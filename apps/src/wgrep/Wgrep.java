@@ -12,6 +12,7 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
+import sys.Log;
 import time.LapTime;
 
 public class Wgrep {
@@ -59,6 +60,7 @@ public class Wgrep {
 		else {
 			conn.url(url);
 		}
+		Log.debug("Connected %s", url);
 		Response resp=conn.execute();
 		long t=System.currentTimeMillis();
 		lap.update(t, resp.body().length());

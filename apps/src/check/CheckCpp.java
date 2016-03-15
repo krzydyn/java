@@ -3,8 +3,8 @@ package check;
 import java.io.IOException;
 
 import text.FileUtils;
+import text.tokenize.CppParser;
 import time.LapTime;
-import tokenize.CppParser;
 
 public class CheckCpp {
 	static String[] files={

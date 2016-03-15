@@ -4,7 +4,7 @@ import sys.UnitTest;
 
 public class T_System extends UnitTest {
 	public static void printStackTrace() {
-		new Throwable().printStackTrace();
+		new Throwable().printStackTrace(System.out);
 	}
 	public static void listPackages() throws Exception {
         System.out.println(UnitTest.getClasses("unittest"));

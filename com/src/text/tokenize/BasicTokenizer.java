@@ -1,4 +1,4 @@
-package tokenize;
+package text.tokenize;
 
 import java.io.IOException;
 import java.io.Reader;
@@ -6,7 +6,7 @@ import java.io.Reader;
 public class BasicTokenizer {
 	private final Reader rd;
 	private final StringBuilder pushback=new StringBuilder();
-	
+
 	private int line;
 	private int maxunread;
 	public BasicTokenizer(Reader r) {
@@ -29,7 +29,7 @@ public class BasicTokenizer {
 		int r;
 		if (pushback.length()>0) {
 			r=pushback.charAt(0);
-			pushback.deleteCharAt(0);			
+			pushback.deleteCharAt(0);
 		}
 		else {
 			r=rd.read();
@@ -54,7 +54,7 @@ public class BasicTokenizer {
 					s.append((char)c);
 					if (c=='\n') break;
 				}
-				else { unread(c); break; } 
+				else { unread(c); break; }
 			}
 			else if (isAlnum((char)c)) {
 				if (prevsp && s.length()>0) { unread(c); break; }

@@ -1,4 +1,4 @@
-package tokenize;
+package text.tokenize;
 
 public class Token {
 	public final int cla;

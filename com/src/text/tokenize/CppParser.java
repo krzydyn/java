@@ -1,4 +1,4 @@
-package tokenize;
+package text.tokenize;
 
 import java.io.FileReader;
 import java.io.IOException;
@@ -36,26 +36,26 @@ public class CppParser {
 		public CharLiteral(char c) {super(new String(new char[]{c}));}
 	}
 	static class CppClass extends CppNode {
-		final List<String> bases=new ArrayList<String>(); //base classes  
+		final List<String> bases=new ArrayList<String>(); //base classes 
 	}
 	static class CppMethod extends CppNode {
 		String retType;
 		List<String> modiers;  //{public,final,static}
 		List<String> exception;//declared exceptions
 	}
-	
+
 	CppTokenizer ct=null;
 	int line;
 	public int getLineNo() {return line; }
-	
+
 	public CppNode parse(String f) throws Exception {
 		System.out.printf("parsing file \"%s\"\n",f);
 		BasicTokenizer t=new BasicTokenizer(new FileReader(f));
-	
+
 		ct = new CppTokenizer(t);
 		CppNode node=new CppNode();
 		readNode(node);
-		
+
 		System.out.printf("parsing done\n");
 		//printNode(node);
 		return node;
@@ -86,7 +86,7 @@ public class CppParser {
 				//if (iscb || lcb)  System.out.println();
 				lcb=iscb;
 			}
-			if (cb) System.out.println("\n"+indent+"}");				
+			if (cb) System.out.println("\n"+indent+"}");
 		}
 	}
 	static public void printNode(CppNode n) {
@@ -104,7 +104,7 @@ public class CppParser {
 		while ((tok=ct.next(b))!=null) {
 			line = ct.getLineNo();
 			if (tok.cla==CppTokenizer.TOKEN_WHILESPACE) continue;
-			
+
 			if (tok.cla==CppTokenizer.TOKEN_PREPROC) {
 				node.nodes.add(new PrepocesorCode(tok.rep));
 			}
@@ -127,16 +127,16 @@ public class CppParser {
 				node.nodes.add(readBlock(new CodeBlock()));
 			}
 			else throw new Token.TokenException(tok);
-		}		
+		}
 	}
 
 	CppNode readNamespace(Namespace node) throws Exception {
 		Token tok;
 		StringBuilder b=new StringBuilder();
-		
+
 		while ((tok=ct.next(b))!=null) {
 			if (tok.cla==CppTokenizer.TOKEN_WHILESPACE) continue;
-			
+
 			if (tok.cla==CppTokenizer.TOKEN_PREPROC) {
 				node.nodes.add(new PrepocesorCode(tok.rep));
 			}
@@ -158,7 +158,7 @@ public class CppParser {
 				return readFragment(new SourceFragment("namespace "+node.name+tok.rep));
 			}
 			else throw new Token.TokenException(tok);
-		}			
+		}
 		return node;
 	}
 	CppNode readFragment(SourceFragment node) throws Exception {
@@ -172,7 +172,7 @@ public class CppParser {
 		}
 		while ((tok=ct.next(b))!=null) {
 			if (tok.cla==CppTokenizer.TOKEN_WHILESPACE) continue;
-			
+
 			if (tok.cla==CppTokenizer.TOKEN_NAME || tok.cla==CppTokenizer.TOKEN_SPECIAL) {
 				if (lcla!=CppTokenizer.TOKEN_SPECIAL && lcla==tok.cla) blk.append(' ');
 				lcla=tok.cla;
@@ -196,7 +196,7 @@ public class CppParser {
 		int lcla=CppTokenizer.TOKEN_NONE;
 		while ((tok=ct.next(b))!=null) {
 			if (tok.cla==CppTokenizer.TOKEN_WHILESPACE) continue;
-			
+
 			if (tok.cla==CppTokenizer.TOKEN_PREPROC) {
 				node.nodes.add(new PrepocesorCode(tok.rep));
 			}
@@ -248,10 +248,10 @@ public class CppParser {
 				}
 			}
 		}
-		return node;		
+		return node;
 	}
 }
 /*
  * 103/18 ln/ms, 5.722 kln/s [5.722 kln/s]
- * 
+ *
  */

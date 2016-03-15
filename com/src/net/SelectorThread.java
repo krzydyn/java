@@ -16,7 +16,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import sys.Log;
-import sys.Time;
+import sys.XThread;
 
 public class SelectorThread {
 	private final Selector selector;
@@ -65,7 +65,7 @@ public class SelectorThread {
 			Log.debug("stopping");
 			running=false;
 			selector.wakeup();
-			Time.sleep(500);
+			XThread.sleep(500);
 		}
 	}
 	

@@ -1,4 +1,4 @@
-package tokenize;
+package text.tokenize;
 
 import java.io.IOException;
 
@@ -15,18 +15,18 @@ public class CppTokenizer {
 	static public final int TOKEN_SPECIAL = 9;
 	static public final int TOKEN_BLKSTART = 10;
 	static public final int TOKEN_BLKEND = 11;
-	
+
 	private BasicTokenizer tokenizer;
 	public CppTokenizer(BasicTokenizer t) {
 		tokenizer=t;
 	}
-	
+
 	public int getLineNo() {return tokenizer.getLineNo();}
-	
+
 	public void unread(CharSequence s) {
 		tokenizer.unread(s);
 	}
-	
+
 	public Token next(StringBuilder b) throws IOException {
 		int cla=TOKEN_NONE;
 		StringBuilder cpptok=new StringBuilder();
@@ -66,7 +66,7 @@ public class CppTokenizer {
 								break;
 							}
 							cpptok.setLength(cpptok.length()-1);
-						} 
+						}
 						cpptok.append(b);
 						if (b.charAt(0)=='/' && cpptok.toString().endsWith("//")) {
 							int i=cpptok.length()-2;
