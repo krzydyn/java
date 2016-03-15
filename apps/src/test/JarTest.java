@@ -11,10 +11,11 @@ import text.FileUtils;
 public class JarTest {
 	public static void main(String[] args) throws IOException {
 		JarFile f=new JarFile(FileUtils.expandEnv("~/work/java/lib/jsoup-1.8.2.jar"));
+		
 		Manifest m = f.getManifest();
 		printAttributes("Main",m.getMainAttributes());
+		
 		Map<String,Attributes> map=m.getEntries();
-		System.out.printf("attrs size = %d\n", map.size());
 		for (String k : map.keySet()) {
 			printAttributes(k, map.get(k));
 		}
@@ -25,7 +26,8 @@ public class JarTest {
 		System.out.printf("Section %s\n",section);
 		for (Object k : a.keySet()) {
 			System.out.printf("attr[%s] = %s\n", k, a.get(k));
-		}		
+		}
+		System.out.println();
 	}
 	
 }

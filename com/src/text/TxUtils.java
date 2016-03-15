@@ -18,7 +18,8 @@ public class TxUtils {
 			if (chars.get(c)!=0) return false;
 		return true;
 	}
-	public static StringBuilder vis(CharSequence s,StringBuilder b) {
+	
+	public static StringBuilder vis(StringBuilder b, CharSequence s) {
 		for (int i=0; i<s.length(); ++i) {
 			char c=s.charAt(i);
 			if (c>0x20 && c<0x80) b.append(c);
@@ -28,12 +29,15 @@ public class TxUtils {
 	}
 	public static String vis(CharSequence s) {
 		StringBuilder b=new StringBuilder(s.length());
-		return vis(s,b).toString();
+		return vis(b, s).toString();
+	}
+	
+	public static StringBuilder repeat(StringBuilder b, CharSequence s, int n) {
+		for (int i=0; i < n; ++i) b.append(s);
+		return b;		
 	}
 	public static String repeat(CharSequence s, int n) {
 		StringBuilder b=new StringBuilder(s.length()*n);
-		for (int i=0; i < n; ++i)
-			b.append(s);
-		return b.toString();
+		return repeat(b, s, n).toString();
 	}
 }

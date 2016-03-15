@@ -3,7 +3,7 @@ package check;
 import java.io.IOException;
 
 import text.FileUtils;
-import time.LapTimer;
+import time.LapTime;
 import tokenize.CppParser;
 
 public class CheckCpp {
@@ -14,7 +14,7 @@ public class CheckCpp {
 			"server/zones-manager.cpp",
 			"libs/config/from-kvjson-visitor.hpp",
 	};
-	static String pfx="~/slp-darek/security-containers/";
+	static String pfx="~/security-containers/";
 	public static void main(String[] args) throws Exception {
 		String p=FileUtils.expandEnv(pfx);
 		for (String f : files) {
@@ -27,11 +27,12 @@ public class CheckCpp {
 	}
 	static void dofile(String f) throws Exception {
 		CppParser p=new CppParser();
-		LapTimer tm=new LapTimer("ln");
+		LapTime tm=new LapTime("ln");
 		try {
 			CppParser.CppNode n=p.parse(f);
 			tm.update(System.currentTimeMillis(), p.getLineNo());
 			System.out.println(tm.toString());
+			CppParser.printNode(n);
 		}catch (IOException e) {
 			System.err.println(e.getMessage());
 		}

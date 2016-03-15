@@ -12,7 +12,7 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
-import time.LapTimer;
+import time.LapTime;
 
 public class Wgrep {
 	
@@ -23,7 +23,7 @@ public class Wgrep {
 	static List<String> visitedDirs = new ArrayList<String>();
 	static long tmPrn;
 	
-	static LapTimer lap=new LapTimer("B");
+	static LapTime lap=new LapTime("B");
 	
 	public static void main(String[] args) {
 		int i=0;
