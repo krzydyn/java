@@ -3,7 +3,7 @@ package unittest;
 import crypt.Base64;
 import sys.UnitTest;
 
-public class T_Base64 extends UnitTest {
+public class T_Crypt extends UnitTest {
 	static void encodeBase64() throws Exception {
 		check(Base64.encode(new byte[] {'1'}), "MQ");
 		check(Base64.encode(new byte[] {'2','3'}), "MjM");

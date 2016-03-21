@@ -6,7 +6,7 @@ final public class XThread extends Thread {
 		super(r);
 	}
 	public boolean isInterrupted() {
-		if (super.isInterrupted()) interrupted = true;
+		if (!interrupted && super.isInterrupted()) interrupted = true;
 		return interrupted;
 	}
 	public void interrupt() { interrupted=true; super.interrupt(); }

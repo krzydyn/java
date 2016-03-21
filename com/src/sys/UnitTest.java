@@ -58,7 +58,7 @@ public class UnitTest {
 	
 	static public void test(String unit) {
 		ClassLoader cl = getClassLoader();
-		Log.debug("* Processing unit: %s", unit);
+		Log.tdebug(-1, "* Processing unit: %s", unit);
 		Class<?> c;
 		try {
 			c = cl.loadClass(unit);
@@ -69,20 +69,20 @@ public class UnitTest {
 				}
 				if ("main".equals(m.getName())) continue;
 				
-				Log.debug("** Processing testcase: %s", m.getName());
+				Log.tdebug(-1, "** Processing testcase: %s", m.getName());
 				// allow access to non public method
 				m.setAccessible(true);
 				try {
 					m.invoke(null, empty);
 				} catch (Throwable e) {
-					Log.error("Error in %s.%s", unit, m.getName());
+					Log.terror(1,"Error in %s.%s", unit, m.getName());
 					e.printStackTrace();
 				}
 			}
 		} catch (ClassNotFoundException e) {
-			Log.error("Can't load unit %s", unit);
+			Log.terror(1,"Can't load unit %s", unit);
 		} catch (Throwable e) {
-			Log.error("Exception in unit %s", unit);
+			Log.terror(1,"Exception in unit %s", unit);
 			e.printStackTrace();
 		}		
 	}
@@ -103,17 +103,17 @@ public class UnitTest {
 	}
 	protected static void check(String t1, String t2) {
 		if (!t1.equals(t2)) {
-			Log.error(1, "check failed: '%s'!='%s'", t1, t2);
+			Log.terror(1, "check failed: '%s'!='%s'", t1, t2);
 		}
 	}
 	protected static void check(byte[] t1, byte[] t2) {
 		if (t1.length != t2.length) {
-			Log.error(1, "check failed: length %d!=%d", t1.length, t2.length);
+			Log.terror(1, "check failed: length %d!=%d", t1.length, t2.length);
 			return ;
 		}
 		for (int i =0; i < t1.length; ++i) {
 			if (t1[i] != t2[i]) {
-				Log.error(1, "check failed: byte[%d] %d!=%d", i, t1[i], t2[i]);
+				Log.terror(1, "check failed: byte[%d] %d!=%d", i, t1[i], t2[i]);
 				return ;
 			}
 		}
