@@ -101,4 +101,9 @@ public class UnitTest {
 	static public void test(String[] units) {
 		for (String u : units) test(u);
 	}
+	protected static void check(String t1, String t2) {
+		if (!t1.equals(t2)) {
+			Log.error("check failed: '%s'!='%s'", t1, t2);
+		}
+	}
 }
