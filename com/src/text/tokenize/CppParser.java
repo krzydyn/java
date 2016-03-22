@@ -5,7 +5,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import text.TxUtils;
+import text.Text;
 
 public class CppParser {
 	public static class CppNode {
@@ -61,7 +61,7 @@ public class CppParser {
 		return node;
 	}
 	static private void printNode(CppNode n, int l) {
-		String indent = TxUtils.repeat("    ", l);
+		String indent = Text.repeat("    ", l);
 		if (n instanceof SourceFragment) {
 			String pfx="fra";
 			if (n instanceof PrepocesorCode) pfx="pre";

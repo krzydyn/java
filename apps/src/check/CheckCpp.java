@@ -2,7 +2,7 @@ package check;
 
 import java.io.IOException;
 
-import text.FileUtils;
+import sys.Env;
 import text.tokenize.CppParser;
 import time.LapTime;
 
@@ -16,9 +16,9 @@ public class CheckCpp {
 	};
 	static String pfx="~/security-containers/";
 	public static void main(String[] args) throws Exception {
-		String p=FileUtils.expandEnv(pfx);
+		String p=Env.expandEnv(pfx);
 		for (String f : files) {
-			f=FileUtils.expandEnv(f);
+			f=Env.expandEnv(f);
 			if (f.startsWith("/"))
 				dofile(f);
 			else

@@ -1,6 +1,6 @@
-package text;
+package sys;
 
-public class FileUtils {
+public class Env {
 	static public final String expandEnv(String p) {
 		if (p.startsWith("~/") || p.equals("~")) {
 			p=System.getProperty("user.home")+p.substring(1);

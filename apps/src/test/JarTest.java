@@ -6,11 +6,11 @@ import java.util.jar.Attributes;
 import java.util.jar.JarFile;
 import java.util.jar.Manifest;
 
-import text.FileUtils;
+import sys.Env;
 
 public class JarTest {
 	public static void main(String[] args) throws IOException {
-		JarFile f=new JarFile(FileUtils.expandEnv("~/work/java/lib/jsoup-1.8.2.jar"));
+		JarFile f=new JarFile(Env.expandEnv("~/work/java/lib/jsoup-1.8.2.jar"));
 		
 		Manifest m = f.getManifest();
 		printAttributes("Main",m.getMainAttributes());

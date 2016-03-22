@@ -5,13 +5,17 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 
+import text.Ansi;
+
 public class Log {
 	private static final SimpleDateFormat tmfmt_rel = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
 	private static final SimpleDateFormat tmfmt_tst = new SimpleDateFormat("HH:mm:ss.SSS");
+	private static final String[] COLOR_LEVEL = {Ansi.SGR_RED, Ansi.SGR_YELLOW, "", Ansi.SGR_CYAN, Ansi.SGR_BLUE, Ansi.SGR_GREEN };
 	
 	private static SimpleDateFormat tmfmt = tmfmt_tst;
 	private static Object lock=new Object();
-	private static void log(int level, int traceOffs, Object ...args) {
+
+	private static void log(int level, int traceOffs, String fmt, Object[] args) {
 		String file = null;
 		int line = -1;
 		if (tmfmt == tmfmt_tst && traceOffs >= 0) {
@@ -21,18 +25,14 @@ public class Log {
 				line = bt[2+traceOffs].getLineNumber();
 			}
 		}
-		String fmt = null;
-		if (args.length > 0) {
-			fmt = args[0] instanceof String ? (String)args[0] : args[0].toString();
-			for (int i = 1; i < args.length; ++i) args[i-1]=args[i];
-		}
 		
-		@SuppressWarnings("resource")
-		final PrintStream s = level == 0 ? System.err : System.out;
+		final String color = level < COLOR_LEVEL.length ? COLOR_LEVEL[level] : "";
+		final PrintStream s = System.out;
 		synchronized (lock) {
-			s.printf("%s: ", tmfmt.format(new Date()));
+			s.printf("%s%s: ", color, tmfmt.format(new Date()));
 			if (file != null) s.printf("(%s:%d) ", file, line );
 			if (fmt != null) s.printf((Locale)null, fmt, args);
+			if (!color.isEmpty()) s.printf(Ansi.SGR_RESET);
 			s.println();
 			s.flush();
 		}		
@@ -41,12 +41,16 @@ public class Log {
 	public static void setReleaseMode() { tmfmt = tmfmt_rel; }
 	public static void setTestMode() { tmfmt = tmfmt_tst; }
 
-	public static void error(Object ...args) {log(0, 0, args);}
-	public static void warn(Object ...args) {log(0, 0, args);}
-	public static void debug(Object ...args) {log(1, 0, args);}
-	public static void info(Object ...args) {log(3, -1, args);}
+	public static void error(String fmt,Object ...args) {log(0, 0, fmt, args);}
+	public static void warn(String fmt,Object ...args) {log(1, 0, fmt, args);}
+	public static void debug(String fmt,Object ...args) {log(2, 0, fmt, args);}
+	public static void trace(String fmt,Object ...args) {log(3, 0, fmt, args);}
+	public static void info(String fmt,Object ...args) {log(4, -1, fmt, args);}
+	public static void notice(String fmt,Object ...args) {log(5, -1, fmt, args);}
 
-	public static void terror(int traceOffs, Object ...args) {log(0, traceOffs, args);}
-	public static void twarn(int traceOffs, Object ...args) {log(0, traceOffs, args);}
-	public static void tdebug(int traceOffs, Object ...args) {log(1, traceOffs, args);}
+	public static void error(int traceOffs,String fmt, Object ...args) {log(0, traceOffs, fmt, args);}
+	public static void warn(int traceOffs,String fmt, Object ...args) {log(1, traceOffs, fmt, args);}
+	public static void debug(int traceOffs,String fmt, Object ...args) {log(2, traceOffs, fmt, args);}
+	public static void trace(int traceOffs,String fmt, Object ...args) {log(3, traceOffs, fmt, args);}
+	public static void info(int traceOffs,String fmt, Object ...args) {log(4, traceOffs, fmt, args);}
 }
