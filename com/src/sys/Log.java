@@ -10,7 +10,8 @@ import text.Ansi;
 public class Log {
 	private static final SimpleDateFormat tmfmt_rel = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
 	private static final SimpleDateFormat tmfmt_tst = new SimpleDateFormat("HH:mm:ss.SSS");
-	private static final String[] COLOR_LEVEL = {Ansi.SGR_RED, Ansi.SGR_YELLOW, "", Ansi.SGR_CYAN, Ansi.SGR_BLUE, Ansi.SGR_GREEN };
+	private static final String[] LEVEL_ANSI_COLOR = {Ansi.SGR_RED, Ansi.SGR_YELLOW, Ansi.SGR_BLUE, Ansi.SGR_CYAN, "", Ansi.SGR_GREEN };
+	private static final String[] LEVEL_NAME = {"E", "W", "D", "T", "I", "N" };
 	
 	private static SimpleDateFormat tmfmt = tmfmt_tst;
 	private static Object lock=new Object();
@@ -25,11 +26,13 @@ public class Log {
 				line = bt[2+traceOffs].getLineNumber();
 			}
 		}
+		if (level < 0) level=0;
 		
-		final String color = level < COLOR_LEVEL.length ? COLOR_LEVEL[level] : "";
+		final String color = level < LEVEL_ANSI_COLOR.length ? LEVEL_ANSI_COLOR[level] : "";
+		final String name = level < LEVEL_NAME.length ? LEVEL_NAME[level] : String.format("%d", level);
 		final PrintStream s = System.out;
 		synchronized (lock) {
-			s.printf("%s%s: ", color, tmfmt.format(new Date()));
+			s.printf("%s%s [%s]: ", color, tmfmt.format(new Date()), name);
 			if (file != null) s.printf("(%s:%d) ", file, line );
 			if (fmt != null) s.printf((Locale)null, fmt, args);
 			if (!color.isEmpty()) s.printf(Ansi.SGR_RESET);
