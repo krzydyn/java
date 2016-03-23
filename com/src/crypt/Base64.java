@@ -6,6 +6,7 @@ import java.util.Map;
 
 public class Base64 {
 	private static final String BASE64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+	private static final char BASE64_PAD = '=';
 	private static final Map<Character, Integer> BASE64inv = new HashMap<Character, Integer>();
 	static {
 		for (int i = 0; i < BASE64.length(); ++i)
@@ -32,6 +33,10 @@ public class Base64 {
 			int y = c & 0x3f;
 			s.append(BASE64.charAt(y));
 		}
+		if ((s.length()&0x3) > 0) {
+			for (int i = s.length()&0x3; i < 4; ++i)
+				s.append(BASE64_PAD);
+		}
 		return s.toString();
 	}
 
@@ -40,8 +45,12 @@ public class Base64 {
 		ByteArrayOutputStream b = new ByteArrayOutputStream(s.length());
 		//process input bits
 		for (int i = 0; i < s.length(); ++i) {
-			Integer x = BASE64inv.get(s.charAt(i));
-			if (x == null) continue;
+			char ch = s.charAt(i); 
+			Integer x = BASE64inv.get(ch);
+			if (x == null) {
+				if (ch == BASE64_PAD) break;
+				continue;
+			}
 			c = (c<<6) | x.intValue(); // 6 bits read
 			cbits += 6;
 			while (cbits >= 8) {
