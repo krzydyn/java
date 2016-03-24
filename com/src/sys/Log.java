@@ -19,8 +19,9 @@ public class Log {
 	private static void log(int level, int traceOffs, String fmt, Object[] args) {
 		String file = null;
 		int line = -1;
+		Thread ct = Thread.currentThread();
 		if (tmfmt == tmfmt_tst && traceOffs >= 0) {
-			StackTraceElement[] bt = new Throwable().getStackTrace();
+			StackTraceElement[] bt = ct.getStackTrace();
 			if (bt.length > 2+traceOffs) {
 				file = bt[2+traceOffs].getFileName();
 				line = bt[2+traceOffs].getLineNumber();
@@ -33,7 +34,7 @@ public class Log {
 		final PrintStream s = System.out;
 		synchronized (lock) {
 			if (name.isEmpty()) s.printf("%s%s: ", color, tmfmt.format(new Date()));
-			else s.printf("%s%s [%s]: ", color, tmfmt.format(new Date()), name);
+			else s.printf("%s%s [%s] %s: ", color, tmfmt.format(new Date()), name, ct.getName());
 			if (file != null) s.printf("(%s:%d) ", file, line );
 			if (fmt != null) s.printf((Locale)null, fmt, args);
 			if (!color.isEmpty()) s.printf(Ansi.SGR_RESET);
