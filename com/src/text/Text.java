@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class Text {
+	public static String HEX_DIGITS = "0123456789ABCDEF";
 	public static boolean isAnagram(String s1, String s2) {
 		if (s1.length() != s2.length()) return false;
 		Map<Character, Integer> chars=new HashMap<Character, Integer>();
@@ -18,7 +19,29 @@ public class Text {
 			if (chars.get(c)!=0) return false;
 		return true;
 	}
-	
+
+	public static StringBuilder repeat(StringBuilder b, CharSequence s, int n) {
+		b.ensureCapacity(b.length()+s.length()*n);
+		for (int i=0; i < n; ++i) b.append(s);
+		return b;
+	}
+	public static String repeat(CharSequence s, int n) {
+		StringBuilder b=new StringBuilder(s.length()*n);
+		return repeat(b, s, n).toString();
+	}
+
+	public static StringBuilder hex(StringBuilder b, byte[] s) {
+		b.ensureCapacity(b.length()+s.length);
+		for (int i=0; i<s.length; ++i) {
+			b.append(String.format("%02X", s[i]&0xff));
+		}
+		return b;
+	}
+	public static String hex(byte[] s) {
+		StringBuilder b=new StringBuilder(s.length);
+		return vis(b, s).toString();
+	}
+
 	public static StringBuilder vis(StringBuilder b, byte[] s) {
 		b.ensureCapacity(b.length()+s.length);
 		for (int i=0; i<s.length; ++i) {
@@ -32,6 +55,7 @@ public class Text {
 		StringBuilder b=new StringBuilder(s.length);
 		return vis(b, s).toString();
 	}
+
 	public static StringBuilder vis(StringBuilder b, CharSequence s) {
 		b.ensureCapacity(b.length()+s.length());
 		for (int i=0; i<s.length(); ++i) {
@@ -45,14 +69,5 @@ public class Text {
 		StringBuilder b=new StringBuilder(s.length());
 		return vis(b, s).toString();
 	}
-	
-	public static StringBuilder repeat(StringBuilder b, CharSequence s, int n) {
-		b.ensureCapacity(b.length()+s.length()*n);
-		for (int i=0; i < n; ++i) b.append(s);
-		return b;		
-	}
-	public static String repeat(CharSequence s, int n) {
-		StringBuilder b=new StringBuilder(s.length()*n);
-		return repeat(b, s, n).toString();
-	}
+
 }

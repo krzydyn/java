@@ -10,10 +10,13 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
+import time.LapTime;
+
 public class UnitTest {
 	static private String classExt = ".class";
 	static private Object[] empty = null;
-	
+	static private LapTime time=new LapTime("s");
+
 	static ClassLoader getClassLoader() {
 		//return ClassLoader.getSystemClassLoader();
 		return Thread.currentThread().getContextClassLoader();
@@ -21,7 +24,7 @@ public class UnitTest {
 
 	static public List<String> getClasses(String pkg) throws IOException {
 		ArrayList<String> a = new ArrayList<String>();
-		
+
 		ClassLoader cl = getClassLoader();
 		URL url = cl.getResource(pkg.replace(".", "/"));
 		BufferedReader rd = new BufferedReader(new InputStreamReader((InputStream) url.getContent()));
@@ -37,7 +40,7 @@ public class UnitTest {
 
 	static public List<String> getTestUnits(String pkg) throws IOException {
 		ArrayList<String> a = new ArrayList<String>();
-		
+
 		ClassLoader cl = getClassLoader();
 		URL url = cl.getResource(pkg.replace(".", "/"));
 		BufferedReader rd = new BufferedReader(new InputStreamReader((InputStream) url.getContent()));
@@ -55,10 +58,12 @@ public class UnitTest {
 		}
 		return a;
 	}
-	
+
 	static public void test(String unit) {
 		ClassLoader cl = getClassLoader();
-		Log.info(-1, "* Processing unit: %s", unit);
+
+		time.reset(0);
+		Log.info("* TestUnit: %s start", unit);
 		Class<?> c;
 		try {
 			c = cl.loadClass(unit);
@@ -68,15 +73,19 @@ public class UnitTest {
 					continue;
 				}
 				if ("main".equals(m.getName())) continue;
-				
-				Log.info(-1, "** Processing testcase: %s", m.getName());
-				// allow access to non public method
-				m.setAccessible(true);
+
+				time.nextLap();
+				Log.info("  ** Testcase: %s start", m.getName());
 				try {
+					// allow access to non public method
+					m.setAccessible(true);
 					m.invoke(null, empty);
 				} catch (Throwable e) {
 					Log.error(1,"Error in %s.%s", unit, m.getName());
 					e.printStackTrace();
+				} finally {
+					time.update(0);
+					Log.info("  ** Testcase: %s end in %.3f sec", m.getName(), time.getTime()/1000.0);
 				}
 			}
 		} catch (ClassNotFoundException e) {
@@ -84,9 +93,11 @@ public class UnitTest {
 		} catch (Throwable e) {
 			Log.error(1,"Exception in unit %s", unit);
 			e.printStackTrace();
-		}		
+		} finally {
+			Log.info("* TestUnit: %s end in %.3f sec", unit, time.getTotalTime()/1000.0);
+		}
 	}
-	
+
 	static public void testAll(String pkg) {
 		try {
 			test(getTestUnits(pkg));
@@ -94,12 +105,17 @@ public class UnitTest {
 			e.printStackTrace();
 		}
 	}
-	
+
 	static public void test(Iterable<String> units) {
 		for (String u : units) test(u);
 	}
 	static public void test(String[] units) {
 		for (String u : units) test(u);
+	}
+	protected static void check(boolean r, String msg) {
+		if (!r) {
+			Log.error(1, "check failed: (false) %s", msg);
+		}
 	}
 	protected static void check(String t1, String t2) {
 		if (!t1.equals(t2)) {
