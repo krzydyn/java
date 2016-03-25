@@ -20,6 +20,17 @@ public class Text {
 		return true;
 	}
 
+	public static String join(int[] a, String sep) {
+		if (a.length==0) return "";
+		StringBuilder b=new StringBuilder(a.length*(sep.length()+2));
+		b.append(Integer.toString(a[0]));
+		for (int i = 1; i < a.length; ++i) {
+			b.append(sep);
+			b.append(a[i]);
+		}
+		return b.toString();
+	}
+
 	public static StringBuilder repeat(StringBuilder b, CharSequence s, int n) {
 		b.ensureCapacity(b.length()+s.length()*n);
 		for (int i=0; i < n; ++i) b.append(s);
@@ -39,7 +50,7 @@ public class Text {
 	}
 	public static String hex(byte[] s) {
 		StringBuilder b=new StringBuilder(s.length);
-		return vis(b, s).toString();
+		return hex(b, s).toString();
 	}
 
 	public static StringBuilder vis(StringBuilder b, byte[] s) {
@@ -47,7 +58,7 @@ public class Text {
 		for (int i=0; i<s.length; ++i) {
 			char c=(char)s[i];
 			if (c>0x20 && c<0x80) b.append(c);
-			else b.append(String.format("<%X>", (int)c));
+			else b.append(String.format("<%X>", c&0xffff));
 		}
 		return b;
 	}

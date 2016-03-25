@@ -22,9 +22,13 @@ public class Log {
 		Thread ct = Thread.currentThread();
 		if (tmfmt == tmfmt_tst && traceOffs >= 0) {
 			StackTraceElement[] bt = ct.getStackTrace();
-			if (bt.length > 2+traceOffs) {
-				file = bt[2+traceOffs].getFileName();
-				line = bt[2+traceOffs].getLineNumber();
+			for (int i=0; i<3; ++i) {
+				System.out.printf("[%d] %s:%d; ", i, bt[i].getFileName(), bt[i].getLineNumber());
+			}
+			System.out.println();
+			if (bt.length > 3+traceOffs) {
+				file = bt[3+traceOffs].getFileName();
+				line = bt[3+traceOffs].getLineNumber();
 			}
 		}
 		if (level < 0) level=0;
