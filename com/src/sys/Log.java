@@ -50,6 +50,7 @@ public class Log {
 	public static void setReleaseMode() { tmfmt = tmfmt_rel; }
 	public static void setTestMode() { tmfmt = tmfmt_tst; }
 
+	public static void error(Throwable e) {e.printStackTrace(System.out);}
 	public static void error(String fmt,Object ...args) {log(0, 0, fmt, args);}
 	public static void warn(String fmt,Object ...args) {log(1, 0, fmt, args);}
 	public static void debug(String fmt,Object ...args) {log(2, 0, fmt, args);}
