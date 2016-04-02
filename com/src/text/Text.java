@@ -1,6 +1,7 @@
 package text;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class Text {
@@ -23,10 +24,20 @@ public class Text {
 	public static String join(int[] a, String sep) {
 		if (a.length==0) return "";
 		StringBuilder b=new StringBuilder(a.length*(sep.length()+2));
-		b.append(Integer.toString(a[0]));
+		b.append(a[0]);
 		for (int i = 1; i < a.length; ++i) {
 			b.append(sep);
 			b.append(a[i]);
+		}
+		return b.toString();
+	}
+	public static String join(List<?> a, String sep) {
+		if (a.size()==0) return "";
+		StringBuilder b=new StringBuilder(a.size()*(sep.length()+2));
+		b.append(a.get(0));
+		for (int i = 1; i < a.size(); ++i) {
+			b.append(sep);
+			b.append(a.get(i));
 		}
 		return b.toString();
 	}

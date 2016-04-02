@@ -72,7 +72,7 @@ public class Wgrep {
 		
 		Document doc = resp.parse();
 		Elements links = doc.select("a[href]");
-		List<String> dirs=new ArrayList<>();
+		List<String> dirs=new ArrayList<String>();
 		for (Element link : links) {
 			String f=link.attr("abs:href");
 			if (f.endsWith("/")) dirs.add(f);

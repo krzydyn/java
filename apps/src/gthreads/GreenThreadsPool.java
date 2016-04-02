@@ -8,7 +8,7 @@ import java.util.concurrent.TimeUnit;
 
 public class GreenThreadsPool {
 	
-	List<GreenThread> threads=new LinkedList<>();
+	List<GreenThread> threads=new LinkedList<GreenThread>();
 	private final Object lock=new Object(); 
 	
 	void addThread(GreenThread t) {
