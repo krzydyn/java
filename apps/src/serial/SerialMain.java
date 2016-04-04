@@ -36,16 +36,16 @@ public class SerialMain extends MainPanel implements FocusListener,KeyListener {
 
 		setName("MultiConsole");
 
-		p = new JPanel(new GridLayout(2,0));
+		p = new JPanel(new GridLayout(0,2));
 
-		List<String> nm = Serial.listPorts();
+		/*List<String> nm = Serial.listPorts();
 		for (String n : nm) {
 			if (n.contains("USB"))
 				ports.add(new Serial(n));
-		}
+		}*/
 		if (ports.isEmpty()) {
-			ports.add(new Serial("/dev/ttyS0"));
-			ports.add(new Serial("/dev/ttyS1"));
+			ports.add(new Serial("/dev/ttyUSB1"));
+			ports.add(new Serial("/dev/ttyUSB2"));
 		}
 
 		for (Serial sp : ports) {
@@ -83,7 +83,7 @@ public class SerialMain extends MainPanel implements FocusListener,KeyListener {
 	}
 
 	public void readloop() {
-		byte[] buffer = new byte[1024];
+		byte[] buffer = new byte[4*1024];
 		long reopen = System.currentTimeMillis()-1;
 		while (running) {
 			if (reopen!=0 && reopen < System.currentTimeMillis()) {
@@ -174,6 +174,6 @@ public class SerialMain extends MainPanel implements FocusListener,KeyListener {
 	}
 
 	public static void main(String[] args) {
-		start(SerialMain.class);
+		start(SerialMain.class, args);
 	}
 }

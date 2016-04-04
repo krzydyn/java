@@ -5,7 +5,6 @@ import java.awt.Dimension;
 import java.awt.LayoutManager;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
-
 import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
@@ -48,10 +47,14 @@ public class MainPanel extends JPanel{
 		return sp;
 	}
 
-	static public void start(final Class<? extends MainPanel> mainclass) {
+	static public void start(final Class<? extends MainPanel> mainclass, String[] args) {
 		try {
 			intern_start(mainclass);
-		}catch (Throwable e) {Log.error(e);}
+		}
+		catch (Throwable e) {Log.error(e);}
+	}
+	static public void start(final Class<? extends MainPanel> mainclass) {
+		start(mainclass,null);
 	}
 
 	static private void intern_start(final Class<? extends MainPanel> mainclass) throws Exception {

@@ -1,7 +1,23 @@
 package text;
 
 public class Ansi {
-	public final static String ESC = "\u001b";
+	public static class Code {
+		public final static char NUL = (char)0x0;
+		public final static char STX = (char)0x1; // Start Transmission Block
+		public final static char SOT = (char)0x2; // Start Of Text
+		public final static char ETX = (char)0x3; // End Transmission Block
+		public final static char EOT = (char)0x4; // End Of Text
+		public final static char ENQ = (char)0x5; // Enquire ("I am ready")
+		public final static char ACK = (char)0x6; // Acknowledge
+		public final static char DEL = (char)0x7;
+		public final static char BS = (char)0x8;
+		public final static char HT = (char)0x9;
+		public final static char LF = (char)0xa;
+		public final static char CR = (char)0xd;
+
+		public final static char NAK = (char)0x15; // Not Acknowledge
+		public final static char ESC = (char)0x1b;
+	}
 
 	public final static String CSI_C0 = "\u001b[";
 	public final static String CSI_C1 = "\u009b"; //only on 8bit terminal

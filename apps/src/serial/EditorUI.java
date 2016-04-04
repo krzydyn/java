@@ -22,6 +22,8 @@ import javax.swing.text.BadLocationException;
 import javax.swing.text.Document;
 
 import sys.Log;
+import text.Ansi;
+import text.Text;
 import ui.MainPanel;
 
 @SuppressWarnings("serial")
@@ -52,10 +54,11 @@ public class EditorUI extends JPanel implements FocusListener {
 
 		editor.setFont(Font.decode(Font.MONOSPACED));
 		editor.setEditable(editable);
-		//editor.setFocusable(editable);
+		editor.setFocusable(editable);
 		editor.setEnabled(false); //disabled editor does not receive focus
 		editor.setBackground(Color.DARK_GRAY);
 		editor.setForeground(Color.LIGHT_GRAY);
+		editor.setCaretColor(Color.WHITE);
 		editor.addMouseListener(ml);
 		addMouseListener(ml);
 		addFocusListener(this);
@@ -84,12 +87,16 @@ public class EditorUI extends JPanel implements FocusListener {
 			if (off+i >= b.length) throw new IndexOutOfBoundsException();
 			char c = (char)(b[off+i]&0xff);
 			if (escseq) {
-				if (Character.isLowerCase(c)) escseq=false;
+				s.append(c);
+				if (Character.isLowerCase(c)) {
+					Log.debug("eseq=%s", Text.vis(s.toString()));
+					s.setLength(0);
+					escseq=false;
+				}
 			}
 			else if (c < 0x20 || c > 0x80) {
 				if (c == '\t'||c=='\n'||c=='\r') s.append(c);
-				else if (c == '\u0007');
-				else if (c == '\u0008') { //backspace
+				else if (c == '\u0007' || c == '\u0008') { //backspace
 					int p = editor.getCaretPosition();
 					if (p > 0) {
 						--p;
@@ -98,12 +105,17 @@ public class EditorUI extends JPanel implements FocusListener {
 						try {
 							doc.remove(p, 1);
 						} catch (BadLocationException e) {}
+						editor.repaint();
 					}
 				}
-				else if (c == '\u001b') escseq=true;
+				else if (c == Ansi.Code.ESC) {
+					escseq=true;
+					if (s.length() > 0) {
+						append(s.toString());
+						s.setLength(0);
+					}
+				}
 				else {
-					//append(s.toString());
-					//s.setLength(0);
 					s.append(String.format("<%x>",(int)c));
 				}
 			}
@@ -112,7 +124,8 @@ public class EditorUI extends JPanel implements FocusListener {
 			}
 		}
 		if (s.length() > 0) {
-			append(s.toString());
+			if (escseq) Log.debug("eseq=%s", Text.vis(s.toString()));
+			else append(s.toString());
 			s.setLength(0);
 		}
 	}
@@ -120,10 +133,12 @@ public class EditorUI extends JPanel implements FocusListener {
 	@Override
 	public void focusGained(FocusEvent e) {
 		setBorder(focusedBorder);
+		editor.getCaret().setVisible(true);
 	}
 
 	@Override
 	public void focusLost(FocusEvent e) {
 		setBorder(unfocusedBorder);
+		editor.getCaret().setVisible(false);
 	}
 }
