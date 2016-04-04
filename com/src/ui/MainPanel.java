@@ -1,12 +1,10 @@
 package ui;
 
 import java.awt.BorderLayout;
-import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.LayoutManager;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
-import java.lang.reflect.InvocationTargetException;
 
 import javax.swing.JComponent;
 import javax.swing.JFrame;
@@ -45,6 +43,8 @@ public class MainPanel extends JPanel{
 		JScrollPane sp = new JScrollPane(scrollable);
 		sp.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED);
 		sp.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
+		sp.getVerticalScrollBar().setFocusable(false);
+		sp.getHorizontalScrollBar().setFocusable(false);
 		return sp;
 	}
 
@@ -87,13 +87,12 @@ public class MainPanel extends JPanel{
 						}
 					});
 					f.setTitle(main.getName());
-					//f.setFocusTraversalPolicy(null); // null = default
 					f.setContentPane(main);
 					f.pack();
-					//f.setLocationRelativeTo(null);
 					f.setLocation(10,10);
 					f.setVisible(true);
 				} catch (Exception e) {
+					Log.error(e);
 				}
 			}
 		});
