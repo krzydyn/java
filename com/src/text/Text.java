@@ -21,7 +21,17 @@ public class Text {
 		return true;
 	}
 
-	public static String join(int[] a, String sep) {
+	private static String join_l(List<?> a, String sep) {
+		if (a.size()==0) return "";
+		StringBuilder b=new StringBuilder(a.size()*(sep.length()+2));
+		b.append(a.get(0));
+		for (int i = 1; i < a.size(); ++i) {
+			b.append(sep);
+			b.append(a.get(i));
+		}
+		return b.toString();
+	}
+	private static String join_i(int[] a, String sep) {
 		if (a.length==0) return "";
 		StringBuilder b=new StringBuilder(a.length*(sep.length()+2));
 		b.append(a[0]);
@@ -31,15 +41,10 @@ public class Text {
 		}
 		return b.toString();
 	}
-	public static String join(List<?> a, String sep) {
-		if (a.size()==0) return "";
-		StringBuilder b=new StringBuilder(a.size()*(sep.length()+2));
-		b.append(a.get(0));
-		for (int i = 1; i < a.size(); ++i) {
-			b.append(sep);
-			b.append(a.get(i));
-		}
-		return b.toString();
+	public static String join(Object o, String sep) {
+		if (o instanceof int[]) return join_i((int[])o, sep);
+		if (o instanceof List) return join_l((List<?>)o, sep);
+		return o.toString();
 	}
 
 	public static StringBuilder repeat(StringBuilder b, CharSequence s, int n) {

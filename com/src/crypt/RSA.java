@@ -116,4 +116,38 @@ return (N, e, d)
 		return b.toByteArray();
 	}
 
+	byte[] sign(byte[] data) {
+		/*
+		Creates a message digest of the information to be sent.
+		Represents this digest as an integer m between 1 and n-1..
+		Take private key (n, d) to compute the signature s = m^d mod n.
+		Sends this signature s to the recipient.
+		*/
+		return null;
+	}
+
+	boolean verify(byte[] data, byte[] sign) {
+		/*
+		Creates a message digest of the information received.
+		Take sender public key (n, e) to compute inteer v = m^e mod n.
+		Extracts the message digest from this integer.
+		If both message digests are identical, the signature is valid.
+		*/
+		return false;
+	}
+
+	/*
+	 * Chinese Remainder Theorem (CRT)
+	 * calc helpers:
+	 *   dP = (1/e) mod (p-1) = d mod (p-1)
+	 *   dQ = (1/e) mod (q-1) = d mod (q-1)
+	 *   qInv = (1/q) mod p  where p > q
+	 *
+	 * decrypt cyphered text c:
+	 *   m1 = c^dP mod p
+	 *   m2 = c^dQ mod q
+	 *   h = qInv(m1 - m2) mod p
+	 *   m = m2 + hq
+
+	 */
 }

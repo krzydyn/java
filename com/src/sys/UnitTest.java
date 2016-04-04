@@ -13,9 +13,9 @@ import java.util.List;
 import time.LapTime;
 
 public class UnitTest {
-	static private String classExt = ".class";
-	static private Object[] empty = null;
-	static private LapTime time=new LapTime("s");
+	final static private String classExt = ".class";
+	final static private Object[] empty = null;
+	final static private LapTime time=new LapTime("s");
 
 	static ClassLoader getClassLoader() {
 		//return ClassLoader.getSystemClassLoader();
@@ -38,9 +38,10 @@ public class UnitTest {
 		return a;
 	}
 
-	static public List<String> getTestUnits(String pkg) throws IOException {
+	static public List<String> getTestUnits(String prefix) throws IOException {
 		ArrayList<String> a = new ArrayList<String>();
 
+		String pkg = prefix.substring(0, prefix.lastIndexOf('.'));
 		ClassLoader cl = getClassLoader();
 		URL url = cl.getResource(pkg.replace(".", "/"));
 		BufferedReader rd = new BufferedReader(new InputStreamReader((InputStream) url.getContent()));
@@ -48,6 +49,7 @@ public class UnitTest {
 		while ((line = rd.readLine()) != null) {
 			if(line.endsWith(classExt) && !line.contains("$")) {
 				String unit = pkg + "." + line.substring(0, line.length() - classExt.length());
+				if (unit.startsWith(prefix))
 				try {
 					Class<?> c = cl.loadClass(unit);;
 					if (UnitTest.class.isAssignableFrom(c)) {
