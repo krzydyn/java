@@ -1,4 +1,12 @@
 package text;
+/**
+ *
+ * @author k.dynowski
+ *
+ * Sources:
+ * https://en.wikipedia.org/wiki/ANSI_escape_code
+ * http://ascii-table.com/ansi-escape-sequences.php
+ */
 
 public class Ansi {
 	public static class Code {

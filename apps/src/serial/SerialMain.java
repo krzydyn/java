@@ -179,16 +179,16 @@ public class SerialMain extends MainPanel implements FocusListener,KeyListener {
 	@Override
 	public void keyPressed(KeyEvent e) {
 		Log.debug("key pressed %d", e.getKeyCode());
-		if (e.getKeyCode() == 38) { //up
+		if (e.getKeyCode() == 38) { //up-arrow
 			keysToSend.append(Ansi.CSI+"A");
 		}
-		else if (e.getKeyCode() == 40) { //down
+		else if (e.getKeyCode() == 40) { //down-arrow
 			keysToSend.append(Ansi.CSI+"B");
 		}
-		else if (e.getKeyCode() == 39) { //right
+		else if (e.getKeyCode() == 39) { //right-arrow
 			keysToSend.append(Ansi.CSI+"C");
 		}
-		else if (e.getKeyCode() == 37) { //left
+		else if (e.getKeyCode() == 37) { //left-arrow
 			keysToSend.append(Ansi.CSI+"D");
 		}
 	}
