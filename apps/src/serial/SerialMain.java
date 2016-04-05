@@ -19,6 +19,7 @@ import javax.swing.JPanel;
 import javax.swing.KeyStroke;
 
 import sys.Log;
+import text.Ansi;
 import ui.MainPanel;
 
 @SuppressWarnings("serial")
@@ -112,21 +113,29 @@ public class SerialMain extends MainPanel implements FocusListener,KeyListener {
 						break;
 					}
 				}
-				if (sfoc.isOpen()) {
-					byte[] b = keysToSend.toString().getBytes();
+
+				byte[] b = null;
+				synchronized (keysToSend) {
+					if (keysToSend.indexOf(Ansi.CSI) >= 0) {
+						focused.clear();
+					}
+					if (sfoc!=null && sfoc.isOpen())
+						b = keysToSend.toString().getBytes();
+					keysToSend.setLength(0);
+				}
+				if (b!=null) {
 					try {
 						sfoc.write(b, 0, b.length);
 					}catch(Exception e) {
 						Log.error(e);
 					}
 				}
-				keysToSend.setLength(0);
 			}
 
 			for (Serial s : ports) {
 				if (!s.isOpen()) {
 					if (reopen == 0)
-						reopen = System.currentTimeMillis()+1000;
+						reopen = System.currentTimeMillis()+3000;
 					continue;
 				}
 				EditorUI ed = editors.get(s);
@@ -162,12 +171,26 @@ public class SerialMain extends MainPanel implements FocusListener,KeyListener {
 
 	@Override
 	public void keyTyped(KeyEvent e) {
-		//Log.debug("key typed %d", (int)e.getKeyChar());
-		keysToSend.append(e.getKeyChar());
+		Log.debug("key typed %d", (int)e.getKeyChar());
+		char c = e.getKeyChar();
+		keysToSend.append(c);
 		e.consume();
 	}
 	@Override
 	public void keyPressed(KeyEvent e) {
+		Log.debug("key pressed %d", e.getKeyCode());
+		if (e.getKeyCode() == 38) { //up
+			keysToSend.append(Ansi.CSI+"A");
+		}
+		else if (e.getKeyCode() == 40) { //down
+			keysToSend.append(Ansi.CSI+"B");
+		}
+		else if (e.getKeyCode() == 39) { //right
+			keysToSend.append(Ansi.CSI+"C");
+		}
+		else if (e.getKeyCode() == 37) { //left
+			keysToSend.append(Ansi.CSI+"D");
+		}
 	}
 	@Override
 	public void keyReleased(KeyEvent e) {

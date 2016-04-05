@@ -13,13 +13,14 @@ import java.util.HashSet;
 import java.util.Set;
 
 import javax.swing.BorderFactory;
-import javax.swing.JEditorPane;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JTextPane;
 import javax.swing.KeyStroke;
 import javax.swing.border.Border;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.Document;
+import javax.swing.text.JTextComponent;
 
 import sys.Log;
 import text.Ansi;
@@ -31,7 +32,7 @@ public class EditorUI extends JPanel implements FocusListener {
 	final static Border focusedBorder = BorderFactory.createLineBorder(Color.GRAY, 3);
 	final static Border unfocusedBorder = BorderFactory.createEmptyBorder(3, 3, 3, 3);
 
-	private JEditorPane editor = new JEditorPane();
+	private JTextComponent editor = new JTextPane();
 
 
 	//to get focus component must satisfy: 1.visible, 2.enabled, 3. focusable
@@ -76,6 +77,7 @@ public class EditorUI extends JPanel implements FocusListener {
 		if (s.length() == 0) return ;
 		try {
 			Document doc = editor.getDocument();
+
 			doc.insertString(doc.getLength(), s, null);
 			editor.setCaretPosition(doc.getLength());
 		} catch (BadLocationException e) {}
@@ -96,7 +98,11 @@ public class EditorUI extends JPanel implements FocusListener {
 			}
 			else if (c < 0x20 || c > 0x80) {
 				if (c == '\t'||c=='\n'||c=='\r') s.append(c);
-				else if (c == '\u0007' || c == '\u0008') { //backspace
+				else if (c == 7) { //del
+					Log.debug("DEL");
+				}
+				else if (c == 8) { //backspace
+					Log.debug("BS");
 					int p = editor.getCaretPosition();
 					if (p > 0) {
 						--p;
@@ -140,5 +146,25 @@ public class EditorUI extends JPanel implements FocusListener {
 	public void focusLost(FocusEvent e) {
 		setBorder(unfocusedBorder);
 		editor.getCaret().setVisible(false);
+	}
+
+	public void clear() {
+		Document doc = editor.getDocument();
+		//Log.debug("clear: %s", Text.vis(doc.));
+		int p = doc.getLength();
+		while (p > 0) {
+			try {
+				if (doc.getText(p-1, 1).equals("\n")) break;
+			} catch (BadLocationException e1) {}
+			--p;
+		}
+
+		if (p != doc.getLength()) {
+			try {
+				doc.remove(p, doc.getLength()-p);
+			} catch (BadLocationException e) {}
+			editor.setCaretPosition(p);
+			editor.repaint();
+		}
 	}
 }

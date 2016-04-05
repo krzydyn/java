@@ -19,9 +19,20 @@ public class Ansi {
 		public final static char ESC = (char)0x1b;
 	}
 
+	// Character Sequence Information
 	public final static String CSI_C0 = "\u001b[";
 	public final static String CSI_C1 = "\u009b"; //only on 8bit terminal
 	public final static String CSI = CSI_C0;
+
+	public final static String CURSOR_UP = CSI + "A"; // CSI+n+"A" move cursor n cells up
+
+	public final static String CLEAR_END = CSI + "J"; // clear from cursor to end of screen
+	public final static String CLEAR_BEG = CSI + "1J"; // clear from cursor to beginning of screen
+	public final static String CLEAR_ALL = CSI + "2J"; // clear entire screen
+
+	public final static String ERASE_LN = CSI + "K";
+	public final static String SCROLL_UP = CSI + "S";
+	public final static String SCROLL_DN = CSI + "T";
 
 	public final static String SCR_MODE19 = CSI + "=19h";// 320x200 256colors
 	public final static String SCR_RESET19 = CSI + "=19l";
