@@ -13,8 +13,8 @@ public class Serial {
 	static public class Param {
 		final static public int DATA_7 = SerialPort.DATABITS_7;
 		final static public int DATA_8 = SerialPort.DATABITS_8;
-		final static public int STOP_0 = 0;
 		final static public int STOP_1 = SerialPort.STOPBITS_1;
+		final static public int STOP_2 = SerialPort.STOPBITS_2;
 		final static public int FLOW_NONE = SerialPort.FLOWCONTROL_NONE;
 		final static public int FLOW_RTSCTS = SerialPort.FLOWCONTROL_RTSCTS_IN|SerialPort.FLOWCONTROL_RTSCTS_OUT;
 	}
@@ -36,6 +36,7 @@ public class Serial {
 	        } else {
 	        	commPort = portIdentifier.open(this.getClass().getName(),2000);
 	        }
+	        //setup default reading timeout
 	        commPort.enableReceiveTimeout(100);
 		} catch (Throwable e) {
 			throw new IOException("open " + portName, e);
@@ -55,7 +56,7 @@ public class Serial {
 		try {
 	        if (commPort instanceof SerialPort) {
 	            SerialPort serialPort = (SerialPort) commPort;
-	            serialPort.setSerialPortParams(115200,SerialPort.DATABITS_8,SerialPort.STOPBITS_1,SerialPort.FLOWCONTROL_NONE);
+	            serialPort.setSerialPortParams(speed,databits,SerialPort.STOPBITS_1,SerialPort.FLOWCONTROL_NONE);
 	        } else {
 	            throw new RuntimeException("Must be serial port");
 	        }

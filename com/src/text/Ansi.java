@@ -6,25 +6,53 @@ package text;
  * Sources:
  * https://en.wikipedia.org/wiki/ANSI_escape_code
  * http://ascii-table.com/ansi-escape-sequences.php
+ * http://invisible-island.net/xterm/ctlseqs/ctlseqs.html
  */
 
 public class Ansi {
 	public static class Code {
-		public final static char NUL = (char)0x0;
-		public final static char STX = (char)0x1; // Start Transmission Block
-		public final static char SOT = (char)0x2; // Start Of Text
-		public final static char ETX = (char)0x3; // End Transmission Block
-		public final static char EOT = (char)0x4; // End Of Text
-		public final static char ENQ = (char)0x5; // Enquire ("I am ready")
-		public final static char ACK = (char)0x6; // Acknowledge
-		public final static char DEL = (char)0x7;
-		public final static char BS = (char)0x8;
-		public final static char HT = (char)0x9;
-		public final static char LF = (char)0xa;
-		public final static char CR = (char)0xd;
+		/** Null */				public final static char NUL = (char)0x0;
+		/** Start of Header */	public final static char SOH = (char)0x1;
+		/** Start of Text */	public final static char STX = (char)0x2;
+		/** End of Text */		public final static char ETX = (char)0x3;
+		/** End of Transmit */	public final static char EOT = (char)0x4;
+		/** Enquire */			public final static char ENQ = (char)0x5;
+		/** Acknowledge */		public final static char ACK = (char)0x6;
+		/** Bell */				public final static char BEL = (char)0x7;
+		/** Backspace */		public final static char BS = (char)0x8;
+		/** Horizontal Tab */	public final static char HT = (char)0x9;
+		/** Line Feed */		public final static char LF = (char)0xa;
+		/** Vertical Tab */		public final static char VT = (char)0xb;
+		/** Form Feed */		public final static char FF = (char)0xc;
+		/** Carriage Return */	public final static char CR = (char)0xd;
+		/** Shift Out */		public final static char SO = (char)0xe;
+		/** Shift In */			public final static char SI = (char)0xf;
+		/** Data Link Escape */	public final static char DLE = (char)0x10;
+		/** Device Control 1 */	public final static char DC1 = (char)0x11;
+		/** Device Control 2 */	public final static char DC2 = (char)0x12;
+		/** Device Control 3 */	public final static char DC3 = (char)0x13;
+		/** Device Control 4 */	public final static char DC4 = (char)0x14;
+		/** Negative Ack */		public final static char NAK = (char)0x15;
+		/** Synchronous idle */	public final static char SYN = (char)0x16;
+		/** End Trans. Block */	public final static char ETB = (char)0x17;
+		/** Cancel (last op)*/	public final static char CAN = (char)0x18;
+		/** End of Medium */	public final static char EM = (char)0x19;
+		/** Substitute */		public final static char SUB = (char)0x1a;
+		/** Escape */ 			public final static char ESC = (char)0x1b;
+		/** File Separator */	public final static char FS = (char)0x1c;
+		/** Group Separator */	public final static char GS = (char)0x1d;
+		/** Record Separator */	public final static char RS = (char)0x1e;
+		/** Unit Separator */	public final static char US = (char)0x1f;
+	}
 
-		public final static char NAK = (char)0x15; // Not Acknowledge
-		public final static char ESC = (char)0x1b;
+	private final static String[] CODENAME = {
+		"NUL", "STX", "SOT", "ETX", "EOT", "ENQ", "ACK", "BEL",  "BS", "HT",  "LF",  "VT", "FF", "CR", "SO", "SI",
+		"DLE", "DC1", "DC2", "DC3", "DC4", "NAK", "SYN", "ETB", "CAN", "EM", "SUB", "ESC", "FS", "GS", "RS", "US"
+	};
+	public final static String codeName(int code) {
+		if (code >= 0 && code < CODENAME.length) return String.format("<%s>", CODENAME[code]);
+		if (Character.isAlphabetic(code)) return String.format("%c", code);
+		return String.format("<%02X>", code);
 	}
 
 	// Character Sequence Information

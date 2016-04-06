@@ -69,19 +69,19 @@ public class Text {
 		return hex(b, s).toString();
 	}
 
-	public static StringBuilder vis(StringBuilder b, byte[] s, int offs, int len) {
+	public static StringBuilder vis(StringBuilder b, byte[] s, int off, int len) {
 		b.ensureCapacity(b.length()+s.length);
 		for (int i=0; i<len; ++i) {
-			if (offs+i >= s.length) throw new IndexOutOfBoundsException();
-			char c=(char)s[offs+i];
+			if (off+i >= s.length) throw new IndexOutOfBoundsException();
+			char c=(char)s[off+i];
 			if (c>0x20 && c<0x80) b.append(c);
 			else b.append(String.format("<%X>", c&0xffff));
 		}
 		return b;
 	}
-	public static String vis(byte[] s, int offs, int len) {
+	public static String vis(byte[] s, int off, int len) {
 		StringBuilder b=new StringBuilder(s.length);
-		return vis(b, s, offs, len).toString();
+		return vis(b, s, off, len).toString();
 	}
 	public static String vis(byte[] s) {
 		StringBuilder b=new StringBuilder(s.length);

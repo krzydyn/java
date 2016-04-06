@@ -12,7 +12,7 @@ public class T_SelectorThread extends UnitTest {
 	//static String HOST = "stackoverflow.com";
 	static String HOST = "www.google.com";
 	//static String HOST = "104.16.33.249";
-	
+
 	static void startStop() throws Exception {
 		SelectorThread t=new SelectorThread();
 		t.start();
@@ -21,9 +21,6 @@ public class T_SelectorThread extends UnitTest {
 	}
 
 	static void connectTCP() throws Exception {
-		if (true) {
-			return ;
-		}
 		final byte[] CRLF = "\r\n".getBytes();
 		final ByteBuffer data = ByteBuffer.allocate(100*1024);
 		data.put("GET /?gfe_rd=cr&ei=uUfgVvPuEeza8Afh9IbIDQ&gws_rd=cr HTTP/1.1".getBytes());
@@ -35,10 +32,12 @@ public class T_SelectorThread extends UnitTest {
 		SelectorThread t=new SelectorThread();
 		t.start();
 		t.connect(HOST, 80, new ChannelStatusHandler(){
+			@Override
 			public void connected(SelectorThread st, ChannelWriter w) {
 				Log.debug("connected!");
 				w.write(st, data);
-			}			
+			}
+			@Override
 			public void received(SelectorThread st, ChannelWriter w, ByteBuffer buf) {
 				String rep = new String(buf.array(), buf.position(), buf.limit());
 				Log.debug("data[%d]:  %s",rep.length(), rep);

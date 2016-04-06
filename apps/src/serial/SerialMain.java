@@ -6,7 +6,6 @@ import java.awt.BorderLayout;
 import java.awt.GridLayout;
 import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
-import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.util.ArrayList;
@@ -14,11 +13,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.swing.InputMap;
 import javax.swing.JPanel;
-import javax.swing.KeyStroke;
 
 import sys.Log;
+import sys.XThread;
 import text.Ansi;
 import ui.MainPanel;
 
@@ -59,9 +57,10 @@ public class SerialMain extends MainPanel implements FocusListener,KeyListener {
 
 		add(p,BorderLayout.CENTER);
 
-		InputMap im=getInputMap();
+		/*InputMap im=getInputMap();
 		getActionMap().remove(im.get(KeyStroke.getKeyStroke(KeyEvent.VK_TAB, 0)));
 		getActionMap().remove(im.get(KeyStroke.getKeyStroke(KeyEvent.VK_TAB, InputEvent.SHIFT_DOWN_MASK)));
+		*/
 
 		new Thread(new Runnable() {
 			@Override
@@ -94,7 +93,7 @@ public class SerialMain extends MainPanel implements FocusListener,KeyListener {
 					try {
 						if (!s.isOpen()) {
 							s.open();
-							s.setParams(115200, Serial.Param.DATA_8, Serial.Param.STOP_0, Serial.Param.FLOW_NONE);
+							s.setParams(115200, Serial.Param.DATA_8, Serial.Param.STOP_1, Serial.Param.FLOW_NONE);
 							ed.append("Port opened\n");
 						}
 					}
@@ -105,7 +104,7 @@ public class SerialMain extends MainPanel implements FocusListener,KeyListener {
 				}
 			}
 
-			if (keysToSend.length() > 0) {
+			while (keysToSend.length() > 0) {
 				Serial sfoc = null;
 				for (Serial s : ports) {
 					if (editors.get(s) == focused) {
@@ -116,9 +115,6 @@ public class SerialMain extends MainPanel implements FocusListener,KeyListener {
 
 				byte[] b = null;
 				synchronized (keysToSend) {
-					if (keysToSend.indexOf(Ansi.CSI) >= 0) {
-						focused.clear();
-					}
 					if (sfoc!=null && sfoc.isOpen())
 						b = keysToSend.toString().getBytes();
 					keysToSend.setLength(0);
@@ -130,6 +126,7 @@ public class SerialMain extends MainPanel implements FocusListener,KeyListener {
 						Log.error(e);
 					}
 				}
+				XThread.sleep(100);
 			}
 
 			for (Serial s : ports) {
@@ -140,15 +137,18 @@ public class SerialMain extends MainPanel implements FocusListener,KeyListener {
 				}
 				EditorUI ed = editors.get(s);
 				try {
-					int r = s.read(buffer, 0, buffer.length);
-					if (r > 0) {
+					int r, n=5;
+					while ((r = s.read(buffer, 0, buffer.length)) > 0) {
 						ed.append(buffer, 0, r);
+						if (r < buffer.length) break;
+						if (--n == 0) {Log.warn("counter zero"); break;}
 					}
 				}catch(Throwable e) {
 					Log.error(e);
 					s.close();
 					ed.append("Port closed on error\n");
 				}
+				if (keysToSend.length() > 0) break;
 			}
 		}
 
@@ -180,9 +180,11 @@ public class SerialMain extends MainPanel implements FocusListener,KeyListener {
 	public void keyPressed(KeyEvent e) {
 		Log.debug("key pressed %d", e.getKeyCode());
 		if (e.getKeyCode() == 38) { //up-arrow
+			focused.clear();
 			keysToSend.append(Ansi.CSI+"A");
 		}
 		else if (e.getKeyCode() == 40) { //down-arrow
+			focused.clear();
 			keysToSend.append(Ansi.CSI+"B");
 		}
 		else if (e.getKeyCode() == 39) { //right-arrow

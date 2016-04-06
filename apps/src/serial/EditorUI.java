@@ -6,9 +6,7 @@ import java.awt.Font;
 import java.awt.KeyboardFocusManager;
 import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
+import java.awt.event.KeyListener;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -23,10 +21,20 @@ import javax.swing.text.Document;
 import javax.swing.text.JTextComponent;
 
 import sys.Log;
+import sys.Sound;
 import text.Ansi;
 import text.Text;
 import ui.MainPanel;
 
+/**
+ *
+ * @author k.dynowski
+ *
+ */
+
+//TODO rename it to AnsiTerminal
+// input: swing events system -> sent to remote OutputStream
+// output: JTextComponent <- responses from remote InputStream
 @SuppressWarnings("serial")
 public class EditorUI extends JPanel implements FocusListener {
 	final static Border focusedBorder = BorderFactory.createLineBorder(Color.GRAY, 3);
@@ -34,44 +42,55 @@ public class EditorUI extends JPanel implements FocusListener {
 
 	private JTextComponent editor = new JTextPane();
 
-
 	//to get focus component must satisfy: 1.visible, 2.enabled, 3. focusable
 	public EditorUI(String t, boolean editable) {
 		super(new BorderLayout());
 		setName(t);
-		setFocusable(true);
-
-		MouseListener ml = new MouseAdapter() {
-			@Override
-			public void mouseClicked(MouseEvent e) {
-				if (isFocusOwner()) return ;
-				if (!requestFocusInWindow()) {
-					Log.error("can't focus on %s\n", getName());
-				}
-			}
-		};
 
 		setBorder(unfocusedBorder);
 
 		editor.setFont(Font.decode(Font.MONOSPACED));
 		editor.setEditable(editable);
-		editor.setFocusable(editable);
-		editor.setEnabled(false); //disabled editor does not receive focus
+		editor.setFocusable(true); // this allow selection of text
+
 		editor.setBackground(Color.DARK_GRAY);
 		editor.setForeground(Color.LIGHT_GRAY);
 		editor.setCaretColor(Color.WHITE);
-		editor.addMouseListener(ml);
-		addMouseListener(ml);
-		addFocusListener(this);
+		editor.addFocusListener(this);
 
 		//don't traversal
 		Set<KeyStroke> emptyset = new HashSet<KeyStroke>();
-		setFocusTraversalKeys(KeyboardFocusManager.FORWARD_TRAVERSAL_KEYS,emptyset);
-		setFocusTraversalKeys(KeyboardFocusManager.BACKWARD_TRAVERSAL_KEYS,emptyset);
+		editor.setFocusTraversalKeys(KeyboardFocusManager.FORWARD_TRAVERSAL_KEYS,emptyset);
+		editor.setFocusTraversalKeys(KeyboardFocusManager.BACKWARD_TRAVERSAL_KEYS,emptyset);
 
 		add(new JLabel(t), BorderLayout.NORTH);
 		add(MainPanel.createScrolledPanel(editor), BorderLayout.CENTER);
 	}
+
+	@Override
+	public void addKeyListener(KeyListener l) {
+		editor.addKeyListener(l);
+	}
+	@Override
+	public void addFocusListener(final FocusListener l) {
+		editor.addFocusListener(new FocusListener() {
+			@Override
+			public void focusLost(FocusEvent e) {
+				e.setSource(EditorUI.this);
+				l.focusLost(e);
+			}
+			@Override
+			public void focusGained(FocusEvent e) {
+				e.setSource(EditorUI.this);
+				l.focusGained(e);
+			}
+		});
+	}
+
+	private void dong() {
+		try { Sound.dong(); } catch (Exception e) {}
+	}
+
 
 	public void append(String s) {
 		if (s.length() == 0) return ;
@@ -82,27 +101,36 @@ public class EditorUI extends JPanel implements FocusListener {
 			editor.setCaretPosition(doc.getLength());
 		} catch (BadLocationException e) {}
 	}
+	private StringBuilder textcache = new StringBuilder(1024);
 	public void append(byte[] b, int off, int len) {
-		StringBuilder s = new StringBuilder(len);
-		boolean escseq = false;
+		//Log.debug("appending: %s", Text.vis(b, off, len));
+		boolean escseq = textcache.length()>0;
 		for (int i=0; i<len; ++i) {
-			if (off+i >= b.length) throw new IndexOutOfBoundsException();
+
 			char c = (char)(b[off+i]&0xff);
 			if (escseq) {
-				s.append(c);
-				if (Character.isLowerCase(c)) {
-					Log.debug("eseq=%s", Text.vis(s.toString()));
-					s.setLength(0);
+				textcache.append(c);
+				if (Character.isLetter(c)) {
+					Log.debug("%s: seq=%s", getName(), Text.vis(textcache.toString()));
+					textcache.setLength(0);
 					escseq=false;
 				}
 			}
-			else if (c < 0x20 || c > 0x80) {
-				if (c == '\t'||c=='\n'||c=='\r') s.append(c);
-				else if (c == 7) { //del
-					Log.debug("DEL");
+			else if (c < 0x20) {
+				if (c == Ansi.Code.CR) {
+					append(textcache.toString());
+					textcache.setLength(0);
 				}
-				else if (c == 8) { //backspace
-					Log.debug("BS");
+				else if (c == Ansi.Code.BEL) {
+					dong();
+				}
+				else if (c == Ansi.Code.VT) {
+					textcache.append('\n');
+				}
+				else if (c == Ansi.Code.HT || c == Ansi.Code.LF) {
+					textcache.append(c);
+				}
+				else if (c == Ansi.Code.BS) {
 					int p = editor.getCaretPosition();
 					if (p > 0) {
 						--p;
@@ -116,23 +144,21 @@ public class EditorUI extends JPanel implements FocusListener {
 				}
 				else if (c == Ansi.Code.ESC) {
 					escseq=true;
-					if (s.length() > 0) {
-						append(s.toString());
-						s.setLength(0);
-					}
+					append(textcache.toString());
+					textcache.setLength(0);
+					textcache.append(c);
 				}
 				else {
-					s.append(String.format("<%x>",(int)c));
+					Log.debug("%s: Ignore %s", getName(), Ansi.codeName(c));
 				}
 			}
 			else {
-				s.append(c);
+				textcache.append(c);
 			}
 		}
-		if (s.length() > 0) {
-			if (escseq) Log.debug("eseq=%s", Text.vis(s.toString()));
-			else append(s.toString());
-			s.setLength(0);
+		if (!escseq) {
+			append(textcache.toString());
+			textcache.setLength(0);
 		}
 	}
 

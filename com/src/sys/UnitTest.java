@@ -16,6 +16,16 @@ public class UnitTest {
 	final static private String classExt = ".class";
 	final static private Object[] empty = null;
 	final static private LapTime time=new LapTime("s");
+	final static private List<TestSummary> summary = new ArrayList<UnitTest.TestSummary>();
+
+	private static class TestSummary {
+		String testunit;
+		String testcase;
+		int checks;
+		int errors;
+	}
+
+	static TestSummary current;
 
 	static ClassLoader getClassLoader() {
 		//return ClassLoader.getSystemClassLoader();
@@ -76,6 +86,12 @@ public class UnitTest {
 				}
 				if ("main".equals(m.getName())) continue;
 
+
+				current = new TestSummary();
+				summary.add(current);
+				current.testunit = unit;
+				current.testcase = m.getName();
+
 				time.nextLap();
 				Log.info("  ** Testcase: %s start", m.getName());
 				try {
@@ -83,11 +99,13 @@ public class UnitTest {
 					m.setAccessible(true);
 					m.invoke(null, empty);
 				} catch (Throwable e) {
+					current.errors=-1;
 					Log.error(1,"Error in %s.%s", unit, m.getName());
 					e.printStackTrace();
 				} finally {
 					time.update(0);
 					Log.info("  ** Testcase: %s end in %.3f sec", m.getName(), time.getTime()/1000.0);
+					current=null;
 				}
 			}
 		} catch (ClassNotFoundException e) {
@@ -110,28 +128,40 @@ public class UnitTest {
 
 	static public void test(Iterable<String> units) {
 		for (String u : units) test(u);
+		Log.info("* *********** ");
+		Log.info("* Tests: %d", summary.size());
+		for (TestSummary s : summary) {
+			Log.info("%s.%s: %d/%d", s.testunit, s.testcase, s.errors, s.checks);
+		}
 	}
 	static public void test(String[] units) {
 		for (String u : units) test(u);
 	}
 	protected static void check(boolean r, String msg) {
+		++current.checks;
 		if (!r) {
 			Log.error(1, "check failed: (false) %s", msg);
+			++current.errors;
 		}
 	}
 	protected static void check(String t1, String t2) {
+		++current.checks;
 		if (!t1.equals(t2)) {
 			Log.error(1, "check failed: '%s'!='%s'", t1, t2);
+			++current.errors;
 		}
 	}
 	protected static void check(byte[] t1, byte[] t2) {
+		++current.checks;
 		if (t1.length != t2.length) {
 			Log.error(1, "check failed: length %d!=%d", t1.length, t2.length);
+			++current.errors;
 			return ;
 		}
 		for (int i =0; i < t1.length; ++i) {
 			if (t1[i] != t2[i]) {
 				Log.error(1, "check failed: byte[%d] %d!=%d", i, t1[i], t2[i]);
+				++current.errors;
 				return ;
 			}
 		}
