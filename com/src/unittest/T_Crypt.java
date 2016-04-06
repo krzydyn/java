@@ -13,7 +13,6 @@ public class T_Crypt extends UnitTest {
 		for (int i =0; i < primes.length; ++i) {
 			check(primes[i]==Prime.PRIMES[i], String.format("error at %d %d!=%d",i,primes[i],Prime.PRIMES[i]));
 		}
-		//Log.debug("Primes: %s", Text.join(Prime.PRIMES, ","));
 	}
 	static void encodeBase64() throws Exception {
 		check(Base64.encode(new byte[] {'1'}), "MQ==");
@@ -32,8 +31,17 @@ public class T_Crypt extends UnitTest {
 		check(Base64.decode("Nzg5MEFC"), new byte[] {'7','8','9','0', 'A', 'B'});
 	}
 	static void rsa() {
-		new RSA(1024);
-		new RSA(1024,BigInteger.valueOf(3));
-		new RSA(1024,BigInteger.valueOf(0x10001));
+		checkNoThrow(new Runnable() {
+			@Override
+			public void run() {new RSA(1024);}
+		});
+		checkNoThrow(new Runnable() {
+			@Override
+			public void run() {new RSA(1024,BigInteger.valueOf(3));}
+		});
+		checkNoThrow(new Runnable() {
+			@Override
+			public void run() {new RSA(1024,BigInteger.valueOf(0x10001));}
+		});
 	}
 }

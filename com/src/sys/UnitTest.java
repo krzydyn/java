@@ -131,11 +131,31 @@ public class UnitTest {
 		Log.info("* *********** ");
 		Log.info("* Tests: %d", summary.size());
 		for (TestSummary s : summary) {
-			Log.info("%s.%s: %d/%d", s.testunit, s.testcase, s.errors, s.checks);
+			Log.info("%s.%s:  %d / %d", s.testunit, s.testcase, s.checks-s.errors, s.checks);
 		}
 	}
 	static public void test(String[] units) {
 		for (String u : units) test(u);
+	}
+
+	protected static void checkNoThrow(Runnable r) {
+		++current.checks;
+		try {
+			r.run();
+		} catch (Throwable e) {
+			++current.errors;
+		}
+	}
+	protected static void checkThrow(Runnable r, Class<? extends Throwable> c) {
+		++current.checks;
+		try {
+			r.run();
+			++current.errors;
+		} catch (Throwable e) {
+			if (!e.getClass().isAssignableFrom(c)) {
+				++current.errors;
+			}
+		}
 	}
 	protected static void check(boolean r, String msg) {
 		++current.checks;
