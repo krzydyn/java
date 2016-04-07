@@ -1,8 +1,9 @@
+package test;
 import java.util.HashMap;
 import java.util.Map;
 
 
-public class Test implements Runnable {
+public class LockString implements Runnable {
 	
 	private Map<String,Object> locks=new HashMap<String,Object>();
 	
@@ -54,7 +55,7 @@ public class Test implements Runnable {
     }
 
 	public static void main(String[] args) {
-		final Test t = new Test();
+		final LockString t = new LockString();
 		Thread ths[] = new Thread[30];
 		for (int i=0; i < ths.length; ++i)
 			ths[i]=new Thread(t, String.valueOf(i));
