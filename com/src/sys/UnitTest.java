@@ -138,7 +138,11 @@ public class UnitTest {
 		for (String u : units) test(u);
 	}
 
-	protected static void checkNoThrow(Runnable r) {
+	static public interface RunThrowable {
+		public void run() throws Throwable;
+	}
+
+	protected static void checkNoThrow(RunThrowable r) {
 		++current.checks;
 		try {
 			r.run();
@@ -146,7 +150,7 @@ public class UnitTest {
 			++current.errors;
 		}
 	}
-	protected static void checkThrow(Runnable r, Class<? extends Throwable> c) {
+	protected static void checkThrow(RunThrowable r, Class<? extends Throwable> c) {
 		++current.checks;
 		try {
 			r.run();

@@ -4,10 +4,6 @@ import io.Serial;
 
 import java.awt.BorderLayout;
 import java.awt.GridLayout;
-import java.awt.event.FocusEvent;
-import java.awt.event.FocusListener;
-import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -16,19 +12,14 @@ import java.util.Map;
 import javax.swing.JPanel;
 
 import sys.Log;
-import sys.XThread;
-import text.Ansi;
 import ui.MainPanel;
 
 @SuppressWarnings("serial")
-public class SerialMain extends MainPanel implements FocusListener,KeyListener {
+public class SerialMain extends MainPanel {
 
 	private List<Serial> ports = new ArrayList<Serial>();
-	private Map<Serial,EditorUI> editors = new HashMap<Serial,EditorUI>();
+	private Map<Serial,AnsiTerminal> editors = new HashMap<Serial,AnsiTerminal>();
 	private boolean running = false;
-
-	private EditorUI focused;
-	private StringBuilder keysToSend = new StringBuilder(50);
 
 	public SerialMain() {
 		JPanel p;
@@ -48,19 +39,12 @@ public class SerialMain extends MainPanel implements FocusListener,KeyListener {
 		}
 
 		for (Serial sp : ports) {
-			EditorUI e = new EditorUI(sp.getName(), false);
+			AnsiTerminal e = new AnsiTerminal(sp.getName(), false);
 			p.add(e);
-			e.addFocusListener(this);
-			e.addKeyListener(this);
 			editors.put(sp, e);
 		}
 
 		add(p,BorderLayout.CENTER);
-
-		/*InputMap im=getInputMap();
-		getActionMap().remove(im.get(KeyStroke.getKeyStroke(KeyEvent.VK_TAB, 0)));
-		getActionMap().remove(im.get(KeyStroke.getKeyStroke(KeyEvent.VK_TAB, InputEvent.SHIFT_DOWN_MASK)));
-		*/
 
 		new Thread(new Runnable() {
 			@Override
@@ -83,50 +67,41 @@ public class SerialMain extends MainPanel implements FocusListener,KeyListener {
 	}
 
 	public void readloop() {
-		byte[] buffer = new byte[4*1024];
+		byte[] buffer = new byte[1024];
 		long reopen = System.currentTimeMillis()-1;
 		while (running) {
 			if (reopen!=0 && reopen < System.currentTimeMillis()) {
 				reopen = 0;
 				for (Serial s : ports) {
-					EditorUI ed = editors.get(s);
+					AnsiTerminal trm = editors.get(s);
 					try {
 						if (!s.isOpen()) {
 							s.open();
 							s.setParams(115200, Serial.Param.DATA_8, Serial.Param.STOP_1, Serial.Param.FLOW_NONE);
-							ed.append("Port opened\n");
+							trm.write("Port opened\n");
 						}
 					}
 					catch (Throwable e) {
 						Log.error("%s", e);
-						ed.append("Open failed\n");
+						trm.write("Open failed\n");
 					}
 				}
 			}
 
-			while (keysToSend.length() > 0) {
-				Serial sfoc = null;
-				for (Serial s : ports) {
-					if (editors.get(s) == focused) {
-						sfoc = s;
-						break;
-					}
+			for (Serial s : ports) {
+				AnsiTerminal trm = editors.get(s);
+				if (!s.isOpen()) {
+					trm.flushImput();
+					continue;
 				}
-
-				byte[] b = null;
-				synchronized (keysToSend) {
-					if (sfoc!=null && sfoc.isOpen())
-						b = keysToSend.toString().getBytes();
-					keysToSend.setLength(0);
-				}
-				if (b!=null) {
+				int r = trm.getInputBuffer(buffer);
+				if (r > 0) {
 					try {
-						sfoc.write(b, 0, b.length);
-					}catch(Exception e) {
+						s.write(buffer, 0, r);
+					}catch(Throwable e) {
 						Log.error(e);
 					}
 				}
-				XThread.sleep(100);
 			}
 
 			for (Serial s : ports) {
@@ -135,20 +110,19 @@ public class SerialMain extends MainPanel implements FocusListener,KeyListener {
 						reopen = System.currentTimeMillis()+3000;
 					continue;
 				}
-				EditorUI ed = editors.get(s);
+				AnsiTerminal trm = editors.get(s);
 				try {
 					int r, n=5;
 					while ((r = s.read(buffer, 0, buffer.length)) > 0) {
-						ed.append(buffer, 0, r);
+						trm.write(buffer, 0, r);
 						if (r < buffer.length) break;
 						if (--n == 0) {Log.warn("counter zero"); break;}
 					}
 				}catch(Throwable e) {
 					Log.error(e);
 					s.close();
-					ed.append("Port closed on error\n");
+					trm.write("Port closed on error\n");
 				}
-				if (keysToSend.length() > 0) break;
 			}
 		}
 
@@ -156,46 +130,6 @@ public class SerialMain extends MainPanel implements FocusListener,KeyListener {
 		for (Serial s : ports) {
 			s.close();
 		}
-	}
-
-
-	@Override
-	public void focusGained(FocusEvent e) {
-		focused = (EditorUI)e.getSource();
-		Log.debug("Focused %s", focused.getName());
-	}
-	@Override
-	public void focusLost(FocusEvent e) {
-		//focused = null;
-	}
-
-	@Override
-	public void keyTyped(KeyEvent e) {
-		Log.debug("key typed %d", (int)e.getKeyChar());
-		char c = e.getKeyChar();
-		keysToSend.append(c);
-		e.consume();
-	}
-	@Override
-	public void keyPressed(KeyEvent e) {
-		Log.debug("key pressed %d", e.getKeyCode());
-		if (e.getKeyCode() == 38) { //up-arrow
-			focused.clear();
-			keysToSend.append(Ansi.CSI+"A");
-		}
-		else if (e.getKeyCode() == 40) { //down-arrow
-			focused.clear();
-			keysToSend.append(Ansi.CSI+"B");
-		}
-		else if (e.getKeyCode() == 39) { //right-arrow
-			keysToSend.append(Ansi.CSI+"C");
-		}
-		else if (e.getKeyCode() == 37) { //left-arrow
-			keysToSend.append(Ansi.CSI+"D");
-		}
-	}
-	@Override
-	public void keyReleased(KeyEvent e) {
 	}
 
 	public static void main(String[] args) {

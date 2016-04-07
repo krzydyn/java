@@ -11,12 +11,15 @@ import gnu.io.SerialPort;
 
 public class Serial {
 	static public class Param {
+		final static public int DATA_5 = SerialPort.DATABITS_5;
+		final static public int DATA_6 = SerialPort.DATABITS_6;
 		final static public int DATA_7 = SerialPort.DATABITS_7;
 		final static public int DATA_8 = SerialPort.DATABITS_8;
 		final static public int STOP_1 = SerialPort.STOPBITS_1;
 		final static public int STOP_2 = SerialPort.STOPBITS_2;
 		final static public int FLOW_NONE = SerialPort.FLOWCONTROL_NONE;
 		final static public int FLOW_RTSCTS = SerialPort.FLOWCONTROL_RTSCTS_IN|SerialPort.FLOWCONTROL_RTSCTS_OUT;
+		final static public int FLOW_XONXOFF = SerialPort.FLOWCONTROL_XONXOFF_IN|SerialPort.FLOWCONTROL_XONXOFF_OUT;
 	}
 	private String portName;
 	private CommPort commPort;
@@ -52,11 +55,11 @@ public class Serial {
 		return commPort != null;
 	}
 
-	public void setParams(int speed, int databits, int stopbits, int flow) {
+	public void setParams(int speed, int databits, int stopbits, int flowcontrol) {
 		try {
 	        if (commPort instanceof SerialPort) {
 	            SerialPort serialPort = (SerialPort) commPort;
-	            serialPort.setSerialPortParams(speed,databits,SerialPort.STOPBITS_1,SerialPort.FLOWCONTROL_NONE);
+	            serialPort.setSerialPortParams(speed,databits,stopbits,flowcontrol);
 	        } else {
 	            throw new RuntimeException("Must be serial port");
 	        }

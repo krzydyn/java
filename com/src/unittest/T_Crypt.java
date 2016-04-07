@@ -31,15 +31,15 @@ public class T_Crypt extends UnitTest {
 		check(Base64.decode("Nzg5MEFC"), new byte[] {'7','8','9','0', 'A', 'B'});
 	}
 	static void rsa() {
-		checkNoThrow(new Runnable() {
+		checkNoThrow(new RunThrowable() {
 			@Override
 			public void run() {new RSA(1024);}
 		});
-		checkNoThrow(new Runnable() {
+		checkNoThrow(new RunThrowable() {
 			@Override
 			public void run() {new RSA(1024,BigInteger.valueOf(3));}
 		});
-		checkNoThrow(new Runnable() {
+		checkNoThrow(new RunThrowable() {
 			@Override
 			public void run() {new RSA(1024,BigInteger.valueOf(0x10001));}
 		});
