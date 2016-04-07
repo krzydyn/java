@@ -60,11 +60,18 @@ public class Ansi {
 	public final static String CSI_C1 = "\u009b"; //only on 8bit terminal
 	public final static String CSI = CSI_C0;
 
-	public final static String CURSOR_UP = CSI + "A"; // CSI+n+"A" move cursor n cells up
+	public final static String CURSOR_UP = CSI + "A"; // CSI n A move cursor up n times
+	public final static String CURSOR_DOWN = CSI + "B"; // CSI n A move cursor down n times
+	public final static String CURSOR_FORW = CSI + "C"; // CSI n A move cursor forward n times
+	public final static String CURSOR_BACK = CSI + "D"; // CSI n D move cursor backward n times
+	public final static String CURSOR_NEXTLN = CSI + "E"; // CSI n E move cursor next line n times
+	public final static String CURSOR_PREVLN = CSI + "F"; // CSI n F move cursor prev line n times
+	public final static String CURSOR_ROW = CSI + "G"; // CSI n G move cursor to row n (n,1)
+	public final static String CURSOR_POS = CSI + "H"; // CSI n;m H move cursor to position (n,m)
 
-	public final static String CLEAR_END = CSI + "J"; // clear from cursor to end of screen
-	public final static String CLEAR_BEG = CSI + "1J"; // clear from cursor to beginning of screen
-	public final static String CLEAR_ALL = CSI + "2J"; // clear entire screen
+	public final static String ERASE_BELOW = CSI + "J"; // clear from cursor to end of screen
+	public final static String ERASE_ABOVE = CSI + "1J"; // clear from cursor to beginning of screen
+	public final static String ERASE_ALL = CSI + "2J"; // clear entire screen
 
 	public final static String ERASE_LN = CSI + "K";
 	public final static String SCROLL_UP = CSI + "S";

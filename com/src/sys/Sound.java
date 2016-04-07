@@ -47,6 +47,6 @@ public class Sound {
 	}
 
 	static public void dong() throws Exception {
-		play(Note.E4, 100);
+		play(Note.F4, 50);
 	}
 }

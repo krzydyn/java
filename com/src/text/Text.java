@@ -41,8 +41,20 @@ public class Text {
 		}
 		return b.toString();
 	}
+	private static String join_o(Object[] a, String sep) {
+		if (a.length==0) return "";
+		StringBuilder b=new StringBuilder(a.length*(sep.length()+2));
+		b.append(a[0]);
+		for (int i = 1; i < a.length; ++i) {
+			b.append(sep);
+			b.append(a[i]);
+		}
+		return b.toString();
+	}
 	public static String join(Object o, String sep) {
+		if (o == null) return null;
 		if (o instanceof int[]) return join_i((int[])o, sep);
+		if (o instanceof Object[]) return join_o((Object[])o, sep);
 		if (o instanceof List) return join_l((List<?>)o, sep);
 		return o.toString();
 	}
