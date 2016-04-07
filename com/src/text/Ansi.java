@@ -80,11 +80,12 @@ public class Ansi {
 	public final static String SCR_MODE19 = CSI + "=19h";// 320x200 256colors
 	public final static String SCR_RESET19 = CSI + "=19l";
 
-	public final static String SGR_RESET = CSI + "0m";
-	public final static String SGR_BOLD = CSI + "1m";
+	public final static String SGR_RESET = CSI + "m";
+	public final static String SGR_BOLD = CSI + "1m"; //increased intensity
+	public final static String SGR_FAINT = CSI + "2m";//decreased intensity
 	public final static String SGR_ITALIC = CSI + "3m";
-	public final static String SGR_BOLDITALIC = CSI + "2;3m";
-	public final static String SGR_NORMAL = CSI + "22;29;39m";
+	public final static String SGR_BOLDITALIC = CSI + "1;3m";
+	public final static String SGR_NORMAL = CSI + "22m";// Normal color and intensity
 
 	public final static String SGR_BLACK = CSI + "0;30m";
 	public final static String SGR_RED = CSI + "0;31m";
