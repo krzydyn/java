@@ -131,7 +131,8 @@ public class UnitTest {
 		Log.info("* *********** ");
 		Log.info("* Tests: %d", summary.size());
 		for (TestSummary s : summary) {
-			Log.info("%s.%s:  %d / %d", s.testunit, s.testcase, s.checks-s.errors, s.checks);
+			if (s.errors!=0) Log.error(-1,"%s.%s:  %d / %d", s.testunit, s.testcase, s.checks-s.errors, s.checks);
+			else Log.info("%s.%s:  %d / %d", s.testunit, s.testcase, s.checks-s.errors, s.checks);
 		}
 	}
 	static public void test(String[] units) {
@@ -147,6 +148,7 @@ public class UnitTest {
 		try {
 			r.run();
 		} catch (Throwable e) {
+			Log.error(e);
 			++current.errors;
 		}
 	}
@@ -155,8 +157,10 @@ public class UnitTest {
 		try {
 			r.run();
 			++current.errors;
+			Log.error("Exception expected");
 		} catch (Throwable e) {
 			if (!e.getClass().isAssignableFrom(c)) {
+				Log.error(e);
 				++current.errors;
 			}
 		}
