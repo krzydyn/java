@@ -4,6 +4,8 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.KeyboardFocusManager;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
 import java.awt.event.KeyEvent;
@@ -14,6 +16,9 @@ import java.util.Set;
 import javax.swing.Action;
 import javax.swing.ActionMap;
 import javax.swing.BorderFactory;
+import javax.swing.Box;
+import javax.swing.BoxLayout;
+import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextPane;
@@ -82,14 +87,26 @@ public class AnsiTerminal extends JPanel implements FocusListener,KeyListener {
 
 		disableActions("caret-down", "caret-up", "caret-backward", "caret-forward");
 
-		add(new JLabel(t), BorderLayout.NORTH);
+		JPanel p = new JPanel(null);
+		p.setLayout(new BoxLayout(p, BoxLayout.LINE_AXIS));
+		JButton b=new JButton("C");
+		b.setFocusable(false);
+		b.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				eraseAll();
+			}
+		});
+		p.add(new JLabel(t));
+		p.add(Box.createHorizontalGlue());
+		p.add(b);
+
+		add(p, BorderLayout.NORTH);
 		add(MainPanel.createScrolledPanel(editor), BorderLayout.CENTER);
 	}
 
 	private void disableActions(String ...names) {
 		ActionMap m = editor.getActionMap();
-		//Log.debug("Action keys: %d %s", m.size(), Text.join(m.allKeys(), "\n"));
-
 		for (String n : names) {
 	        Action a = m.get(n);
 	        if (a != null) a.setEnabled(false);
@@ -109,8 +126,15 @@ public class AnsiTerminal extends JPanel implements FocusListener,KeyListener {
 
 	@Override
 	public void keyTyped(KeyEvent e) {
-		Log.debug("key typed %d", (int)e.getKeyChar());
 		char c = e.getKeyChar();
+		Log.debug("key typed %s", Ansi.toString(c));
+		if (c == Ansi.Code.LF) {
+			cursorEnd();
+		}
+		else if (c == Ansi.Code.HT) {
+			inputBuffer.setLength(0);
+			cursorLineBegin();
+		}
 		inputBuffer.append(c);
 		e.consume();
 	}
@@ -144,8 +168,8 @@ public class AnsiTerminal extends JPanel implements FocusListener,KeyListener {
 
 	private void writeBuffer() {
 		if (outputBuffer.length() == 0) return ;
-
 		int p0 = editor.getCaretPosition();
+		//Log.debug("write at %d: %s", p0, Text.vis(outputBuffer));
 		try {
 			Document doc = editor.getDocument();
 			if (p0 < doc.getLength()) {
@@ -155,7 +179,7 @@ public class AnsiTerminal extends JPanel implements FocusListener,KeyListener {
 			doc.insertString(p0, outputBuffer.toString(), attrib);
 			editor.setCaretPosition(p0+outputBuffer.length());
 			outputBuffer.setLength(0);
-		} catch (BadLocationException e) {}
+		} catch (BadLocationException e) {Log.error(e.toString());}
 	}
 
 	public void flushImput() {
@@ -247,22 +271,21 @@ public class AnsiTerminal extends JPanel implements FocusListener,KeyListener {
 		}
 		else if (c < 0x20) {
 			if (c != Ansi.Code.LF && c != Ansi.Code.CR && c != Ansi.Code.ESC && c != Ansi.Code.ENQ)
-				Log.debug("proc ansi %s", Ansi.codeName(c));
+				Log.debug("proc ansi %s", Ansi.toString(c));
 
 			if (c == Ansi.Code.CR) {
 				writeBuffer();
-				//cursorLineBegin();
 			}
 			else if (c == Ansi.Code.BEL) {
 				cursorEnd();
 				beep();
 			}
-			else if (c == Ansi.Code.VT) {
-				outputBuffer.append('\n');
-			}
-			else if (c == Ansi.Code.HT || c == Ansi.Code.LF) {
-				cursorEnd();
+			else if (c == Ansi.Code.HT) {
 				outputBuffer.append(c);
+			}
+			else if (c == Ansi.Code.VT || c == Ansi.Code.LF) {
+				cursorEnd();
+				outputBuffer.append('\n');
 			}
 			else if (c == Ansi.Code.BS) {
 				int p = editor.getCaretPosition();
@@ -276,7 +299,7 @@ public class AnsiTerminal extends JPanel implements FocusListener,KeyListener {
 				escSeq=true;
 			}
 			else {
-				Log.debug("%s: Ignore %s", getName(), Ansi.codeName(c));
+				Log.debug("%s: Ignore %s", getName(), Ansi.toString(c));
 			}
 		}
 		else {
@@ -319,7 +342,7 @@ public class AnsiTerminal extends JPanel implements FocusListener,KeyListener {
 		for (p=p0; p0 > 0; --p0) {
 			try {
 				if (doc.getText(p0-1, 1).equals("\n")) break;
-			} catch (BadLocationException e1) {}
+			} catch (BadLocationException e) {Log.error(e.toString());}
 		}
 
 		if (p != p0) {
@@ -328,14 +351,11 @@ public class AnsiTerminal extends JPanel implements FocusListener,KeyListener {
 	}
 	public void eraseAll() {
 		Document doc = editor.getDocument();
-		int p=0, p0 = doc.getLength();
-		try {
-			doc.remove(p0, p-p0);
-		} catch (BadLocationException e) {}
+		int p0=0, p = doc.getLength();
 		if (p != p0) {
 			try {
 				doc.remove(p0, p-p0);
-			} catch (BadLocationException e) {}
+			} catch (BadLocationException e) {Log.error(e.toString());}
 			editor.setCaretPosition(p0);
 		}
 	}
@@ -346,7 +366,7 @@ public class AnsiTerminal extends JPanel implements FocusListener,KeyListener {
 		if (p != p0) {
 			try {
 				doc.remove(p0, p-p0);
-			} catch (BadLocationException e) {}
+			} catch (BadLocationException e) {Log.error(e.toString());}
 			editor.setCaretPosition(p0);
 		}
 	}
@@ -357,7 +377,7 @@ public class AnsiTerminal extends JPanel implements FocusListener,KeyListener {
 		if (p != p0) {
 			try {
 				doc.remove(p0, p-p0);
-			} catch (BadLocationException e) {}
+			} catch (BadLocationException e) {Log.error(e.toString());}
 			editor.setCaretPosition(p0);
 		}
 	}
@@ -367,13 +387,13 @@ public class AnsiTerminal extends JPanel implements FocusListener,KeyListener {
 		for (p=p0; p0 > 0; --p0) {
 			try {
 				if (doc.getText(p0-1, 1).equals("\n")) break;
-			} catch (BadLocationException e1) {}
+			} catch (BadLocationException e) {Log.error(e.toString());}
 		}
 
 		if (p != p0) {
 			try {
 				doc.remove(p0, p-p0);
-			} catch (BadLocationException e) {}
+			} catch (BadLocationException e) {Log.error(e.toString());}
 			editor.setCaretPosition(p0);
 		}
 	}
@@ -383,13 +403,13 @@ public class AnsiTerminal extends JPanel implements FocusListener,KeyListener {
 		for (p=p0; p < doc.getLength(); ++p) {
 			try {
 				if (doc.getText(p, 1).equals("\n")) break;
-			} catch (BadLocationException e1) {}
+			} catch (BadLocationException e) {Log.error(e.toString());}
 		}
 
 		if (p != p0) {
 			try {
 				doc.remove(p0, p-p0);
-			} catch (BadLocationException e) {}
+			} catch (BadLocationException e) {Log.error(e.toString());}
 			editor.setCaretPosition(p0);
 		}
 	}
