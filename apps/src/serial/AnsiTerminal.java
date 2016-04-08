@@ -58,6 +58,7 @@ public class AnsiTerminal extends JPanel implements FocusListener,KeyListener {
 	};
 
 	private JTextComponent editor = new JTextPane();
+	private JLabel title = new JLabel();
 	private AttributeSet attrib = SimpleAttributeSet.EMPTY;
 	private StringBuilder inputBuffer = new StringBuilder();
 	private StringBuilder outputBuffer = new StringBuilder();
@@ -70,10 +71,11 @@ public class AnsiTerminal extends JPanel implements FocusListener,KeyListener {
 
 		setBorder(unfocusedBorder);
 
+		title.setText(t);
+
 		editor.setFont(Font.decode(Font.MONOSPACED));
 		editor.setEditable(editable);
 		editor.setFocusable(true); // this allow selection of text
-
 		editor.setBackground(Color.DARK_GRAY);
 		editor.setForeground(Color.LIGHT_GRAY);
 		editor.setCaretColor(Color.WHITE);
@@ -97,7 +99,7 @@ public class AnsiTerminal extends JPanel implements FocusListener,KeyListener {
 				eraseAll();
 			}
 		});
-		p.add(new JLabel(t));
+		p.add(title);
 		p.add(Box.createHorizontalGlue());
 		p.add(b);
 
@@ -125,24 +127,23 @@ public class AnsiTerminal extends JPanel implements FocusListener,KeyListener {
 	}
 
 	@Override
-	public void keyTyped(KeyEvent e) {
-		char c = e.getKeyChar();
-		Log.debug("key typed %s", Ansi.toString(c));
-		if (c == Ansi.Code.LF) {
-			cursorEnd();
-		}
-		else if (c == Ansi.Code.HT) {
-			inputBuffer.setLength(0);
-			cursorLineBegin();
-		}
-		inputBuffer.append(c);
-		e.consume();
-	}
+	public void keyTyped(KeyEvent e) {}
 	@Override
 	public void keyPressed(KeyEvent e) {
 		if (e.getModifiers() != 0) return ;
-
-		if (e.getKeyCode() == 38) { //up-arrow
+		//Log.debug("%s: key pressed %d", getName(), e.getKeyCode());
+		if (e.getKeyChar()!=0) {
+			char c = e.getKeyChar();
+			if (c == Ansi.Code.LF) {
+				cursorEnd();
+			}
+			else if (c == Ansi.Code.HT) {
+				flushInput();
+				cursorLineBegin();
+			}
+			inputBuffer.append(c);
+		}
+		else if (e.getKeyCode() == 38) { //up-arrow
 			inputBuffer.append(Ansi.CSI+"A");
 			cursorEnd();
 			cursorLineBegin();
@@ -158,13 +159,9 @@ public class AnsiTerminal extends JPanel implements FocusListener,KeyListener {
 		else if (e.getKeyCode() == 37) { //left-arrow
 			inputBuffer.append(Ansi.CSI+"D");
 		}
-		else if (e.getKeyChar()==0) {
-			Log.debug("%s: key pressed %d", getName(), e.getKeyCode());
-		}
 	}
 	@Override
-	public void keyReleased(KeyEvent e) {
-	}
+	public void keyReleased(KeyEvent e) {}
 
 	private void writeBuffer() {
 		if (outputBuffer.length() == 0) return ;
@@ -182,7 +179,7 @@ public class AnsiTerminal extends JPanel implements FocusListener,KeyListener {
 		} catch (BadLocationException e) {Log.error(e.toString());}
 	}
 
-	public void flushImput() {
+	public void flushInput() {
 		inputBuffer.setLength(0);
 		escSeq = false;
 	}
@@ -256,22 +253,28 @@ public class AnsiTerminal extends JPanel implements FocusListener,KeyListener {
 		}
 		else done=false;
 
-		if (done) ;//Log.debug("%s: seq %s", getName(), Text.vis(seq));
-		else Log.warn("%s: seq %s is not handled", getName(), Text.vis(seq));
+		if (!done) Log.warn("%s: seq %s is not handled", getName(), Text.vis(seq));
+		//else Log.debug("%s: seq %s", getName(), Text.vis(seq));
 	}
 
 	public void append(char c) {
 		if (escSeq) {
 			outputBuffer.append(c);
-			if (Character.isLetter(c)) {
+			String  s0 = outputBuffer.substring(0, 2);
+			if (s0.equals(Ansi.CSI)) {
+				if (Character.isLetter(c)) escSeq=false;
+			}
+			else if (s0.equals(Ansi.OSC)) {
+				if (c == Ansi.Code.BEL) escSeq=false;
+			}
+			if (!escSeq) {
 				handleEscSeq(outputBuffer.toString());
 				outputBuffer.setLength(0);
-				escSeq=false;
 			}
 		}
 		else if (c < 0x20) {
-			if (c != Ansi.Code.LF && c != Ansi.Code.CR && c != Ansi.Code.ESC && c != Ansi.Code.ENQ)
-				Log.debug("proc ansi %s", Ansi.toString(c));
+			//if (c != Ansi.Code.LF && c != Ansi.Code.CR && c != Ansi.Code.ESC && c != Ansi.Code.ENQ)
+			//	Log.debug("ansi %s", Ansi.toString(c));
 
 			if (c == Ansi.Code.CR) {
 				writeBuffer();
@@ -320,7 +323,10 @@ public class AnsiTerminal extends JPanel implements FocusListener,KeyListener {
 		if (!escSeq) writeBuffer();
 	}
 
-
+	public void setTitle(String t) {
+		if (t==null || t.isEmpty()) title.setText(getName());
+		else title.setText(String.format("[%s] %s",getName(),t));
+	}
 	public void beep() {
 		try { Sound.dong(); } catch (Exception e) {}
 	}

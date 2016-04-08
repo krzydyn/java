@@ -85,9 +85,7 @@ public class Text {
 		b.ensureCapacity(b.length()+s.length);
 		for (int i=0; i<len; ++i) {
 			if (off+i >= s.length) throw new IndexOutOfBoundsException();
-			char c=(char)s[off+i];
-			if (c>0x20 && c<0x80) b.append(c);
-			else b.append(String.format("<%X>", c&0xffff));
+			b.append(Ansi.toString((char)s[off+i]));
 		}
 		return b;
 	}
@@ -103,9 +101,7 @@ public class Text {
 	public static StringBuilder vis(StringBuilder b, CharSequence s) {
 		b.ensureCapacity(b.length()+s.length());
 		for (int i=0; i<s.length(); ++i) {
-			char c=s.charAt(i);
-			if (c>0x20 && c<0x80) b.append(c);
-			else b.append(String.format("<%X>", (int)c));
+			b.append(Ansi.toString(s.charAt(i)));
 		}
 		return b;
 	}

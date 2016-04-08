@@ -91,7 +91,7 @@ public class SerialMain extends MainPanel {
 			for (Serial s : ports) {
 				AnsiTerminal trm = editors.get(s);
 				if (!s.isOpen()) {
-					trm.flushImput();
+					trm.flushInput();
 					continue;
 				}
 				int r = trm.getInputBuffer(buffer);

@@ -52,15 +52,21 @@ public class Ansi {
 		"SP"
 	};
 	public final static String toString(int code) {
-		if (code >= 0 && code < CODENAME.length) return String.format("<%s>", CODENAME[code]);
-		if (Character.isAlphabetic(code)) return String.format("%c", code);
-		return String.format("<%02X>", code);
+		if (code < 0) return String.format("<&%02X>", code);
+		if (code < CODENAME.length) return String.format("<%s>", CODENAME[code]);
+		if (code < 0x7f) return String.format("%c", code);
+		return String.format("<&%02X>", code);
 	}
 
 	// Character Sequence Indicator
 	public final static String CSI_C0 = "\u001b[";
 	public final static String CSI_C1 = "\u009b"; //only on 8bit terminal
 	public final static String CSI = CSI_C0;
+
+	// Operating System Command
+	public final static String OSC_C0 = "\u001b]";
+	public final static String OSC_C1 = "\u009d"; //only on 8bit terminal
+	public final static String OSC = CSI_C0;
 
 	public final static String CURSOR_UP = CSI + "A"; // CSI n A move cursor up n times
 	public final static String CURSOR_DOWN = CSI + "B"; // CSI n A move cursor down n times
@@ -106,8 +112,21 @@ public class Ansi {
 	public final static String SGR_LIGHTCYAN = CSI + "1;36m";
 	public final static String SGR_WHITE = CSI + "1;37m";
 
+
+	public final static String TRM_ICON_TITLE = OSC + "0";	// OSC 0;IconName BEL
+	public final static String TRM_ICON = OSC + "1";		// OSC 1;IconName BEL
+	public final static String TRM_TITLE = OSC + "2";		// OSC 2;Title BEL
+	public final static String TRM_PROP = OSC + "3";		// OSC 2;Prop=Value BEL
+	public final static String TRM_COLORDEF = OSC + "4";	// OSC 4;idx;r;g;b ? - Define RGB color
+
 	//not commonly supported
-	public final static String gen_RGB(int r, int g, int b) {
+	public final static String seqSetRGB(int r, int g, int b) {
 		return String.format("%s38;2;%d;%d;%dm", CSI, r, g, b);
+	}
+	public final static String seqSetColor(int i) {
+		return String.format("%s48;5;%dm", CSI, i);
+	}
+	public final static String seqDefRGB(int i, int r, int g, int b) {
+		return String.format("%s4;%d;%x;%x;%x\\", OSC, i, r, g, b);
 	}
 }
