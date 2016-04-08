@@ -43,19 +43,21 @@ public class Ansi {
 		/** Group Separator */	public final static char GS = (char)0x1d;
 		/** Record Separator */	public final static char RS = (char)0x1e;
 		/** Unit Separator */	public final static char US = (char)0x1f;
+		/** Space */			public final static char SP = (char)0x20;
 	}
 
 	private final static String[] CODENAME = {
 		"NUL", "STX", "SOT", "ETX", "EOT", "ENQ", "ACK", "BEL",  "BS", "HT",  "LF",  "VT", "FF", "CR", "SO", "SI",
-		"DLE", "DC1", "DC2", "DC3", "DC4", "NAK", "SYN", "ETB", "CAN", "EM", "SUB", "ESC", "FS", "GS", "RS", "US"
+		"DLE", "DC1", "DC2", "DC3", "DC4", "NAK", "SYN", "ETB", "CAN", "EM", "SUB", "ESC", "FS", "GS", "RS", "US",
+		"SP"
 	};
-	public final static String codeName(int code) {
+	public final static String toString(int code) {
 		if (code >= 0 && code < CODENAME.length) return String.format("<%s>", CODENAME[code]);
 		if (Character.isAlphabetic(code)) return String.format("%c", code);
 		return String.format("<%02X>", code);
 	}
 
-	// Character Sequence Information
+	// Character Sequence Indicator
 	public final static String CSI_C0 = "\u001b[";
 	public final static String CSI_C1 = "\u009b"; //only on 8bit terminal
 	public final static String CSI = CSI_C0;
