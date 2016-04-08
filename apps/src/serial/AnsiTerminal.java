@@ -127,36 +127,36 @@ public class AnsiTerminal extends JPanel implements FocusListener,KeyListener {
 	}
 
 	@Override
-	public void keyTyped(KeyEvent e) {}
+	public void keyTyped(KeyEvent e) {
+		char c = e.getKeyChar();
+		if (c == Ansi.Code.LF) {
+			cursorEnd();
+		}
+		else if (c == Ansi.Code.HT) {
+			inputBuffer.setLength(0);
+			cursorLineBegin();
+		}
+		inputBuffer.append(c);
+	}
 	@Override
 	public void keyPressed(KeyEvent e) {
 		if (e.getModifiers() != 0) return ;
-		//Log.debug("%s: key pressed %d", getName(), e.getKeyCode());
-		if (e.getKeyChar()!=0) {
-			char c = e.getKeyChar();
-			if (c == Ansi.Code.LF) {
-				cursorEnd();
-			}
-			else if (c == Ansi.Code.HT) {
-				flushInput();
-				cursorLineBegin();
-			}
-			inputBuffer.append(c);
-		}
-		else if (e.getKeyCode() == 38) { //up-arrow
+
+		int code = e.getKeyCode();
+		if (code == 38) { //up-arrow
 			inputBuffer.append(Ansi.CSI+"A");
 			cursorEnd();
 			cursorLineBegin();
 		}
-		else if (e.getKeyCode() == 40) { //down-arrow
+		else if (code == 40) { //down-arrow
 			inputBuffer.append(Ansi.CSI+"B");
 			cursorEnd();
 			cursorLineBegin();
 		}
-		else if (e.getKeyCode() == 39) { //right-arrow
+		else if (code == 39) { //right-arrow
 			inputBuffer.append(Ansi.CSI+"C");
 		}
-		else if (e.getKeyCode() == 37) { //left-arrow
+		else if (code == 37) { //left-arrow
 			inputBuffer.append(Ansi.CSI+"D");
 		}
 	}
@@ -166,7 +166,7 @@ public class AnsiTerminal extends JPanel implements FocusListener,KeyListener {
 	private void writeBuffer() {
 		if (outputBuffer.length() == 0) return ;
 		int p0 = editor.getCaretPosition();
-		//Log.debug("write at %d: %s", p0, Text.vis(outputBuffer));
+		//Log.debug("Output: %s", Text.vis(outputBuffer));
 		try {
 			Document doc = editor.getDocument();
 			if (p0 < doc.getLength()) {
@@ -187,10 +187,10 @@ public class AnsiTerminal extends JPanel implements FocusListener,KeyListener {
 		if (inputBuffer.length() == 0) return 0;
 
 		synchronized (inputBuffer) {
+			//Log.debug("Input: %s", inputBuffer.toString());
 			byte[] bi = inputBuffer.toString().getBytes();
 			int l = Math.min(b.length, bi.length);
-			for (int i = 0; i < l; ++i)
-				b[i] = bi[i];
+			for (int i = 0; i < l; ++i) b[i] = bi[i];
 			inputBuffer.delete(0, l);
 			return l;
 		}
