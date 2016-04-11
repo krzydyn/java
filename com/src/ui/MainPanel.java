@@ -49,20 +49,27 @@ public class MainPanel extends JPanel{
 
 	static public void start(final Class<? extends MainPanel> mainclass, String[] args) {
 		try {
-			intern_start(mainclass);
+			intern_start(mainclass, args);
 		}
 		catch (Throwable e) {Log.error(e);}
 	}
 	static public void start(final Class<? extends MainPanel> mainclass) {
 		start(mainclass,null);
 	}
-
-	static private void intern_start(final Class<? extends MainPanel> mainclass) throws Exception {
+	static private MainPanel create(final Class<? extends MainPanel> mainclass, String[] args) throws Exception {
+		try {
+			return mainclass.getConstructor(String[].class).newInstance(new Object[]{args});
+		}catch (Exception e) {
+			Log.error(e);
+		}
+		return mainclass.newInstance();
+	}
+	static private void intern_start(final Class<? extends MainPanel> mainclass, final String[] args) throws Exception {
 		SwingUtilities.invokeAndWait(new Runnable() {
 			@Override
 			public void run() {
 				try {
-					final MainPanel main = mainclass.newInstance();
+					final MainPanel main = create(mainclass, args);
 					final JFrame f = new JFrame();
 					f.setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
 					f.addWindowListener(new WindowListener() {
