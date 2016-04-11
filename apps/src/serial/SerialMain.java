@@ -21,22 +21,20 @@ public class SerialMain extends MainPanel {
 	private Map<Serial,AnsiTerminal> editors = new HashMap<Serial,AnsiTerminal>();
 	private boolean running = false;
 
-	public SerialMain() {
-		JPanel p;
-
+	public SerialMain() {this(null);}
+	public SerialMain(String[] args) {
 		setName("MultiConsole");
 
-		p = new JPanel(new GridLayout(0,2));
-
-		/*List<String> nm = Serial.listPorts();
-		for (String n : nm) {
-			if (n.contains("USB"))
+		if (args != null) {
+			for (String n : args)
 				ports.add(new Serial(n));
-		}*/
+		}
 		if (ports.isEmpty()) {
 			ports.add(new Serial("/dev/ttyUSB1"));
 			ports.add(new Serial("/dev/ttyUSB2"));
 		}
+		int cols = (ports.size()+2)/3;
+		JPanel p = new JPanel(new GridLayout(0,cols));
 
 		for (Serial sp : ports) {
 			AnsiTerminal e = new AnsiTerminal(sp.getName(), false);
@@ -79,11 +77,12 @@ public class SerialMain extends MainPanel {
 							s.open();
 							s.setParams(115200, Serial.Param.DATA_8, Serial.Param.STOP_1, Serial.Param.FLOW_NONE);
 							trm.write("Port opened\n");
+							trm.setTitle(null);
 						}
 					}
 					catch (Throwable e) {
-						Log.error("%s", e);
-						trm.write("Open failed\n");
+						//Log.error("%s", e);
+						trm.setTitle("Open failed");
 					}
 				}
 			}
@@ -116,12 +115,12 @@ public class SerialMain extends MainPanel {
 					while ((r = s.read(buffer, 0, buffer.length)) > 0) {
 						trm.write(buffer, 0, r);
 						if (r < buffer.length) break;
-						if (--n == 0) {Log.warn("counter zero"); break;}
+						if (--n == 0) break;
 					}
 				}catch(Throwable e) {
 					Log.error(e);
 					s.close();
-					trm.write("Port closed on error\n");
+					trm.setTitle("closed on error");
 				}
 			}
 		}

@@ -54,7 +54,7 @@ public class AnsiTerminal extends JPanel implements FocusListener,KeyListener {
 	final static Border unfocusedBorder = BorderFactory.createEmptyBorder(3, 3, 3, 3);
 
 	final static Color[] colorTable = {
-		Color.GRAY, Color.RED, Color.GREEN, Color.YELLOW, new Color(0x8080FF), Color.MAGENTA.darker(), Color.CYAN, Color.WHITE
+		Color.GRAY, Color.RED, Color.GREEN.darker(), Color.YELLOW, new Color(0x8080FF), Color.MAGENTA.darker(), Color.CYAN, Color.WHITE
 	};
 
 	private JTextComponent editor = new JTextPane();
@@ -62,6 +62,7 @@ public class AnsiTerminal extends JPanel implements FocusListener,KeyListener {
 	private AttributeSet attrib = SimpleAttributeSet.EMPTY;
 	private StringBuilder inputBuffer = new StringBuilder();
 	private StringBuilder outputBuffer = new StringBuilder();
+	private boolean paused = false;
 	private boolean escSeq = false;
 
 	//to get focus component must satisfy: 1.visible, 2.enabled, 3. focusable
@@ -91,16 +92,21 @@ public class AnsiTerminal extends JPanel implements FocusListener,KeyListener {
 
 		JPanel p = new JPanel(null);
 		p.setLayout(new BoxLayout(p, BoxLayout.LINE_AXIS));
+		p.add(title);
+		p.add(Box.createHorizontalGlue());
 		JButton b=new JButton("C");
 		b.setFocusable(false);
 		b.addActionListener(new ActionListener() {
 			@Override
-			public void actionPerformed(ActionEvent e) {
-				eraseAll();
-			}
+			public void actionPerformed(ActionEvent e) {eraseAll();}
 		});
-		p.add(title);
-		p.add(Box.createHorizontalGlue());
+		p.add(b);
+		b=new JButton("P");
+		b.setFocusable(false);
+		b.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {paused=!paused;}
+		});
 		p.add(b);
 
 		add(p, BorderLayout.NORTH);
@@ -205,6 +211,7 @@ public class AnsiTerminal extends JPanel implements FocusListener,KeyListener {
 			if (seq.equals(Ansi.ERASE_ALL)) eraseAll();
 			else if (seq.equals(Ansi.ERASE_BELOW)) eraseBelow();
 			else if (seq.equals(Ansi.ERASE_ABOVE)) eraseAbove();
+			else if (seq.equals(Ansi.ERASE_LN)) eraseLineRight();
 			else if (seq.equals(Ansi.CURSOR_POS)) cursorHome();
 			else if (seq.equals(Ansi.SGR_RESET)) {
 				attrib = SimpleAttributeSet.EMPTY;
@@ -220,6 +227,12 @@ public class AnsiTerminal extends JPanel implements FocusListener,KeyListener {
 			else if (seq.endsWith("H")) {
 				cursorHome();
 			}
+			else if (seq.endsWith("K")) {
+				int n = Integer.parseInt(seq.substring(Ansi.CSI.length(), seq.length()-1));
+				if (n == 0) eraseLineRight();
+				else if (n == 1) eraseLineLeft();
+				else if (n == 2) eraseAll();
+			}
 			else if (seq.endsWith("m")) {
 				StyleContext sc = StyleContext.getDefaultStyleContext();
 				String code = seq.substring(Ansi.CSI.length(), seq.length()-1);
@@ -227,7 +240,14 @@ public class AnsiTerminal extends JPanel implements FocusListener,KeyListener {
 				for (int j,i=0; i < code.length(); i=j+1) {
 					j=code.indexOf(';', i);
 					if (j<0) j=code.length();
-					int n = Integer.parseInt(code.substring(i, j));
+					if (i==j) continue;
+					int n = 0;
+					try {
+						n=Integer.parseInt(code.substring(i, j));
+					} catch (Exception e) {
+						Log.error("can't parse seq: '%s'", Text.vis(seq));
+					}
+
 					if (n==0) { //normal
 						attrib = SimpleAttributeSet.EMPTY;
 						regIntens=0;
@@ -243,7 +263,7 @@ public class AnsiTerminal extends JPanel implements FocusListener,KeyListener {
 						attrib = sc.addAttribute(attrib, StyleConstants.Foreground, c);
 					}
 					else if (n>=40 && n<48) { //background color
-						Color c = colorTable[n-30];
+						Color c = colorTable[n-40];
 						if (regIntens == 0) c=c.darker();
 						attrib = sc.addAttribute(attrib, StyleConstants.Background, c);
 					}
@@ -258,18 +278,27 @@ public class AnsiTerminal extends JPanel implements FocusListener,KeyListener {
 	}
 
 	public void append(char c) {
+		if (paused && !escSeq) {
+			return ;
+		}
 		if (escSeq) {
 			outputBuffer.append(c);
+			if (outputBuffer.length() < 3) return ;
 			String  s0 = outputBuffer.substring(0, 2);
 			if (s0.equals(Ansi.CSI)) {
-				if (Character.isLetter(c)) escSeq=false;
+				if (Character.isLetter(c)) {escSeq=false;c=0;}
+				else if ((c=='['||c==']') && outputBuffer.length() > 2) {
+					escSeq=false;
+				}
 			}
 			else if (s0.equals(Ansi.OSC)) {
-				if (c == Ansi.Code.BEL) escSeq=false;
+				if (c == Ansi.Code.BEL) {escSeq=false;c=0;}
 			}
+
 			if (!escSeq) {
 				handleEscSeq(outputBuffer.toString());
 				outputBuffer.setLength(0);
+				if (c!=0) outputBuffer.append(c);
 			}
 		}
 		else if (c < 0x20) {
@@ -278,6 +307,7 @@ public class AnsiTerminal extends JPanel implements FocusListener,KeyListener {
 
 			if (c == Ansi.Code.CR) {
 				writeBuffer();
+				attrib = SimpleAttributeSet.EMPTY;
 			}
 			else if (c == Ansi.Code.BEL) {
 				cursorEnd();
@@ -387,7 +417,7 @@ public class AnsiTerminal extends JPanel implements FocusListener,KeyListener {
 			editor.setCaretPosition(p0);
 		}
 	}
-	public void eraseLineBegin() {
+	public void eraseLineLeft() {
 		Document doc = editor.getDocument();
 		int p, p0 = editor.getCaretPosition();
 		for (p=p0; p0 > 0; --p0) {
@@ -403,7 +433,7 @@ public class AnsiTerminal extends JPanel implements FocusListener,KeyListener {
 			editor.setCaretPosition(p0);
 		}
 	}
-	public void eraseLineEnd() {
+	public void eraseLineRight() {
 		Document doc = editor.getDocument();
 		int p,p0 = editor.getCaretPosition();
 		for (p=p0; p < doc.getLength(); ++p) {
@@ -419,5 +449,4 @@ public class AnsiTerminal extends JPanel implements FocusListener,KeyListener {
 			editor.setCaretPosition(p0);
 		}
 	}
-
 }
