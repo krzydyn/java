@@ -4,6 +4,7 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.KeyboardFocusManager;
+import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.FocusEvent;
@@ -57,11 +58,15 @@ public class AnsiTerminal extends JPanel implements FocusListener,KeyListener {
 		Color.GRAY, Color.RED, Color.GREEN.darker(), Color.YELLOW, new Color(0x8080FF), Color.MAGENTA.darker(), Color.CYAN, Color.WHITE
 	};
 
+	private final int MAX_COL=120;
+	private final int MAX_ROW=60;
+
 	private JTextComponent editor = new JTextPane();
 	private JLabel title = new JLabel();
 	private AttributeSet attrib = SimpleAttributeSet.EMPTY;
 	private StringBuilder inputBuffer = new StringBuilder();
 	private StringBuilder outputBuffer = new StringBuilder();
+	private Point cpos = new Point(0, 0);
 	private boolean paused = false;
 	private boolean escSeq = false;
 
@@ -224,7 +229,25 @@ public class AnsiTerminal extends JPanel implements FocusListener,KeyListener {
 				int n = Integer.parseInt(seq.substring(Ansi.CSI.length(), seq.length()-1));
 				cursorMove(-n);
 			}
-			else if (seq.endsWith("H")) {
+			else if (seq.endsWith("H")) { //set cursor position
+				int x=-1,y=-1;
+				String code = seq.substring(Ansi.CSI.length(), seq.length()-1);
+				for (int j,i=0; i < code.length(); i=j+1) {
+					j=code.indexOf(';', i);
+					if (j<0) j=code.length();
+					try {
+						y=Integer.parseInt(code.substring(i, j));
+						if (x < 0) {x=y; y=-1;}
+					} catch (Exception e) {
+						Log.error("can't parse seq: '%s'", Text.vis(seq));
+					}
+				}
+				if (x<0) x=1;
+				else if (x > MAX_COL) x=MAX_COL;
+				if (y<0) y=1;
+				else if (y > MAX_ROW) x=MAX_ROW;
+				cpos.x = x;
+				cpos.y = y;
 				cursorHome();
 			}
 			else if (seq.endsWith("K")) {
@@ -232,6 +255,12 @@ public class AnsiTerminal extends JPanel implements FocusListener,KeyListener {
 				if (n == 0) eraseLineRight();
 				else if (n == 1) eraseLineLeft();
 				else if (n == 2) eraseAll();
+			}
+			else if (seq.endsWith("h")) {
+				if (seq.equals(Ansi.CSI + "?1049")) {
+					eraseAll();
+				}
+				else done=false;
 			}
 			else if (seq.endsWith("m")) {
 				StyleContext sc = StyleContext.getDefaultStyleContext();
@@ -257,6 +286,8 @@ public class AnsiTerminal extends JPanel implements FocusListener,KeyListener {
 					}
 					else if (n==2) {  //italic
 					}
+					else if (n==7) {  //inverse
+					}
 					else if (n>=30 && n<38) { //text color
 						Color c = colorTable[n-30];
 						if (regIntens == 0) c=c.darker();
@@ -267,6 +298,15 @@ public class AnsiTerminal extends JPanel implements FocusListener,KeyListener {
 						if (regIntens == 0) c=c.darker();
 						attrib = sc.addAttribute(attrib, StyleConstants.Background, c);
 					}
+					else done=false;
+				}
+			}
+			else if (seq.endsWith("n")) {
+				if (seq.equals(Ansi.CSI + "5n")) {
+					inputBuffer.append(Ansi.CSI + "0n");
+				}
+				else if (seq.equals(Ansi.CSI + "6n")) {
+					inputBuffer.append(Ansi.CSI + String.format("%d;%dR", cpos.x, cpos.y));
 				}
 			}
 			else done=false;
@@ -274,7 +314,7 @@ public class AnsiTerminal extends JPanel implements FocusListener,KeyListener {
 		else done=false;
 
 		if (!done) Log.warn("%s: seq %s is not handled", getName(), Text.vis(seq));
-		//else Log.debug("%s: seq %s", getName(), Text.vis(seq));
+		else Log.debug("%s: seq %s [OK]", getName(), Text.vis(seq));
 	}
 
 	public void append(char c) {

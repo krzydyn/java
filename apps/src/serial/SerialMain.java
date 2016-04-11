@@ -33,7 +33,8 @@ public class SerialMain extends MainPanel {
 			ports.add(new Serial("/dev/ttyUSB1"));
 			ports.add(new Serial("/dev/ttyUSB2"));
 		}
-		int cols = (ports.size()+2)/3;
+		int cols = 1;
+		while (cols*cols < ports.size()) ++cols;
 		JPanel p = new JPanel(new GridLayout(0,cols));
 
 		for (Serial sp : ports) {
@@ -48,12 +49,14 @@ public class SerialMain extends MainPanel {
 			@Override
 			public void run() {
 				running = true;
+				Log.notice("Read loop started");
 				try {
 					readloop();
 				}catch(Throwable e){
 					Log.error(e);
 				} finally {
 					running = false;
+					Log.notice("Read loop finished");
 				}
 			}
 		}, "SerialLoop").start();
@@ -125,7 +128,6 @@ public class SerialMain extends MainPanel {
 			}
 		}
 
-		Log.notice("Read loop finished");
 		for (Serial s : ports) {
 			s.close();
 		}
