@@ -1,10 +1,27 @@
 package crypt;
 
+import java.security.Key;
+
+import javax.crypto.spec.SecretKeySpec;
+
+import sys.Log;
+
+/**
+ * AES algorithm (Rijndael)
+ * http://csrc.nist.gov/publications/fips/fips197/fips-197.pdf
+ * http://csrc.nist.gov/publications/nistpubs/800-38a/sp800-38a.pdf
+ * http://csrc.nist.gov/archive/aes/rijndael/Rijndael-ammended.pdf#page=19
+ * https://cr.yp.to/aes-speed/aesspeed-20080926.pdf
+ * Key lengths (in bits): 128, 192, 256
+ * @author k.dynowski
+ *
+ */
 public class AES {
 	static final int BLOCKSIZE = 16;
-	static final byte[] sbox = new byte[256];   /** AES S-box  */
-	static final byte[] isbox = new byte[256];  /** AES iS-box */
-	static { generateSbox(); }
+	static final byte[] sbox = new byte[256];   // S-box
+	static final byte[] isbox = new byte[256];  // iS-box
+	static final int[] rcon = new int[10];		// Round constants
+	static { generateSbox(); generateRcon(); }
 
 	static final private void generateSbox() {
 	    byte[] t = isbox;
@@ -26,15 +43,67 @@ public class AES {
 	         isbox[sbox[i]]=(byte)i;
 	    }
 	}
+	static final private void generateRcon() {
+		int ROOT = 0x11b;
+		int r = 1;
+        rcon[0] = r << 24;
+        for (int i = 1; i < 10; i++) {
+            r <<= 1;
+            if (r >= 0x100) {
+                r ^= ROOT;
+            }
+            rcon[i] = r << 24;
+        }
+	}
 
 	private final byte[] key;
 	private final byte[] iv = new byte[BLOCKSIZE];
+	private final byte[] state = new byte[BLOCKSIZE];
+	private int[] rek;
 
-	AES(byte[] k) {
+	AES(byte[] k,byte[] i) {
 		key=k;
+		System.arraycopy(i, 0, iv, 0, iv.length);
 	}
 
+	private void expandKey(byte[] cipherKey) {
+		int Nk = (cipherKey.length*8) >>> 5;
+        int Nr = Nk + 6;
+        int Nw = 4*(Nr + 1);
+        rek = new int[Nw];
+
+        int temp, r = 0;
+        for (int i = 0, k = 0; i < Nk; i++, k += 4) {
+			rek[i] =
+			    ((cipherKey[k    ]       ) << 24) |
+			    ((cipherKey[k + 1] & 0xff) << 16) |
+			    ((cipherKey[k + 2] & 0xff) <<  8) |
+			    ((cipherKey[k + 3] & 0xff));
+        }
+        for (int i = Nk, n = 0; i < Nw; i++, n--) {
+			temp = rek[i - 1];
+			if (n == 0) {
+				n = Nk;
+			    temp =
+			        ((sbox[(temp >>> 16) & 0xff]       ) << 24) |
+			        ((sbox[(temp >>>  8) & 0xff] & 0xff) << 16) |
+			        ((sbox[(temp       ) & 0xff] & 0xff) <<  8) |
+			        ((sbox[(temp >>> 24)       ] & 0xff));
+			    temp ^= rcon[r++];
+			} else if (Nk == 8 && n == 4) {
+                temp =
+                    ((sbox[(temp >>> 24)       ]       ) << 24) |
+                    ((sbox[(temp >>> 16) & 0xff] & 0xff) << 16) |
+                    ((sbox[(temp >>>  8) & 0xff] & 0xff) <<  8) |
+                    ((sbox[(temp       ) & 0xff] & 0xff));
+            }
+            rek[i] = rek[i - Nk] ^ temp;
+        }
+        temp = 0;
+    }
+
 	private void init() {
+		System.arraycopy(iv, 0, state, 0, iv.length);
 	}
 
 	private void update(byte[] src, byte[] dst, int offs) {
@@ -44,7 +113,7 @@ public class AES {
 
 	}
 
-	void cbc_encrypt(byte[] msg, byte[] out, int length)
+	public void cbc_encrypt(byte[] msg, byte[] out, int length)
 	{
 	    int p = 0;
 	    init();
@@ -53,6 +122,125 @@ public class AES {
 	    }
 	    finish(out, p);
 	}
+
+	public void javax_encrypt(byte[] msg, byte[] out, int length) {
+		Key aesKey = new SecretKeySpec(key, "AES");
+		try {
+			javax.crypto.Cipher cipher = javax.crypto.Cipher.getInstance("AES");
+			cipher.init(javax.crypto.Cipher.ENCRYPT_MODE, aesKey);
+			cipher.doFinal(msg, 0, length, out);
+		}catch(Exception e) {
+			Log.error(e);
+		}
+	}
+	public void javax_decrypt(byte[] msg, byte[] out, int length) {
+		Key aesKey = new SecretKeySpec(key, "AES");
+		try {
+			javax.crypto.Cipher cipher = javax.crypto.Cipher.getInstance("AES");
+			cipher.init(javax.crypto.Cipher.DECRYPT_MODE, aesKey);
+			cipher.doFinal(msg, 0, length, out);
+		}catch(Exception e) {
+			Log.error(e);
+		}
+	}
+
+	static void shift_rows(byte[] state)
+	{
+	    byte tmp;
+	    /* just substitute row 0 */
+	    state[0] = sbox[state[0]];
+	    state[4] = sbox[state[4]];
+	    state[8] = sbox[state[8]];
+	    state[12] = sbox[state[12]];
+
+	    /* rotate row 1 */
+	    tmp = sbox[state[1]];
+	    state[1] = sbox[state[5]];
+	    state[5] = sbox[state[9]];
+	    state[9] = sbox[state[13]];
+	    state[13] = tmp;
+
+	    /* rotate row 2 */
+	    tmp = sbox[state[2]];
+	    state[2] = sbox[state[10]];
+	    state[10] = tmp;
+	    tmp = sbox[state[6]];
+	    state[6] = sbox[state[14]];
+	    state[14] = tmp;
+
+	    /* rotate row 3 */
+	    tmp = sbox[state[15]];
+	    state[15] = sbox[state[11]];
+	    state[11] = sbox[state[7]];
+	    state[7] = sbox[state[3]];
+	    state[3] = tmp;
+	}
+	static void inv_shift_rows(byte[] state)
+	{
+	    byte tmp;
+	    /* restore row 0 */
+	    state[0] = isbox[state[0]];
+	    state[4] = isbox[state[4]];
+	    state[8] = isbox[state[8]];
+	    state[12] = isbox[state[12]];
+
+	    /* restore row 1 */
+	    tmp = isbox[state[13]];
+	    state[13] = isbox[state[9]];
+	    state[9] = isbox[state[5]];
+	    state[5] = isbox[state[1]];
+	    state[1] = tmp;
+
+	    /* restore row 2 */
+	    tmp = isbox[state[2]];
+	    state[2] = isbox[state[10]];
+	    state[10] = tmp;
+	    tmp = isbox[state[6]];
+	    state[6] = isbox[state[14]];
+	    state[14] = tmp;
+
+	    /* restore row 3 */
+	    tmp = isbox[state[3]];
+	    state[3] = isbox[state[7]];
+	    state[7] = isbox[state[11]];
+	    state[11] = isbox[state[15]];
+	    state[15] = tmp;
+	}
+
+	static void mix_sub_columns(byte[] state)
+	{
+	    byte[] tmp = new byte[BLOCKSIZE];
+	    byte[] x2_sbox=sbox;//fake
+	    byte[] x3_sbox=sbox;//fake
+
+	    /* mixing column 0 */
+	    tmp[0] = (byte)(x2_sbox[state[0]] ^ x3_sbox[state[5]] ^ sbox[state[10]] ^ sbox[state[15]]);
+	    tmp[1] = (byte)(sbox[state[0]] ^ x2_sbox[state[5]] ^ x3_sbox[state[10]] ^ sbox[state[15]]);
+	    tmp[2] = (byte)(sbox[state[0]] ^ sbox[state[5]] ^ x2_sbox[state[10]] ^ x3_sbox[state[15]]);
+	    tmp[3] = (byte)(x3_sbox[state[0]] ^ sbox[state[5]] ^ sbox[state[10]] ^ x2_sbox[state[15]]);
+
+	    /* mixing column 1 */
+	    tmp[4] = (byte)(x2_sbox[state[4]] ^ x3_sbox[state[9]] ^ sbox[state[14]] ^ sbox[state[3]]);
+	    tmp[5] = (byte)(sbox[state[4]] ^ x2_sbox[state[9]] ^ x3_sbox[state[14]] ^ sbox[state[3]]);
+	    tmp[6] = (byte)(sbox[state[4]] ^ sbox[state[9]] ^ x2_sbox[state[14]] ^ x3_sbox[state[3]]);
+	    tmp[7] = (byte)(x3_sbox[state[4]] ^ sbox[state[9]] ^ sbox[state[14]] ^ x2_sbox[state[3]]);
+
+	    /* mixing column 2 */
+	    tmp[8] = (byte)(x2_sbox[state[8]] ^ x3_sbox[state[13]] ^ sbox[state[2]] ^ sbox[state[7]]);
+	    tmp[9] = (byte)(sbox[state[8]] ^ x2_sbox[state[13]] ^ x3_sbox[state[2]] ^ sbox[state[7]]);
+	    tmp[10] = (byte)(sbox[state[8]] ^ sbox[state[13]] ^ x2_sbox[state[2]] ^ x3_sbox[state[7]]);
+	    tmp[11] = (byte)(x3_sbox[state[8]] ^ sbox[state[13]] ^ sbox[state[2]] ^ x2_sbox[state[7]]);
+
+	    /* mixing column 3 */
+	    tmp[12] = (byte)(x2_sbox[state[12]] ^ x3_sbox[state[1]] ^ sbox[state[6]] ^ sbox[state[11]]);
+	    tmp[13] = (byte)(sbox[state[12]] ^ x2_sbox[state[1]] ^ x3_sbox[state[6]] ^ sbox[state[11]]);
+	    tmp[14] = (byte)(sbox[state[12]] ^ sbox[state[1]] ^ x2_sbox[state[6]] ^ x3_sbox[state[11]]);
+	    tmp[15] = (byte)(x3_sbox[state[12]] ^ sbox[state[1]] ^ sbox[state[6]] ^ x2_sbox[state[11]]);
+
+	    System.arraycopy(tmp, 0, state, 0, state.length);
+	}
+
+
 }
 /*
 AES_CTX ctx;

@@ -1,5 +1,6 @@
 package text;
 
+import java.io.ByteArrayOutputStream;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -110,4 +111,24 @@ public class Text {
 		return vis(b, s).toString();
 	}
 
+	public static byte[] hex2byte(CharSequence s) {
+		ByteArrayOutputStream ba = new ByteArrayOutputStream(s.length()/2);
+		byte bt=0;
+		int bc=0;
+		for (int i=0; i<s.length(); ++i) {
+			bt<<=4;
+			char c = Character.toUpperCase(s.charAt(i));
+			if (c >= '0' && c <= '9') bc|=c-'0';
+			else if (c >= 'A' && c <= 'F') bc|=c-'A'+10;
+			else continue;
+			++bc;
+			if (bc==2) {
+				ba.write(bt);
+				bc=bt=0;
+			}
+		}
+		if (bc>0) ba.write(bt<<4);
+
+		return ba.toByteArray();
+	}
 }

@@ -229,26 +229,27 @@ public class AnsiTerminal extends JPanel implements FocusListener,KeyListener {
 				int n = Integer.parseInt(seq.substring(Ansi.CSI.length(), seq.length()-1));
 				cursorMove(-n);
 			}
-			else if (seq.endsWith("H")) { //set cursor position
+			else if (seq.endsWith("H")) { //set cursor position row;col
 				int x=-1,y=-1;
 				String code = seq.substring(Ansi.CSI.length(), seq.length()-1);
 				for (int j,i=0; i < code.length(); i=j+1) {
 					j=code.indexOf(';', i);
 					if (j<0) j=code.length();
 					try {
-						y=Integer.parseInt(code.substring(i, j));
-						if (x < 0) {x=y; y=-1;}
+						x=Integer.parseInt(code.substring(i, j));
+						if (y < 0) {y=x; x=-1;}
 					} catch (Exception e) {
 						Log.error("can't parse seq: '%s'", Text.vis(seq));
 					}
 				}
-				if (x<0) x=1;
+				if (x<0) x=0;
 				else if (x > MAX_COL) x=MAX_COL;
 				if (y<0) y=1;
 				else if (y > MAX_ROW) x=MAX_ROW;
-				cpos.x = x;
-				cpos.y = y;
-				cursorHome();
+				cpos.x = x; cpos.y = y;
+				Log.debug("setSursor %s", cpos.toString());
+				if (cpos.y <= 1) cursorHome();
+				else cursorEnd();
 			}
 			else if (seq.endsWith("K")) {
 				int n = Integer.parseInt(seq.substring(Ansi.CSI.length(), seq.length()-1));
@@ -301,14 +302,14 @@ public class AnsiTerminal extends JPanel implements FocusListener,KeyListener {
 					else done=false;
 				}
 			}
-			else if (seq.endsWith("n")) {
+			/*else if (seq.endsWith("n")) {
 				if (seq.equals(Ansi.CSI + "5n")) {
 					inputBuffer.append(Ansi.CSI + "0n");
 				}
 				else if (seq.equals(Ansi.CSI + "6n")) {
 					inputBuffer.append(Ansi.CSI + String.format("%d;%dR", cpos.x, cpos.y));
 				}
-			}
+			}*/
 			else done=false;
 		}
 		else done=false;
@@ -434,6 +435,7 @@ public class AnsiTerminal extends JPanel implements FocusListener,KeyListener {
 			} catch (BadLocationException e) {Log.error(e.toString());}
 			editor.setCaretPosition(p0);
 		}
+		cpos.x=cpos.y=0;
 	}
 	public void eraseAbove() {
 		Document doc = editor.getDocument();
