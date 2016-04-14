@@ -43,7 +43,6 @@ import sys.Log;
 import sys.Sound;
 import text.Ansi;
 import text.Text;
-import text.Ansi.Code;
 import ui.MainPanel;
 
 /**
@@ -51,6 +50,8 @@ import ui.MainPanel;
  * <p>
  * input: swing events system -> sent to remote OutputStream<br>
  * output: JTextComponent <- responses from remote InputStream
+ *
+ * http://invisible-island.net/xterm/ctlseqs/ctlseqs.html
  *
  * @author k.dynowski
  *
@@ -189,6 +190,7 @@ public class AnsiTerminal extends JPanel implements FocusListener,KeyListener {
 		}
 		else if (c == Ansi.Code.HT) {
 			inputBuffer.setLength(0);
+			cursorEnd();
 			cursorLineBegin();
 		}
 		inputBuffer.append(c);
@@ -220,6 +222,9 @@ public class AnsiTerminal extends JPanel implements FocusListener,KeyListener {
 		}
 		else if (code == KeyEvent.VK_END) {
 			inputBuffer.append(Ansi.CSI+"F");
+		}
+		else if (code == KeyEvent.VK_DELETE) {
+			inputBuffer.append(Ansi.CSI+"3~");
 		}
 	}
 	@Override
@@ -379,7 +384,7 @@ public class AnsiTerminal extends JPanel implements FocusListener,KeyListener {
 			String  s0 = outputBuffer.substring(0, 2);
 			if (s0.equals(Ansi.CSI)) {
 				if (Character.isLetter(c)) {escSeq=false;c=0;}
-				else if ((c=='['||c==']') && outputBuffer.length() > 2) {
+				else if ((c=='['||c==']'||c=='~') && outputBuffer.length() > 2) {
 					escSeq=false;
 				}
 			}

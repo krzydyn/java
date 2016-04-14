@@ -12,11 +12,11 @@ import org.jnativehook.mouse.NativeMouseListener;
 import org.jnativehook.mouse.NativeMouseMotionListener;
 
 
-public class RobotTest implements NativeMouseListener, NativeMouseMotionListener {
+public class NativeHookTest implements NativeMouseListener, NativeMouseMotionListener {
 	final private Robot robot;
 	boolean running=false;
 
-	public RobotTest() {
+	public NativeHookTest() {
 		Robot r=null;
 		//Toolkit.getDefaultToolkit().setLockingKeyState(KeyEvent.VK_NUM_LOCK, false);
 		try {
@@ -87,7 +87,7 @@ public class RobotTest implements NativeMouseListener, NativeMouseMotionListener
 	}
 
 	public static void main(String args[]){
-		new RobotTest().loop();
+		new NativeHookTest().loop();
 		System.out.printf("main done\n");
 	}
 
