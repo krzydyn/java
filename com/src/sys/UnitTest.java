@@ -51,7 +51,8 @@ public class UnitTest {
 	static public List<String> getTestUnits(String prefix) throws IOException {
 		ArrayList<String> a = new ArrayList<String>();
 
-		String pkg = prefix.substring(0, prefix.lastIndexOf('.'));
+		String pkg = "";
+		if (prefix.lastIndexOf('.')>0) pkg=prefix.substring(0, prefix.lastIndexOf('.'));
 		ClassLoader cl = getClassLoader();
 		URL url = cl.getResource(pkg.replace(".", "/"));
 		BufferedReader rd = new BufferedReader(new InputStreamReader((InputStream) url.getContent()));

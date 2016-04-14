@@ -59,12 +59,22 @@ public class Ansi {
 	}
 
 	// Character Sequence Indicator
-	public final static String CSI_C0 = "\u001b[";
+	public final static String CSI_C0 = Code.ESC+"[";
 	public final static String CSI_C1 = "\u009b"; //only on 8bit terminal
 	public final static String CSI = CSI_C0;
 
+	// Single Shift Select of G2
+	public final static String SS2_0 ="\u008e";
+	public final static String SS2_1 = Code.ESC+"N";
+	public final static String SS2 = SS2_0;
+
+	// Single Shift Select of G3
+	public final static String SS3_0 = Code.ESC+"O";
+	public final static String SS3_1 ="\u008f";
+	public final static String SS3 = SS3_0;
+
 	// Operating System Command
-	public final static String OSC_C0 = "\u001b]";
+	public final static String OSC_C0 = Code.ESC+"]";
 	public final static String OSC_C1 = "\u009d"; //only on 8bit terminal
 	public final static String OSC = CSI_C0;
 

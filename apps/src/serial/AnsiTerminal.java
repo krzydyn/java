@@ -5,12 +5,18 @@ import java.awt.Color;
 import java.awt.Font;
 import java.awt.KeyboardFocusManager;
 import java.awt.Point;
+import java.awt.Toolkit;
+import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.DataFlavor;
+import java.awt.datatransfer.Transferable;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -37,6 +43,7 @@ import sys.Log;
 import sys.Sound;
 import text.Ansi;
 import text.Text;
+import text.Ansi.Code;
 import ui.MainPanel;
 
 /**
@@ -116,6 +123,43 @@ public class AnsiTerminal extends JPanel implements FocusListener,KeyListener {
 
 		add(p, BorderLayout.NORTH);
 		add(MainPanel.createScrolledPanel(editor), BorderLayout.CENTER);
+
+		editor.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseReleased(MouseEvent e) {
+			}
+			@Override
+			public void mousePressed(MouseEvent e) {
+			}
+			@Override
+			public void mouseExited(MouseEvent e) {
+			}
+			@Override
+			public void mouseEntered(MouseEvent e) {
+			}
+			@Override
+			public void mouseClicked(MouseEvent ev) {
+				if (ev.getButton() != MouseEvent.BUTTON2) return ;
+
+				String s=editor.getSelectedText();
+				if (s!=null) {
+					cursorEnd();
+					inputBuffer.append(s);
+					return ;
+				}
+
+				Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+				Transferable t = clipboard.getContents(clipboard);
+				if (t==null) return ;
+				if (t.isDataFlavorSupported(DataFlavor.stringFlavor)) {
+					try {
+						s = (String)(t.getTransferData(DataFlavor.stringFlavor));
+						cursorEnd();
+						inputBuffer.append(s);
+					} catch (Exception e) {}
+				}
+			}
+		});
 	}
 
 	private void disableActions(String ...names) {
@@ -154,21 +198,28 @@ public class AnsiTerminal extends JPanel implements FocusListener,KeyListener {
 		if (e.getModifiers() != 0) return ;
 
 		int code = e.getKeyCode();
-		if (code == 38) { //up-arrow
+
+		if (code == KeyEvent.VK_UP) { //up-arrow
 			inputBuffer.append(Ansi.CSI+"A");
 			cursorEnd();
 			cursorLineBegin();
 		}
-		else if (code == 40) { //down-arrow
+		else if (code == KeyEvent.VK_DOWN) { //down-arrow
 			inputBuffer.append(Ansi.CSI+"B");
 			cursorEnd();
 			cursorLineBegin();
 		}
-		else if (code == 39) { //right-arrow
+		else if (code == KeyEvent.VK_RIGHT) { //right-arrow
 			inputBuffer.append(Ansi.CSI+"C");
 		}
-		else if (code == 37) { //left-arrow
+		else if (code == KeyEvent.VK_LEFT) { //left-arrow
 			inputBuffer.append(Ansi.CSI+"D");
+		}
+		else if (code == KeyEvent.VK_HOME) {
+			inputBuffer.append(Ansi.CSI+"H");
+		}
+		else if (code == KeyEvent.VK_END) {
+			inputBuffer.append(Ansi.CSI+"F");
 		}
 	}
 	@Override
@@ -368,6 +419,7 @@ public class AnsiTerminal extends JPanel implements FocusListener,KeyListener {
 				}
 			}
 			else if (c == Ansi.Code.ESC) {
+				cursorEnd();
 				writeBuffer();
 				outputBuffer.append(c);
 				escSeq=true;
