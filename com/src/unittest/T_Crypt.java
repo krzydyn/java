@@ -2,10 +2,14 @@ package unittest;
 
 import java.math.BigInteger;
 
+import crypt.AES2;
+import crypt.AES3;
 import crypt.Base64;
 import crypt.Prime;
 import crypt.RSA;
+import sys.Log;
 import sys.UnitTest;
+import text.Text;
 
 public class T_Crypt extends UnitTest {
 	static void testPrimes() throws Exception {
@@ -43,5 +47,30 @@ public class T_Crypt extends UnitTest {
 			@Override
 			public void run() {new RSA(1024,BigInteger.valueOf(0x10001));}
 		});
+	}
+
+	static void aes2() {
+		byte[] key={1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16};
+		String msg="Test message    ";
+		AES2 aes=new AES2();
+		aes.setKey(key);
+		byte [] orig=msg.getBytes();
+		for(int i=0; i<1000; ++i) aes.encrypt(orig);
+		byte[] result = aes.encrypt(orig);
+		Log.info("encr(%s) = %s", msg, Text.hex(result));
+		String rmsg = new String(aes.decrypt(result));
+		check(msg, rmsg);
+	}
+	static void aes3() {
+		byte[] key={1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16};
+		String msg="Test message    ";
+		AES3 aes=new AES3(key);
+
+		byte [] orig=msg.getBytes();
+		for(int i=0; i<1000; ++i) aes.encrypt(orig);
+		byte[] result = aes.encrypt(orig);
+		Log.info("encr(%s) = %s", msg, Text.hex(result));
+		String rmsg = new String(aes.decrypt(result));
+		check(msg, rmsg);
 	}
 }
