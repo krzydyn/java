@@ -46,13 +46,13 @@ public class AnimationTest {
 						} catch (Exception e) {
 							e.printStackTrace();
 							break;
-						}						
+						}
 					}
 					System.out.printf("gif frames: %d\n",fnum);
 				}
 			} catch (Throwable e) {
 				e.printStackTrace();
-			}			
+			}
 		}
 	}
 	private static void printNode(IIOMetadataNode node) {
@@ -64,7 +64,7 @@ public class AnimationTest {
 			for (int i = 0; i < n; i++) {
 				Node ni=attrs.item(i);
 				System.out.printf("%s=%s\n",ni.getNodeName(),ni.getNodeValue());
-			}					
+			}
 		}
 		n=node.getLength();
 		if (n>0) {
@@ -72,7 +72,7 @@ public class AnimationTest {
 			for (int i = 0; i < n; i++) {
 				Node ni=node.item(i);
 				printNode((IIOMetadataNode)ni);
-			}					
+			}
 		}
 	}
 	private static IIOMetadataNode getNode(IIOMetadataNode node, String nodeName) {

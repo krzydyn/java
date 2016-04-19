@@ -1,3 +1,21 @@
+/*
+ *  Copyright (c) 2016 Krzysztof Dynowski All Rights Reserved
+ *
+ *  Contact: krzydyn@gmail.com)
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License
+ */
+
 package net;
 
 import java.io.EOFException;
@@ -24,34 +42,36 @@ public class SelectorThread {
 	private final List<ByteBuffer> bpool=new ArrayList<ByteBuffer>();
 	private int bufcnt = 0;
 	private boolean running;
-	
+
 	private final List<SelectionKey> writeFlag=new ArrayList<SelectionKey>();
-	
+
 	static class ChannelState {
 		public ChannelState(SelectableChannel c, ChannelStatusHandler h) {
 			chn=c;
 			hnd=h;
 		}
-		
+
 		final SelectableChannel chn;
 		final ChannelStatusHandler hnd;
 		List<ByteBuffer> writeq;
-		
+
 		ChannelWriter write = new ChannelWriter() {
+			@Override
 			public void write(SelectorThread st, ByteBuffer b) {
 				st.write(chn, b);
 			}
 		};
 	};
-	
+
 	//private final Map<Channel,ChannelState> chns=new HashMap<Channel, ChannelState>();
-	
+
 	public SelectorThread() throws IOException {
 		selector = Selector.open();
 	}
-	
+
 	public void start() {
 		new Thread("Selector") {
+			@Override
 			public void run() {
 				running=true;
 				try { loop(); }
@@ -68,7 +88,7 @@ public class SelectorThread {
 			XThread.sleep(500);
 		}
 	}
-	
+
 	public void bind(String addr, int port, ChannelStatusHandler d) throws IOException {
 		ServerSocketChannel chn=ServerSocketChannel.open();
 		chn.bind(new InetSocketAddress(port), 3);
@@ -83,7 +103,7 @@ public class SelectorThread {
 		chn.connect(new InetSocketAddress(host, port));
 		addChannel(chn, SelectionKey.OP_CONNECT|SelectionKey.OP_READ, d);
 	}
-	
+
 	//low level
 	public SelectionKey addChannel(SelectableChannel chn, int ops, ChannelStatusHandler d) throws IOException {
 		chn.configureBlocking(false);//must be non blocked !!!
@@ -91,11 +111,11 @@ public class SelectorThread {
 		if (running) selector.wakeup();
 		return sk;
 	}
-	
+
 	public void write(SelectableChannel chn, byte[] buf, int offs, int len) {
 		write(chn, ByteBuffer.wrap(buf, offs, len));
 	}
-	
+
 	public void write(SelectableChannel chn, ByteBuffer buf) {
 		SelectionKey sk = chn.keyFor(selector);
 		ChannelState chnst = (ChannelState)sk.attachment();
@@ -112,12 +132,12 @@ public class SelectorThread {
 			}
 		}
 		synchronized (writeFlag) {
-			writeFlag.add(sk);	
+			writeFlag.add(sk);
 		}
 		//sk.interestOps(SelectionKey.OP_READ|SelectionKey.OP_WRITE);
 		if (running) selector.wakeup();
 	}
-	
+
 	final private ByteBuffer getbuf() {
 		ByteBuffer b=null;
 		synchronized (bpool) {
@@ -140,7 +160,7 @@ public class SelectorThread {
 			bpool.add(b);
 		}
 	}
-	
+
 	private void idle() {}
 	private void loop() throws Exception {
 		Log.debug("loop started");
@@ -158,7 +178,7 @@ public class SelectorThread {
 				idle();
 				continue;
 			}
-			
+
 			for (Iterator<SelectionKey> i = selector.selectedKeys().iterator(); i.hasNext(); ) {
 				SelectionKey sk = i.next();
 				i.remove();

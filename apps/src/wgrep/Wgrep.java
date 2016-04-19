@@ -1,3 +1,21 @@
+/*
+ *  Copyright (c) 2016 Krzysztof Dynowski All Rights Reserved
+ *
+ *  Contact: krzydyn@gmail.com)
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License
+ */
+
 package wgrep;
 
 import java.io.IOException;
@@ -16,19 +34,19 @@ import sys.Log;
 import time.LapTime;
 
 public class Wgrep {
-	
+
 	static Pattern regex = null;
-	
+
 	static String basePath;
 	static Connection conn;
 	static List<String> visitedDirs = new ArrayList<String>();
 	static long tmPrn;
-	
+
 	static LapTime lap=new LapTime("B");
-	
+
 	public static void main(String[] args) {
 		int i=0;
-		
+
 		if (i < args.length) regex=Pattern.compile(args[i++]);
 		for (; i < args.length; ++i) {
 			String u = args[i];
@@ -69,7 +87,7 @@ public class Wgrep {
 			tmPrn += 5000;
 			lap.nextLap();
 		}
-		
+
 		Document doc = resp.parse();
 		Elements links = doc.select("a[href]");
 		List<String> dirs=new ArrayList<String>();
@@ -81,7 +99,7 @@ public class Wgrep {
 					System.out.println(f);
 			}
 	    }
-		
+
 		for (String u : dirs) {
 			if (!u.startsWith(basePath)) continue;
 			String ru=u.substring(basePath.length());
