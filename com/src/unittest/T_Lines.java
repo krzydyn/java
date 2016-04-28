@@ -1,11 +1,10 @@
 package unittest;
 
-import graph.Lines;
-import graph.Lines.IntersectionType;
-
 import java.awt.Point;
 import java.awt.geom.Point2D;
 
+import algebra.Lines;
+import algebra.Lines.IntersectionType;
 import sys.Log;
 import sys.UnitTest;
 

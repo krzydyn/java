@@ -1,4 +1,4 @@
-package graph;
+package algebra;
 
 import java.awt.Point;
 import java.awt.geom.Point2D;
@@ -60,7 +60,7 @@ public class Lines {
 
 		if (d == 0) {
 			if (a == 0 && b == 0) {
-
+				a = p2.x-p1.x;
 				return IntersectionType.COLINEAR;
 			}
 			return IntersectionType.PARALLEL;
