@@ -31,7 +31,7 @@ public class Graph {
 	}
 
 	private int nodeCnt;
-	private final List<Edge> edges=new ArrayList<>();
+	private final List<Edge> edges=new ArrayList<Graph.Edge>();
 	private int[] flag;
 
 	private void do_dfs(int from) {
@@ -50,7 +50,7 @@ public class Graph {
 	}
 
 	private void do_bfs(int from) {
-		List<Integer> q = new ArrayList<>();
+		List<Integer> q = new ArrayList<Integer>();
 		q.add(from);
 		while (!q.isEmpty()) {
 			int u = q.remove(q.size()-1);
