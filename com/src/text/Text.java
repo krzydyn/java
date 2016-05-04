@@ -20,6 +20,7 @@ package text;
 
 import java.io.ByteArrayOutputStream;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -40,13 +41,14 @@ public class Text {
 		return true;
 	}
 
-	private static String join_l(List<?> a, String sep) {
-		if (a.size()==0) return "";
-		StringBuilder b=new StringBuilder(a.size()*(sep.length()+2));
-		b.append(a.get(0));
-		for (int i = 1; i < a.size(); ++i) {
+	private static String join_iter(Iterable<?> a, String sep) {
+		Iterator<?> it = a.iterator();
+		if (!it.hasNext()) return "";
+		StringBuilder b=new StringBuilder(30*(sep.length()+2));
+		b.append(it.next());
+		while (it.hasNext()) {
 			b.append(sep);
-			b.append(a.get(i));
+			b.append(it.next());
 		}
 		return b.toString();
 	}
@@ -74,7 +76,7 @@ public class Text {
 		if (o == null) return null;
 		if (o instanceof int[]) return join_i((int[])o, sep);
 		if (o instanceof Object[]) return join_o((Object[])o, sep);
-		if (o instanceof List) return join_l((List<?>)o, sep);
+		if (o instanceof Iterable) return join_iter((List<?>)o, sep);
 		return o.toString();
 	}
 
