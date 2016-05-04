@@ -6,6 +6,24 @@ import java.util.List;
 
 public class Combinatory {
 
+	static public <T extends Object> void comboSort(List<T> a, Comparator<T> cmp) {
+		int gap = a.size();
+		boolean swapped=false;
+		while (gap > 1 || swapped) {
+			gap = gap * 10 / 13; //empiric
+			if (gap==0) gap=1;
+			else if (gap==9||gap==10) gap=11;
+
+			swapped = false;
+			for (int i = 0; i + gap < a.size(); ++i) {
+				if (cmp.compare(a.get(i), a.get(i + gap)) > 0) {
+					Collections.swap(a, i, i + gap);
+		            swapped = true;
+		           }
+		      }
+		   }
+	}
+
 	static public <T extends Comparable<T>> boolean nextPermutation(List<T> a) {
         int i = a.size() - 2;
 

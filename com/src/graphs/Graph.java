@@ -1,7 +1,11 @@
 package graphs;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
+
+import algebra.Combinatory;
+import sys.Log;
 
 /**
  * Operate on N nodes numbered (0...N-1)
@@ -18,8 +22,7 @@ public class Graph {
 	private int nodeCnt;
 	private final List<Edge> edges=new ArrayList<Graph.Edge>();
 	private int[] flag;
-	private int weight = 0;
-
+	private long weight = 0;
 
 	public Graph() {this(0);}
 	public Graph(int n) {nodeCnt=n;}
@@ -28,7 +31,9 @@ public class Graph {
 		weight = 0;
 		edges.clear();
 	}
-	public int getWeight() { return weight; }
+	public long getWeight() {
+		return weight;
+	}
 	public int addNode() {
 		return ++nodeCnt;
 	}
@@ -81,25 +86,17 @@ public class Graph {
 		do_bfs(from);
 	}
 
+	/**
+	 * sort edges by weight from upper to lower
+	 * @param edges
+	 */
 	private void sortByWeight(List<Edge> edges) {
-		//combo sort
-		Edge t;
-		int gap = edges.size();
-		boolean swapped=false;
-		while (gap > 1 || swapped) {
-		      gap = gap * 10 / 13; //empiric
-		      if (gap==0) gap=1;
-		      //else if (gap==9||gap==10) gap=11;
-		      swapped = false;
-		      for (int i = 0; i + gap < edges.size(); ++i) {
-		         if (edges.get(i).w > edges.get(i + gap).w) {
-		            t = edges.get(i);
-		            edges.set(i, edges.get(i + gap));
-		            edges.set(i + gap, t);
-		            swapped = true;
-		           }
-		      }
-		   }
+		Combinatory.comboSort(edges, new Comparator<Edge>() {
+			@Override
+			public int compare(Edge o1, Edge o2) {
+				return o2.w-o1.w;
+			}
+		});
 	}
 
 
@@ -117,7 +114,7 @@ public class Graph {
 
 		while (edges.size() > 0) {
 			//2. remove first edge (with lowest weight)
-			Edge me = edges.remove(0);
+			Edge me = edges.remove(edges.size()-1);
 
 			//3. add edge to tree
 			if (used[me.s]==null && used[me.e]==null) {
