@@ -10,7 +10,7 @@ public class Combinatory {
 		int gap = a.size();
 		boolean swapped=false;
 		while (gap > 1 || swapped) {
-			gap = gap * 10 / 13; //empiric
+			gap = gap * 10 / 13; //empirical
 			if (gap==0) gap=1;
 			else if (gap==9||gap==10) gap=11;
 

@@ -1,0 +1,69 @@
+package test;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import algebra.Combinatory;
+
+public class Cryptarithm {	
+	final static List<Character> symbols = new ArrayList<Character>();
+	final static List<Integer> values = new ArrayList<Integer>();
+	
+	static int getValue(char symb) {
+		int i = symbols.indexOf(symb);
+		return values.get(i);
+	}
+	static long value(String t) {
+		long x=0;
+		for (int i=0; i < t.length(); ++i) {
+			x*=10;
+			x += getValue(t.charAt(i));
+		}
+		return x;
+	}
+	
+	static void getSymbols(String s) {
+		for (int i=0; i < s.length(); ++i) {
+			char c = s.charAt(i);
+			if (!symbols.contains(c)) {
+				symbols.add(c);
+			}
+		}
+	}
+	static void print(long[] r) {
+		for (int i=0; i < symbols.size(); ++i) {
+			char symb = symbols.get(i);
+			System.out.printf("%d ", getValue(symb));
+		}
+		System.out.print("  ");
+		for (int i=0; i < r.length; ++i) {
+			System.out.printf(" %d", r[i]);
+		}
+		System.out.println();
+	}
+		
+	static boolean nextValues() {
+		return Combinatory.nextPermutation(values);
+	}
+
+	public static void main(String[] args) {
+		String a = "dcxciii";
+		String b = "dcccxcv";
+		String c = "mdcccxv";
+		String d = "mmmcdiii";
+		String a1 = "mroz";
+		String b1 = "zima";
+		getSymbols("mroziadcxv");
+		
+		for (int i=0; i < 10; ++i)
+			values.add(i);
+
+		do {
+			//print();
+			if (3*value(a1)==value(b1) && value(a)+value(b)+value(c) == value(d)) {
+				long[] r={value(a1),value(b1),value(a),value(b),value(c),value(d)};
+				print(r);
+			}
+		} while (nextValues());
+	}
+}
