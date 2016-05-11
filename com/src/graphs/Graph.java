@@ -5,7 +5,6 @@ import java.util.Comparator;
 import java.util.List;
 
 import algebra.Combinatory;
-import sys.Log;
 
 /**
  * Operate on N nodes numbered (0...N-1)
@@ -91,6 +90,12 @@ public class Graph {
 	 * @param edges
 	 */
 	private void sortByWeight(List<Edge> edges) {
+		/*java.util.Collections.sort(edges, new Comparator<Edge>() {
+			@Override
+			public int compare(Edge o1, Edge o2) {
+				return o2.w-o1.w;
+			}
+		});*/
 		Combinatory.comboSort(edges, new Comparator<Edge>() {
 			@Override
 			public int compare(Edge o1, Edge o2) {
