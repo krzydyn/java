@@ -19,7 +19,7 @@
 package crypt;
 
 public interface Digest {
-	public void init();
-	public void update();
+	public void init(byte[] initval);
+	public void update(byte[] data, int offs, int len);
 	public byte[] finish();
 }

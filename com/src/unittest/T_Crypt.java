@@ -25,6 +25,7 @@ import crypt.AES3;
 import crypt.Base64;
 import crypt.Prime;
 import crypt.RSA;
+import crypt.SuperHash;
 import sys.Log;
 import sys.UnitTest;
 import text.Text;
@@ -90,5 +91,18 @@ public class T_Crypt extends UnitTest {
 		Log.info("encr(%s) = %s", msg, Text.hex(result));
 		String rmsg = new String(aes.decrypt(result));
 		check(msg, rmsg);
+	}
+
+	static void hash() {
+		byte[] data=new byte[256];
+		SuperHash h=new SuperHash();
+		for (int i=0; i < data.length; ++i) {
+			data[i] = (byte)(i*i*0x11b);
+		}
+
+		for (int i=0; i < 5000000; ++i) {
+			h.init(null);
+			h.update(data, 0, data.length);
+		}
 	}
 }
