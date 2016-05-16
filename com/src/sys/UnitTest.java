@@ -73,6 +73,11 @@ public class UnitTest {
 		if (prefix.lastIndexOf('.')>0) pkg=prefix.substring(0, prefix.lastIndexOf('.'));
 		ClassLoader cl = getClassLoader();
 		URL url = cl.getResource(pkg.replace(".", "/"));
+		if (url == null) {
+			prefix = pkg;
+			pkg=prefix.substring(0, pkg.lastIndexOf('.'));
+			url = cl.getResource(pkg.replace(".", "/"));
+		}
 		BufferedReader rd = new BufferedReader(new InputStreamReader((InputStream) url.getContent()));
 		String line = null;
 		while ((line = rd.readLine()) != null) {
@@ -90,7 +95,7 @@ public class UnitTest {
 		return a;
 	}
 
-	static public void test(String unit) {
+	static public void test(String prefix, String unit) {
 		ClassLoader cl = getClassLoader();
 
 		time.reset(0);
@@ -104,7 +109,7 @@ public class UnitTest {
 					continue;
 				}
 				if ("main".equals(m.getName())) continue;
-
+				if (!(unit + "." + m.getName()).startsWith(prefix)) continue;
 
 				current = new TestSummary();
 				summary.add(current);
@@ -137,16 +142,16 @@ public class UnitTest {
 		}
 	}
 
-	static public void testAll(String pkg) {
+	static public void testAll(String prefix) {
 		try {
-			test(getTestUnits(pkg));
+			test(prefix, getTestUnits(prefix));
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 	}
 
-	static public void test(Iterable<String> units) {
-		for (String u : units) test(u);
+	static public void test(String prefix, Iterable<String> units) {
+		for (String u : units) test(prefix,u);
 		Log.info("* *********** ");
 		Log.info("* Tests: %d", summary.size());
 		for (TestSummary s : summary) {
@@ -154,8 +159,8 @@ public class UnitTest {
 			else Log.info("%s.%s:  %d / %d", s.testunit, s.testcase, s.checks-s.errors, s.checks);
 		}
 	}
-	static public void test(String[] units) {
-		for (String u : units) test(u);
+	static public void test(String prefix, String[] units) {
+		for (String u : units) test(prefix, u);
 	}
 
 	static public interface RunThrowable {
