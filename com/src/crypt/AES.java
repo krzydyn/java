@@ -35,10 +35,11 @@ import sys.Log;
  *
  */
 public class AES {
-	static final int BLOCKSIZE = 16;
+	static final int ROOT = 0x11b;
+	static final int BLOCKSIZE = 16; // 128-bit
 	static final byte[] sBox = new byte[256];   // S-box
 	static final byte[] invSbox = new byte[256];  // iS-box
-	static final int[] rCon = new int[10];		// Round constants
+	static final int[] rCon = new int[15];  // round constants (max 10 rounds for 128 bit block)
 	static { generateSbox(); generateRcon(); }
 
 	static final private void generateSbox() {
@@ -46,7 +47,7 @@ public class AES {
 	    int x, i;
 	    for (i = 0, x = 1; i < 256; i ++) {
 	        t[i] = (byte)(x & 0xFF);
-	        x ^= (x << 1) ^ ((x >> 7) * 0x11B);
+	        x ^= (x << 1) ^ ((x >> 7) * ROOT);
 	    }
 
 	    sBox[0] = 0x63;
@@ -61,9 +62,10 @@ public class AES {
 	         invSbox[sBox[i]]=(byte)i;
 	    }
 	}
-	static final int ROOT = 0x11b;
 	static final private void generateRcon() {
-
+		/* {0x01000000,0x02000000,0x04000000,0x08000000,0x10000000,0x20000000,
+		 *  0x40000000,0x80000000,0x1b000000,0x36000000,0x6c000000,0xd8000000,
+		 *  0xab000000,0x4d000000,0x9a000000};*/
 		int r = 1;
         rCon[0] = r << 24;
         for (int i = 1; i < rCon.length; i++) {
@@ -96,7 +98,6 @@ public class AES {
             a = a >>> 1;
         }
         return sum;
-
 	}
 
 	private void expandKey(byte[] cipherKey) {
