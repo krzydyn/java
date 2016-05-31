@@ -26,7 +26,7 @@ import java.util.Map;
 
 public class Text {
 	final public static String HEX_DIGITS = "0123456789ABCDEF";
-	
+
 	public static boolean isAnagram(String s1, String s2) {
 		if (s1.length() != s2.length()) return false;
 		Map<Character, Integer> chars=new HashMap<Character, Integer>();
