@@ -35,8 +35,9 @@ import sys.Log;
  *
  */
 public class AES {
-	static final int ROOT = 0x11b;
 	static final int BLOCKSIZE = 16; // 128-bit
+	static final int Nb = 4;  //number of columns (number of words in state)
+	static final int ROOT = 0x11b; // AES irreducible polynomial
 	static final byte[] sBox = new byte[256];   // S-box
 	static final byte[] invSbox = new byte[256];  // iS-box
 	static final int[] rCon = new int[15];  // round constants (max 10 rounds for 128 bit block)
@@ -80,6 +81,15 @@ public class AES {
 	private final byte[] state = new byte[BLOCKSIZE];
 	private int[] rek;
 
+    public static int getRounds (int keySize) {
+        switch (keySize) {
+          case 16: return 10;   // 16 byte = 128 bit key
+          case 24: return 12;   // 24 byte = 192 bit key
+          case 32: return 14;   // 32 byte = 256 bit key
+        }
+        throw new RuntimeException("wrong keysize");
+    }
+
 	AES(byte[] k,byte[] i) {
 		key=k;
 		System.arraycopy(i, 0, iv, 0, iv.length);
@@ -100,19 +110,19 @@ public class AES {
         return sum;
 	}
 
-	private void expandKey(byte[] cipherKey) {
-		int Nk = (cipherKey.length*8) >>> 5;
+	private void expandKey(byte[] key) {
+		int Nk = (key.length*8) >>> 5;
         int Nr = Nk + 6;
-        int Nw = 4*(Nr + 1);
+        int Nw = Nb*(Nr + 1);
         rek = new int[Nw];
 
         int temp, r = 0;
         for (int i = 0, k = 0; i < Nk; i++, k += 4) {
 			rek[i] =
-			    ((cipherKey[k    ]       ) << 24) |
-			    ((cipherKey[k + 1] & 0xff) << 16) |
-			    ((cipherKey[k + 2] & 0xff) <<  8) |
-			    ((cipherKey[k + 3] & 0xff));
+			    ((key[k    ]       ) << 24) |
+			    ((key[k + 1] & 0xff) << 16) |
+			    ((key[k + 2] & 0xff) <<  8) |
+			    ((key[k + 3] & 0xff));
         }
         for (int i = Nk, n = 0; i < Nw; i++, n--) {
 			temp = rek[i - 1];
@@ -178,7 +188,7 @@ public class AES {
 		}
 	}
 
-	static void shift_rows(byte[] state)
+	static void shiftRows(byte[] state)
 	{
 	    byte tmp;
 	    /* just substitute row 0 */
@@ -209,7 +219,7 @@ public class AES {
 	    state[7] = sBox[state[3]];
 	    state[3] = tmp;
 	}
-	static void inv_shift_rows(byte[] state)
+	static void inv_shiftRows(byte[] state)
 	{
 	    byte tmp;
 	    /* restore row 0 */
@@ -241,7 +251,7 @@ public class AES {
 	    state[15] = tmp;
 	}
 
-	static void mix_sub_columns(byte[] state)
+	static void mix_columns(byte[] state)
 	{
 	    byte[] tmp = new byte[BLOCKSIZE];
 	    byte[] x2_sbox=sBox;//fake
