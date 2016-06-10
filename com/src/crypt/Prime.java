@@ -39,7 +39,7 @@ public class Prime {
 
 	static public boolean isPrime(BigInteger p) {
 		if (!p.testBit(0)) return false;
-		for (int i=1; i < 8; ++i) {
+		for (int i=1; i < PRIMES.length; ++i) {
 			if (p.remainder(BigInteger.valueOf(PRIMES[i])).equals(BigInteger.ZERO)) return false;
 		}
 		return true;

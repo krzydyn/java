@@ -24,6 +24,11 @@ import java.util.Map;
 
 public class Base64 {
 	private static final String BASE64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+	private static final String URL64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_"; //url
+	private static final String RADIX64 = "./0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"; //linux passwords/Gedcom
+	private static final String XX64 = "+-0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"; //xxencoding
+	private static final String UU64 = " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_"; //uuencoding
+
 	private static final char BASE64_PAD = '=';
 	private static final Map<Character, Integer> BASE64inv = new HashMap<Character, Integer>();
 	static {

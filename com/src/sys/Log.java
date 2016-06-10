@@ -34,9 +34,36 @@ public class Log {
 	private static SimpleDateFormat tmfmt = tmfmt_tst;
 	private static Object lock=new Object();
 
-	private static void log(int level, int traceOffs, String fmt, Object[] args) {
+	static private void moveLeft(Object[] args, int pa) {
+		if (pa>0)
+			for (int i=pa; i<args.length; ++i) args[i-pa]=args[i];
+	}
+
+	private static void log(int level, int traceOffs, Object[] args) {
 		String file = null;
 		int line = -1;
+
+		Throwable e = null;
+		String fmt=null;
+		int pa=0;
+		if (args.length > pa) {
+			if (args[pa] instanceof Integer) {
+				traceOffs=(Integer)args[pa++];
+			}
+		}
+		if (args.length > pa) {
+			if (args[pa] instanceof Throwable) {
+				e=(Throwable)args[pa++];
+			}
+		}
+		if (args.length > pa) {
+			if (args[pa] instanceof String) {
+				fmt=(String)args[pa++];
+			}
+		}
+		moveLeft(args,pa);
+
+
 		Thread ct = Thread.currentThread();
 		if (tmfmt == tmfmt_tst && traceOffs >= 0) {
 			StackTraceElement[] bt = ct.getStackTrace();
@@ -55,6 +82,7 @@ public class Log {
 			else s.printf("%s%s [%s] %s: ", color, tmfmt.format(new Date()), name, ct.getName());
 			if (file != null) s.printf("(%s:%d) ", file, line );
 			if (fmt != null) s.printf((Locale)null, fmt, args);
+			if (e != null) e.printStackTrace(s);
 			if (!color.isEmpty()) s.printf(Ansi.SGR_RESET);
 			s.println();
 			s.flush();
@@ -64,18 +92,10 @@ public class Log {
 	public static void setReleaseMode() { tmfmt = tmfmt_rel; }
 	public static void setTestMode() { tmfmt = tmfmt_tst; }
 
-	public static void error(Throwable e) {e.printStackTrace(System.out);}
-	public static void error(String fmt,Object ...args) {log(0, 0, fmt, args);}
-	public static void warn(String fmt,Object ...args) {log(1, 0, fmt, args);}
-	public static void debug(String fmt,Object ...args) {log(2, 0, fmt, args);}
-	public static void trace(String fmt,Object ...args) {log(3, 0, fmt, args);}
-	public static void info(String fmt,Object ...args) {log(4, -1, fmt, args);}
-	public static void notice(String fmt,Object ...args) {log(5, -1, fmt, args);}
-
-	public static void error(int traceOffs,String fmt, Object ...args) {log(0, traceOffs, fmt, args);}
-	public static void warn(int traceOffs,String fmt, Object ...args) {log(1, traceOffs, fmt, args);}
-	public static void debug(int traceOffs,String fmt, Object ...args) {log(2, traceOffs, fmt, args);}
-	public static void trace(int traceOffs,String fmt, Object ...args) {log(3, traceOffs, fmt, args);}
-	public static void info(int traceOffs,String fmt, Object ...args) {log(4, traceOffs, fmt, args);}
-	public static void notice(int traceOffs,String fmt, Object ...args) {log(5, traceOffs, fmt, args);}
+	public static void error(Object ...args) {log(0, 0, args);}
+	public static void warn(Object ...args) {log(1, 0, args);}
+	public static void debug(Object ...args) {log(2, 0, args);}
+	public static void trace(Object ...args) {log(3, 0, args);}
+	public static void info(Object ...args) {log(4, -1, args);}
+	public static void notice(Object ...args) {log(5, -1, args);}
 }

@@ -220,9 +220,9 @@ public class AnsiTerminal extends JPanel implements FocusListener,KeyListener {
 		int code = e.getKeyCode();
 
 		if (code == KeyEvent.VK_UP) { //up-arrow
-			inputBuffer.append(Ansi.CSI+"A");
 			cursorEnd();
 			cursorLineBegin();
+			inputBuffer.append(Ansi.CSI+"A");
 		}
 		else if (code == KeyEvent.VK_DOWN) { //down-arrow
 			inputBuffer.append(Ansi.CSI+"B");
@@ -251,7 +251,7 @@ public class AnsiTerminal extends JPanel implements FocusListener,KeyListener {
 	private void writeBuffer() {
 		if (outputBuffer.length() == 0) return ;
 		int p0 = editor.getCaretPosition();
-		//Log.debug("Output: %s", Text.vis(outputBuffer));
+		Log.debug("Output: %s", Text.vis(outputBuffer));
 		try {
 			Document doc = editor.getDocument();
 			if (p0 < doc.getLength()) {
@@ -432,7 +432,7 @@ public class AnsiTerminal extends JPanel implements FocusListener,KeyListener {
 				outputBuffer.append(c);
 			}
 			else if (c == Ansi.Code.VT || c == Ansi.Code.LF) {
-				cursorEnd();
+				//cursorEnd();
 				outputBuffer.append('\n');
 			}
 			else if (c == Ansi.Code.BS) {
@@ -442,7 +442,7 @@ public class AnsiTerminal extends JPanel implements FocusListener,KeyListener {
 				}
 			}
 			else if (c == Ansi.Code.ESC) {
-				cursorEnd();
+				//cursorEnd();
 				writeBuffer();
 				outputBuffer.append(c);
 				escSeq=true;
@@ -477,18 +477,22 @@ public class AnsiTerminal extends JPanel implements FocusListener,KeyListener {
 		try { Sound.dong(); } catch (Exception e) {}
 	}
 	public void cursorHome() {
+		Log.debug("cursor: home");
 		editor.setCaretPosition(0);
 	}
 	public void cursorEnd() {
+		Log.debug("cursor: end");
 		Document doc = editor.getDocument();
 		int p0 = doc.getLength();
 		editor.setCaretPosition(p0);
 	}
 	public void cursorMove(int n) {
+		Log.debug("cursor: move %d",n);
 		int p0 = editor.getCaretPosition();
 		editor.setCaretPosition(p0+n);
 	}
 	public void cursorLineBegin() {
+		Log.debug("cursor: line_begin");
 		Document doc = editor.getDocument();
 		int p, p0 = editor.getCaretPosition();
 		for (p=p0; p0 > 0; --p0) {
@@ -524,6 +528,7 @@ public class AnsiTerminal extends JPanel implements FocusListener,KeyListener {
 		}
 	}
 	public void eraseBelow() {
+		Log.debug("eraseBelow");
 		Document doc = editor.getDocument();
 		int p, p0 = editor.getCaretPosition();
 		p=doc.getLength();

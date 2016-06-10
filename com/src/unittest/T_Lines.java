@@ -5,11 +5,16 @@ import java.awt.geom.Point2D;
 
 import algebra.Lines;
 import algebra.Lines.IntersectionType;
+import algebra.Maths;
 import sys.Log;
 import sys.UnitTest;
 
 public class T_Lines extends UnitTest {
 
+	static void power() {
+		Log.debug("pow=%d",Maths.power(3, 10));
+		check(Maths.power(3, 10)==59049, "wrong power");
+	}
 	static void intersectInt() {
 		Point[] p = {new Point(-3,0),new Point(3,0),new Point(0,2),new Point(-4,2)};
 		Point2D r = new Point2D.Float();

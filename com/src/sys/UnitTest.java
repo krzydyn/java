@@ -155,7 +155,7 @@ public class UnitTest {
 		Log.info("* *********** ");
 		Log.info("* Tests: %d", summary.size());
 		for (TestSummary s : summary) {
-			if (s.errors!=0) Log.error(-1,"%s.%s:  %d / %d", s.testunit, s.testcase, s.checks-s.errors, s.checks);
+			if (s.errors!=0) Log.error(-1, "%s.%s:  %d / %d", s.testunit, s.testcase, s.checks-s.errors, s.checks);
 			else Log.info("%s.%s:  %d / %d", s.testunit, s.testcase, s.checks-s.errors, s.checks);
 		}
 	}

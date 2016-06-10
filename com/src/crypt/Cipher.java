@@ -21,8 +21,7 @@ package crypt;
 public interface Cipher {
 	final public int ENCRYPT=0;
 	final public int DECRYPT=1;
-	final public int CBC=2;
 	public void init(int mode);
-	public int update(byte[] data, int offs, int len, byte[] out);
-	public int finish(byte[] out);
+	public int update(byte[] data, int offs, int len, byte[] out, int outoffs);
+	public int finish(byte[] out, int outoffs);
 }
