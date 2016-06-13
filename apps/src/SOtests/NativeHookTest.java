@@ -1,4 +1,4 @@
-package test;
+package SOtests;
 
 import java.awt.Rectangle;
 import java.awt.Robot;

@@ -1,4 +1,4 @@
-package test;
+package SOtests;
 
 import java.awt.Color;
 import java.io.BufferedReader;

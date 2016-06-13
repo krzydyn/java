@@ -1,4 +1,4 @@
-package test;
+package SOtests;
 
 public class Factoring {
 	static double fac(double x, int pow) {

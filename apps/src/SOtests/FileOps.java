@@ -1,4 +1,4 @@
-package test;
+package SOtests;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;

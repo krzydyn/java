@@ -1,4 +1,4 @@
-package test;
+package SOtests;
 
 import java.net.NetworkInterface;
 import java.util.Enumeration;

@@ -1,4 +1,4 @@
-package test;
+package SOtests;
 
 import java.io.File;
 import java.util.Iterator;
@@ -75,14 +75,4 @@ public class AnimationTest {
 			}
 		}
 	}
-	private static IIOMetadataNode getNode(IIOMetadataNode node, String nodeName) {
-		int nNodes = node.getLength();
-		for (int i = 0; i < nNodes; i++) {
-			Node ni=node.item(i);
-			if (ni.getNodeName().equals(nodeName)) {
-            	return (IIOMetadataNode) ni;
-			}
-		}
-		return null;
-    }
 }
