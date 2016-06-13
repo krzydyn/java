@@ -3,8 +3,8 @@ package crypt;
 // http://www.azillionmonkeys.com/qed/hash.html
 
 public class SuperHash implements Digest {
-	int hash; //32-bit hash
-	byte[] hashrep = new byte[4];
+	int hash; //32-bit hash (for fast algebra)
+	byte[] hashrep = new byte[4];//byte sequence of hash
 
 	@Override
 	public void init(byte[] initval) {
@@ -28,37 +28,37 @@ public class SuperHash implements Digest {
 
 		int tmp;
 		 /* Main loop */
-	    for (;len > 0; len--) {
-	        hash  += get16bits (data,offs);
-	        tmp    = (get16bits (data,offs+2) << 11) ^ hash;
-	        hash   = (hash << 16) ^ tmp;
-	        hash  += hash >> 11;
-	        offs  += 4;
-	    }
+		for (;len > 0; --len) {
+			hash  += get16bits (data,offs);
+			tmp	= (get16bits (data,offs+2) << 11) ^ hash;
+			hash   = (hash << 16) ^ tmp;
+			hash  += hash >>> 11;
+			offs  += 4;
+		}
 
-	    /* Handle end cases */
-	    switch (rem) {
-	        case 3: hash += get16bits(data, offs);
-	                hash ^= hash << 16;
-	                hash ^= data[offs+2] << 18;
-	                hash += hash >> 11;
-	                break;
-	        case 2: hash += get16bits(data, offs);
-	                hash ^= hash << 11;
-	                hash += hash >> 17;
-	                break;
-	        case 1: hash += data[offs];
-	                hash ^= hash << 10;
-	                hash += hash >> 1;
-	    }
+		/* Handle end cases */
+		switch (rem) {
+			case 3: hash += get16bits(data, offs);
+					hash ^= hash << 16;
+					hash ^= data[offs+2] << 18;
+					hash += hash >>> 11;
+					break;
+			case 2: hash += get16bits(data, offs);
+					hash ^= hash << 11;
+					hash += hash >>> 17;
+					break;
+			case 1: hash += data[offs];
+					hash ^= hash << 10;
+					hash += hash >>> 1;
+		}
 
-	    /* Force "avalanching" of final 127 bits */
-	    hash ^= hash << 3;
-	    hash += hash >> 5;
-	    hash ^= hash << 4;
-	    hash += hash >> 17;
-	    hash ^= hash << 25;
-	    hash += hash >> 6;
+		/* Force "avalanching" of final 127 bits */
+		hash ^= hash << 3;
+		hash += hash >>> 5;
+		hash ^= hash << 4;
+		hash += hash >>> 17;
+		hash ^= hash << 25;
+		hash += hash >>> 6;
 	}
 
 	@Override
