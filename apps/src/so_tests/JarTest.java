@@ -1,4 +1,4 @@
-package SOtests;
+package so_tests;
 
 import java.io.IOException;
 import java.util.Map;

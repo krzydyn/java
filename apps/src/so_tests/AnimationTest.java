@@ -1,4 +1,4 @@
-package SOtests;
+package so_tests;
 
 import java.io.File;
 import java.util.Iterator;

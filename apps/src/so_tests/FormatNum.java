@@ -1,4 +1,4 @@
-package SOtests;
+package so_tests;
 
 import java.text.DecimalFormat;
 import java.util.Locale;

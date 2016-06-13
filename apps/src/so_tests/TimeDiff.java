@@ -1,4 +1,4 @@
-package SOtests;
+package so_tests;
 
 public class TimeDiff {
 

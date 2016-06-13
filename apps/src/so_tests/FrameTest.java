@@ -1,4 +1,4 @@
-package SOtests;
+package so_tests;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
