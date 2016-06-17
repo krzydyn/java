@@ -84,8 +84,9 @@ public class AnsiTerminal extends JPanel implements FocusListener,KeyListener {
 		Color.GRAY, Color.RED, Color.GREEN.darker(), Color.YELLOW, new Color(0x8080FF), Color.MAGENTA.darker(), Color.CYAN, Color.WHITE
 	};
 
-	private final int MAX_COL=120;
-	private final int MAX_ROW=60;
+	private static final int MAX_IN_BUFFER=32*1024;
+	private static final int MAX_COL=120;
+	private static final int MAX_ROW=60;
 
 	private JTextComponent editor = new JTextPane();
 	private JLabel title = new JLabel();
@@ -93,6 +94,7 @@ public class AnsiTerminal extends JPanel implements FocusListener,KeyListener {
 	private StringBuilder inputBuffer = new StringBuilder();
 	private StringBuilder outputBuffer = new StringBuilder();
 	private Point cpos = new Point(0, 0);
+	private int linesInBuf=0;
 	private boolean paused = false;
 	private boolean escSeq = false;
 
@@ -207,6 +209,7 @@ public class AnsiTerminal extends JPanel implements FocusListener,KeyListener {
 			cursorEnd();
 		}
 		else if (c == Ansi.Code.HT) {
+			Log.debug("HT key");
 			inputBuffer.setLength(0);
 			cursorEnd();
 			cursorLineBegin();
@@ -248,23 +251,30 @@ public class AnsiTerminal extends JPanel implements FocusListener,KeyListener {
 	@Override
 	public void keyReleased(KeyEvent e) {}
 
-	private void writeBuffer() {
+	private void flushOutput() {
 		if (outputBuffer.length() == 0) return ;
 		int p0 = editor.getCaretPosition();
-		Log.debug("Output: %s", Text.vis(outputBuffer));
 		try {
 			Document doc = editor.getDocument();
 			if (p0 < doc.getLength()) {
 				int l = Math.min(doc.getLength() - p0, outputBuffer.length());
+				Log.debug("Replace @ %d %s with %s", p0, Text.vis(doc.getText(p0, l)), Text.vis(outputBuffer));
 				doc.remove(p0, l);
+			}
+			else {
+				Log.debug("Append: %s", Text.vis(outputBuffer));
 			}
 			doc.insertString(p0, outputBuffer.toString(), attrib);
 			editor.setCaretPosition(p0+outputBuffer.length());
 			outputBuffer.setLength(0);
+			if (doc.getLength() > MAX_IN_BUFFER) {
+				doc.remove(0,MAX_IN_BUFFER/4);
+			}
+			Log.debug("cursor @%d", editor.getCaretPosition());
 		} catch (BadLocationException e) {Log.error(e.toString());}
 	}
 
-	public void flushInput() {
+	public void clearInput() {
 		inputBuffer.setLength(0);
 		escSeq = false;
 	}
@@ -288,8 +298,8 @@ public class AnsiTerminal extends JPanel implements FocusListener,KeyListener {
 		boolean done=true;
 		if (seq.startsWith(Ansi.CSI)) {
 			if (seq.equals(Ansi.ERASE_ALL)) eraseAll();
-			else if (seq.equals(Ansi.ERASE_BELOW)) eraseBelow();
-			else if (seq.equals(Ansi.ERASE_ABOVE)) eraseAbove();
+			else if (seq.equals(Ansi.ERASE_BELOW)) eraseLineBelow();
+			else if (seq.equals(Ansi.ERASE_ABOVE)) eraseLineAbove();
 			else if (seq.equals(Ansi.ERASE_LN)) eraseLineRight();
 			else if (seq.equals(Ansi.CURSOR_POS)) cursorHome();
 			else if (seq.equals(Ansi.SGR_RESET)) {
@@ -316,20 +326,14 @@ public class AnsiTerminal extends JPanel implements FocusListener,KeyListener {
 						Log.error("can't parse seq: '%s'", Text.vis(seq));
 					}
 				}
-				if (x<0) x=0;
-				else if (x > MAX_COL) x=MAX_COL;
-				if (y<0) y=1;
-				else if (y > MAX_ROW) x=MAX_ROW;
-				cpos.x = x; cpos.y = y;
-				Log.debug("setSursor %s", cpos.toString());
-				if (cpos.y <= 1) cursorHome();
-				else cursorEnd();
+				cursorLocate(x, y);
 			}
 			else if (seq.endsWith("K")) {
 				int n = Integer.parseInt(seq.substring(Ansi.CSI.length(), seq.length()-1));
 				if (n == 0) eraseLineRight();
 				else if (n == 1) eraseLineLeft();
 				else if (n == 2) eraseAll();
+				else done=false;
 			}
 			else if (seq.endsWith("h")) {
 				if (seq.equals(Ansi.CSI + "?1049")) {
@@ -411,8 +415,9 @@ public class AnsiTerminal extends JPanel implements FocusListener,KeyListener {
 			}
 
 			if (!escSeq) {
-				handleEscSeq(outputBuffer.toString());
+				String seq = outputBuffer.toString();
 				outputBuffer.setLength(0);
+				handleEscSeq(seq);
 				if (c!=0) outputBuffer.append(c);
 			}
 		}
@@ -421,7 +426,8 @@ public class AnsiTerminal extends JPanel implements FocusListener,KeyListener {
 			//	Log.debug("ansi %s", Ansi.toString(c));
 
 			if (c == Ansi.Code.CR) {
-				writeBuffer();
+				flushOutput();
+				cursorLineBegin();
 				attrib = SimpleAttributeSet.EMPTY;
 			}
 			else if (c == Ansi.Code.BEL) {
@@ -432,8 +438,10 @@ public class AnsiTerminal extends JPanel implements FocusListener,KeyListener {
 				outputBuffer.append(c);
 			}
 			else if (c == Ansi.Code.VT || c == Ansi.Code.LF) {
-				//cursorEnd();
+				cursorEnd(); //go end of line
 				outputBuffer.append('\n');
+				flushOutput();
+				++linesInBuf;
 			}
 			else if (c == Ansi.Code.BS) {
 				int p = editor.getCaretPosition();
@@ -442,8 +450,7 @@ public class AnsiTerminal extends JPanel implements FocusListener,KeyListener {
 				}
 			}
 			else if (c == Ansi.Code.ESC) {
-				//cursorEnd();
-				writeBuffer();
+				flushOutput();
 				outputBuffer.append(c);
 				escSeq=true;
 			}
@@ -460,13 +467,13 @@ public class AnsiTerminal extends JPanel implements FocusListener,KeyListener {
 		for (int i=0; i<len; ++i) {
 			append((char)(b[off+i]&0xff));
 		}
-		if (!escSeq) writeBuffer();
+		if (!escSeq) flushOutput();
 	}
 	public void write(CharSequence s) {
 		for (int i=0; i<s.length(); ++i) {
 			append(s.charAt(i));
 		}
-		if (!escSeq) writeBuffer();
+		if (!escSeq) flushOutput();
 	}
 
 	public void setTitle(String t) {
@@ -476,9 +483,18 @@ public class AnsiTerminal extends JPanel implements FocusListener,KeyListener {
 	public void beep() {
 		try { Sound.dong(); } catch (Exception e) {}
 	}
+	public void cursorLocate(int x, int y) {
+		if (x<0) x=0;
+		else if (x > MAX_COL) x=MAX_COL;
+		if (y<=0) y=1;
+		else if (y > MAX_ROW) x=MAX_ROW;
+		cpos.x=x; cpos.y=y;
+		Log.debug("setSursor %s", cpos.toString());
+	}
 	public void cursorHome() {
 		Log.debug("cursor: home");
 		editor.setCaretPosition(0);
+		cursorLocate(0, 0);
 	}
 	public void cursorEnd() {
 		Log.debug("cursor: end");
@@ -487,7 +503,7 @@ public class AnsiTerminal extends JPanel implements FocusListener,KeyListener {
 		editor.setCaretPosition(p0);
 	}
 	public void cursorMove(int n) {
-		Log.debug("cursor: move %d",n);
+		Log.debug("cursor: moverel %d",n);
 		int p0 = editor.getCaretPosition();
 		editor.setCaretPosition(p0+n);
 	}
@@ -506,6 +522,7 @@ public class AnsiTerminal extends JPanel implements FocusListener,KeyListener {
 		}
 	}
 	public void eraseAll() {
+		Log.debug("buffer: eraseAll");
 		Document doc = editor.getDocument();
 		int p0=0, p = doc.getLength();
 		if (p != p0) {
@@ -514,9 +531,11 @@ public class AnsiTerminal extends JPanel implements FocusListener,KeyListener {
 			} catch (BadLocationException e) {Log.error(e.toString());}
 			editor.setCaretPosition(p0);
 		}
-		cpos.x=cpos.y=0;
+		linesInBuf=0;
+		cursorLocate(0, 0);
 	}
-	public void eraseAbove() {
+	public void eraseLineAbove() {
+		Log.debug("buffer: eraseLineAbove");
 		Document doc = editor.getDocument();
 		int p, p0 = editor.getCaretPosition();
 		p = 0;
@@ -527,19 +546,20 @@ public class AnsiTerminal extends JPanel implements FocusListener,KeyListener {
 			editor.setCaretPosition(p0);
 		}
 	}
-	public void eraseBelow() {
-		Log.debug("eraseBelow");
+	public void eraseLineBelow() {
 		Document doc = editor.getDocument();
 		int p, p0 = editor.getCaretPosition();
 		p=doc.getLength();
 		if (p != p0) {
 			try {
+				Log.debug("buffer: eraseLineBelow '%s'",doc.getText(p0, p-p0));
 				doc.remove(p0, p-p0);
 			} catch (BadLocationException e) {Log.error(e.toString());}
 			editor.setCaretPosition(p0);
 		}
 	}
 	public void eraseLineLeft() {
+		Log.debug("buffer: eraseLineLeft");
 		Document doc = editor.getDocument();
 		int p, p0 = editor.getCaretPosition();
 		for (p=p0; p0 > 0; --p0) {
@@ -556,6 +576,7 @@ public class AnsiTerminal extends JPanel implements FocusListener,KeyListener {
 		}
 	}
 	public void eraseLineRight() {
+		Log.debug("buffer: eraseLineRight");
 		Document doc = editor.getDocument();
 		int p,p0 = editor.getCaretPosition();
 		for (p=p0; p < doc.getLength(); ++p) {

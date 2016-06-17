@@ -6,7 +6,7 @@ import java.util.ArrayList;
 public class Planes {
 	public static interface Raster {
 		public int getPixel(int x,int y);
-		public void setPixel(int x,int y, int v);
+		public void drawHline(int x1, int x2,int y, int v);
 		public Dimension getSize();
 	}
 
@@ -41,7 +41,7 @@ public class Planes {
 
 		while (!q.isEmpty()) {
 			Segment s=q.remove(q.size()-1);
-			for (x=s.x0; x<s.x1; ++x) t.setPixel(x,s.y,dval);
+			t.drawHline(s.x0, s.x1, y, dval);
 
 			//segments above
 			if (s.y > 0) {
@@ -81,7 +81,7 @@ public class Planes {
 		while (!q.isEmpty()) {
 			Coord c=q.remove(q.size()-1);
 			x=c.x;y=c.y;
-			t.setPixel(x, y, dval);
+			t.drawHline(x, x+1, y, dval);
 			if (x>0 && t.getPixel(x-1,y)==1) q.add(new Coord(x-1, y));
 			if (x+1<d.width && t.getPixel(x+1,y)==1) q.add(new Coord(x+1, y));
 			if (y>0 && t.getPixel(x,y-1)==1) q.add(new Coord(x, y-1));
