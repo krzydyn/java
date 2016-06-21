@@ -39,7 +39,7 @@ public class Cryptarithm {
 		return x;
 	}
 	
-	static void getSymbols(String s) {
+	static void addSymbols(String s) {
 		for (int i=0; i < s.length(); ++i) {
 			char c = s.charAt(i);
 			if (!symbols.contains(c)) {
@@ -70,7 +70,7 @@ public class Cryptarithm {
 		String d = "mmmcdiii";
 		String a1 = "mroz";
 		String b1 = "zima";
-		getSymbols("mroziadcxv");
+		addSymbols("mroziadcxv");
 		
 		for (int i=0; i < 10; ++i)
 			values.add(i);
