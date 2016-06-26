@@ -15,12 +15,12 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License
  */
-package so_tests;
+package puzzles;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import algebra.Combinatory;
+import algebra.Permutate;
 
 public class Cryptarithm {	
 	final static List<Character> symbols = new ArrayList<Character>();
@@ -60,7 +60,7 @@ public class Cryptarithm {
 	}
 		
 	static boolean nextValues() {
-		return Combinatory.nextPermutation(values);
+		return Permutate.nextPermutation(values);
 	}
 
 	public static void main(String[] args) {
