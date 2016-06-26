@@ -1,3 +1,20 @@
+/*
+ *  Copyright (c) 2016 Krzysztof Dynowski All Rights Reserved
+ *
+ *  Contact: krzydyn@gmail.com)
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License
+ */
 package unittest;
 
 import java.util.ArrayList;
@@ -39,13 +56,35 @@ public class T_Algebra extends UnitTest {
 			// hard
 			".6.9....35....4.2.....8.4..8......5...3...7...9......1..1.5.....7.3....99....2.4.",
 			"1....7.9..3..2...8..96..5....53..9...1..8...26....4...3......1..4......7..7...3..",
+			"3217.4...64..9...7.............459....51874....496.............2...7..19...6.9582",
 		};
 		Sudoku s=new Sudoku(3);
 		for (String ex : examples) {
 			s.parse(ex);
-			//s.print();
-			s.solve();
 			s.print();
+			for (int i=0; s.solve(); ++i) {
+				System.out.printf("Solution %d:\n",i+1);
+				s.print();
+				if (i==2) break;
+			}
 		}
 	}
+	/*static void sudokuGen() {
+		Sudoku s=new Sudoku(3);
+		List<Integer> box = new ArrayList<Integer>();
+		int i;
+		for (i=0; i < 9; ++i) box.add(i+1);
+		while (Permutate.nextPermutation(box)) {
+			s.clear();
+			for (i=0; i < 9; ++i) {
+				s.set(i%9, i/9, i+1);
+			}
+			int sol;
+			for (sol=0; s.solve(); ++sol) {
+				//System.out.printf("%d: ",sol+1);
+				//s.printshort();
+			}
+			System.out.printf("Solutions %d ",sol+1);
+		}
+	}*/
 }
