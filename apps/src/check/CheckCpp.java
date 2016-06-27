@@ -26,11 +26,7 @@ import time.LapTime;
 
 public class CheckCpp {
 	static String[] files={
-			"libs/lxcpp/network-config.cpp",
-			"libs/config/from-kvjson-visitor.hpp",
-			"wrapper/wrapper-compatibility.cpp",
-			"server/zones-manager.cpp",
-			"libs/config/from-kvjson-visitor.hpp",
+			"~/tee_client_api.c",
 	};
 	static String pfx="~/security-containers/";
 	public static void main(String[] args) throws Exception {

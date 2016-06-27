@@ -214,6 +214,7 @@ public class AnsiTerminal extends JPanel implements FocusListener,KeyListener {
 			cursorEnd();
 			cursorLineBegin();
 		}
+		Log.debug("char %x",(int)c);
 		inputBuffer.append(c);
 	}
 	@Override

@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import sys.Log;
 import text.Text;
 
 public class CppParser {
@@ -144,6 +145,9 @@ public class CppParser {
 			else if (tok.cla==CppTokenizer.TOKEN_BLKSTART) {
 				node.nodes.add(readBlock(new CodeBlock()));
 			}
+			else if (tok.cla==CppTokenizer.TOKEN_NUMBER) {
+				node.nodes.add(readFragment(new SourceFragment(tok.rep)));
+			}
 			else throw new Token.TokenException(tok);
 		}
 	}
@@ -170,8 +174,8 @@ public class CppParser {
 			}
 			else if (tok.cla==CppTokenizer.TOKEN_SPECIAL) {
 				if (node.name==null || !tok.rep.equals("=")) {
-				    //throw new Token.TokenException(tok);
-				    return readFragment(new SourceFragment("ERROR namespace "+node.name+tok.rep));
+					//throw new Token.TokenException(tok);
+					return readFragment(new SourceFragment("ERROR namespace "+node.name+tok.rep));
 				}
 				return readFragment(new SourceFragment("namespace "+node.name+tok.rep));
 			}
@@ -191,7 +195,7 @@ public class CppParser {
 		while ((tok=ct.next(b))!=null) {
 			if (tok.cla==CppTokenizer.TOKEN_WHILESPACE) continue;
 
-			if (tok.cla==CppTokenizer.TOKEN_NAME || tok.cla==CppTokenizer.TOKEN_SPECIAL) {
+			if (tok.cla==CppTokenizer.TOKEN_NAME || tok.cla==CppTokenizer.TOKEN_SPECIAL || tok.cla==CppTokenizer.TOKEN_DBLQUOTE) {
 				if (lcla!=CppTokenizer.TOKEN_SPECIAL && lcla==tok.cla) blk.append(' ');
 				lcla=tok.cla;
 				blk.append(tok.rep);
@@ -201,7 +205,8 @@ public class CppParser {
 				}
 			}
 			else {
-				ct.unread(b);
+				Log.debug("unread %s",tok.toString());
+				ct.unread(tok.rep);
 				break;
 			}
 		}

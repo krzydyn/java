@@ -45,7 +45,7 @@ public class Prime {
 		return true;
 	}
 
-	//Fermat's little theorem
+	//Fermat's little theorem: a^p == a mod p for any p-prime and a-integer [a^(p-1) == 1 mod p]
 	static public boolean isFermatPrime(BigInteger p) {
 		return p.isProbablePrime(2);
 	}

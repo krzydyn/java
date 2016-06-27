@@ -20,6 +20,7 @@ package text.tokenize;
 
 import java.io.IOException;
 import java.io.Reader;
+import java.io.StringReader;
 
 public class BasicTokenizer {
 	private final Reader rd;
@@ -27,27 +28,32 @@ public class BasicTokenizer {
 
 	private int line;
 	private int maxunread;
+
 	public BasicTokenizer(Reader r) {
 		rd=r;
 		line=1;
 		maxunread=0;
 	}
+	public BasicTokenizer(String s) {this(new StringReader(s));}
+
 	public void unread(int c) {
 		if (c=='\n') --line;
-		pushback.insert(0,(char)c);
+		pushback.append((char)c);
 		if (maxunread < pushback.length()) maxunread=pushback.length();
 	}
 	public void unread(CharSequence s) {
-		for (int i=0; i<s.length(); ++i)
+		for (int i=s.length(); i>0; ) {
+			--i;
 			if (s.charAt(i)=='\n') --line;
-		pushback.insert(0,s);
+			pushback.append(s.charAt(i));
+		}
 		if (maxunread < pushback.length()) maxunread=pushback.length();
 	}
 	private int readc() throws IOException {
-		int r;
-		if (pushback.length()>0) {
-			r=pushback.charAt(0);
-			pushback.deleteCharAt(0);
+		int r,l=pushback.length();
+		if (l>0) {
+			r=pushback.charAt(l-1);
+			pushback.setLength(l-1);
 		}
 		else {
 			r=rd.read();

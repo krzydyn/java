@@ -26,13 +26,18 @@ public class Token {
 		cla=c; ln=l; rep=s;
 	}
 
+	@Override
+	public String toString() {
+		return String.format("token %d: ln(%d) '%s'",cla,ln,rep);
+	}
+
 	@SuppressWarnings("serial")
 	static public class TokenException extends RuntimeException {
 		TokenException(Token tok) {
-			super(String.format("ln(%d): wrong token (%d,'%s')",tok.ln,tok.cla,tok.rep));
+			super("wrong "+tok.toString());
 		}
 		TokenException(Token tok, String msg) {
-			super(String.format("ln(%d): wrong token (%d,'%s'), %s",tok.ln,tok.cla,tok.rep,msg));
+			super(String.format("wrong %s; %s",tok.toString(),msg));
 		}
 	}
 }

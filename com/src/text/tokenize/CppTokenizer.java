@@ -20,6 +20,8 @@ package text.tokenize;
 
 import java.io.IOException;
 
+import sys.Log;
+
 public class CppTokenizer {
 	static public final int TOKEN_NONE = 0;
 	static public final int TOKEN_WHILESPACE = 1;
@@ -145,6 +147,7 @@ public class CppTokenizer {
 		}
 		if (cla==TOKEN_NONE && cpptok.length()>0)
 			throw new RuntimeException(String.format("unknown token: ln=%d '%s'",ln0,cpptok.toString()));
+		//Log.info("Token %d: (ln=%d) '%s'",cla,ln0,cpptok.toString());
 		return cla!=0?new Token(cla, ln0, cpptok.toString()):null;
 	}
 }
