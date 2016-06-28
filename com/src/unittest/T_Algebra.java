@@ -39,6 +39,14 @@ public class T_Algebra extends UnitTest {
 			//Log.debug("%d: %s", n, l.toString());
 		} while (Permutate.nextPermutation(l));
 		check(n == 6, "should be 6 permutations");
+
+		l.clear(); n=0;
+		for (int i=0; i<6; ++i) l.add(i);
+		do {
+			++n;
+			//Log.debug("%d: %s", n, l.toString());
+		} while (Permutate.nextPermutation(l));
+		check(n == 720, "should be 720 permutations");
 	}
 
 	static void blackjack() {
@@ -49,7 +57,7 @@ public class T_Algebra extends UnitTest {
 			check(r==res[i], String.format("%s=%d, should be %d", test[i], r, res[i]));
 		}
 	}
-	
+
 	static void no_sudoku() {
 		String[] examples = {
 			"..8....1.|27.84..6.|..6...4.8|...4.6.7.|.8..2..5.|.4.1.3...|7.4...6..|.6..35.42|.2....9..",
@@ -190,7 +198,7 @@ public class T_Algebra extends UnitTest {
 			System.out.printf("Solutions %d ",sol+1);
 		}
 	}*/
-	
+
 	static void expression() {
 		Expression e = new Expression("1+1");
 		long r=e.evaluate();
@@ -202,11 +210,17 @@ public class T_Algebra extends UnitTest {
 		r=e.evaluate();
 		check(r==0, String.format("1=2 = %d != 0",r));
 	}
-	
+
 	static void cryptarithm() {
 		Cryptarithm c=new Cryptarithm();
-		c.addExpr("3*zima=mroz");
+		c.addExpr("3*mroz=zima");
 		c.addExpr("dcxciii+dcccxcv+mdcccxv=mmmcdiii");
-		c.solve();
+		c.prepare(null);
+		do {
+			if (c.verify()) {
+				System.out.println(c.getSymbols());
+				System.out.println(c.toString());
+			}
+		} while (c.next());
 	}
 }

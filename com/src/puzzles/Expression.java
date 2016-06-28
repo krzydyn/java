@@ -45,7 +45,7 @@ public class Expression {
 				return symbol();
 			}
 		}
-		return 0;	
+		return 0;
 	}
 	//components = product of symbols
 	private long component() throws Exception {
@@ -63,14 +63,13 @@ public class Expression {
 	}
 	//expression = sum of components
 	private long expression() throws Exception {
-		long sum = component();
 		StringBuilder s=new StringBuilder();
+		long sum = component();
 		while (tok.next(s)) {
 			if (s.toString().equals("-")) sum-=component();
 			else if (s.toString().equals("+")) sum+=component();
 			else if (s.toString().equals("=")) {
 				long sum2=expression();
-				//Log.debug("cmp %d %d",sum, sum2);
 				return sum == sum2 ? 1 : 0;
 			}
 			else if (s.toString().equals("<")) {

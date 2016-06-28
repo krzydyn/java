@@ -31,10 +31,16 @@ public class Cryptarithm {
 	public Cryptarithm() {
 		clear();
 	}
+	@Override
+	public String toString() {
+		return values.toString();
+	}
 	void clear() {
-		values.clear();
 		symbols.clear();
 		exprs.clear();
+	}
+	public List<Character> getSymbols() {
+		return new ArrayList<Character>(symbols);
 	}
 	private void addSymbols(String s) {
 		for (int i=0; i < s.length(); ++i) {
@@ -47,23 +53,31 @@ public class Cryptarithm {
 		addSymbols(expr);
 		exprs.add(expr);
 	}
-	private boolean verify(String expr) {
-		return new Expression(expr,symval).evaluate() != 0;
+	public void prepare(int[] init) {
+		values.clear();
+		if (init==null)
+			for (int i=0; i < 10; ++i) values.add(i);
+		else
+			for (int i=0; i < init.length; ++i) values.add(init[i]);
+	}
+	public boolean verify() {
+		for (String e : exprs) {
+			if (new Expression(e,symval).evaluate() == 0) {
+				return false;
+			}
+		}
+		return true;
+	}
+	public boolean next() {
+		return Permutate.nextPermutation(values);
 	}
 	public void solve() {
-		for (int i=0; i < 10; ++i) values.add(i);
+		prepare(null);
 		do {
-			boolean r=true;
-			for (String e : exprs) {
-				if (!verify(e)) {r=false;break;}
+			if (verify()) {
+				System.out.println(symbols);
+				System.out.println(values);
 			}
-			if (r) {
-				for (int i=0; i < symbols.size(); ++i) {
-					char symb = symbols.get(i);
-					System.out.printf("%c:%d ", symb, getValue(symb));
-				}
-				System.out.println();
-			}
-		} while (Permutate.nextPermutation(values));
+		} while (next());
 	}
 }
