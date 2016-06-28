@@ -8,12 +8,13 @@ public class Expression {
 		long getValue(String s);
 	}
 
+	private String expr;
 	private SymbolGetter symget = null;
 	private BasicTokenizer tok;
 
 	public Expression(String expr, SymbolGetter symget) {
 		this.symget = symget;
-		tok = new BasicTokenizer(expr);
+		this.expr = expr;
 	}
 	public Expression(String expr) {
 		this(expr,null);
@@ -87,6 +88,7 @@ public class Expression {
 	}
 
 	public long evaluate() {
+		tok = new BasicTokenizer(expr);
 		try {
 			return expression();
 		} catch (Exception e) {

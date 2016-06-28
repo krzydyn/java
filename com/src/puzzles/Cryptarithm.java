@@ -4,13 +4,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 import puzzles.Expression.SymbolGetter;
-import sys.Log;
 import algebra.Permutate;
 
 public class Cryptarithm {
 	final List<Integer> values = new ArrayList<Integer>();
 	final List<Character> symbols = new ArrayList<Character>();
-	final List<String> exprs = new ArrayList<String>();
+	final List<Expression> exprs = new ArrayList<Expression>();
 
 	private int getValue(char symb) {
 		int i = symbols.indexOf(symb);
@@ -51,7 +50,7 @@ public class Cryptarithm {
 	}
 	public void addExpr(String expr) {
 		addSymbols(expr);
-		exprs.add(expr);
+		exprs.add(new Expression(expr,symval));
 	}
 	public void prepare(int[] init) {
 		values.clear();
@@ -61,8 +60,8 @@ public class Cryptarithm {
 			for (int i=0; i < init.length; ++i) values.add(init[i]);
 	}
 	public boolean verify() {
-		for (String e : exprs) {
-			if (new Expression(e,symval).evaluate() == 0) {
+		for (Expression e : exprs) {
+			if (e.evaluate() == 0) {
 				return false;
 			}
 		}
