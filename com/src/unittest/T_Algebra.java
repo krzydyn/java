@@ -20,6 +20,8 @@ package unittest;
 import java.util.ArrayList;
 import java.util.List;
 
+import puzzles.Cryptarithm;
+import puzzles.Expression;
 import puzzles.Sudoku;
 import algebra.Maths;
 import algebra.Permutate;
@@ -48,7 +50,7 @@ public class T_Algebra extends UnitTest {
 		}
 	}
 	
-	static void sudoku() {
+	static void no_sudoku() {
 		String[] examples = {
 			"..8....1.|27.84..6.|..6...4.8|...4.6.7.|.8..2..5.|.4.1.3...|7.4...6..|.6..35.42|.2....9..",
 			".........|8...2...5|.....624.|.38..71..|2.4...3.9|..74..52.|.725.....|6...8...1|.........",
@@ -188,4 +190,23 @@ public class T_Algebra extends UnitTest {
 			System.out.printf("Solutions %d ",sol+1);
 		}
 	}*/
+	
+	static void expression() {
+		Expression e = new Expression("1+1");
+		long r=e.evaluate();
+		check(r==2, String.format("1+1 = %d != 2",r));
+		e = new Expression("1+(1+2)*2");
+		r=e.evaluate();
+		check(r==7, String.format("1+(1+2)*2 = %d != 7",r));
+		e = new Expression("1=2");
+		r=e.evaluate();
+		check(r==0, String.format("1=2 = %d != 0",r));
+	}
+	
+	static void cryptarithm() {
+		Cryptarithm c=new Cryptarithm();
+		c.addExpr("3*zima=mroz");
+		c.addExpr("dcxciii+dcccxcv+mdcccxv=mmmcdiii");
+		c.solve();
+	}
 }

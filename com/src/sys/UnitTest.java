@@ -108,9 +108,9 @@ public class UnitTest {
 				if (!Modifier.isStatic(m.getModifiers())) {
 					continue;
 				}
-				if ("main".equals(m.getName())) continue;
+				if ("main".equals(m.getName()) || m.getName().startsWith("no_")) continue;
 				if (!(unit + "." + m.getName()).startsWith(prefix)) continue;
-
+				
 				current = new TestSummary();
 				summary.add(current);
 				current.testunit = unit;

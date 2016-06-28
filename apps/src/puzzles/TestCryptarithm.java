@@ -22,7 +22,7 @@ import java.util.List;
 
 import algebra.Permutate;
 
-public class Cryptarithm {	
+public class TestCryptarithm {	
 	final static List<Character> symbols = new ArrayList<Character>();
 	final static List<Integer> values = new ArrayList<Integer>();
 	

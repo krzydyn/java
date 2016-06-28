@@ -12,18 +12,17 @@ public class Cryptarithm {
 	final List<Character> symbols = new ArrayList<Character>();
 	final List<String> exprs = new ArrayList<String>();
 
+	private int getValue(char symb) {
+		int i = symbols.indexOf(symb);
+		return values.get(i);
+	}
 	final SymbolGetter symval = new SymbolGetter() {
-		private int getValue(char symb) {
-			int i = symbols.indexOf(symb);
-			return values.get(i);
-		}
 		@Override
 		public long getValue(String s) {
-			Log.debug("getVal('%s')", s);
 			long x=0;
 			for (int i=0; i < s.length(); ++i) {
 				x*=10;
-				x += getValue(s.charAt(i));
+				x += Cryptarithm.this.getValue(s.charAt(i));
 			}
 			return x;
 		}
@@ -40,7 +39,7 @@ public class Cryptarithm {
 	private void addSymbols(String s) {
 		for (int i=0; i < s.length(); ++i) {
 			char c = s.charAt(i);
-			if (!Character.isAlphabetic(c)) continue;
+			if (!Character.isLetter(c)) continue;
 			if (!symbols.contains(c)) symbols.add(c);
 		}
 	}
@@ -49,7 +48,7 @@ public class Cryptarithm {
 		exprs.add(expr);
 	}
 	private boolean verify(String expr) {
-		return new Expression(expr).evaluate() == 0;
+		return new Expression(expr,symval).evaluate() != 0;
 	}
 	public void solve() {
 		for (int i=0; i < 10; ++i) values.add(i);
@@ -58,7 +57,13 @@ public class Cryptarithm {
 			for (String e : exprs) {
 				if (!verify(e)) {r=false;break;}
 			}
-			if (r) break;
+			if (r) {
+				for (int i=0; i < symbols.size(); ++i) {
+					char symb = symbols.get(i);
+					System.out.printf("%c:%d ", symb, getValue(symb));
+				}
+				System.out.println();
+			}
 		} while (Permutate.nextPermutation(values));
 	}
 }

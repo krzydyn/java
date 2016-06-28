@@ -1,5 +1,6 @@
 package puzzles;
 
+import sys.Log;
 import text.tokenize.BasicTokenizer;
 
 public class Expression {
@@ -8,13 +9,10 @@ public class Expression {
 	}
 
 	private SymbolGetter symget = null;
-	//private String expr;
 	private BasicTokenizer tok;
-
 
 	public Expression(String expr, SymbolGetter symget) {
 		this.symget = symget;
-		//this.expr = expr;
 		tok = new BasicTokenizer(expr);
 	}
 	public Expression(String expr) {
@@ -24,40 +22,66 @@ public class Expression {
 	private long symbol() throws Exception {
 		StringBuilder s=new StringBuilder();
 		tok.next(s);
-		if (symget != null) return symget.getValue(s.toString());
-		long sum =0;
+		long sum=0;
 		if (Character.isDigit(s.charAt(0))) {
 			sum = Long.parseLong(s.toString());
 		}
+		else if (symget != null) return symget.getValue(s.toString());
 		return sum;
 	}
-	private long component() throws Exception {
+	private long factor() throws Exception {
 		StringBuilder s=new StringBuilder();
-		long sum = 0;
 		while (tok.next(s)) {
-			if (s.equals("*")) sum*=symbol();
-			else if (s.equals("/")) sum/=symbol();
+			if (s.toString().equals("!")) return factor()==0?1:0;
+			if (s.toString().equals("-")) return -factor();
+			if (s.toString().equals("+")) return factor();
+			if (s.toString().equals("(")) {
+				long sum = expression();
+				tok.next(s); //should be ')'
+				return sum;
+			}
 			else {
 				tok.unread(s);
-				sum=symbol();
+				return symbol();
+			}
+		}
+		return 0;	
+	}
+	//components = product of symbols
+	private long component() throws Exception {
+		StringBuilder s=new StringBuilder();
+		long sum = factor();
+		while (tok.next(s)) {
+			if (s.toString().equals("*")) sum*=factor();
+			else if (s.toString().equals("/")) sum/=factor();
+			else {
+				tok.unread(s);
+				break;
 			}
 		}
 		return sum;
 	}
+	//expression = sum of components
 	private long expression() throws Exception {
+		long sum = component();
 		StringBuilder s=new StringBuilder();
-		long sum = 0;
 		while (tok.next(s)) {
-			if (s.equals("(")) {
-				sum += expression();
-				tok.next(s);
-				if (!s.equals(")")) throw new RuntimeException("expected )");
+			if (s.toString().equals("-")) sum-=component();
+			else if (s.toString().equals("+")) sum+=component();
+			else if (s.toString().equals("=")) {
+				long sum2=expression();
+				//Log.debug("cmp %d %d",sum, sum2);
+				return sum == sum2 ? 1 : 0;
 			}
-			else if (s.equals("-")) sum-=component();
-			else if (s.equals("+")) sum-=component();
+			else if (s.toString().equals("<")) {
+				return sum < expression() ? 1 : 0;
+			}
+			else if (s.toString().equals(">")) {
+				return sum > expression() ? 1 : 0;
+			}
 			else {
 				tok.unread(s);
-				sum+=component();
+				break;
 			}
 		}
 		return sum;
@@ -67,7 +91,8 @@ public class Expression {
 		try {
 			return expression();
 		} catch (Exception e) {
-			return -1;
+			Log.error(e);
+			return 0;
 		}
 	}
 }
