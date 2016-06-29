@@ -39,6 +39,7 @@ public class UnitTest {
 	private static class TestSummary {
 		String testunit;
 		String testcase;
+		long elapsed;
 		int checks;
 		int errors;
 	}
@@ -110,11 +111,12 @@ public class UnitTest {
 				}
 				if ("main".equals(m.getName()) || m.getName().startsWith("no_")) continue;
 				if (!(unit + "." + m.getName()).startsWith(prefix)) continue;
-				
+
 				current = new TestSummary();
 				summary.add(current);
 				current.testunit = unit;
 				current.testcase = m.getName();
+				current.elapsed = -1;
 
 				time.nextLap();
 				Log.info("  ** Testcase: %s start", m.getName());
@@ -128,6 +130,7 @@ public class UnitTest {
 					e.printStackTrace();
 				} finally {
 					time.update(0);
+					current.elapsed = time.getTime();
 					Log.info("  ** Testcase: %s end in %.3f sec", m.getName(), time.getTime()/1000.0);
 					current=null;
 				}
@@ -155,8 +158,8 @@ public class UnitTest {
 		Log.info("* *********** ");
 		Log.info("* Tests: %d", summary.size());
 		for (TestSummary s : summary) {
-			if (s.errors!=0) Log.error(-1, "%s.%s:  %d / %d", s.testunit, s.testcase, s.checks-s.errors, s.checks);
-			else Log.info("%s.%s:  %d / %d", s.testunit, s.testcase, s.checks-s.errors, s.checks);
+			if (s.errors!=0) Log.error(-1, "%s.%s:  %d / %d    %.3f",s.testunit,s.testcase,s.checks-s.errors,s.checks,s.elapsed/1000.0);
+			else Log.info("%s.%s:  %d / %d    %.3f",s.testunit,s.testcase,s.checks-s.errors,s.checks,s.elapsed/1000.0);
 		}
 	}
 	static public void test(String prefix, String[] units) {

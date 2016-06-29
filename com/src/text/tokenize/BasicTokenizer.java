@@ -36,17 +36,10 @@ public class BasicTokenizer {
 	}
 	public BasicTokenizer(String s) {this(new StringReader(s));}
 
-	public void unread(int c) {
+	private void unread(int c) {
+		if (c==-1) return ;
 		if (c=='\n') --line;
 		pushback.append((char)c);
-		if (maxunread < pushback.length()) maxunread=pushback.length();
-	}
-	public void unread(CharSequence s) {
-		for (int i=s.length(); i>0; ) {
-			--i;
-			if (s.charAt(i)=='\n') --line;
-			pushback.append(s.charAt(i));
-		}
 		if (maxunread < pushback.length()) maxunread=pushback.length();
 	}
 	private int readc() throws IOException {
@@ -61,13 +54,24 @@ public class BasicTokenizer {
 		if (r=='\n') {++line;}
 		return r;
 	}
-	final public boolean isSpace(char c) {
+
+	public void unread(CharSequence s) {
+		for (int i=s.length(); i > 0; ) {
+			--i;
+			char c = s.charAt(i);
+			if (c=='\n') --line;
+			pushback.append(c);
+		}
+		if (maxunread < pushback.length()) maxunread=pushback.length();
+	}
+	protected boolean isSpace(char c) {
 		return Character.isWhitespace(c);
 	}
-	private boolean isAlnum(char c) {
+	protected boolean isAlnum(char c) {
 		return Character.isAlphabetic(c)||Character.isDigit(c)||c=='_';
 	}
 	public int getLineNo() {return line;}
+
 	public boolean next(StringBuilder s) throws IOException {
 		int c;
 		boolean prevsp=true;

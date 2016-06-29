@@ -52,16 +52,16 @@ public class TestCryptarithm {
 		return Permutate.nextPermutation(values);
 	}
 
-	public static void main(String[] args) {
+	static void test() {
 		String a = "dcxciii";
 		String b = "dcccxcv";
 		String c = "mdcccxv";
 		String d = "mmmcdiii";
 		String a1 = "mroz";
 		String b1 = "zima";
+
 		//addSymbols("mroziadcxv");
 		addSymbols(a1+b1+a+b+c+d);
-
 		for (int i=0; i < 10; ++i)
 			values.add(i);
 
@@ -74,8 +74,13 @@ public class TestCryptarithm {
 				for (String v : vars) {
 					System.out.printf("%s = %d\n",v,value(v));
 				}
-
 			}
 		} while (nextValues());
+	}
+
+	public static void main(String[] args) {
+		long t0 = System.currentTimeMillis();
+		test();
+		System.out.printf("Elapsed time: %d ms\n",System.currentTimeMillis()-t0);
 	}
 }
