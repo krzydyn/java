@@ -24,15 +24,32 @@ public class Prime {
 	static public final int PRIMES[] = new int[100];
 	static  {
 		int p=0;
-		PRIMES[p++]=2;
-
+		PRIMES[p++]=2; // first prime numbers
 		for (int i = 3; p < PRIMES.length; i+=2) {
 			PRIMES[p++]=i;
-			int sq = (int)Math.sqrt(i);
+			//int sq = (int)Math.sqrt(i);
+			int sq = i/2;
 			for (int x=0; x < p-1; ++x) {
 				int p1 = PRIMES[x];
 				if (p1 > sq) break;
 				if (i%p1 == 0) {--p;break;}
+			}
+		}
+	}
+
+	//Eratostene Sieve
+	static void sieve()
+	{
+		int a_size = 100;
+		boolean[] ispri = new boolean[a_size];
+		int i, j;
+		for (i = 0; i < a_size; ++i)
+			ispri[i] = true;
+		for (i = 2; i * i < a_size ; ++i) {
+			if(ispri[i] == true) {
+				for (j = 2; j * i < a_size ; ++j) {
+					ispri[i*j] = false;
+				}
 			}
 		}
 	}
@@ -42,7 +59,7 @@ public class Prime {
 		for (int i=1; i < PRIMES.length; ++i) {
 			if (p.remainder(BigInteger.valueOf(PRIMES[i])).equals(BigInteger.ZERO)) return false;
 		}
-		return true;
+		return p.isProbablePrime(100);
 	}
 
 	//Fermat's little theorem: a^p == a mod p for any p-prime and a-integer [a^(p-1) == 1 mod p]

@@ -43,12 +43,12 @@ public class Sudoku {
 	public boolean isEmpty(int x,int y) {return a[y][x]==0;}
 	
 	public void parse(String s) {
-		String sep = "-|= ";
+		String ignore = "-|= ";
 		clear();
 		int p=0;
 		for (int i=0; i < s.length(); ++i) {
 			char c=s.charAt(i);
-			if (c <= ' ' || sep.indexOf(c) >= 0) continue;
+			if (c <= ' ' || ignore.indexOf(c) >= 0) continue;
 			int x=p%DIM;
 			int y=p/DIM;
 			int v = values.indexOf(c);
