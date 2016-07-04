@@ -49,9 +49,10 @@ public class Maths {
 			else sum+=10; //other fig
 		}
 		if (aces>0) {
-			if (aces==2) return 21;
 			sum+=aces;
-			while (aces>0 && sum+10<=21) {sum+=10; --aces;}
+			while (aces>0 && sum+10<=21) {
+				 sum+=10; --aces;
+			}
 		}
 		return sum;
 	}

@@ -51,7 +51,7 @@ public class T_Algebra extends UnitTest {
 
 	static void blackjack() {
 		String[] test = {"", "AA", "XA", "9AA", "8AA", "8AAA"};
-		int [] res    = {0, 12, 21, 21, 20, 21};
+		int [] res    = {0,   12,   21,    21,    20,     21};
 		for (int i=0; i < test.length; ++i) {
 			int r=Maths.blackjackPoints(test[i]);
 			check(r==res[i], String.format("%s=%d, should be %d", test[i], r, res[i]));
@@ -200,9 +200,9 @@ public class T_Algebra extends UnitTest {
 	}*/
 
 	static void expression() {
-		Expression e = new Expression("1+1");
+		Expression e = new Expression("9/3");
 		long r=e.evaluate();
-		check(r==2, String.format("1+1 = %d != 2",r));
+		check(r==3, String.format("9/3 = %d != 3",r));
 		e = new Expression("1+(1+2)*2");
 		r=e.evaluate();
 		check(r==7, String.format("1+(1+2)*2 = %d != 7",r));
@@ -213,8 +213,8 @@ public class T_Algebra extends UnitTest {
 
 	static void cryptarithm() {
 		Cryptarithm c=new Cryptarithm();
-		c.addExpr("3*mroz=zima");
-		c.addExpr("dcxciii+dcccxcv+mdcccxv=mmmcdiii");
+		c.addExpr("3 * mroz = zima");
+		c.addExpr("dcxciii + dcccxcv + mdcccxv=mmmcdiii");
 		c.prepare(null);
 		do {
 			if (c.verify()) {
