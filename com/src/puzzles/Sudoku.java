@@ -17,8 +17,6 @@
  */
 package puzzles;
 
-import sys.Log;
-
 public class Sudoku {
 	final private String values = ".123456789ABCDEFGHIJKLMNOPQRSTUWXYZ@%";
 	final private int ORDER;
@@ -117,7 +115,7 @@ public class Sudoku {
 				--p;
 			}
 		}
-		String last=toString();
+
 		while (p < DIM*DIM) {
 			x=p%DIM; y=p/DIM;
 			if (fixed[y][x]) {++p; continue;}
@@ -141,10 +139,6 @@ public class Sudoku {
 				break;
 			}
 			if (p==0 && fixed[0][0]) return false;
-		}
-		if (last.equals(toString())) {
-			Log.error("internal error");
-			return false;
 		}
 		return true;
 	}

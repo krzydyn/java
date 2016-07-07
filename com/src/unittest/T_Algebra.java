@@ -180,6 +180,7 @@ public class T_Algebra extends UnitTest {
 			check(i==1, "wrong sudoku");
 		}
 	}
+
 	/*static void sudokuGen() {
 		Sudoku s=new Sudoku(3);
 		List<Integer> box = new ArrayList<Integer>();
