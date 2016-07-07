@@ -170,7 +170,7 @@ public class T_Algebra extends UnitTest {
 			++exnum;
 			System.out.printf("Example: %d\n", exnum);
 			s.parse(ex);
-			s.printshort();
+			System.out.print(s.toString());
 			int i;
 			for (i=0; s.solve(); ++i) {
 				System.out.printf("Solution %d:\n",i+1);
@@ -180,7 +180,12 @@ public class T_Algebra extends UnitTest {
 			check(i==1, "wrong sudoku");
 		}
 	}
-
+/*
+ * 1. Find all solutions with an efficient backtracking algorithm.
+ * 2. If there is just one solution, you are done. Otherwise if you have more than one solution,
+ *    find a position at which most of the solutions differ. Add the number at this position.
+ * 3. Go to 1.
+ */
 	/*static void sudokuGen() {
 		Sudoku s=new Sudoku(3);
 		List<Integer> box = new ArrayList<Integer>();

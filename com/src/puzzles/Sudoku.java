@@ -73,9 +73,6 @@ public class Sudoku {
 		}
 		System.out.println();
 	}
-	public void printshort() {
-		System.out.println(toString());
-	}
 	
 	private boolean isAllowed(int x,int y,int v) {
 		//horizontal
