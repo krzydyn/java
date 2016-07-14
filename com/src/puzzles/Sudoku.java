@@ -41,13 +41,23 @@ public class Sudoku {
 	public void clear() {
 		initFixed=true;
 		for (int y=0; y<DIM; ++y)
-			for (int x=0; x<DIM; ++x) a[y][x]=0;
+			for (int x=0; x<DIM; ++x) {
+				a[y][x]=0;
+				usedRow[y][x]=false;
+				usedCol[y][x]=false;
+				usedBox[y][x]=false;
+			}
 	}
 	public void reset() {
 		if (initFixed) clear();
 		else {
 			for (int y=0; y<DIM; ++y)
-				for (int x=0; x<DIM; ++x) if (!fixed[y][x]) a[y][x]=0;
+				for (int x=0; x<DIM; ++x) {
+					if (!fixed[y][x]) a[y][x]=0;
+					usedRow[y][x]=false;
+					usedCol[y][x]=false;
+					usedBox[y][x]=false;
+				}
 		}
 	}
 	public void set(int x,int y,int v) {a[y][x]=v;}
@@ -70,9 +80,13 @@ public class Sudoku {
 	}
 	public String toString() {
 		StringBuilder b=new StringBuilder();
+		int s=0;
 		for (int y=0; y<DIM; ++y)
-			for (int x=0; x<DIM; ++x)
+			for (int x=0; x<DIM; ++x) {
 				b.append(String.format("%s",values.charAt(a[y][x])));
+				if (a[y][x]>0) ++s;
+			}
+		b.append(" s="+s);
 		return b.toString();
 	}
 	public void print() {
@@ -101,7 +115,7 @@ public class Sudoku {
 	}
 	private boolean canSet(int x,int y,int v) {
 		int box=x/ORDER+(y/ORDER)*ORDER;
-		return !usedRow[y][v] && !usedCol[y][v] && !usedBox[box][v];
+		return !usedRow[y][v] && !usedCol[x][v] && !usedBox[box][v];
 	}
 	private boolean isAllowed(int x,int y,int v) {
 		//horizontal
@@ -129,9 +143,7 @@ public class Sudoku {
 			for (y=0; y<DIM; ++y)
 				for (x=0; x<DIM; ++x) {
 					fixed[y][x] = a[y][x] != 0;
-					usedRow[y][x]=false;
-					usedCol[y][x]=false;
-					usedBox[y][x]=false;
+					if (fixed[y][x]) setUsed(x, y, a[y][x]-1);
 				}
 			initFixed=false;
 			p=0;
@@ -150,25 +162,25 @@ public class Sudoku {
 			if (fixed[y][x]) {++p; continue;}
 			int v=a[y][x];
 			for (; v<DIM; ++v) {
-				//if (isAllowed(x, y, v+1)) break;
-				if (canSet(x, y, v)) break;
+				if (isAllowed(x, y, v+1)) break;
+				//if (canSet(x, y, v)) break;
 			}
 
 			if (v < DIM) {
 				a[y][x] = v+1; ++p;
-				setUsed(x,y,v);
+				//setUsed(x,y,v);
 				continue;
 			}
 
 			//backtrack
 			if (p == 0) return false;
-			resetUsed(x, y, a[y][x]);
+			//if (a[y][x]>0) resetUsed(x, y, a[y][x]-1);
 			a[y][x] = 0; --p;
 			while (p >= 0) {
 				x=p%DIM; y=p/DIM;
 				if (fixed[y][x]) {--p;continue;}
 				if (a[y][x] == DIM) {
-					resetUsed(x,y,a[y][x]-1);
+					//resetUsed(x,y,a[y][x]-1);
 					a[y][x]=0; --p;
 					continue;
 				}

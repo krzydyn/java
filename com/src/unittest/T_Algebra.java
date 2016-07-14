@@ -25,6 +25,7 @@ import puzzles.Expression;
 import puzzles.Sudoku;
 import algebra.Maths;
 import algebra.Permutate;
+import sys.Log;
 import sys.UnitTest;
 
 public class T_Algebra extends UnitTest {
@@ -58,7 +59,7 @@ public class T_Algebra extends UnitTest {
 		}
 	}
 
-	static void no_sudoku() {
+	static void sudoku() {
 		String[] examples = {
 			"..8....1.|27.84..6.|..6...4.8|...4.6.7.|.8..2..5.|.4.1.3...|7.4...6..|.6..35.42|.2....9..",
 			".........|8...2...5|.....624.|.38..71..|2.4...3.9|..74..52.|.725.....|6...8...1|.........",
@@ -167,18 +168,24 @@ public class T_Algebra extends UnitTest {
 		Sudoku s=new Sudoku(3);
 		int exnum=0;
 		for (String ex : examples) {
+			ex=examples[6];
 			++exnum;
 			System.out.printf("Example: %d\n", exnum);
 			s.parse(ex);
-			System.out.print(s.toString());
+			long t0=System.currentTimeMillis();
+			System.out.println(s.toString());
+			s.print();
 			int i;
 			for (i=0; s.solve(); ++i) {
 				System.out.printf("Solution %d:\n",i+1);
 				s.print();
-				if (i==10) break;
+				if (i>2) break;
 			}
-			check(i==1, "wrong sudoku");
+			Log.info("Example done in %d ms", System.currentTimeMillis()-t0);
+			check(i==1, "wrong sudoku i="+i);
+			break;
 		}
+		
 	}
 /*
  * 1. Find all solutions with an efficient backtracking algorithm.
