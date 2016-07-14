@@ -226,6 +226,7 @@ public class T_Algebra extends UnitTest {
 			if (c.verify()) {
 				System.out.println(c.getSymbols());
 				System.out.println(c.toString());
+				check(c.getValue("mroz")==2708, "mroz != 2708");
 			}
 		} while (c.next());
 	}

@@ -55,6 +55,9 @@ public class Cryptarithm {
 		symbols.clear();
 		exprs.clear();
 	}
+	public long getValue(String s) {
+		return symval.getValue(s);
+	}
 	public List<Character> getSymbols() {
 		return new ArrayList<Character>(symbols);
 	}
