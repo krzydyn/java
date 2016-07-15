@@ -22,7 +22,8 @@ import java.util.List;
 
 import puzzles.Cryptarithm;
 import puzzles.Expression;
-import puzzles.Sudoku;
+import puzzles.SudokuFast;
+import puzzles.SudokuSimple;
 import algebra.Maths;
 import algebra.Permutate;
 import sys.Log;
@@ -62,7 +63,7 @@ public class T_Algebra extends UnitTest {
 	static void sudoku() {
 		String[] examples = {
 			"..8....1.|27.84..6.|..6...4.8|...4.6.7.|.8..2..5.|.4.1.3...|7.4...6..|.6..35.42|.2....9..",
-			".........|8...2...5|.....624.|.38..71..|2.4...3.9|..74..52.|.725.....|6...8...1|.........",
+			".........8...2...5.....624..38..71..2.4...3.9..74..52..725.....6...8...1.........",
 			"6.214..7.8.......4.4..8..1....85....1..2.4......96.....8..2..6.7.......92.673..4.",
 			// hard
 			".6.9....35....4.2.....8.4..8......5...3...7...9......1..1.5.....7.3....99....2.4.",
@@ -165,27 +166,39 @@ public class T_Algebra extends UnitTest {
 			".....2.......7...17..3...9.8..7......2.89.6...13..6....9..5.824.....891..........",
 			"3...8.......7....51..............36...2..4....7...........6.13..452...........8..",
 		};
-		Sudoku s=new Sudoku(3);
+		SudokuFast fast=new SudokuFast(3);
+		//SudokuSimple simp=new SudokuSimple(3);
 		int exnum=0;
 		for (String ex : examples) {
-			ex=examples[6];
+			//ex=examples[6];
 			++exnum;
 			System.out.printf("Example: %d\n", exnum);
-			s.parse(ex);
+			fast.parse(ex);
+			//simp.parse(ex);
+
 			long t0=System.currentTimeMillis();
-			System.out.println(s.toString());
-			s.print();
+			System.out.println(fast.toString());
+			fast.print();
 			int i;
-			for (i=0; s.solve(); ++i) {
+			for (i=0; fast.solve(); ++i) {
 				System.out.printf("Solution %d:\n",i+1);
-				s.print();
+				fast.print();
 				if (i>2) break;
 			}
-			Log.info("Example done in %d ms", System.currentTimeMillis()-t0);
+			Log.info("Example done in %.3f sec", (System.currentTimeMillis()-t0)/1000.0);
 			check(i==1, "wrong sudoku i="+i);
-			break;
+
+			/*t0=System.currentTimeMillis();
+			System.out.println(fast.toString());
+			for (i=0; simp.solve(); ++i) {
+				System.out.printf("Solution %d:\n",i+1);
+				simp.print();
+				if (i>2) break;
+			}
+			Log.info("Example done in %.3f sec", (System.currentTimeMillis()-t0)/1000.0);
+			check(i==1, "wrong sudoku i="+i);*/
 		}
-		
+
 	}
 /*
  * 1. Find all solutions with an efficient backtracking algorithm.

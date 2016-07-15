@@ -17,46 +17,60 @@
  */
 package puzzles;
 
-public class Sudoku {
-	final private String values = ".123456789ABCDEFGHIJKLMNOPQRSTUWXYZ@%";
+public class SudokuFast {
+	final static private String values = ".123456789ABCDEFGHIJKLMNOPQRSTUWXYZ@%";
+
 	final private int ORDER;
 	final private int DIM;
 	final private int[][] a;
 	final private boolean[][] fixed;
-	private boolean initFixed = true;
+	private boolean doInit = true;
 
-	private boolean[][] usedRow;
-	private boolean[][] usedCol;
-	private boolean[][] usedBox;
+	final private boolean[][] notUsedRow;
+	final private boolean[][] notUsedCol;
+	final private boolean[][] notUsedBox;
+	final private int[][] cbox;
 
-	public Sudoku(int order) {
+	public SudokuFast(int order) {
 		ORDER = order;
 		DIM = order*order;
 		a = new int[DIM][DIM];
 		fixed = new boolean[DIM][DIM];
-		usedRow = new boolean[DIM][DIM];
-		usedCol = new boolean[DIM][DIM];
-		usedBox = new boolean[DIM][DIM];
+		notUsedRow = new boolean[DIM][DIM];
+		notUsedCol = new boolean[DIM][DIM];
+		notUsedBox = new boolean[DIM][DIM];
+		cbox = new int[DIM][DIM];
+
+		for (int y=0; y<DIM; ++y)
+			for (int x=0; x<DIM; ++x) {
+				cbox[y][x]=x/ORDER+y-y%ORDER;
+			}
+
+		clear();
 	}
 	public void clear() {
-		initFixed=true;
+		doInit=true;
 		for (int y=0; y<DIM; ++y)
 			for (int x=0; x<DIM; ++x) {
 				a[y][x]=0;
-				usedRow[y][x]=false;
-				usedCol[y][x]=false;
-				usedBox[y][x]=false;
+				notUsedRow[y][x]=true;
+				notUsedCol[y][x]=true;
+				notUsedBox[y][x]=true;
 			}
 	}
 	public void reset() {
-		if (initFixed) clear();
+		if (doInit) clear();
 		else {
 			for (int y=0; y<DIM; ++y)
 				for (int x=0; x<DIM; ++x) {
+					notUsedRow[y][x]=true;
+					notUsedCol[y][x]=true;
+					notUsedBox[y][x]=true;
+				}
+			for (int y=0; y<DIM; ++y)
+				for (int x=0; x<DIM; ++x) {
 					if (!fixed[y][x]) a[y][x]=0;
-					usedRow[y][x]=false;
-					usedCol[y][x]=false;
-					usedBox[y][x]=false;
+					else setUsed(x, y, a[y][x]-1);
 				}
 		}
 	}
@@ -78,6 +92,7 @@ public class Sudoku {
 			++p;
 		}
 	}
+	@Override
 	public String toString() {
 		StringBuilder b=new StringBuilder();
 		int s=0;
@@ -101,51 +116,34 @@ public class Sudoku {
 		}
 		System.out.println();
 	}
+	private int getbox(int x,int y) {
+		//return x/ORDER+y-y%ORDER;
+		return cbox[y][x];
+	}
 	private void setUsed(int x,int y,int v) {
-		usedRow[y][v]=true;
-		usedCol[x][v]=true;
-		int box=x/ORDER+(y/ORDER)*ORDER;
-		usedBox[box][v]=true;
+		notUsedRow[y][v]=false;
+		notUsedCol[x][v]=false;
+		notUsedBox[getbox(x,y)][v]=false;
 	}
 	private void resetUsed(int x,int y,int v) {
-		usedRow[y][v]=false;
-		usedCol[x][v]=false;
-		int box=x/ORDER+(y/ORDER)*ORDER;
-		usedBox[box][v]=false;
+		notUsedRow[y][v]=true;
+		notUsedCol[x][v]=true;
+		notUsedBox[getbox(x,y)][v]=true;
 	}
 	private boolean canSet(int x,int y,int v) {
-		int box=x/ORDER+(y/ORDER)*ORDER;
-		return !usedRow[y][v] && !usedCol[x][v] && !usedBox[box][v];
-	}
-	private boolean isAllowed(int x,int y,int v) {
-		//horizontal
-		for (int i=0; i < DIM; ++i) {
-			if (a[y][i] == v) return false;
-		}
-		//vertical
-		for (int i=0; i < DIM; ++i) {
-			if (a[i][x] == v) return false;
-		}
-		//box
-		int x0 = x - x%ORDER;
-		int y0 = y - y%ORDER;
-		for (y=0; y < ORDER; ++y) {
-			for (x=0; x < ORDER; ++x) {
-				if (a[y0+y][x0+x] == v) return false;
-			}
-		}
-		return true;
+		//return !(usedRow[y][v] || usedCol[x][v] || usedBox[getbox(x,y)][v]);
+		return notUsedRow[y][v] && notUsedCol[x][v] && notUsedBox[getbox(x,y)][v];
 	}
 
 	public boolean solve() {
 		int p,x,y;
-		if (initFixed) {
+		if (doInit) {
 			for (y=0; y<DIM; ++y)
 				for (x=0; x<DIM; ++x) {
 					fixed[y][x] = a[y][x] != 0;
 					if (fixed[y][x]) setUsed(x, y, a[y][x]-1);
 				}
-			initFixed=false;
+			doInit=false;
 			p=0;
 		}
 		else {
@@ -161,26 +159,25 @@ public class Sudoku {
 			x=p%DIM; y=p/DIM;
 			if (fixed[y][x]) {++p; continue;}
 			int v=a[y][x];
+			if (v>0) resetUsed(x,y,v-1);
+			a[y][x] = 0;
 			for (; v<DIM; ++v) {
-				if (isAllowed(x, y, v+1)) break;
-				//if (canSet(x, y, v)) break;
+				if (canSet(x, y, v)) break;
 			}
 
 			if (v < DIM) {
 				a[y][x] = v+1; ++p;
-				//setUsed(x,y,v);
+				setUsed(x,y,v);
 				continue;
 			}
 
 			//backtrack
-			if (p == 0) return false;
-			//if (a[y][x]>0) resetUsed(x, y, a[y][x]-1);
-			a[y][x] = 0; --p;
+			--p;
 			while (p >= 0) {
 				x=p%DIM; y=p/DIM;
 				if (fixed[y][x]) {--p;continue;}
 				if (a[y][x] == DIM) {
-					//resetUsed(x,y,a[y][x]-1);
+					resetUsed(x,y,a[y][x]-1);
 					a[y][x]=0; --p;
 					continue;
 				}
