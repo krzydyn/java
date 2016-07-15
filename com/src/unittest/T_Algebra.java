@@ -62,6 +62,7 @@ public class T_Algebra extends UnitTest {
 
 	static void sudoku() {
 		String[] examples = {
+			".....6....59.....82....8....45........3........6..3.54...325..6..................",
 			"..8....1.|27.84..6.|..6...4.8|...4.6.7.|.8..2..5.|.4.1.3...|7.4...6..|.6..35.42|.2....9..",
 			".........8...2...5.....624..38..71..2.4...3.9..74..52..725.....6...8...1.........",
 			"6.214..7.8.......4.4..8..1....85....1..2.4......96.....8..2..6.7.......92.673..4.",
@@ -170,11 +171,10 @@ public class T_Algebra extends UnitTest {
 		//SudokuSimple simp=new SudokuSimple(3);
 		int exnum=0;
 		for (String ex : examples) {
-			//ex=examples[6];
+			ex=examples[11];
 			++exnum;
 			System.out.printf("Example: %d\n", exnum);
 			fast.parse(ex);
-			//simp.parse(ex);
 
 			long t0=System.currentTimeMillis();
 			System.out.println(fast.toString());
@@ -186,17 +186,8 @@ public class T_Algebra extends UnitTest {
 				if (i>2) break;
 			}
 			Log.info("Example done in %.3f sec", (System.currentTimeMillis()-t0)/1000.0);
-			check(i==1, "wrong sudoku i="+i);
-
-			/*t0=System.currentTimeMillis();
-			System.out.println(fast.toString());
-			for (i=0; simp.solve(); ++i) {
-				System.out.printf("Solution %d:\n",i+1);
-				simp.print();
-				if (i>2) break;
-			}
-			Log.info("Example done in %.3f sec", (System.currentTimeMillis()-t0)/1000.0);
-			check(i==1, "wrong sudoku i="+i);*/
+			check(i==1, i==0?"no solution":"multiple solutions "+i);
+			break;
 		}
 
 	}

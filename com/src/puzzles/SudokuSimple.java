@@ -72,7 +72,7 @@ public class SudokuSimple {
 		}
 		System.out.println();
 	}
-	private boolean isAllowed(int x,int y,int v) {
+	private boolean setCheck(int x,int y,int v) {
 		//horizontal
 		for (int i=0; i < DIM; ++i) {
 			if (a[y][i] == v) return false;
@@ -117,7 +117,7 @@ public class SudokuSimple {
 			int v=a[y][x];
 			a[y][x] = 0;
 			for (; v<DIM; ++v) {
-				if (isAllowed(x, y, v+1)) break;
+				if (setCheck(x, y, v+1)) break;
 			}
 
 			if (v < DIM) {

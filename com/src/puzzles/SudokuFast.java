@@ -117,24 +117,26 @@ public class SudokuFast {
 		System.out.println();
 	}
 	private int getbox(int x,int y) {
-		//return x/ORDER+y-y%ORDER;
 		return cbox[y][x];
 	}
 	private void setUsed(int x,int y,int v) {
+		a[y][x] = v+1;
 		notUsedRow[y][v]=false;
 		notUsedCol[x][v]=false;
 		notUsedBox[getbox(x,y)][v]=false;
 	}
-	private void resetUsed(int x,int y,int v) {
+	private void resetUsed(int x,int y) {
+		int v=a[y][x]-1;
+		a[y][x]=0;
 		notUsedRow[y][v]=true;
 		notUsedCol[x][v]=true;
 		notUsedBox[getbox(x,y)][v]=true;
 	}
-	private boolean canSet(int x,int y,int v) {
-		//return !(usedRow[y][v] || usedCol[x][v] || usedBox[getbox(x,y)][v]);
+	private boolean setCheck(int x,int y,int v) {
 		return notUsedRow[y][v] && notUsedCol[x][v] && notUsedBox[getbox(x,y)][v];
 	}
 
+	//TODO search in order of line/cols/boxes occupied most
 	public boolean solve() {
 		int p,x,y;
 		if (doInit) {
@@ -159,14 +161,13 @@ public class SudokuFast {
 			x=p%DIM; y=p/DIM;
 			if (fixed[y][x]) {++p; continue;}
 			int v=a[y][x];
-			if (v>0) resetUsed(x,y,v-1);
-			a[y][x] = 0;
+			if (v>0) resetUsed(x,y);
 			for (; v<DIM; ++v) {
-				if (canSet(x, y, v)) break;
+				if (setCheck(x,y,v)) break;
 			}
 
 			if (v < DIM) {
-				a[y][x] = v+1; ++p;
+				++p;
 				setUsed(x,y,v);
 				continue;
 			}
@@ -177,7 +178,7 @@ public class SudokuFast {
 				x=p%DIM; y=p/DIM;
 				if (fixed[y][x]) {--p;continue;}
 				if (a[y][x] == DIM) {
-					resetUsed(x,y,a[y][x]-1);
+					resetUsed(x,y);
 					a[y][x]=0; --p;
 					continue;
 				}
