@@ -22,8 +22,8 @@ import java.util.List;
 
 import puzzles.Cryptarithm;
 import puzzles.Expression;
+import puzzles.Sudoku9;
 import puzzles.SudokuFast;
-import puzzles.SudokuSimple;
 import algebra.Maths;
 import algebra.Permutate;
 import sys.Log;
@@ -62,8 +62,8 @@ public class T_Algebra extends UnitTest {
 
 	static void sudoku() {
 		String[] examples = {
-			".....6....59.....82....8....45........3........6..3.54...325..6..................",
-			"..8....1.|27.84..6.|..6...4.8|...4.6.7.|.8..2..5.|.4.1.3...|7.4...6..|.6..35.42|.2....9..",
+			"1....7.9..3..2...8..96..5....53..9...1..8...26....4...3......1..4......7..7...3..",
+			"..8....1.27.84..6...6...4.8...4.6.7..8..2..5..4.1.3...7.4...6...6..35.42.2....9..",
 			".........8...2...5.....624..38..71..2.4...3.9..74..52..725.....6...8...1.........",
 			"6.214..7.8.......4.4..8..1....85....1..2.4......96.....8..2..6.7.......92.673..4.",
 			// hard
@@ -166,37 +166,44 @@ public class T_Algebra extends UnitTest {
 			".5..9....1.....6.....3.8.....8.4...9514.......3....2..........4.8...6..77..15..6.",
 			".....2.......7...17..3...9.8..7......2.89.6...13..6....9..5.824.....891..........",
 			"3...8.......7....51..............36...2..4....7...........6.13..452...........8..",
+			// multiple solutions
+			//".....6....59.....82....8....45........3........6..3.54...325..6..................",
 		};
+		Sudoku9 s9=new Sudoku9();
 		SudokuFast fast=new SudokuFast(3);
-		//SudokuSimple simp=new SudokuSimple(3);
 		int exnum=0;
 		for (String ex : examples) {
-			ex=examples[11];
+			int i;
+			long t0;
+			//ex=examples[11];
 			++exnum;
 			System.out.printf("Example: %d\n", exnum);
 			fast.parse(ex);
 
-			long t0=System.currentTimeMillis();
-			System.out.println(fast.toString());
 			fast.print();
-			int i;
-			for (i=0; fast.solve(); ++i) {
-				System.out.printf("Solution %d:\n",i+1);
-				fast.print();
-				if (i>2) break;
+			System.out.println(fast.toString());
+
+			t0=System.currentTimeMillis();
+			s9.solve(ex);
+			Log.info("S9 done in %.3f sec", (System.currentTimeMillis()-t0)/1000.0);
+
+			t0=System.currentTimeMillis();
+			for (i=0; i<5 && fast.solve(); ++i) {
+				System.out.printf("Sol %d: %s\n",i+1,fast.toString());
 			}
-			Log.info("Example done in %.3f sec", (System.currentTimeMillis()-t0)/1000.0);
+			Log.info("Fast done in %.3f sec", (System.currentTimeMillis()-t0)/1000.0);
 			check(i==1, i==0?"no solution":"multiple solutions "+i);
+
 			break;
 		}
 
 	}
-/*
- * 1. Find all solutions with an efficient backtracking algorithm.
- * 2. If there is just one solution, you are done. Otherwise if you have more than one solution,
- *    find a position at which most of the solutions differ. Add the number at this position.
- * 3. Go to 1.
- */
+	/*
+	 * 1. Find all solutions with an efficient backtracking algorithm.
+	 * 2. If there is just one solution, you are done. Otherwise if you have more than one solution,
+	 *    find a position at which most of the solutions differ. Add the number at this position.
+	 * 3. Go to 1.
+	 */
 	/*static void sudokuGen() {
 		Sudoku s=new Sudoku(3);
 		List<Integer> box = new ArrayList<Integer>();

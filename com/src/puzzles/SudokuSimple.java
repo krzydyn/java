@@ -1,18 +1,36 @@
 package puzzles;
 
+/*
+ *  Copyright (c) 2016 Krzysztof Dynowski All Rights Reserved
+ *
+ *  Contact: krzydyn@gmail.com)
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License");
+ *  you may not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License
+ */
+
 public class SudokuSimple {
-	final private String values = ".123456789ABCDEFGHIJKLMNOPQRSTUWXYZ@%";
-	final private int ORDER;
-	final private int DIM;
-	final private int[][] a;
-	final private boolean[][] fixed;
-	private boolean doInit = true;
+	final private String values = ".123456789";
+	protected final int ORDER;
+	protected final int DIM;
+	protected final int[][] a;
+	protected final boolean[][] hints;
+	protected boolean doInit = true;
 
 	public SudokuSimple(int order) {
 		ORDER = order;
 		DIM = order*order;
 		a = new int[DIM][DIM];
-		fixed = new boolean[DIM][DIM];
+		hints = new boolean[DIM][DIM];
 	}
 	public void clear() {
 		doInit=true;
@@ -26,7 +44,7 @@ public class SudokuSimple {
 		else {
 			for (int y=0; y<DIM; ++y)
 				for (int x=0; x<DIM; ++x) {
-					if (!fixed[y][x]) a[y][x]=0;
+					if (!hints[y][x]) a[y][x]=0;
 				}
 		}
 	}
@@ -66,13 +84,21 @@ public class SudokuSimple {
 				System.out.println("-----------------------");
 			for (int x=0; x<DIM; ++x) {
 				if (x>0 && x%ORDER == 0) System.out.print(" |");
-				System.out.printf(" %s",values.charAt(a[y][x]));
+				if (a[y][x]!=0) System.out.printf(" %d",a[y][x]);
+				else System.out.printf(" .");
 			}
 			System.out.println();
 		}
 		System.out.println();
 	}
-	private boolean setCheck(int x,int y,int v) {
+	protected void setUsed(int x,int y,int v) {
+		a[y][x] = v+1;
+	}
+	protected void resetUsed(int x,int y) {
+		a[y][x]=0;
+	}
+
+	protected boolean setCheck(int x,int y,int v) {
 		//horizontal
 		for (int i=0; i < DIM; ++i) {
 			if (a[y][i] == v) return false;
@@ -92,51 +118,64 @@ public class SudokuSimple {
 		return true;
 	}
 
+	//order of visiting fields
+	protected int pmap(int mp) {
+		//return DIM*DIM-mp-1; //280.677 sec
+		return mp; //134.139 sec
+	}
+
 	public boolean solve() {
-		int p,x,y;
+		final int d=DIM*DIM;
+		int mp,p,x,y;
 		if (doInit) {
 			for (y=0; y<DIM; ++y)
 				for (x=0; x<DIM; ++x) {
-					fixed[y][x] = a[y][x] != 0;
+					hints[y][x] = a[y][x] != 0;
+					if (hints[y][x]) setUsed(x, y, a[y][x]-1);
 				}
 			doInit=false;
-			p=0;
+			mp=0;
 		}
 		else {
-			p=DIM*DIM-1;
-			while (p > 0) {
+			mp=d-1;
+			while (mp > 0) {
+				p=pmap(mp);
 				x=p%DIM; y=p/DIM;
-				if (!fixed[y][x]) break;
-				--p;
+				if (!hints[y][x]) break;
+				--mp;
 			}
 		}
 
-		while (p < DIM*DIM) {
+		while (mp < d) {
+			p=pmap(mp);
 			x=p%DIM; y=p/DIM;
-			if (fixed[y][x]) {++p; continue;}
+			if (hints[y][x]) {++mp; continue;}
 			int v=a[y][x];
-			a[y][x] = 0;
+			if (v>0) resetUsed(x,y);
 			for (; v<DIM; ++v) {
-				if (setCheck(x, y, v+1)) break;
+				if (setCheck(x,y,v)) break;
 			}
 
 			if (v < DIM) {
-				a[y][x] = v+1; ++p;
+				++mp;
+				setUsed(x,y,v);
 				continue;
 			}
 
 			//backtrack
-			--p;
-			while (p >= 0) {
+			--mp;
+			while (mp >= 0) {
+				p=pmap(mp);
 				x=p%DIM; y=p/DIM;
-				if (fixed[y][x]) {--p;continue;}
+				if (hints[y][x]) {--mp;continue;}
 				if (a[y][x] == DIM) {
-					a[y][x]=0; --p;
+					resetUsed(x,y);
+					--mp;
 					continue;
 				}
 				break;
 			}
-			if (p<0) return false;
+			if (mp<0) return false;
 		}
 		return true;
 	}
