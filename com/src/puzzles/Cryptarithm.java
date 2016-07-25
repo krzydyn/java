@@ -24,12 +24,14 @@ import puzzles.Expression.SymbolGetter;
 import algebra.Permutate;
 
 public class Cryptarithm {
+	final int BASE=10;
 	final List<Integer> values = new ArrayList<Integer>();
 	final List<Character> symbols = new ArrayList<Character>();
 	final List<Expression> exprs = new ArrayList<Expression>();
 
 	private int getValue(char symb) {
 		int i = symbols.indexOf(symb);
+		if (i<0) return -1;
 		return values.get(i);
 	}
 	final SymbolGetter symval = new SymbolGetter() {
@@ -37,7 +39,7 @@ public class Cryptarithm {
 		public long getValue(String s) {
 			long x=0;
 			for (int i=0; i < s.length(); ++i) {
-				x*=10;
+				x *= BASE;
 				x += Cryptarithm.this.getValue(s.charAt(i));
 			}
 			return x;
@@ -49,11 +51,30 @@ public class Cryptarithm {
 	}
 	@Override
 	public String toString() {
-		return values.toString();
+		if (values.size()==0) return "[]";
+		StringBuilder b=new StringBuilder();
+		b.append("[");
+		for (Integer v : values) {
+			b.append(Integer.toString(v,BASE));
+			b.append(", ");
+		}
+		b.setLength(b.length()-2);
+		b.append("]");
+		return b.toString();
+		//return values.toString();
 	}
-	void clear() {
+	public void clear() {
+		values.clear();
 		symbols.clear();
 		exprs.clear();
+		for (int i=0; i < BASE; ++i) values.add(i);
+	}
+	public void removeFigure(int v) {
+		for (int i=0; i < values.size(); ++i)
+			if (values.get(i) == v) {
+				values.remove(i);
+				break;
+			}
 	}
 	public long getValue(String s) {
 		return symval.getValue(s);
@@ -72,13 +93,6 @@ public class Cryptarithm {
 		addSymbols(expr);
 		exprs.add(new Expression(expr,symval));
 	}
-	public void prepare(int[] init) {
-		values.clear();
-		if (init==null)
-			for (int i=0; i < 10; ++i) values.add(i);
-		else
-			for (int i=0; i < init.length; ++i) values.add(init[i]);
-	}
 	public boolean verify() {
 		for (Expression e : exprs) {
 			if (e.evaluate() == 0) {
@@ -91,7 +105,6 @@ public class Cryptarithm {
 		return Permutate.nextPermutation(values);
 	}
 	public void solve() {
-		prepare(null);
 		do {
 			if (verify()) {
 				System.out.println(symbols);

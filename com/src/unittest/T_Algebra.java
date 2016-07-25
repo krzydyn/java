@@ -239,12 +239,21 @@ public class T_Algebra extends UnitTest {
 		Cryptarithm c=new Cryptarithm();
 		c.addExpr("3 * mroz = zima");
 		c.addExpr("dcxciii + dcccxcv + mdcccxv=mmmcdiii");
-		c.prepare(null);
+		System.out.println(c.getSymbols());
 		do {
 			if (c.verify()) {
-				System.out.println(c.getSymbols());
 				System.out.println(c.toString());
 				check(c.getValue("mroz")==2708, "mroz != 2708");
+			}
+		} while (c.next());
+		System.out.println("-----------------------");
+		c.clear();
+		c.removeFigure(0);
+		c.addExpr("vive * la = france");
+		System.out.println(c.getSymbols());
+		do {
+			if (c.verify()) {
+				System.out.println(c.toString());
 			}
 		} while (c.next());
 	}
