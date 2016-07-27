@@ -19,7 +19,8 @@ package puzzles;
  */
 
 public class SudokuSimple {
-	final private String values = ".123456789";
+	// 36 figures - support ORDER up to 6
+	final private String figures = ".123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ@";
 	protected final int ORDER;
 	protected final int DIM;
 	protected final int[][] a;
@@ -61,7 +62,7 @@ public class SudokuSimple {
 			if (c <= ' ' || ignore.indexOf(c) >= 0) continue;
 			int x=p%DIM;
 			int y=p/DIM;
-			int v = values.indexOf(c);
+			int v = figures.indexOf(c);
 			a[y][x] = v<0 ? v=0 : v;
 			++p;
 		}
@@ -72,7 +73,7 @@ public class SudokuSimple {
 		int s=0;
 		for (int y=0; y<DIM; ++y)
 			for (int x=0; x<DIM; ++x) {
-				b.append(String.format("%s",values.charAt(a[y][x])));
+				b.append(String.format("%s",figures.charAt(a[y][x])));
 				if (a[y][x]>0) ++s;
 			}
 		b.append(" s="+s);
