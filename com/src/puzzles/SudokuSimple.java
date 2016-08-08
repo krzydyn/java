@@ -23,6 +23,7 @@ public class SudokuSimple {
 	final private String figures = ".123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ@";
 	protected final int ORDER;
 	protected final int DIM;
+	protected final int DIM2;
 	protected final int[][] a;
 	protected final boolean[][] hints;
 	protected boolean doInit = true;
@@ -30,6 +31,7 @@ public class SudokuSimple {
 	public SudokuSimple(int order) {
 		ORDER = order;
 		DIM = order*order;
+		DIM2 = DIM*DIM;
 		a = new int[DIM][DIM];
 		hints = new boolean[DIM][DIM];
 	}
@@ -63,7 +65,7 @@ public class SudokuSimple {
 			int x=p%DIM;
 			int y=p/DIM;
 			int v = figures.indexOf(c);
-			a[y][x] = v<0 ? v=0 : v;
+			a[y][x] = v<0 ? 0 : v;
 			++p;
 		}
 	}
@@ -76,21 +78,28 @@ public class SudokuSimple {
 				b.append(String.format("%s",figures.charAt(a[y][x])));
 				if (a[y][x]>0) ++s;
 			}
-		b.append(" s="+s);
+		b.append(String.format(" [%d]", s));
 		return b.toString();
 	}
-	public void print() {
-		for (int y=0; y<DIM; ++y) {
-			if (y>0 && y%ORDER == 0)
-				System.out.println("-----------------------");
-			for (int x=0; x<DIM; ++x) {
-				if (x>0 && x%ORDER == 0) System.out.print(" |");
-				if (a[y][x]!=0) System.out.printf(" %d",a[y][x]);
+	static protected void print(int[][] mtx, int order) {
+		int dim=order*order;
+		for (int y=0; y<dim; ++y) {
+			if (y>0 && y%order == 0) {
+				int n = 2*order*order+order;
+				for (int i=0; i <= n; ++i)
+					System.out.print("-");
+				System.out.println("-");
+			}
+			for (int x=0; x<dim; ++x) {
+				if (x>0 && x%order == 0) System.out.print(" |");
+				if (mtx[y][x]!=0) System.out.printf(" %d",mtx[y][x]);
 				else System.out.printf(" .");
 			}
 			System.out.println();
 		}
-		System.out.println();
+	}
+	public void print() {
+		print(a,ORDER);
 	}
 	protected void setUsed(int x,int y,int v) {
 		a[y][x] = v+1;
@@ -99,46 +108,48 @@ public class SudokuSimple {
 		a[y][x]=0;
 	}
 
-	protected boolean setCheck(int x,int y,int v) {
+	protected boolean isForbiden(int x,int y,int v) {
+		++v;
 		//horizontal
 		for (int i=0; i < DIM; ++i) {
-			if (a[y][i] == v) return false;
+			if (a[y][i] == v) return true;
 		}
 		//vertical
 		for (int i=0; i < DIM; ++i) {
-			if (a[i][x] == v) return false;
+			if (a[i][x] == v) return true;
 		}
 		//box
 		int x0 = x - x%ORDER;
 		int y0 = y - y%ORDER;
 		for (y=0; y < ORDER; ++y) {
 			for (x=0; x < ORDER; ++x) {
-				if (a[y0+y][x0+x] == v) return false;
+				if (a[y0+y][x0+x] == v) return true;
 			}
 		}
-		return true;
+		return false;
 	}
 
 	//order of visiting fields
-	protected int pmap(int mp) {
-		//return DIM*DIM-mp-1; //280.677 sec
-		return mp; //134.139 sec
+	protected int pmap(int mp) {return mp;}
+
+	protected void init() {
+		int x,y;
+		for (y=0; y<DIM; ++y)
+			for (x=0; x<DIM; ++x) {
+				hints[y][x] = a[y][x] != 0;
+				if (hints[y][x]) setUsed(x, y, a[y][x]-1);
+			}
 	}
 
 	public boolean solve() {
-		final int d=DIM*DIM;
 		int mp,p,x,y;
 		if (doInit) {
-			for (y=0; y<DIM; ++y)
-				for (x=0; x<DIM; ++x) {
-					hints[y][x] = a[y][x] != 0;
-					if (hints[y][x]) setUsed(x, y, a[y][x]-1);
-				}
+			init();
 			doInit=false;
 			mp=0;
 		}
 		else {
-			mp=d-1;
+			mp=DIM2-1;
 			while (mp > 0) {
 				p=pmap(mp);
 				x=p%DIM; y=p/DIM;
@@ -147,14 +158,14 @@ public class SudokuSimple {
 			}
 		}
 
-		while (mp < d) {
+		while (mp < DIM2) {
 			p=pmap(mp);
 			x=p%DIM; y=p/DIM;
 			if (hints[y][x]) {++mp; continue;}
 			int v=a[y][x];
 			if (v>0) resetUsed(x,y);
 			for (; v<DIM; ++v) {
-				if (setCheck(x,y,v)) break;
+				if (!isForbiden(x,y,v)) break;
 			}
 
 			if (v < DIM) {

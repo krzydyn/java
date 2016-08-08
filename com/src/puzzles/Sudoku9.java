@@ -60,6 +60,7 @@ public class Sudoku9 {
 		int[] sc = new int[324];
 		int[] cc = new int[81];
 		int[] out = new int[81];
+		char[] y = new char[81];
 		for (r = 0; r < 729; ++r) sr[r] = 0; // no row is forbidden
 		for (c = 0; c < 324; ++c) sc[c] = 0<<7|9; // 9 allowed choices; no constraint has been used
 		for (i = 0; i < 81; ++i) {
@@ -93,7 +94,7 @@ public class Sudoku9 {
 				} else cr[i--] = dir = -1; // backtrack
 			}
 			if (i < 0) break;
-			char[] y = new char[81];
+
 			for (j = 0; j < 81; ++j) y[j] = (char)(out[j] + '1');
 			for (j = 0; j < i; ++j) { r = R[cc[j]][cr[j]]; y[r/9] = (char)(r%9 + '1'); }
 			System.out.println(new String(y));

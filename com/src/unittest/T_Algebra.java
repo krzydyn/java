@@ -171,16 +171,17 @@ public class T_Algebra extends UnitTest {
 		};
 		Sudoku9 s9=new Sudoku9();
 		SudokuFast fast=new SudokuFast(3);
-		int exnum=0;
+		int exnum=0,exmax=0;
+		long tmax=0;
 		for (String ex : examples) {
 			int i;
 			long t0;
-			//ex=examples[11];
+			//ex=examples[58];
 			++exnum;
 			System.out.printf("Example: %d\n", exnum);
 			fast.parse(ex);
 
-			fast.print();
+			//fast.print();
 			System.out.println(fast.toString());
 
 			t0=System.currentTimeMillis();
@@ -190,13 +191,17 @@ public class T_Algebra extends UnitTest {
 			t0=System.currentTimeMillis();
 			for (i=0; i<5 && fast.solve(); ++i) {
 				System.out.printf("Sol %d: %s\n",i+1,fast.toString());
+				//fast.print();
 			}
-			Log.info("Fast done in %.3f sec", (System.currentTimeMillis()-t0)/1000.0);
+			t0=System.currentTimeMillis()-t0;
+			if (tmax<t0) {tmax=t0; exmax=exnum;}
+			Log.info("Fast done in %.3f sec", t0/1000.0);
 			check(i==1, i==0?"no solution":"multiple solutions "+i);
 
-			break;
+			//break;
 		}
 
+		Log.info("Slowest %d in %.3f sec", exmax, tmax/1000.0);
 	}
 	/*
 	 * 1. Find all solutions with an efficient backtracking algorithm.
@@ -256,5 +261,13 @@ public class T_Algebra extends UnitTest {
 				System.out.println(c.toString());
 			}
 		} while (c.next());
+	}
+	static void countthe() {
+		String s = "The other day I went over there";
+		s = s.toLowerCase();
+		int count=0;
+		for (int i=0; (i=s.indexOf("the",i))>=0; ++i,++count) ;
+		System.out.printf("count=%d\n",count);
+		check(count==3,"");
 	}
 }
