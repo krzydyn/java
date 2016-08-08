@@ -17,8 +17,6 @@
  */
 package puzzles;
 
-import sys.Log;
-
 public class SudokuFast extends SudokuSimple {
 	final private boolean[][] usedInRow;
 	final private boolean[][] usedInCol;
@@ -97,7 +95,6 @@ public class SudokuFast extends SudokuSimple {
 		}
 	}
 	private void swapBigRows(int y1,int y2) {
-		Log.info("swapBigRows %d <> %d",y1,y2);
 		for (int y=0; y<ORDER; ++y)
 			swapRows(y1+y,y2+y);
 	}
@@ -114,7 +111,6 @@ public class SudokuFast extends SudokuSimple {
 			swapCols(x1+x,x2+x);
 	}*/
 	private void transpose() {
-		Log.info("transpose");
 		int t;
 		for (int y=0; y<DIM; ++y) {
 			for (int x=0; x<y; ++x) {

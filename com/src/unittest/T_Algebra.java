@@ -22,7 +22,6 @@ import java.util.List;
 
 import puzzles.Cryptarithm;
 import puzzles.Expression;
-import puzzles.Sudoku9;
 import puzzles.SudokuFast;
 import algebra.Maths;
 import algebra.Permutate;
@@ -169,7 +168,7 @@ public class T_Algebra extends UnitTest {
 			// multiple solutions
 			//".....6....59.....82....8....45........3........6..3.54...325..6..................",
 		};
-		Sudoku9 s9=new Sudoku9();
+		//Sudoku9 s9=new Sudoku9();
 		SudokuFast fast=new SudokuFast(3);
 		int exnum=0,exmax=0;
 		long tmax=0;
@@ -184,20 +183,21 @@ public class T_Algebra extends UnitTest {
 			//fast.print();
 			System.out.println(fast.toString());
 
-			t0=System.currentTimeMillis();
+			/*t0=System.currentTimeMillis();
 			s9.solve(ex);
-			Log.info("S9 done in %.3f sec", (System.currentTimeMillis()-t0)/1000.0);
+			t0=System.currentTimeMillis()-t0;
+			Log.info("S9 done in %.3f sec", t0/1000.0);*/
 
 			t0=System.currentTimeMillis();
 			for (i=0; i<5 && fast.solve(); ++i) {
-				System.out.printf("Sol %d: %s\n",i+1,fast.toString());
+				System.out.printf("%s\n",fast.toString());
 				//fast.print();
 			}
 			t0=System.currentTimeMillis()-t0;
-			if (tmax<t0) {tmax=t0; exmax=exnum;}
-			Log.info("Fast done in %.3f sec", t0/1000.0);
 			check(i==1, i==0?"no solution":"multiple solutions "+i);
+			Log.info("Fast done in %.3f sec", t0/1000.0);
 
+			if (tmax<t0) {tmax=t0; exmax=exnum;}
 			//break;
 		}
 
