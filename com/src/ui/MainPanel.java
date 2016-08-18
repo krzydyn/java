@@ -28,6 +28,7 @@ import java.awt.event.WindowEvent;
 import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
+import javax.swing.JScrollBar;
 import javax.swing.JScrollPane;
 import javax.swing.JTextPane;
 import javax.swing.ScrollPaneConstants;
@@ -59,10 +60,9 @@ public class MainPanel extends JPanel{
 	}
 
 	static public JScrollPane createScrolledPanel(JComponent c) {
-		//wrapping in JPanel Border layout
-
 		JScrollPane sp;
 		if (c instanceof JTextComponent) {
+			//wrapping TextComponents with JPanel Border layout
 			JPanel bpan = new JPanel(new BorderLayout());
 			bpan.add(c);
 			sp = new JScrollPane(bpan);
@@ -70,8 +70,14 @@ public class MainPanel extends JPanel{
 		else sp = new JScrollPane(c);
 		sp.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED);
 		sp.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
-		sp.getVerticalScrollBar().setFocusable(false);
-		sp.getHorizontalScrollBar().setFocusable(false);
+		JScrollBar sb;
+
+		sb=sp.getVerticalScrollBar();
+		sb.setUnitIncrement(32); // default is 1
+		sb.setFocusable(false);
+
+		sb=sp.getHorizontalScrollBar();
+		sb.setFocusable(false);
 		return sp;
 	}
 
