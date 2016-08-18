@@ -30,8 +30,9 @@ public class T_System extends UnitTest {
         System.out.println(UnitTest.getClasses("unittest"));
     }
 
-	public static void ansiSequences() {
+	public static void ansiSequences() throws Exception {
 		PrintStream p = System.out;
+
 		for (int i=0; i < 16; ++i)
 			p.printf("Color %d: %s%d;%dmsample text%s\n", i, Ansi.CSI, i/8, 30+i%8, Ansi.SGR_RESET);
     }

@@ -65,7 +65,7 @@ public class Ansi {
 	}
 
 	private final static String[] CODENAME = {
-		"NUL", "STX", "SOT", "ETX", "EOT", "ENQ", "ACK", "BEL",  "BS", "HT",  "LF",  "VT", "FF", "CR", "SO", "SI",
+		"NUL", "SOH", "STX", "ETX", "EOT", "ENQ", "ACK", "BEL",  "BS", "HT",  "LF",  "VT", "FF", "CR", "SO", "SI",
 		"DLE", "DC1", "DC2", "DC3", "DC4", "NAK", "SYN", "ETB", "CAN", "EM", "SUB", "ESC", "FS", "GS", "RS", "US",
 		"SP"
 	};
@@ -76,20 +76,33 @@ public class Ansi {
 		return String.format("<&%02X>", code);
 	}
 
+	public final static String DEC_SCP = Code.ESC+"7";
+	public final static String DEC_RCP = Code.ESC+"8";
+
+	// Single Shift Select of G2
+	public final static String SS2_0 = Code.ESC+"N";
+	public final static String SS2_1 = "\u008e"; //only on 8bit terminal
+	public final static String SS2 = SS2_0;
+
+	// Single Shift Select of G3
+	public final static String SS3_0 = Code.ESC+"O";
+	public final static String SS3_1 = "\u008f"; //only on 8bit terminal
+	public final static String SS3 = SS3_0;
+
+	// Device Control String
+	public final static String DCS_C0 = Code.ESC+"P";
+	public final static String DCS_C1 = "\u0090"; //only on 8bit terminal
+	public final static String DCS = DCS_C0;
+
 	// Character Sequence Indicator
 	public final static String CSI_C0 = Code.ESC+"[";
 	public final static String CSI_C1 = "\u009b"; //only on 8bit terminal
 	public final static String CSI = CSI_C0;
 
-	// Single Shift Select of G2
-	public final static String SS2_0 ="\u008e";
-	public final static String SS2_1 = Code.ESC+"N";
-	public final static String SS2 = SS2_0;
-
-	// Single Shift Select of G3
-	public final static String SS3_0 = Code.ESC+"O";
-	public final static String SS3_1 ="\u008f";
-	public final static String SS3 = SS3_0;
+	// String Terminator
+	public final static String ST_C0 = Code.ESC+"\\";
+	public final static String ST_C1 = "\u009c"; //only on 8bit terminal
+	public final static String ST = ST_C0;
 
 	// Operating System Command
 	public final static String OSC_C0 = Code.ESC+"]";
@@ -109,7 +122,7 @@ public class Ansi {
 	public final static String ERASE_ABOVE = CSI + "1J"; // clear from cursor to beginning of screen
 	public final static String ERASE_ALL = CSI + "2J"; // clear entire screen
 
-	public final static String ERASE_LN = CSI + "K";
+	public final static String ERASE_LN = CSI + "K"; // erase line, don't change cursor position
 	public final static String SCROLL_UP = CSI + "S";
 	public final static String SCROLL_DN = CSI + "T";
 
@@ -139,6 +152,13 @@ public class Ansi {
 	public final static String SGR_LIGHTMAGENTA = CSI + "1;35m";
 	public final static String SGR_LIGHTCYAN = CSI + "1;36m";
 	public final static String SGR_WHITE = CSI + "1;37m";
+
+	public final static String PDA_REQ = CSI + "c"; // Request primary device attributes
+	public final static String PDA_SND = CSI + ">"; // Send primary device attributes
+
+	public final static String DEC_DSR = CSI + "?6n"; // DSR – Device Status Report, resp: CSI+n;mR
+	public final static String SCP = CSI + "s"; // Save cursor position
+	public final static String RCP = CSI + "u"; // Restore cursor position
 
 
 	public final static String TRM_ICON_TITLE = OSC + "0";	// OSC 0;IconName BEL
