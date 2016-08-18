@@ -42,6 +42,18 @@ public class Serial {
 	private String portName;
 	private CommPort commPort;
 
+	static public List<String> listPorts() {
+		List<String> list = new ArrayList<String>();
+		java.util.Enumeration<?> portList = CommPortIdentifier.getPortIdentifiers();
+		while(portList.hasMoreElements()) {
+			CommPortIdentifier portId = (CommPortIdentifier)portList.nextElement();
+			if (portId.getPortType() == CommPortIdentifier.PORT_SERIAL)
+				list.add(portId.getName());
+		}
+		Collections.sort(list);
+		return list;
+	}
+
 	public Serial(String n) {
 		portName = n;
 	}
@@ -99,16 +111,4 @@ public class Serial {
 	}
 
 
-    public static List<String> listPorts()
-    {
-        java.util.Enumeration<?> portEnum = CommPortIdentifier.getPortIdentifiers();
-        ArrayList<String> list = new ArrayList<String>();
-        while (portEnum.hasMoreElements())
-        {
-            CommPortIdentifier portIdentifier = (CommPortIdentifier)portEnum.nextElement();
-            list.add(portIdentifier.getName());
-        }
-        Collections.sort(list);
-        return list;
-    }
 }

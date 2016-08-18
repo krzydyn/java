@@ -48,8 +48,11 @@ public class SerialMain extends MainPanel {
 				ports.add(new Serial(n));
 		}
 		if (ports.isEmpty()) {
-			ports.add(new Serial("/dev/ttyUSB1"));
-			ports.add(new Serial("/dev/ttyUSB2"));
+			for (String f : Serial.listPorts()) {
+				ports.add(new Serial(f));
+			}
+			//ports.add(new Serial("/dev/ttyUSB1"));
+			//ports.add(new Serial("/dev/ttyUSB2"));
 		}
 		int cols = 1;
 		while (cols*cols < ports.size()) ++cols;

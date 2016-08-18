@@ -20,18 +20,20 @@ package ui;
 
 import java.awt.BorderLayout;
 import java.awt.Dimension;
+import java.awt.EventQueue;
 import java.awt.LayoutManager;
+import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.awt.event.WindowListener;
+
 import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextPane;
 import javax.swing.ScrollPaneConstants;
-import javax.swing.SwingUtilities;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.Document;
+import javax.swing.text.JTextComponent;
 
 import sys.Log;
 
@@ -56,8 +58,16 @@ public class MainPanel extends JPanel{
 		}
 	}
 
-	static public JScrollPane createScrolledPanel(JComponent scrollable) {
-		JScrollPane sp = new JScrollPane(scrollable);
+	static public JScrollPane createScrolledPanel(JComponent c) {
+		//wrapping in JPanel Border layout
+
+		JScrollPane sp;
+		if (c instanceof JTextComponent) {
+			JPanel bpan = new JPanel(new BorderLayout());
+			bpan.add(c);
+			sp = new JScrollPane(bpan);
+		}
+		else sp = new JScrollPane(c);
 		sp.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED);
 		sp.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
 		sp.getVerticalScrollBar().setFocusable(false);
@@ -83,35 +93,17 @@ public class MainPanel extends JPanel{
 		return mainclass.newInstance();
 	}
 	static private void intern_start(final Class<? extends MainPanel> mainclass, final String[] args) throws Exception {
-		SwingUtilities.invokeAndWait(new Runnable() {
+		EventQueue.invokeAndWait(new Runnable() {
 			@Override
 			public void run() {
 				try {
 					final MainPanel main = create(mainclass, args);
 					final JFrame f = new JFrame();
 					f.setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
-					f.addWindowListener(new WindowListener() {
-						@Override
-						public void windowOpened(WindowEvent e) {
-						}
-						@Override
-						public void windowIconified(WindowEvent e) {
-						}
-						@Override
-						public void windowDeiconified(WindowEvent e) {
-						}
-						@Override
-						public void windowDeactivated(WindowEvent e) {
-						}
-						@Override
-						public void windowClosing(WindowEvent e) {
-						}
+					f.addWindowListener(new WindowAdapter() {
 						@Override
 						public void windowClosed(WindowEvent e) {
 							main.windowClosed();
-						}
-						@Override
-						public void windowActivated(WindowEvent e) {
 						}
 					});
 					f.setTitle(main.getName());
