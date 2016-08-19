@@ -85,13 +85,15 @@ public class Log {
 			if (e != null) e.printStackTrace(s);
 			if (!color.isEmpty()) s.printf(Ansi.SGR_RESET);
 			s.println();
-			s.flush();
 		}
 	}
 
 	public static void setReleaseMode() { tmfmt = tmfmt_rel; }
 	public static void setTestMode() { tmfmt = tmfmt_tst; }
 
+	public static void raw(String fmt,Object ...args) {
+		System.out.printf(fmt+"\n", args);
+	}
 	public static void error(Object ...args) {log(0, 0, args);}
 	public static void warn(Object ...args) {log(1, 0, args);}
 	public static void debug(Object ...args) {log(2, 0, args);}

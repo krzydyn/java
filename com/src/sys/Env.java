@@ -18,6 +18,11 @@
 
 package sys;
 
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+
 public class Env {
 	static public final String expandEnv(String p) {
 		if (p.startsWith("~/") || p.equals("~")) {
@@ -40,5 +45,37 @@ public class Env {
 			else p=p.substring(0,s)+env+p.substring(e);
 		}
 		return p;
+	}
+
+	static public String exec(String cmd, File dir) throws IOException {
+		Log.debug("exec %s", cmd);
+
+		StringBuilder str = new StringBuilder();
+		Process child = Runtime.getRuntime().exec(cmd, null, dir);
+
+		// Get output stream to write from it
+		OutputStream out = child.getOutputStream();
+		InputStream in = child.getInputStream();
+		InputStream err = child.getErrorStream();
+
+		byte[] buf = new byte[1024];
+		int r;
+		while ((r=in.read(buf)) >= 0) {
+			for (int i=0; i < r; ++i)
+				str.append((char)buf[i]);
+		}
+
+		try {
+			int ec = child.waitFor();
+			if (ec != 0) throw new IOException("Process exit code "+ec);
+		} catch (InterruptedException e) {
+			return null;
+		} finally {
+			out.close();
+			in.close();
+			err.close();
+		}
+
+		return str.toString();
 	}
 }

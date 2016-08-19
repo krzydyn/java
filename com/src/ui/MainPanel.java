@@ -49,7 +49,8 @@ public class MainPanel extends JPanel{
 		this(new BorderLayout());
 	}
 
-	public void windowClosed(){}
+	protected void windowClosed(){}
+	protected void windowOpened() {}
 
 	static public void append(JTextPane t, String s) {
 		try {
@@ -94,7 +95,7 @@ public class MainPanel extends JPanel{
 		try {
 			return mainclass.getConstructor(String[].class).newInstance(new Object[]{args});
 		}catch (Exception e) {
-			Log.error(e);
+			Log.error("%s: %s", e.getClass().getName(), e.getMessage());
 		}
 		return mainclass.newInstance();
 	}
@@ -110,6 +111,10 @@ public class MainPanel extends JPanel{
 						@Override
 						public void windowClosed(WindowEvent e) {
 							main.windowClosed();
+						}
+						@Override
+						public void windowOpened(WindowEvent e) {
+							main.windowOpened();
 						}
 					});
 					f.setTitle(main.getName());
