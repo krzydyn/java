@@ -1,10 +1,13 @@
 package git;
 
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import svg.Svg;
 import sys.Log;
 import text.Text;
 import ui.MainPanel;
@@ -27,7 +30,6 @@ public class GitLog extends MainPanel {
 	private Map<String,Commit> hash = new HashMap<String, Commit>();
 
 	public GitLog() {
-
 	}
 
 	private Commit parseRecord(String log,int from, int to) {
@@ -77,51 +79,92 @@ public class GitLog extends MainPanel {
 		Log.debug("commits %d", commits.size());
 	}
 	private void drawTree() {
+		String[] c1 = { "#6963FF", "#47E8D4", "#6BDB52", "#E84BA5", "#FFA657"};
+		String[] c2 = {
+				"#e11d21",
+			    //"#eb6420",
+			    "#fbca04",
+			    "#009800",
+			    "#006b75",
+			    "#207de5",
+			    "#0052cc",
+			    "#5319e7",
+			    "#f7c6c7",
+			    "#fad8c7",
+			    "#fef2c0",
+			    "#bfe5bf",
+			    "#c7def8",
+			    "#bfdadc",
+			    "#bfd4f2",
+			    "#d4c5f9",
+			    "#cccccc",
+			    "#84b6eb",
+			    "#e6e6e6",
+			    "#ffffff",
+			    "#cc317c"
+		};
+		int X0=10,DX=20, DY=40;
+		int limit=20;
+
+		//List<Color> colors=new ArrayList<Color>();
+		List<Commit> pcols=new ArrayList<Commit>();
 		List<Commit> cols=new ArrayList<Commit>();
-		StringBuilder buf = new StringBuilder();
-		//int limit=80;
+
+		int cy=10-DY;
+		Svg svg = new Svg();
+		svg.strokeWidth(2);
 		for (Commit c : commits) {
-			//if (--limit <= 0) break;
-			buf.setLength(0);
-			if (cols.size()==0) {
-				cols.add(c);
-			}
+			cy += DY;
+			if (--limit <= 0) break;
 
-			//remove forks, leave one
-			boolean cont=false;
-			for (int i=0; i < cols.size(); ++i) {
-				Commit ci = cols.get(i);
-				if (ci==c) {
-					if (cont){cols.remove(i);--i;}
-					else cont=true;
+			pcols.clear();
+			pcols.addAll(cols);
+
+			int cf=cols.indexOf(c);
+			if (cf<0) cols.add(c);
+			else {
+				for (int i=cf+1; i<cols.size(); ++i) {
+					if (cols.get(i)==c) {cols.remove(i); --i;}
+				}
+			}
+			cf=cols.indexOf(c);
+
+			for (int j=0; j < pcols.size(); ++j) {
+				Commit cj = pcols.get(j);
+				for (String ph : cj.parentHash) {
+					Commit ch=hash.get(ph);
+					for (int i=0; i < cols.size(); ++i) {
+						Commit ci = cols.get(i);
+						if (ci == ch)
+							svg.path().moveTo(X0+j*DX, cy-DY).lineRel((i-j)*DX, DY).stroke("red");
+					}
 				}
 			}
 
-			for (Commit ci : cols) {
-				if (ci==c) buf.append("* ");
-				else buf.append("| ");
-			}
-			buf.append(String.format("%s (%s) %s", c.hash, Text.join(c.parentHash, ","), c.message));
-			Log.raw("%s", buf.toString());
+			svg.circle(X0+cf*DX, cy, 5);
+			svg.text(X0+cols.size()*DX, cy+6).print(c.hash + " | " + Text.join(c.parentHash," ") + " | " + c.message);
 
-			// add parents (create forks)
-			if (c.parentHash.length > 0) {
-				int i = cols.indexOf(c);
-				if (i < 0) continue;
-				cols.remove(i);
-				for (String ph : c.parentHash) {
-					cols.add(i, hash.get(ph));
-					++i;
+			if (c.parentHash.length==0) {
+				cols.remove(cf);
+			}
+			else {
+				cols.set(cf, hash.get(c.parentHash[0]));
+				for (int i=1; i < c.parentHash.length; ++i) {
+					cols.add(cf+1, hash.get(c.parentHash[i]));
 				}
 			}
-			else cols.remove(c);
 		}
+		try {
+			svg.write(new FileOutputStream("git.html"));
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		}
+		Log.debug("svg done");
 	}
 
-	@Override
-	protected void windowOpened() {
-		//String branch = "origin/devel/j.bialecki/openssl_2016.08.16";
-		String branch = "origin/devel/k.debski/openssl-20160801";
+	void genlog() {
+		String branch = "origin/devel/anchit/gatekeeper";
+		//String branch = "origin/devel/k.debski/openssl-20160801";
 		try {
 			readBranch(branch);
 			drawTree();
@@ -131,6 +174,7 @@ public class GitLog extends MainPanel {
 	}
 
 	public static void main(String[] args) {
-		start(GitLog.class);
+		//start(GitLog.class);
+		new GitLog().genlog();
 	}
 }
