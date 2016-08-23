@@ -15,7 +15,8 @@ import ui.MainPanel;
 @SuppressWarnings("serial")
 public class GitLog extends MainPanel {
 	static final String[] ArrayOfString0 = new String[0];
-	static GitRepo repo = new GitRepo("~/sec-os/secos");
+	//static GitRepo repo = new GitRepo("~/sec-os/secos");
+	static GitRepo repo = new GitRepo("~/tmp/nuclear-js");
 
 	static class Commit {
 		String hash;
@@ -26,8 +27,18 @@ public class GitLog extends MainPanel {
 		String message;
 	}
 
-	private List<Commit> commits = new ArrayList<Commit>();
-	private Map<String,Commit> hash = new HashMap<String, Commit>();
+	static class Column {
+		Column(String c) {this.color=c;}
+		Commit c;
+		final String color;
+		@Override
+		public String toString() {
+			return c.hash;
+		}
+	}
+
+	private final List<Commit> commits = new ArrayList<Commit>();
+	private final Map<String,Commit> hash = new HashMap<String, Commit>();
 
 	public GitLog() {
 	}
@@ -78,79 +89,71 @@ public class GitLog extends MainPanel {
 		}
 		Log.debug("commits %d", commits.size());
 	}
+	private int findCol(List<Column>cols, Commit cmt) {
+		for (int i=0; i < cols.size(); ++i) {
+			if (cols.get(i).c == cmt) return i;
+		}
+		return -1;
+	}
 	private void drawTree() {
-		String[] c1 = { "#6963FF", "#47E8D4", "#6BDB52", "#E84BA5", "#FFA657"};
-		String[] c2 = {
-				"#e11d21",
-			    //"#eb6420",
-			    "#fbca04",
-			    "#009800",
-			    "#006b75",
-			    "#207de5",
-			    "#0052cc",
-			    "#5319e7",
-			    "#f7c6c7",
-			    "#fad8c7",
-			    "#fef2c0",
-			    "#bfe5bf",
-			    "#c7def8",
-			    "#bfdadc",
-			    "#bfd4f2",
-			    "#d4c5f9",
-			    "#cccccc",
-			    "#84b6eb",
-			    "#e6e6e6",
-			    "#ffffff",
-			    "#cc317c"
-		};
 		int X0=10,DX=20, DY=40;
-		int limit=20;
+		int limit=50;
 
 		//List<Color> colors=new ArrayList<Color>();
-		List<Commit> pcols=new ArrayList<Commit>();
-		List<Commit> cols=new ArrayList<Commit>();
+		List<Column> pcols=new ArrayList<Column>();
+		List<Column> cols=new ArrayList<Column>();
 
 		int cy=10-DY;
 		Svg svg = new Svg();
 		svg.strokeWidth(2);
-		for (Commit c : commits) {
+		for (Commit cmt : commits) {
 			cy += DY;
 			if (--limit <= 0) break;
 
-			pcols.clear();
-			pcols.addAll(cols);
-
-			int cf=cols.indexOf(c);
-			if (cf<0) cols.add(c);
+			int cf=findCol(cols, cmt);
+			if (cf<0) {
+				cols.add(newCol(cmt));
+				cf = cols.size()-1;
+			}
 			else {
 				for (int i=cf+1; i<cols.size(); ++i) {
-					if (cols.get(i)==c) {cols.remove(i); --i;}
+					if (cols.get(i).c==cmt) {
+						cols.remove(i); --i;
+					}
 				}
 			}
-			cf=cols.indexOf(c);
+			Log.raw("pcols: %s", Text.join(pcols, " "));
+			Log.raw("cols: %s", Text.join(cols, " "));
+			Log.raw("--------------------");
 
-			for (int j=0; j < pcols.size(); ++j) {
-				Commit cj = pcols.get(j);
-				for (String ph : cj.parentHash) {
-					Commit ch=hash.get(ph);
-					for (int i=0; i < cols.size(); ++i) {
-						Commit ci = cols.get(i);
-						if (ci == ch)
-							svg.path().moveTo(X0+j*DX, cy-DY).lineRel((i-j)*DX, DY).stroke("red");
+			for (int i=0; i < cols.size(); ++i) {
+				Column ci = cols.get(i);
+				for (int j=0; j < pcols.size(); ++j) {
+					Column cj = pcols.get(j);
+					if (ci.c.hash.equals(cj.c.hash)) {
+						svg.path().moveTo(X0+j*DX, cy-DY).lineRel((i-j)*DX, DY).stroke(cj.color);
 					}
 				}
 			}
 
 			svg.circle(X0+cf*DX, cy, 5);
-			svg.text(X0+cols.size()*DX, cy+6).print(c.hash + " | " + Text.join(c.parentHash," ") + " | " + c.message);
+			svg.text(X0+cols.size()*DX, cy+6).print(cmt.hash + " | " +
+					Text.join(cmt.parentHash," ") + " | " + cmt.message);
 
-			if (c.parentHash.length==0) {
+			while (pcols.size() > 0) {
+				Column c=pcols.get(0);
+				if (!cols.contains(c)) delCol(c);
+				pcols.remove(0);
+			}
+			pcols.addAll(cols);
+
+			if (cmt.parentHash.length==0) {
 				cols.remove(cf);
 			}
 			else {
-				cols.set(cf, hash.get(c.parentHash[0]));
-				for (int i=1; i < c.parentHash.length; ++i) {
-					cols.add(cf+1, hash.get(c.parentHash[i]));
+				cols.get(cf).c = hash.get(cmt.parentHash[0]);
+				for (int i=1; i < cmt.parentHash.length; ++i) {
+					cols.add(cf+i, newCol(hash.get(cmt.parentHash[i])));
 				}
 			}
 		}
@@ -163,7 +166,7 @@ public class GitLog extends MainPanel {
 	}
 
 	void genlog() {
-		String branch = "origin/devel/anchit/gatekeeper";
+		String branch = "origin/master";
 		//String branch = "origin/devel/k.debski/openssl-20160801";
 		try {
 			readBranch(branch);
@@ -177,4 +180,44 @@ public class GitLog extends MainPanel {
 		//start(GitLog.class);
 		new GitLog().genlog();
 	}
+
+	static Column newCol(Commit cmt) {
+		Column c = columns.remove(columns.size()-1);
+		c.c=cmt;
+		return c;
+	}
+	static void delCol(Column c) {
+		columns.add(c);
+		c.c=null;
+	}
+	static String[] c1 = { "#6963FF", "#47E8D4", "#6BDB52", "#E84BA5", "#FFA657"};
+	static String[] c2 = {
+			"#e11d21",
+		    //"#eb6420",
+		    "#fbca04",
+		    "#009800",
+		    "#006b75",
+		    "#207de5",
+		    "#0052cc",
+		    "#5319e7",
+		    "#f7c6c7",
+		    "#fad8c7",
+		    "#fef2c0",
+		    "#bfe5bf",
+		    "#c7def8",
+		    "#bfdadc",
+		    "#bfd4f2",
+		    "#d4c5f9",
+		    "#cccccc",
+		    "#84b6eb",
+		    "#e6e6e6",
+		    "#ffffff",
+		    "#cc317c"
+	};
+	static List<Column> columns=new ArrayList<GitLog.Column>();
+	static {
+		for (int i=0; i < c1.length; ++i)
+			columns.add(new Column(c1[i]));
+	}
+
 }
