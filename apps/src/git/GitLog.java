@@ -18,8 +18,8 @@ import ui.MainPanel;
 @SuppressWarnings("serial")
 public class GitLog extends MainPanel {
 	static final String[] ArrayOfString0 = new String[0];
-	static GitRepo repo = new GitRepo("~/sec-os/secos");
-	//static GitRepo repo = new GitRepo("~/tmp/nuclear-js");
+	//static GitRepo repo = new GitRepo("~/sec-os/secos");
+	static GitRepo repo = new GitRepo("~/tmp/nuclear-js");
 
 	static class Commit {
 		String hash;
@@ -107,71 +107,70 @@ public class GitLog extends MainPanel {
 		}
 		return -1;
 	}
+	void addPoint(Commit c, Point p) {
+		Log.info(1,"addPoint %s %d, %d", c.hash, p.x,p.y);
+		c.points.add(p);
+	}
 	static int X0=10, DX=20, DY=20;
 	private void drawTree() {
-		int limit=80;
+		int limit=5;
 
 		List<Column> pcols=new ArrayList<Column>();
 		List<Column> cols=new ArrayList<Column>();
 
 		int cy=10-DY;
-		Commit pcmt=null;
 		for (Commit cmt : commits) {
 			cy += DY;
 			if (--limit <= 0) break;
 
-			int cf;
-			if (pcmt != null) {
-				if (pcmt.parentHash.length==0) {
-					cols.remove(pcmt);
-				}
-				else {
-					cf=findCol(cols, pcmt);
-					cols.get(cf).c = hash.get(pcmt.parentHash[0]);
-					cols.get(cf).c.points.add(pcmt.cp);
-					for (int i=1; i < pcmt.parentHash.length; ++i) {
-						cols.add(cf+i, new Column(getColor(),hash.get(pcmt.parentHash[i])));
-						cols.get(cf+i).c.points.add(pcmt.cp);
-					}
-					for (int i=cf+1; i < cols.size(); ++i) {
-						cols.get(i).c.points.add(new Point(X0+(i-1)*DX,cy-DY));
-					}
-				}
-			}
+			Log.raw("commit: %s | %s", cmt.hash, Text.join(cmt.parentHash, " "));
 
-			Point cp;
-			cf=findCol(cols, cmt);
+			int cf=findCol(cols, cmt);
 			if (cf<0) {
+				Log.raw("** new branch '%s'", cmt.hash);
 				cols.add(new Column(getColor(), cmt));
 				cf = cols.size()-1;
-				cp = new Point(X0+cf*DX, cy);
 			}
 			else {
-				cp = new Point(X0+cf*DX, cy);
 				for (int i=cf+1; i<cols.size(); ++i) {
 					Column c=cols.get(i);
 					if (c.c==cmt) {
 						retColor(c.color);
+						Log.raw("rm col[%d] %s", i, c.c.hash);
 						cols.set(i,null);
 					}
 				}
 			}
+
+			Point cp = new Point(X0+cf*DX, cy);
+			for (int i=cols.size(); i>0; ) {
+				--i;
+				if (cols.get(i) == null) cols.remove(i);
+			}
+			Log.raw("cols: %s", Text.join(cols, " "));
 			for (int i=0; i<cols.size(); ++i) {
-				if (cols.get(i) == null) {
-					cols.remove(i);
-					--i;
-				};
+				addPoint(cols.get(i).c, new Point(X0+i*DX,cy));
 			}
 
-
 			cmt.cp=cp;
-			cmt.points.add(cp);
 			cmt.color = cols.get(cf).color;
 			cmt.cols = cols.size();
 
-			pcmt=cmt;
 			pcols.clear();
 			for (Column c:cols) pcols.add(new Column(c));
+
+			if (cmt.parentHash.length==0) {
+				cols.remove(cf);
+				Log.debug("cols.remove %s",cmt.hash);
+			}
+			else {
+				cols.get(cf).c = hash.get(cmt.parentHash[0]);
+				addPoint(cols.get(cf).c, cp);
+				for (int i=1; i < cmt.parentHash.length; ++i) {
+					cols.add(cf+i, new Column(getColor(),hash.get(cmt.parentHash[i])));
+					addPoint(cols.get(cf+i).c, cp);
+				}
+			}
 		}
 
 		Svg svg = new Svg();
@@ -179,13 +178,15 @@ public class GitLog extends MainPanel {
 		for (Commit cmt : commits) {
 			if (cmt.cp == null) break;
 
-			Point p0=cmt.points.get(0);
-			SvgPath path = svg.path();
-			path.fill("none").stroke(cmt.color);
-			path.moveTo(p0.x, p0.y);
-			for (int i = 1; i < cmt.points.size(); ++i) {
-				Point p=cmt.points.get(i);
-				path.lineTo(p.x, p.y);
+			if (cmt.points.size() > 0) {
+				Point p0=cmt.points.get(0);
+				SvgPath path = svg.path();
+				path.fill("none").stroke(cmt.color);
+				path.moveTo(p0.x, p0.y);
+				for (int i = 1; i < cmt.points.size(); ++i) {
+					Point p=cmt.points.get(i);
+					path.lineTo(p.x, p.y);
+				}
 			}
 
 			svg.circle(cmt.cp.x, cmt.cp.y, 4).fill("blue");
@@ -201,9 +202,9 @@ public class GitLog extends MainPanel {
 	}
 
 	void genlog() {
-		//String branch = "origin/master";
+		String branch = "origin/master";
 		//String branch = "origin/devel/k.debski/openssl-20160801";
-		String branch = "origin/devel/anchit/gatekeeper";
+		//String branch = "origin/devel/anchit/gatekeeper";
 		try {
 			readBranch(branch);
 			drawTree();

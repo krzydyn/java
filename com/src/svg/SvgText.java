@@ -10,7 +10,7 @@ public class SvgText extends SvgObject {
 	}
 	public SvgText print(String t) {
 		txt+=t;
-		parent.updateSize(x+t.length()*16, y+5);
+		parent.updateSize(x+txt.length()*16, y+5);
 		return this;
 	}
 	@Override
