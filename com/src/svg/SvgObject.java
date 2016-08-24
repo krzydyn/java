@@ -6,6 +6,7 @@ import java.io.PrintStream;
 public abstract class SvgObject {
 	protected SvgContainer parent;
 	protected String props="";
+
 	public SvgObject fill(String c) {
 		props+= String.format(" fill=\"%s\"",c);
 		return this;

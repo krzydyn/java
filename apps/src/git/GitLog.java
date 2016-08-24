@@ -1,13 +1,16 @@
 package git;
 
+import java.awt.Point;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import svg.Svg;
+import svg.SvgPath;
 import sys.Log;
 import text.Text;
 import ui.MainPanel;
@@ -15,8 +18,8 @@ import ui.MainPanel;
 @SuppressWarnings("serial")
 public class GitLog extends MainPanel {
 	static final String[] ArrayOfString0 = new String[0];
-	//static GitRepo repo = new GitRepo("~/sec-os/secos");
-	static GitRepo repo = new GitRepo("~/tmp/nuclear-js");
+	static GitRepo repo = new GitRepo("~/sec-os/secos");
+	//static GitRepo repo = new GitRepo("~/tmp/nuclear-js");
 
 	static class Commit {
 		String hash;
@@ -25,23 +28,32 @@ public class GitLog extends MainPanel {
 		String author;
 		String date;
 		String message;
+		Point cp;
+		List<Point> points=new ArrayList<Point>();
+		int cols;
+		String color;
 	}
 
 	static class Column {
-		Column(String c) {this.color=c;}
-		Commit c;
-		final String color;
+		Column(String color,Commit c) {
+			this.color=color;
+			this.c=c;
+		}
+		Column(Column o) {
+			color = o.color;
+			c = o.c;
+		}
 		@Override
 		public String toString() {
 			return c.hash;
 		}
+
+		final String color;
+		Commit c;
 	}
 
 	private final List<Commit> commits = new ArrayList<Commit>();
 	private final Map<String,Commit> hash = new HashMap<String, Commit>();
-
-	public GitLog() {
-	}
 
 	private Commit parseRecord(String log,int from, int to) {
 		Commit c=new Commit();
@@ -95,67 +107,90 @@ public class GitLog extends MainPanel {
 		}
 		return -1;
 	}
+	static int X0=10, DX=20, DY=20;
 	private void drawTree() {
-		int X0=10,DX=20, DY=40;
-		int limit=50;
+		int limit=80;
 
-		//List<Color> colors=new ArrayList<Color>();
 		List<Column> pcols=new ArrayList<Column>();
 		List<Column> cols=new ArrayList<Column>();
 
 		int cy=10-DY;
-		Svg svg = new Svg();
-		svg.strokeWidth(2);
+		Commit pcmt=null;
 		for (Commit cmt : commits) {
 			cy += DY;
 			if (--limit <= 0) break;
 
-			int cf=findCol(cols, cmt);
+			int cf;
+			if (pcmt != null) {
+				if (pcmt.parentHash.length==0) {
+					cols.remove(pcmt);
+				}
+				else {
+					cf=findCol(cols, pcmt);
+					cols.get(cf).c = hash.get(pcmt.parentHash[0]);
+					cols.get(cf).c.points.add(pcmt.cp);
+					for (int i=1; i < pcmt.parentHash.length; ++i) {
+						cols.add(cf+i, new Column(getColor(),hash.get(pcmt.parentHash[i])));
+						cols.get(cf+i).c.points.add(pcmt.cp);
+					}
+					for (int i=cf+1; i < cols.size(); ++i) {
+						cols.get(i).c.points.add(new Point(X0+(i-1)*DX,cy-DY));
+					}
+				}
+			}
+
+			Point cp;
+			cf=findCol(cols, cmt);
 			if (cf<0) {
-				cols.add(newCol(cmt));
+				cols.add(new Column(getColor(), cmt));
 				cf = cols.size()-1;
+				cp = new Point(X0+cf*DX, cy);
 			}
 			else {
+				cp = new Point(X0+cf*DX, cy);
 				for (int i=cf+1; i<cols.size(); ++i) {
-					if (cols.get(i).c==cmt) {
-						cols.remove(i); --i;
+					Column c=cols.get(i);
+					if (c.c==cmt) {
+						retColor(c.color);
+						cols.set(i,null);
 					}
 				}
 			}
-			Log.raw("pcols: %s", Text.join(pcols, " "));
-			Log.raw("cols: %s", Text.join(cols, " "));
-			Log.raw("--------------------");
-
-			for (int i=0; i < cols.size(); ++i) {
-				Column ci = cols.get(i);
-				for (int j=0; j < pcols.size(); ++j) {
-					Column cj = pcols.get(j);
-					if (ci.c.hash.equals(cj.c.hash)) {
-						svg.path().moveTo(X0+j*DX, cy-DY).lineRel((i-j)*DX, DY).stroke(cj.color);
-					}
-				}
+			for (int i=0; i<cols.size(); ++i) {
+				if (cols.get(i) == null) {
+					cols.remove(i);
+					--i;
+				};
 			}
 
-			svg.circle(X0+cf*DX, cy, 5);
-			svg.text(X0+cols.size()*DX, cy+6).print(cmt.hash + " | " +
+
+			cmt.cp=cp;
+			cmt.points.add(cp);
+			cmt.color = cols.get(cf).color;
+			cmt.cols = cols.size();
+
+			pcmt=cmt;
+			pcols.clear();
+			for (Column c:cols) pcols.add(new Column(c));
+		}
+
+		Svg svg = new Svg();
+		svg.strokeWidth(2);
+		for (Commit cmt : commits) {
+			if (cmt.cp == null) break;
+
+			Point p0=cmt.points.get(0);
+			SvgPath path = svg.path();
+			path.fill("none").stroke(cmt.color);
+			path.moveTo(p0.x, p0.y);
+			for (int i = 1; i < cmt.points.size(); ++i) {
+				Point p=cmt.points.get(i);
+				path.lineTo(p.x, p.y);
+			}
+
+			svg.circle(cmt.cp.x, cmt.cp.y, 4).fill("blue");
+			svg.text(X0+cmt.cols*DX, cmt.cp.y+6).print(cmt.hash + " | " +
 					Text.join(cmt.parentHash," ") + " | " + cmt.message);
-
-			while (pcols.size() > 0) {
-				Column c=pcols.get(0);
-				if (!cols.contains(c)) delCol(c);
-				pcols.remove(0);
-			}
-			pcols.addAll(cols);
-
-			if (cmt.parentHash.length==0) {
-				cols.remove(cf);
-			}
-			else {
-				cols.get(cf).c = hash.get(cmt.parentHash[0]);
-				for (int i=1; i < cmt.parentHash.length; ++i) {
-					cols.add(cf+i, newCol(hash.get(cmt.parentHash[i])));
-				}
-			}
 		}
 		try {
 			svg.write(new FileOutputStream("git.html"));
@@ -166,8 +201,9 @@ public class GitLog extends MainPanel {
 	}
 
 	void genlog() {
-		String branch = "origin/master";
+		//String branch = "origin/master";
 		//String branch = "origin/devel/k.debski/openssl-20160801";
+		String branch = "origin/devel/anchit/gatekeeper";
 		try {
 			readBranch(branch);
 			drawTree();
@@ -181,17 +217,19 @@ public class GitLog extends MainPanel {
 		new GitLog().genlog();
 	}
 
-	static Column newCol(Commit cmt) {
-		Column c = columns.remove(columns.size()-1);
-		c.c=cmt;
+	static String getColor() {
+		if (colorAvail.isEmpty()) {
+			return colors[0];
+		}
+		String c = colorAvail.remove(0);
 		return c;
 	}
-	static void delCol(Column c) {
-		columns.add(c);
-		c.c=null;
+	static void retColor(String c) {
+		if (!colorAvail.contains(c))
+			colorAvail.add(c);
 	}
-	static String[] c1 = { "#6963FF", "#47E8D4", "#6BDB52", "#E84BA5", "#FFA657"};
-	static String[] c2 = {
+	static final String[] colors = {
+		"#6963FF", "#47E8D4", "#6BDB52", "#E84BA5", "#FFA657",
 			"#e11d21",
 		    //"#eb6420",
 		    "#fbca04",
@@ -214,10 +252,8 @@ public class GitLog extends MainPanel {
 		    "#ffffff",
 		    "#cc317c"
 	};
-	static List<Column> columns=new ArrayList<GitLog.Column>();
+	static List<String> colorAvail = new ArrayList<String>();
 	static {
-		for (int i=0; i < c1.length; ++i)
-			columns.add(new Column(c1[i]));
+		Collections.addAll(colorAvail, colors);
 	}
-
 }

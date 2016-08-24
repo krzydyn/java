@@ -7,15 +7,19 @@ import java.util.List;
 public class SvgContainer extends SvgObject {
 	protected int width,height;
 	protected List<SvgObject> objs = new ArrayList<SvgObject>();
+	final protected String name;
 
+	protected SvgContainer(String nm) {
+		name = nm;
+	}
 	public void updateSize(int w,int h) {
 		if (parent!=null) parent.updateSize(w, h);
 		if (width < w) width = w;
 		if (height < h) height = h;
 	}
 
-	public SvgContainer container() {
-		SvgContainer o = new SvgContainer();
+	public SvgGroup group() {
+		SvgGroup o = new SvgGroup();
 		objs.add(o); o.parent=this;
 		return o;
 	}
@@ -38,8 +42,8 @@ public class SvgContainer extends SvgObject {
 
 	@Override
 	public void write(PrintStream p) {
-		p.printf("<g %s>\n", props);
+		p.printf("<%s%s>\n", name, props);
 		for (SvgObject o : objs) o.write(p);
-		p.printf("</g>");
+		p.printf("</%s>\n", name);
 	}
 }

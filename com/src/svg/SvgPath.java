@@ -57,6 +57,6 @@ public class SvgPath extends SvgObject {
 			os.print(op.type);
 			for (int v : op.data) os.printf("%d ",v);
 		}
-		os.printf("\"%s\"/>\n", props);
+		os.printf("\"%s/>\n", props);
 	}
 }
