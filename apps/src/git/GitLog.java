@@ -10,7 +10,7 @@ public class GitLog {
 	static final String[] ArrayOfString0 = new String[0];
 	//static GitRepo repo = new GitRepo("~/sec-os/secos");
 	//static GitRepo repo = new GitRepo("~/tmp/linux");
-	static String repo = "~/tmp/nuclear-js";
+	static GitRepo repo = new GitRepo("~/tmp/nuclear-js");
 	static String branch = "origin/master";
 	//static String branch = "2cde51fbd0f3"; //linux octopus commit
 	//static String branch ="7c4c62a";

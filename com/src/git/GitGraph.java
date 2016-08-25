@@ -18,8 +18,8 @@ public class GitGraph {
 	private final List<Commit> commits = new ArrayList<Commit>();
 	private final Map<String,Commit> hash = new HashMap<String, Commit>();
 
-	public GitGraph(String path) {
-		repo = new GitRepo(path);
+	public GitGraph(GitRepo repo) {
+		this.repo = repo;
 	}
 
 	public Svg buildSvg(String branch, int limit) {
