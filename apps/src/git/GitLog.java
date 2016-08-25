@@ -18,10 +18,11 @@ public class GitLog {
 	static final String[] ArrayOfString0 = new String[0];
 	//static GitRepo repo = new GitRepo("~/sec-os/secos");
 	static GitRepo repo = new GitRepo("~/tmp/linux");
-	//static String branch = "origin/master";
-	//static String branch = "2cde51fbd0f3";
-	static String branch ="7c4c62a";
-	static int limit = 300;
+	//static GitRepo repo = new GitRepo("~/tmp/nuclear-js");
+	static String branch = "origin/master";
+	//static String branch = "2cde51fbd0f3"; //linux octopus commit
+	//static String branch ="7c4c62a";
+	static int limit = 3000;
 	//static String branch = "origin/devel/k.debski/openssl-20160801";
 	//static String branch = "origin/devel/anchit/gatekeeper";
 
@@ -117,18 +118,18 @@ public class GitLog {
 	}
 	static int X0=10, DX=20, DY=20;
 
-	private void genGitGraph() {
-
+	private void genGitGraph(int limit) {
 		List<Column> pcols=new ArrayList<Column>();
 		List<Column> cols=new ArrayList<Column>();
 
-		Log.notice("Generating graph in svg");
-		long tm = System.currentTimeMillis() + 10*1000;
+		Log.notice("Building graph");
+		long tm = System.currentTimeMillis() + 5*1000;
 		int cy=10-DY;
 		int cn=0;
 		for (Commit cmt : commits) {
 			cy += DY;
 			++cn;
+			if (--limit == 0) break;
 
 			//Log.raw("commit: %s | %s", cmt.hash, Text.join(cmt.parentHash, " "));
 			long t=System.currentTimeMillis();
@@ -179,7 +180,6 @@ public class GitLog {
 			}
 
 			if (cmt.parentHash.length==0) {
-				//TODO mark end of branch
 				cmt.flag = 1;
 				retColor(cmt.color);
 				cols.set(cf, null);
@@ -188,7 +188,6 @@ public class GitLog {
 			else {
 				Commit c = hash.get(cmt.parentHash[0]);
 				if (c==null) {
-					//TODO mark broken parent
 					cmt.flag = 2;
 					retColor(cmt.color);
 					cols.set(cf, null);
@@ -206,7 +205,6 @@ public class GitLog {
 					c=hash.get(cmt.parentHash[i]);
 					if (c==null) {
 						cmt.flag = 2;
-						//TODO mark broken parent
 						cols.add(cf+i, null);
 						pcols.add(cf+i, null);
 					}
@@ -226,11 +224,12 @@ public class GitLog {
 			}
 		}
 
+		Log.notice("Generating SVG");
 		Svg svg = new Svg();
 		svg.strokeWidth(2);
 		for (Commit cmt : commits) {
 			if (cmt.cp == null) {
-				Log.error("commit not located %s",cmt.hash);
+				//Log.error("commit not located %s",cmt.hash);
 				break;
 			}
 
@@ -256,6 +255,7 @@ public class GitLog {
 					//Text.join(cmt.parentHash," ") + " | " +
 					cmt.message);
 		}
+		Log.notice("Writing SVG to file");
 		try (OutputStream os=new FileOutputStream("git.html")) {
 			svg.write(os);
 		} catch (IOException e) {
@@ -266,8 +266,8 @@ public class GitLog {
 
 	void genlog() {
 		try {
-			readBranch(branch,limit);
-			genGitGraph();
+			readBranch(branch,10*limit);
+			genGitGraph(limit);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

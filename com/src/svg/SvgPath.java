@@ -14,15 +14,30 @@ public class SvgPath extends SvgObject {
 
 	private List<PathOp> ops = new ArrayList<PathOp>();
 
+	private void checkOp(char type) {
+		if (ops.size() > 0) {
+			PathOp p1 = ops.get(ops.size()-1);
+			if (p1.type=='Z' || p1.type=='z')
+				throw new RuntimeException("invalid op");
+			if (p1.type!='M' && p1.type!='L' && p1.type!='l')
+				throw new RuntimeException("invalid op");
+		}
+		else if (type=='Z' || type=='z' || type=='m' || type=='L' || type=='l')
+			throw new RuntimeException("invalid op");
+	}
+
 	public SvgPath moveTo(int x,int y) {
+		checkOp('M');
 		ops.add(new PathOp('M',x,y));
 		return this;
 	}
 	public SvgPath moveRel(int dx,int dy) {
+		checkOp('m');
 		ops.add(new PathOp('m',dx,dy));
 		return this;
 	}
 	public SvgPath lineTo(int x,int y) {
+		checkOp('L');
 		if (ops.size() > 1) {
 			PathOp p1 = ops.get(ops.size()-1);
 			PathOp p2 = ops.get(ops.size()-2);
@@ -43,14 +58,17 @@ public class SvgPath extends SvgObject {
 		return this;
 	}
 	public SvgPath lineRel(int dx,int dy) {
+		checkOp('l');
 		ops.add(new PathOp('l',dx,dy));
 		return this;
 	}
 	public SvgPath curveTo(int x,int y) {
+		checkOp('T');
 		ops.add(new PathOp('T',x,y));
 		return this;
 	}
 	public SvgPath closePath() {
+		checkOp('Z');
 		ops.add(new PathOp('Z')); //same as 'z'
 		return this;
 	}
