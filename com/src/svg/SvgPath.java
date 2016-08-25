@@ -26,9 +26,17 @@ public class SvgPath extends SvgObject {
 		if (ops.size() > 1) {
 			PathOp p1 = ops.get(ops.size()-1);
 			PathOp p2 = ops.get(ops.size()-2);
-			if (p1.type == 'L' && p1.data[0]==x && p2.data[0]==x) {
-				p1.data[1]=y;
-				return this;
+			if (p1.type == 'L' && (p2.type=='L' || p2.type=='M')) {
+				int dx1,dy1,dx2,dy2;
+				dx1=x-p1.data[0];
+				dy1=y-p1.data[1];
+				dx2=x-p2.data[0];
+				dy2=y-p2.data[1];
+				if (dx1*dy2 == dx2*dy1) {
+					p1.data[0]=x;
+					p1.data[1]=y;
+					return this;
+				}
 			}
 		}
 		ops.add(new PathOp('L',x,y));

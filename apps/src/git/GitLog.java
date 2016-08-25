@@ -13,14 +13,17 @@ import java.util.Map;
 import svg.Svg;
 import svg.SvgPath;
 import sys.Log;
-import text.Text;
-import ui.MainPanel;
 
-@SuppressWarnings("serial")
-public class GitLog extends MainPanel {
+public class GitLog {
 	static final String[] ArrayOfString0 = new String[0];
-	static GitRepo repo = new GitRepo("~/sec-os/secos");
-	//static GitRepo repo = new GitRepo("~/tmp/nuclear-js");
+	//static GitRepo repo = new GitRepo("~/sec-os/secos");
+	static GitRepo repo = new GitRepo("~/tmp/linux");
+	//static String branch = "origin/master";
+	//static String branch = "2cde51fbd0f3";
+	static String branch ="7c4c62a";
+	static int limit = 300;
+	//static String branch = "origin/devel/k.debski/openssl-20160801";
+	//static String branch = "origin/devel/anchit/gatekeeper";
 
 	static class Commit {
 		String hash;
@@ -30,6 +33,7 @@ public class GitLog extends MainPanel {
 		String date;
 		String message;
 		Point cp;
+		int flag;
 		List<Point> points=new ArrayList<Point>();
 		int cols;
 		String color;
@@ -82,11 +86,13 @@ public class GitLog extends MainPanel {
 		return c;
 	}
 
-	private void readBranch(String branch) throws Exception {
+	private void readBranch(String branch, int limit) throws Exception {
 		commits.clear();
 		hash.clear();
-
-		String log=repo.log(branch + " --topo-order --format=%h|%p|%d|%an|%ai|%s");
+		String args;
+		if (limit < 0) args = branch;
+		else args = String.format("%s -n %d", branch, limit);
+		String log=repo.log(args + " --topo-order --format=%h|%p|%d|%an|%ai|%s");
 		int n=log.length();
 		int rl=0;
 		for (int i = 0; i < n; i=rl+1) {
@@ -112,17 +118,24 @@ public class GitLog extends MainPanel {
 	static int X0=10, DX=20, DY=20;
 
 	private void genGitGraph() {
-		int limit=100;
 
 		List<Column> pcols=new ArrayList<Column>();
 		List<Column> cols=new ArrayList<Column>();
 
+		Log.notice("Generating graph in svg");
+		long tm = System.currentTimeMillis() + 10*1000;
 		int cy=10-DY;
+		int cn=0;
 		for (Commit cmt : commits) {
 			cy += DY;
-			//if (--limit <= 0) break;
+			++cn;
 
 			//Log.raw("commit: %s | %s", cmt.hash, Text.join(cmt.parentHash, " "));
+			long t=System.currentTimeMillis();
+			if (tm < t) {
+				Log.raw("Processed %d of %d",cn, commits.size());
+				tm=t+10*1000;
+			}
 
 			Point cp;
 			int cf=findCol(cols, cmt);
@@ -166,13 +179,21 @@ public class GitLog extends MainPanel {
 			}
 
 			if (cmt.parentHash.length==0) {
+				//TODO mark end of branch
+				cmt.flag = 1;
 				retColor(cmt.color);
 				cols.set(cf, null);
 				Log.debug("** End of branch %s",cmt.hash);
 			}
 			else {
 				Commit c = hash.get(cmt.parentHash[0]);
-				if (c.points.isEmpty()){
+				if (c==null) {
+					//TODO mark broken parent
+					cmt.flag = 2;
+					retColor(cmt.color);
+					cols.set(cf, null);
+				}
+				else if (c.points.isEmpty()){
 					addPoint(c, cp);
 					cols.get(cf).c = c;
 				}
@@ -183,7 +204,13 @@ public class GitLog extends MainPanel {
 				}
 				for (int i=1; i < cmt.parentHash.length; ++i) {
 					c=hash.get(cmt.parentHash[i]);
-					if (c.points.isEmpty()){
+					if (c==null) {
+						cmt.flag = 2;
+						//TODO mark broken parent
+						cols.add(cf+i, null);
+						pcols.add(cf+i, null);
+					}
+					else if (c.points.isEmpty()){
 						cols.add(cf+i, new Column(getColor(),c));
 						pcols.add(cf+i, null);
 						addPoint(c, cp);
@@ -222,9 +249,12 @@ public class GitLog extends MainPanel {
 				Log.debug("EOB: %d,%d %s | %s", cmt.cp.x, cmt.cp.y, cmt.hash, cmt.message);
 			}
 
-			svg.circle(cmt.cp.x, cmt.cp.y, 4).fill("blue");
+			if (cmt.flag==1) svg.circle(cmt.cp.x, cmt.cp.y, 6).fill("red");
+			else if (cmt.flag==2) svg.circle(cmt.cp.x, cmt.cp.y, 4).stroke("red").fill("none");
+			else svg.circle(cmt.cp.x, cmt.cp.y, 4).fill("blue");
 			svg.text(X0+cmt.cols*DX, cmt.cp.y+6).print(cmt.hash + " | " +
-					Text.join(cmt.parentHash," ") + " | " + cmt.message);
+					//Text.join(cmt.parentHash," ") + " | " +
+					cmt.message);
 		}
 		try (OutputStream os=new FileOutputStream("git.html")) {
 			svg.write(os);
@@ -235,11 +265,8 @@ public class GitLog extends MainPanel {
 	}
 
 	void genlog() {
-		//String branch = "e9973a9";
-		//String branch = "origin/devel/k.debski/openssl-20160801";
-		String branch = "origin/devel/anchit/gatekeeper";
 		try {
-			readBranch(branch);
+			readBranch(branch,limit);
 			genGitGraph();
 		} catch (Exception e) {
 			e.printStackTrace();
