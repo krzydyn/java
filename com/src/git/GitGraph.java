@@ -205,7 +205,6 @@ public class GitGraph {
 			else if (cmt.flag==2) svg.circle(cmt.cp.x, cmt.cp.y, 4).stroke("red").fill("none");
 			else svg.circle(cmt.cp.x, cmt.cp.y, 4).fill("blue");
 			svg.text(X0+cmt.cols*DX, cmt.cp.y+6).print(cmt.hash + " | " +
-					//Text.join(cmt.parentHash," ") + " | " +
 					cmt.message);
 		}
 		Log.notice("SVG done");
