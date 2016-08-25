@@ -23,6 +23,14 @@ public class SvgPath extends SvgObject {
 		return this;
 	}
 	public SvgPath lineTo(int x,int y) {
+		if (ops.size() > 1) {
+			PathOp p1 = ops.get(ops.size()-1);
+			PathOp p2 = ops.get(ops.size()-2);
+			if (p1.type == 'L' && p1.data[0]==x && p2.data[0]==x) {
+				p1.data[1]=y;
+				return this;
+			}
+		}
 		ops.add(new PathOp('L',x,y));
 		return this;
 	}
