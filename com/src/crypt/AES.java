@@ -167,6 +167,13 @@ public class AES {
 	    finish(out, p);
 	}
 
+	public void javax_listProviders() {
+		for (java.security.Provider provider: java.security.Security.getProviders()) {
+			System.out.println(provider.getName());
+			for (String k: provider.stringPropertyNames())
+				System.out.println("\t" + k + "\t" + provider.getProperty(k));
+		}
+	}
 	public void javax_encrypt(byte[] msg, byte[] out, int length) {
 		Key aesKey = new SecretKeySpec(key, "AES");
 		try {

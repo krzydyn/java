@@ -19,6 +19,7 @@
 package unittest;
 
 import java.math.BigInteger;
+import java.security.Key;
 
 import crypt.AES2;
 import crypt.AES3;
@@ -66,6 +67,67 @@ public class T_Crypt extends UnitTest {
 			@Override
 			public void run() {new RSA(1024,BigInteger.valueOf(0x10001));}
 		});
+	}
+
+	static void des_aes() {
+		byte[] key=new byte[24];
+		byte[] msg = new byte[16];
+		byte[] out = new byte[16];
+
+		for (int i=0; i < 8; ++i) {
+			byte x = (byte)(0x01+0x22*i);
+			key[i] = key[16+i] = x;
+			key[15-i] = (byte)(0x10+0x22*i);
+		}
+
+
+/*
+ * The following modes of DES encryption are supported by SUNJce provider
+ * 1. ECB (Electronic code Book) - Every plaintext block is encrypted separately
+ * 2. CBC (Cipher Block Chaining) - Every plaintext block is XORed with the previous ciphertext block
+ * 3. PCBC (Propogating Cipher Block Chaining) -
+ * 4. CFB (Cipher Feedback Mode) - The previous ciphertext block is encrypted and this enciphered block is XORed with the plaintext block to produce the corresponding ciphertext block
+ * 5. OFB (Output Feedback Mode) -
+ */
+		//DES tests
+		//Cipher.DES SupportedPaddings	NOPADDING|PKCS5PADDING|ISO10126PADDING
+		try {
+			Key ks = new javax.crypto.spec.SecretKeySpec(key,0,8,"DES");
+			javax.crypto.Cipher cipher = javax.crypto.Cipher.getInstance("DES/ECB/NoPadding");
+			cipher.init(javax.crypto.Cipher.ENCRYPT_MODE, ks);
+			int l=cipher.doFinal(msg, 0, 8, out);
+			Log.raw("des(k=%s,%s) = [%d] %s", Text.hex(key,0,8),Text.hex(msg), l, Text.hex(out,0,l));
+			check(Text.hex(out,0,l), "D5D44FF720683D0D");
+		}catch(Exception e) {
+			Log.error(e);
+		}
+
+		//DES3 tests
+		//Cipher.DESede SupportedPaddings	NOPADDING|PKCS5PADDING|ISO10126PADDING
+		try {
+			Key ks = new javax.crypto.spec.SecretKeySpec(key, "DESede");
+			javax.crypto.Cipher cipher = javax.crypto.Cipher.getInstance("DESede/ECB/NoPadding");
+			cipher.init(javax.crypto.Cipher.ENCRYPT_MODE, ks);
+			int l=cipher.doFinal(msg, 0, 8, out);
+			Log.raw("des3(k=%s,%s) = [%d] %s", Text.hex(key,0,16),Text.hex(msg), l, Text.hex(out,0,l));
+			check(Text.hex(out,0,l), "08D7B4FB629D0885");
+		}catch(Exception e) {
+			Log.error(e);
+		}
+
+		//AES tests
+		//Cipher.AES SupportedPaddings	NOPADDING|PKCS5PADDING|ISO10126PADDING
+		try {
+			Key ks = new javax.crypto.spec.SecretKeySpec(key,0,16, "AES");
+			javax.crypto.Cipher cipher = javax.crypto.Cipher.getInstance("AES/ECB/NoPadding");
+			cipher.init(javax.crypto.Cipher.ENCRYPT_MODE, ks);
+			int l=cipher.doFinal(msg, 0, 16, out);
+			Log.raw("aes(k=%s,%s) = [%d] %s", Text.hex(key,0,16),Text.hex(msg), l, Text.hex(out,0,l));
+			check(Text.hex(out,0,l), "D5C825A21F04643B43E2DF3278A762F7");
+		}catch(Exception e) {
+			Log.error(e);
+		}
+
 	}
 
 	static void aes2() {

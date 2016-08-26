@@ -91,22 +91,33 @@ public class Text {
 		return repeat(b, s, n).toString();
 	}
 
-	public static StringBuilder hex(StringBuilder b, byte[] s) {
-		b.ensureCapacity(b.length()+2*s.length);
-		for (int i=0; i<s.length; ++i) {
-			b.append(String.format("%02X", s[i]&0xff));
+	public static StringBuilder hex(StringBuilder b, byte[] s, int off, int len) {
+		b.ensureCapacity(b.length()+2*len);
+		for (int i=0; i<len; ++i) {
+			b.append(String.format("%02X", s[off+i]&0xff));
 		}
 		return b;
 	}
+	public static String hex(byte[] s, int off, int len) {
+		StringBuilder b=new StringBuilder(s.length);
+		return hex(b, s, off, len).toString();
+	}
 	public static String hex(byte[] s) {
 		StringBuilder b=new StringBuilder(s.length);
-		return hex(b, s).toString();
+		return hex(b, s, 0 , s.length).toString();
+	}
+	public static byte[] bin(String s) {
+		int len = s.length();
+		byte[] data = new byte[len / 2];
+		for (int i = 0; i < len; i += 2) {
+			data[i/2]= (byte)((Character.digit(s.charAt(i), 16) << 4)+Character.digit(s.charAt(i+1), 16));
+		}
+		return data;
 	}
 
 	public static StringBuilder vis(StringBuilder b, byte[] s, int off, int len) {
-		b.ensureCapacity(b.length()+s.length);
+		b.ensureCapacity(b.length()+len);
 		for (int i=0; i<len; ++i) {
-			if (off+i >= s.length) throw new IndexOutOfBoundsException();
 			b.append(Ansi.toString((char)s[off+i]));
 		}
 		return b;
