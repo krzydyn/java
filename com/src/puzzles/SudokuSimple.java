@@ -1,5 +1,3 @@
-package puzzles;
-
 /*
  *  Copyright (c) 2016 Krzysztof Dynowski All Rights Reserved
  *
@@ -17,6 +15,8 @@ package puzzles;
  *  See the License for the specific language governing permissions and
  *  limitations under the License
  */
+
+package puzzles;
 
 public class SudokuSimple {
 	// 36 figures - support ORDER up to 6

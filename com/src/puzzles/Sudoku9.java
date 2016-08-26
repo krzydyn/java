@@ -1,5 +1,5 @@
 /*
- * Implementation takes from attractive chaos
+ * Implementation taken from attractive chaos
  */
 package puzzles;
 

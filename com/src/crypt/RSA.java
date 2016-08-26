@@ -27,6 +27,7 @@ import sys.Log;
 import text.Text;
 
 public class RSA {
+	static BigInteger TWO = BigInteger.valueOf(2);
 	private BigInteger N;
 	private BigInteger e;
 	private BigInteger d;
@@ -43,11 +44,14 @@ public class RSA {
 		BigInteger q = BigInteger.probablePrime(bits, r);
 		N = p.multiply(q);
 
+		/* phi = (p-1)*(q-1);
+		 * while (gdc(e,phi)==1 && e < phi) e+=2;
+		 */
 		BigInteger phi = p.subtract(BigInteger.ONE).multiply(q.subtract(BigInteger.ONE));
-		e = BigInteger.probablePrime(bits/4+1, r);
+		if (bits > 8) e = BigInteger.probablePrime(bits/4+1, r);
+		else e = BigInteger.valueOf(3);
 		while (phi.gcd(e).compareTo(BigInteger.ONE) > 0 && e.compareTo(phi) < 0) {
-			e.add(BigInteger.ONE);
-			e.add(BigInteger.ONE);
+			e.add(TWO);
 		}
 		d = e.modInverse(phi);
 		Log.debug("modulus[%d] = %s", N.toByteArray().length, Text.hex(N.toByteArray()));
