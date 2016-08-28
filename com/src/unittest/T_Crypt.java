@@ -80,15 +80,6 @@ public class T_Crypt extends UnitTest {
 			key[15-i] = (byte)(0x10+0x22*i);
 		}
 
-
-/*
- * The following modes of DES encryption are supported by SUNJce provider
- * 1. ECB (Electronic code Book) - Every plaintext block is encrypted separately
- * 2. CBC (Cipher Block Chaining) - Every plaintext block is XORed with the previous ciphertext block
- * 3. PCBC (Propogating Cipher Block Chaining) -
- * 4. CFB (Cipher Feedback Mode) - The previous ciphertext block is encrypted and this enciphered block is XORed with the plaintext block to produce the corresponding ciphertext block
- * 5. OFB (Output Feedback Mode) -
- */
 		//DES tests
 		//Cipher.DES SupportedPaddings	NOPADDING|PKCS5PADDING|ISO10126PADDING
 		try {
