@@ -56,11 +56,11 @@ public class AES {
 	        x = t[255 - i];
 	        x |= x << 8;
 	        x ^= (x >> 4) ^ (x >> 5) ^ (x >> 6) ^ (x >> 7);
-	        sBox[t[i]] = (byte)((x ^ 0x63) & 0xFF);
+	        sBox[t[i]&0xff] = (byte)((x ^ 0x63) & 0xFF);
 	    }
 
 	    for (i = 0; i < 256;i++) {
-	         invSbox[sBox[i]]=(byte)i;
+	         invSbox[sBox[i]&0xff]=(byte)i;
 	    }
 	}
 	static final private void generateRcon() {
@@ -167,7 +167,7 @@ public class AES {
 	    finish(out, p);
 	}
 
-	public void javax_listProviders() {
+	static public void javax_listProviders() {
 		for (java.security.Provider provider: java.security.Security.getProviders()) {
 			System.out.println(provider.getName());
 			for (String k: provider.stringPropertyNames())

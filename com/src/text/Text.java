@@ -106,7 +106,24 @@ public class Text {
 		StringBuilder b=new StringBuilder(s.length);
 		return hex(b, s, 0 , s.length).toString();
 	}
+
+	public static StringBuilder hexstr(StringBuilder b, byte[] s, int off, int len) {
+		for (int i=0; i<len; ++i) {
+			b.append(String.format("\\x%02X", s[off+i]&0xff));
+		}
+		return b;
+	}
+	public static String hexstr(byte[] s, int off, int len) {
+		StringBuilder b=new StringBuilder(s.length);
+		return hexstr(b, s, off, len).toString();
+	}
+	public static String hexstr(byte[] s) {
+		StringBuilder b=new StringBuilder(s.length);
+		return hexstr(b, s, 0 , s.length).toString();
+	}
+
 	public static byte[] bin(String s) {
+		if (s==null) return null;
 		int len = s.length();
 		byte[] data = new byte[len / 2];
 		for (int i = 0; i < len; i += 2) {

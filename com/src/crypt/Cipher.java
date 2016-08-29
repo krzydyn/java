@@ -20,14 +20,24 @@ package crypt;
 
 /**
  * <h2>Theory</h2>
- * <h3>Padding</h3>
+ * <b>Block Ciphers</b>
+ * <ul>
+ * <li> DES (56)
+ * <li> 3DES (112,168)
+ * <li> AES (128,192,256)
+ * </ul><br><br>
+ * <b>Padding</b>
  * <ul>
  * <li>No padding (message length = k*block_size)
  * <li>Zero padding: DATA,0x00...
  * <li>ANSI X.923: DATA,0x00,0x00,...NUM_OF_PAD_BYTES
  * <li>ISO 10126: DATA,RND,RND,...NUM_OF_PAD_BYTES
- * <li>PKCS7/PKCS5: DATA,NUM_OF_PAD_BYTES,...NUM_OF_PAD_BYTES
+ * <li>PKCS5/PKCS7: DATA,NUM_OF_PAD_BYTES,...NUM_OF_PAD_BYTES<br>
+ * 		PKCS5:8 bytes block, PKCS7: 16 bytes block
  * <li>ISO/IEC 7816-4: DATA,0x80,0x00...
+ * <li>ISO/IEC 9797/M1: DATA,0x00,0x00,... (same as ZeroPading)
+ * <li>ISO/IEC 9797/M2: DATA,0x80,0x00,....(same as ISO/IEC 7816-4)
+ * <li>ISO/IEC 9797/M3: pad 0, des CBC, des3 on last block
  * </ul>
  * <h3>Block Cipher Modes (of chaining blocks)</h3>
  * <b>Note:</b> CFB, OFB, CTR does not require padding
