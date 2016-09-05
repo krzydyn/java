@@ -21,6 +21,7 @@ package unittest;
 import java.math.BigInteger;
 import java.security.Key;
 import java.security.NoSuchAlgorithmException;
+
 import javax.crypto.spec.IvParameterSpec;
 
 import crypt.AES2;
@@ -182,7 +183,7 @@ public class T_Crypt extends UnitTest {
 					//for (int i=0; i<bs; ++i) pad[i]=0;
 					//pl=bs-mr;
 				}
-				else if (t.algo.indexOf("NoPadding")>=0) { //truncate (error?)
+				else if (t.algo.indexOf("NoPadding")>=0) { //truncate (should be error)
 					ml -= mr;
 				}
 				else if (t.algo.indexOf("ISO9797_1")>=0) {

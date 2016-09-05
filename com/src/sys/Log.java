@@ -82,7 +82,7 @@ public class Log {
 			else s.printf("%s%s [%s] %s: ", color, tmfmt.format(new Date()), name, ct.getName());
 			if (file != null) s.printf("(%s:%d) ", file, line );
 			if (fmt != null) s.printf((Locale)null, fmt, args);
-			if (e != null) e.printStackTrace(s);
+			if (e != null) {s.println();e.printStackTrace(s);}
 			if (!color.isEmpty()) s.printf(Ansi.SGR_RESET);
 			s.println();
 		}

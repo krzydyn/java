@@ -121,13 +121,14 @@ public class UnitTest {
 				time.nextLap();
 				Log.info("  ** Testcase: %s start", m.getName());
 				try {
+					++current.checks;
 					// allow access to non public method
 					m.setAccessible(true);
 					m.invoke(null, empty);
 				} catch (Throwable e) {
-					current.errors=-1;
-					Log.error(1,"Error in %s.%s", unit, m.getName());
-					e.printStackTrace();
+					++current.errors;
+					if (e.getCause() != null) e=e.getCause();
+					Log.error(e,"Exeception in %s.%s", unit, m.getName());
 				} finally {
 					time.update(0);
 					current.elapsed = time.getTime();
