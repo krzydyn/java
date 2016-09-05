@@ -445,7 +445,6 @@ public class AnsiTerminal extends JPanel implements FocusListener,KeyListener {
 				attrib = SimpleAttributeSet.EMPTY;
 			}
 			else if (c == Ansi.Code.BEL) {
-				cursorEnd();
 				beep();
 			}
 			else if (c == Ansi.Code.HT) {
@@ -458,7 +457,8 @@ public class AnsiTerminal extends JPanel implements FocusListener,KeyListener {
 				++linesInBuf;
 			}
 			else if (c == Ansi.Code.BS) {
-				outputBuffer.append(c);
+				flushOutput();
+				cursorMove(-1);
 			}
 			else if (c == Ansi.Code.ESC) {
 				flushOutput();
@@ -508,13 +508,13 @@ public class AnsiTerminal extends JPanel implements FocusListener,KeyListener {
 		cursorLocate(0, 0);
 	}
 	public void cursorEnd() {
-		Log.debug("cursor: end");
+		Log.debug(1,"cursor: end");
 		Document doc = editor.getDocument();
 		int p0 = doc.getLength();
 		editor.setCaretPosition(p0);
 	}
 	public void cursorMove(int n) {
-		Log.debug("cursor: moverel %d",n);
+		Log.debug(1,"cursor: moverel %d",n);
 		int p0 = editor.getCaretPosition();
 		if (p0+n > 0 && p0+n < editor.getDocument().getLength())
 			editor.setCaretPosition(p0+n);
@@ -571,7 +571,7 @@ public class AnsiTerminal extends JPanel implements FocusListener,KeyListener {
 		}
 	}
 	public void eraseLeft(int n) {
-		Log.debug("buffer: eraseLeft");
+		Log.debug(1,"buffer: eraseLeft");
 		Document doc = editor.getDocument();
 		int p, p0 = editor.getCaretPosition();
 		p=p0;
