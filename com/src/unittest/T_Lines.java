@@ -31,7 +31,7 @@ public class T_Lines extends UnitTest {
 
 	static void power() {
 		Log.debug("pow=%d",Maths.power(3, 10));
-		check(Maths.power(3, 10)==59049, "wrong power");
+		check("wrong power", Maths.power(3, 10)==59049);
 	}
 	static void intersectInt() {
 		Point[] p = {new Point(-3,0),new Point(3,0),new Point(0,2),new Point(-4,2)};

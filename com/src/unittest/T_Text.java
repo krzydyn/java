@@ -23,9 +23,9 @@ import text.Text;
 
 public class T_Text extends UnitTest {
 	static void anagrams() {
-		check(Text.isAnagram("abc", "cba"), "anagram");
-		check(!Text.isAnagram("abbc", "cbaa"), "not anagram");
-		check(!Text.isAnagram("abcd", "cbaa"), "not anagram");
-		check(!Text.isAnagram("abbd", "cbaa"), "not anagram");
+		check("anagram", Text.isAnagram("abc", "cba"));
+		check("not anagram", !Text.isAnagram("abbc", "cbaa"));
+		check("not anagram", !Text.isAnagram("abcd", "cbaa"));
+		check("not anagram", !Text.isAnagram("abbd", "cbaa"));
 	}
 }

@@ -53,6 +53,16 @@ public class Text {
 		}
 		return b.toString();
 	}
+	private static String join_b(byte[] a, String sep) {
+		if (a.length==0) return "";
+		StringBuilder b=new StringBuilder(a.length*(sep.length()+2));
+		for (int i = 0; ; ) {
+			b.append(String.format("%02X", a[i]&0xff));
+			if (++i == a.length) break;
+			b.append(sep);
+		}
+		return b.toString();
+	}
 	private static String join_i(int[] a, String sep) {
 		if (a.length==0) return "";
 		StringBuilder b=new StringBuilder(a.length*(sep.length()+2));
@@ -75,6 +85,7 @@ public class Text {
 	}
 	public static String join(Object o, String sep) {
 		if (o == null) return null;
+		if (o instanceof byte[]) return join_b((byte[])o, sep);
 		if (o instanceof int[]) return join_i((int[])o, sep);
 		if (o instanceof Object[]) return join_o((Object[])o, sep);
 		if (o instanceof Iterable) return join_iter((List<?>)o, sep);
@@ -122,16 +133,6 @@ public class Text {
 		return hexstr(b, s, 0 , s.length).toString();
 	}
 
-	public static byte[] bin(String s) {
-		if (s==null) return null;
-		int len = s.length();
-		byte[] data = new byte[len / 2];
-		for (int i = 0; i < len; i += 2) {
-			data[i/2]= (byte)((Character.digit(s.charAt(i), 16) << 4)+Character.digit(s.charAt(i+1), 16));
-		}
-		return data;
-	}
-
 	public static StringBuilder vis(StringBuilder b, byte[] s, int off, int len) {
 		b.ensureCapacity(b.length()+len);
 		for (int i=0; i<len; ++i) {
@@ -160,7 +161,7 @@ public class Text {
 		return vis(b, s).toString();
 	}
 
-	public static byte[] hex2byte(CharSequence s) {
+	public static byte[] bin(CharSequence s) {
 		ByteArrayOutputStream ba = new ByteArrayOutputStream(s.length()/2);
 		byte bt=0;
 		int bc=0;
@@ -181,5 +182,3 @@ public class Text {
 		return ba.toByteArray();
 	}
 }
-
-

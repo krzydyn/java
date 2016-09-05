@@ -36,9 +36,7 @@ import text.Text;
 public class T_Crypt extends UnitTest {
 	static void testPrimes() throws Exception {
 		int primes[] = {2,3,5,7,11,13,17,19,23,29,31,37,41,43,47,53,59,61,67,71,73,79,83,89,97,101,103,107,109,113,127,131,137,139,149,151};
-		for (int i =0; i < primes.length; ++i) {
-			check(primes[i]==Prime.PRIMES[i], String.format("error at %d %d!=%d",i,primes[i],Prime.PRIMES[i]));
-		}
+		check(primes, Prime.PRIMES, primes.length);
 	}
 	static void encodeBase64() throws Exception {
 		check(Base64.encode(new byte[] {'1'}), "MQ==");
@@ -323,9 +321,11 @@ public class T_Crypt extends UnitTest {
 			data[i] = (byte)(i*i*0x11b);
 		}
 
+		h.init(null);
 		for (int i=0; i < 5000000; ++i) {
-			h.init(null);
 			h.update(data, 0, data.length);
 		}
+		//Log.raw("hash = %s", Text.join(h.finish(), ""));
+		check(h.finish(), new byte[]{(byte)0xe5,(byte)0xf2,(byte)0xf9,(byte)0xfc});
 	}
 }

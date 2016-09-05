@@ -40,7 +40,7 @@ public class T_Serial extends UnitTest {
 		final byte[] tmp = new byte[10];
 		List<String> l=Serial.listPorts();
 		if (l.size() == 0) {
-			Log.error("no serial ports available");
+			Log.warn("no serial ports available");
 			return ;
 		}
 		final String port = l.get(0);

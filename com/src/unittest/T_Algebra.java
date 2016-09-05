@@ -39,7 +39,7 @@ public class T_Algebra extends UnitTest {
 			++n;
 			//Log.debug("%d: %s", n, l.toString());
 		} while (Permutate.nextPermutation(l));
-		check(n == 6, "should be 6 permutations");
+		check("should be 6 permutations", n == 6);
 
 		l.clear(); n=0;
 		for (int i=0; i<6; ++i) l.add(i);
@@ -47,7 +47,7 @@ public class T_Algebra extends UnitTest {
 			++n;
 			//Log.debug("%d: %s", n, l.toString());
 		} while (Permutate.nextPermutation(l));
-		check(n == 720, "should be 720 permutations");
+		check("should be 720 permutations", n == 720);
 	}
 
 	static void blackjack() {
@@ -55,7 +55,7 @@ public class T_Algebra extends UnitTest {
 		int [] res    = {0,   12,   21,    21,    20,     21};
 		for (int i=0; i < test.length; ++i) {
 			int r=Maths.blackjackPoints(test[i]);
-			check(r==res[i], String.format("%s=%d, should be %d", test[i], r, res[i]));
+			check(String.format("%s=%d, should be %d", test[i], r, res[i]), r==res[i]);
 		}
 	}
 
@@ -194,7 +194,7 @@ public class T_Algebra extends UnitTest {
 				//fast.print();
 			}
 			t0=System.currentTimeMillis()-t0;
-			check(i==1, i==0?"no solution":"multiple solutions "+i);
+			check(i==0?"no solution":"multiple solutions "+i, i==1);
 			Log.info("Fast done in %.3f sec", t0/1000.0);
 
 			if (tmax<t0) {tmax=t0; exmax=exnum;}
@@ -231,13 +231,13 @@ public class T_Algebra extends UnitTest {
 	static void expression() {
 		Expression e = new Expression("9/3");
 		long r=e.evaluate();
-		check(r==3, String.format("9/3 = %d != 3",r));
+		check(String.format("9/3 = %d != 3",r), r==3);
 		e = new Expression("1+(1+2)*2");
 		r=e.evaluate();
-		check(r==7, String.format("1+(1+2)*2 = %d != 7",r));
+		check(String.format("1+(1+2)*2 = %d != 7",r), r==7);
 		e = new Expression("1=2");
 		r=e.evaluate();
-		check(r==0, String.format("1=2 = %d != 0",r));
+		check(String.format("1=2 = %d != 0",r), r==0);
 	}
 
 	static void cryptarithm() {
@@ -248,7 +248,7 @@ public class T_Algebra extends UnitTest {
 		do {
 			if (c.verify()) {
 				System.out.println(c.toString());
-				check(c.getValue("mroz")==2708, "mroz != 2708");
+				check("mroz != 2708", c.getValue("mroz")==2708);
 			}
 		} while (c.next());
 		System.out.println("-----------------------");
@@ -268,6 +268,6 @@ public class T_Algebra extends UnitTest {
 		int count=0;
 		for (int i=0; (i=s.indexOf("the",i))>=0; ++i,++count) ;
 		System.out.printf("count=%d\n",count);
-		check(count==3,"");
+		check("count!=3", count==3);
 	}
 }

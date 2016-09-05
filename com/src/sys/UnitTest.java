@@ -192,10 +192,10 @@ public class UnitTest {
 			}
 		}
 	}
-	protected static void check(boolean r, String msg) {
+	protected static void check(String msg, boolean r) {
 		++current.checks;
 		if (!r) {
-			Log.error(1, "check failed: (false) %s", msg);
+			Log.error(1, "check failed: %s", msg);
 			++current.errors;
 		}
 	}
@@ -216,6 +216,32 @@ public class UnitTest {
 		for (int i =0; i < t1.length; ++i) {
 			if (t1[i] != t2[i]) {
 				Log.error(1, "check failed: byte[%d] %d!=%d", i, t1[i], t2[i]);
+				++current.errors;
+				return ;
+			}
+		}
+	}
+	protected static void check(int[] t1, int[] t2, int n) {
+		++current.checks;
+		if (n > 0) {
+			if (t1.length < n || t2.length < n) {
+				Log.error(1, "check failed: length %d!=%d", t1.length, t2.length);
+				++current.errors;
+				return ;
+			}
+		}
+		else {
+			if (t1.length != t2.length) {
+				Log.error(1, "check failed: length %d!=%d", t1.length, t2.length);
+				++current.errors;
+				return ;
+			}
+			n=t1.length;
+		}
+
+		for (int i =0; i < n; ++i) {
+			if (t1[i] != t2[i]) {
+				Log.error(1, "check failed: int[%d] %d!=%d", i, t1[i], t2[i]);
 				++current.errors;
 				return ;
 			}
