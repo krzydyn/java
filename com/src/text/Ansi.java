@@ -159,7 +159,7 @@ public class Ansi {
 	public final static String DEC_DSR = CSI + "?6n"; // DSR – Device Status Report, resp: CSI+n;mR
 	public final static String SCP = CSI + "s"; // Save cursor position
 	public final static String RCP = CSI + "u"; // Restore cursor position
-
+	public final static String DEL_LEFT1 = CSI + "1P"; // CSI Ps P  Delete 1 Character(s) (default = 1)
 
 	public final static String TRM_ICON_TITLE = OSC + "0";	// OSC 0;IconName BEL
 	public final static String TRM_ICON = OSC + "1";		// OSC 1;IconName BEL

@@ -145,6 +145,7 @@ public class SerialMain extends MainPanel {
 					Log.error(e);
 					s.close();
 					trm.setTitle("closed on error");
+					trm.write("Port closed " + e.getMessage() + "\n");
 				}
 			}
 		}
