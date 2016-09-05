@@ -131,7 +131,7 @@ public class T_Crypt extends UnitTest {
 				new CryptoTest("AES/CBC/ISO9797_1Padding", keys[3]),
 				new CryptoTest("AES/CBC/ISO9797_2Padding", keys[3]),
 
-				new CryptoTest("AES/CTR/NoPadding", keys[3]),
+				new CryptoTest("AES/CTR/NoPadding", keys[3]), // padding is ignored in CTR
 				new CryptoTest("AES/CTR/PKCS5Padding", keys[3]),
 
 				new CryptoTest("DES/ECB/NoPadding", keys[0]),
@@ -153,7 +153,7 @@ public class T_Crypt extends UnitTest {
 		//AES.javax_listProviders();
 
 		byte[] msg = message.getBytes();
-		byte[] out = new byte[256];
+		byte[] out = new byte[300];
 		byte[] pad = new byte[16];
 
 		int tc=0;
@@ -179,28 +179,60 @@ public class T_Crypt extends UnitTest {
 				int bs = t.algo.startsWith("AES") ? 16 : 8;
 				int ml = msg.length;
 				int mr = ml%bs;
-				if (t.algo.indexOf("/NoPad")>=0) { //truncate (error?)
-					ml -= mr; mr=0;
+				int pl = 0;
+				if (t.algo.indexOf("CTR")>=0) {
+					//for (int i=0; i<bs; ++i) pad[i]=0;
+					//pl=bs-mr;
+				}
+				else if (t.algo.indexOf("NoPadding")>=0) { //truncate (error?)
+					ml -= mr;
 				}
 				else if (t.algo.indexOf("ISO9797_1")>=0) {
 					for (int i=0; i<bs; ++i) pad[i]=0;
+					pad[0]=(byte)0x80;
+					if (mr==0) pl=0;
+					else pl=bs-mr;
 				}
 				else if (t.algo.indexOf("ISO9797_2")>=0) {
 					for (int i=0; i<bs; ++i) pad[i]=0;
 					pad[0]=(byte)0x80;
+					pl=bs-mr;
 				}
-				else mr=0;
 
 				int l=0;
-				if (mr == 0) {
+				if (pl == 0) {
 					l=cipher.doFinal(msg, 0, ml, out);
+					Log.debug("final(%d) = %d",ml,l);
 				}
 				else {
 					l=cipher.update(msg, 0, ml, out);
-					l+=cipher.doFinal(pad, 0, bs-mr, out, l);
+					Log.debug("update(%d) = %d",ml,l);
+					l+=cipher.doFinal(pad, 0, pl, out, l);
 				}
 
-				Log.raw(" = [%d] %s\n", l, Text.hexstr(out,l-8,8));
+				Log.raw("\t\tbs=%d %s", cipher.getBlockSize(), Text.hex(out,0,l));
+				Log.raw(" = %d, \"%s\"\n", l, Text.hexstr(out,l-8,8));
+
+				/*if (t.algo.equals("AES/ECB/ISO9797_1Padding")) {
+					if (t.algo.indexOf("ECB")>=0)
+						cipher.init(javax.crypto.Cipher.DECRYPT_MODE, ks);
+					else
+						cipher.init(javax.crypto.Cipher.DECRYPT_MODE, ks, new IvParameterSpec(t.key.iv));
+					byte[] tst=Text.bin("2A6704F4A7585FD0CE673D31B9AC505C");
+					l=cipher.doFinal(tst, 0, tst.length, out);
+					Log.raw("Deci block = %s", Text.hex(out,0,l));
+				}*/
+
+				if (t.algo.equals("AES/CTR/NoPadding")) {
+					if (t.algo.indexOf("ECB")>=0)
+						cipher.init(javax.crypto.Cipher.DECRYPT_MODE, ks);
+					else
+						cipher.init(javax.crypto.Cipher.DECRYPT_MODE, ks, new IvParameterSpec(t.key.iv));
+					byte[] tst=out;
+					l=cipher.doFinal(tst, 0, l, out);
+					Log.raw("Deci block = %s", new String(out,0,l));
+				}
+
 			}catch (Exception e) {
 				Log.error(e);
 			}

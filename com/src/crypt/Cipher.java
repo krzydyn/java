@@ -40,7 +40,7 @@ package crypt;
  * <li>ISO/IEC 9797/M3: pad 0, des CBC, des3 on last block
  * </ul>
  * <h3>Block Cipher Modes (of chaining blocks)</h3>
- * <b>Note:</b> CFB, OFB, CTR does not require padding
+ * <b>NOTE:</b> CFB, OFB, CTR does not require padding and return same length as input
  * <ul>
  * <li>ECB (Electronic Codebook)<br>
  *		C[i] = encrypt(K,P[i])<br>
