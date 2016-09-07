@@ -25,7 +25,6 @@ import svg.Svg;
 import sys.Log;
 
 public class GitLog {
-	static final String[] ArrayOfString0 = new String[0];
 	//static GitRepo repo = new GitRepo("~/tmp/nuclear-js");
 	//static String branch = "origin/master";
 
@@ -33,18 +32,52 @@ public class GitLog {
 	//static String branch = "2cde51fbd0f3"; //linux octopus commit
 	//static String branch ="7c4c62a";
 
-	static GitRepo repo = new GitRepo("~/sec-os/secos");
-	static String branch = "--all";
+	//static GitRepo repo = new GitRepo("~/sec-os/secos");
+	//static String branch = "--all";
 	//static String branch = "origin/devel/k.debski/openssl-20160801";
 	//static String branch = "origin/devel/anchit/gatekeeper";
 	static int limit = 8000;
 
+	private static void usage() {
+		Log.debug("debug version");
+		System.out.println("Usage is: ");
+		System.out.println("java -jar gitsvg [-l line-height] <path-to-repo> <branch-or-commit>");
+		System.exit(1);
+	}
 	public static void main(String[] args) {
-		GitGraph graph = new GitGraph(repo);
-		Svg svg = graph.buildSvg(branch, limit);
+		int dy=43;
+		String fmt="";
+		String ofile="git.svg";
+
+		int argi=0;
+		for (; argi < args.length; ++argi) {
+			if (!args[argi].startsWith("-")) break;
+			if (args[argi].equals("-l")) {
+				++argi;
+				dy = Integer.parseInt(args[argi]);
+			}
+			else if (args[argi].equals("-f")) {
+				++argi;
+				fmt=args[argi];
+			}
+			else if (args[argi].equals("-o")) {
+				++argi;
+				ofile=args[argi];
+			}
+		}
+		if (args.length < argi+2) {
+			usage();
+		}
+
+		String repo_path = args[argi];
+		String branch = args[argi+1];
+
+		GitGraph graph = new GitGraph(new GitRepo(repo_path));
+		graph.setUserFormat(fmt);
+		Svg svg = graph.buildSvg(branch, dy, limit);
 
 		Log.notice("Writing SVG to file");
-		try (OutputStream os=new FileOutputStream("git.html")) {
+		try (OutputStream os=new FileOutputStream(ofile)) {
 			svg.write(os);
 		} catch (IOException e) {
 			e.printStackTrace();

@@ -31,19 +31,21 @@ import sys.Log;
 
 public class GitGraph {
 	static final String[] ArrayOfString0 = new String[0];
+	static final int X0=10, DX=20;
 	private final GitRepo repo;
 
 	private final List<Commit> commits = new ArrayList<Commit>();
 	private final Map<String,Commit> hash = new HashMap<String, Commit>();
+	private String userFormat="";
 
 	public GitGraph(GitRepo repo) {
 		this.repo = repo;
 	}
 
-	public Svg buildSvg(String branch, int limit) {
+	public Svg buildSvg(String branch, int dy, int limit) {
 		try {
 			readBranch(branch,limit);
-			return genGitGraph();
+			return genGitGraph(dy);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -55,7 +57,7 @@ public class GitGraph {
 		int f=0,r;
 		for (int j = from; j < to; j=r+1,++f) {
 			r=log.indexOf("|", j);
-			if (r==-1 || f==5) r = to;
+			if (r==-1 || f==2) r = to;
 			String fld = log.substring(j, r);
 
 			if (f == 0) c.hash = fld;
@@ -68,20 +70,17 @@ public class GitGraph {
 				}
 				else c.parentHash = ArrayOfString0;
 			}
-			else if (f == 2) c.refs = fld;
-			else if (f == 3) c.author = fld;
-			else if (f == 4) c.date = fld;
-			else if (f == 5) c.message = fld;
+			else if (f == 2) c.fields = fld;
 		}
 		return c;
 	}
 	private void readBranch(String branch, int limit) throws Exception {
 		commits.clear();
 		hash.clear();
-		String args;
-		if (limit < 0) args = branch;
-		else args = String.format("%s -n %d", branch, limit);
-		String log=repo.log(args + " --topo-order --format=%h|%p|%d|%an|%ai|%s");
+
+		String log;
+		if (limit < 0) log=repo.log(branch, "--topo-order", "--format=%h|%p|"+userFormat);
+		else log=repo.log(branch, "-n", String.valueOf(limit), "--topo-order", "--format=%h|%p|"+userFormat);
 		int n=log.length();
 		int rl=0;
 		for (int i = 0; i < n; i=rl+1) {
@@ -94,16 +93,16 @@ public class GitGraph {
 		Log.debug("commits %d", commits.size());
 	}
 
-	private Svg genGitGraph() {
+	private Svg genGitGraph(int dy) {
 		List<Column> pcols=new ArrayList<Column>();
 		List<Column> cols=new ArrayList<Column>();
 
-		Log.notice("Building graph");
+		Log.notice("Building graph (line-height:%d)",dy);
 		long tm = System.currentTimeMillis() + 5*1000;
-		int cy=10-DY;
+		int cy=10-dy;
 		int cn=0;
 		for (Commit cmt : commits) {
-			cy += DY;
+			cy += dy;
 			++cn;
 
 			//Log.raw("commit: %s | %s", cmt.hash, Text.join(cmt.parentHash, " "));
@@ -222,8 +221,8 @@ public class GitGraph {
 			if (cmt.flag==1) svg.circle(cmt.cp.x, cmt.cp.y, 6).fill("red");
 			else if (cmt.flag==2) svg.circle(cmt.cp.x, cmt.cp.y, 4).stroke("red").fill("none");
 			else svg.circle(cmt.cp.x, cmt.cp.y, 4).fill("blue");
-			svg.text(X0+cmt.cols*DX, cmt.cp.y+6).print(cmt.hash + " | " +
-					cmt.message);
+			if (cmt.fields!=null)
+				svg.text(X0+cmt.cols*DX, cmt.cp.y+6).print(cmt.fields);
 		}
 		Log.notice("SVG done");
 		return svg;
@@ -239,15 +238,12 @@ public class GitGraph {
 	private void addPoint(Commit c, Point p) {
 		c.points.add(p);
 	}
-	static int X0=10, DX=20, DY=20;
 
 	static class Commit {
 		String hash;
 		String[] parentHash;
-		String refs;
-		String author;
-		String date;
-		String message;
+		String fields;
+
 		Point cp;
 		int flag;
 		List<Point> points=new ArrayList<Point>();
@@ -315,5 +311,8 @@ public class GitGraph {
 	static {
 		Collections.addAll(colorAvail, colors);
 		Collections.addAll(colorAll, colors);
+	}
+	public void setUserFormat(String fmt) {
+		userFormat=fmt;
 	}
 }

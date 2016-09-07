@@ -28,7 +28,11 @@ public class Svg extends SvgContainer {
 
 	@Override
 	public void write(PrintStream p) {
+		p.println("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
+		p.println("<!DOCTYPE svg>");
+		// PUBLIC \"-//W3C//DTD SVG 1.1//EN\" \"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd\">
 		props += String.format(" width=\"%d\" height=\"%d\"",width,height);
+		props += " xmlns=\"http://www.w3.org/2000/svg\""; //this is key to set document style
 		//props += " xmlns=\"http://www.w3.org/2000/svg\" version=\"1.1\"";
 		super.write(p);
 	}

@@ -22,6 +22,9 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.URL;
+
+import text.Text;
 
 public class Env {
 	static public final String expandEnv(String p) {
@@ -47,11 +50,11 @@ public class Env {
 		return p;
 	}
 
-	static public String exec(String cmd, File dir) throws IOException {
-		Log.debug("exec %s", cmd);
+	static public String exec(File dir, String ...cmd_args) throws IOException {
+		Log.debug("exec %s", Text.join(cmd_args, " "));
 
 		StringBuilder str = new StringBuilder();
-		Process child = Runtime.getRuntime().exec(cmd, null, dir);
+		Process child = Runtime.getRuntime().exec(cmd_args, null, dir);
 
 		// Get output stream to write from it
 		OutputStream out = child.getOutputStream();
@@ -77,5 +80,18 @@ public class Env {
 		}
 
 		return str.toString();
+	}
+
+
+	static boolean checkApp() {
+		try {
+			URL u=Env.class.getProtectionDomain().getCodeSource().getLocation();
+			if (u.getFile().endsWith(".jar")) {
+				return true;
+			}
+		} catch (Throwable e) {
+			Log.error(e);
+		}
+		return false;
 	}
 }

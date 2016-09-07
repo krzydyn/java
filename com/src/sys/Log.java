@@ -26,20 +26,30 @@ import java.util.Locale;
 import text.Ansi;
 
 public class Log {
-	private static final SimpleDateFormat tmfmt_rel = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
-	private static final SimpleDateFormat tmfmt_tst = new SimpleDateFormat("HH:mm:ss.SSS");
-	private static final String[] LEVEL_ANSI_COLOR = {Ansi.SGR_RED, Ansi.SGR_YELLOW, Ansi.SGR_BLUE, Ansi.SGR_CYAN, "", Ansi.SGR_GREEN, Ansi.SGR_LIGHTMAGENTA };
-	private static final String[] LEVEL_NAME = {"E", "W", "D", "T", "I", "N", ""};
+	final private static Object lock=new Object();
+
+	final private static SimpleDateFormat tmfmt_rel = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
+	final private static SimpleDateFormat tmfmt_tst = new SimpleDateFormat("HH:mm:ss.SSS");
+	final private static String[] LEVEL_ANSI_COLOR = {Ansi.SGR_RED, Ansi.SGR_YELLOW, Ansi.SGR_BLUE, Ansi.SGR_CYAN, "", Ansi.SGR_GREEN, Ansi.SGR_LIGHTMAGENTA };
+	final private static String[] LEVEL_NAME = {"E", "W", "D", "T", "I", "N", ""};
 
 	private static SimpleDateFormat tmfmt = tmfmt_tst;
-	private static Object lock=new Object();
+	static {
+		if (Env.checkApp())
+			tmfmt = tmfmt_rel;
+		else
+			tmfmt = tmfmt_tst;
+	}
 
-	static private void moveLeft(Object[] args, int pa) {
+	final private static void moveLeft(Object[] args, int pa) {
 		if (pa>0)
 			for (int i=pa; i<args.length; ++i) args[i-pa]=args[i];
 	}
 
-	private static void log(int level, int traceOffs, Object[] args) {
+	final private static void log(int level, int traceOffs, Object[] args) {
+		if (tmfmt == tmfmt_rel && level==2 || level==3) //no debug/trace
+			return ;
+
 		String file = null;
 		int line = -1;
 
@@ -88,16 +98,16 @@ public class Log {
 		}
 	}
 
-	public static void setReleaseMode() { tmfmt = tmfmt_rel; }
-	public static void setTestMode() { tmfmt = tmfmt_tst; }
+	final public static void setReleaseMode() { tmfmt = tmfmt_rel; }
+	final public static void setTestMode() { tmfmt = tmfmt_tst; }
 
-	public static void raw(String fmt,Object ...args) {
+	final public static void raw(String fmt,Object ...args) {
 		System.out.printf(fmt+"\n", args);
 	}
-	public static void error(Object ...args) {log(0, 0, args);}
-	public static void warn(Object ...args) {log(1, 0, args);}
-	public static void debug(Object ...args) {log(2, 0, args);}
-	public static void trace(Object ...args) {log(3, 0, args);}
-	public static void info(Object ...args) {log(4, -1, args);}
-	public static void notice(Object ...args) {log(5, -1, args);}
+	final public static void error(Object ...args) {log(0, 0, args);}
+	final public static void warn(Object ...args) {log(1, 0, args);}
+	final public static void debug(Object ...args) {log(2, 0, args);}
+	final public static void trace(Object ...args) {log(3, 0, args);}
+	final public static void info(Object ...args) {log(4, -1, args);}
+	final public static void notice(Object ...args) {log(5, -1, args);}
 }

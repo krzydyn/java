@@ -25,6 +25,14 @@ public abstract class SvgObject {
 	protected SvgContainer parent;
 	protected String props="";
 
+	public static String escapeXmlEntity(String t) {
+		return t.replace("\"", "&quot;")
+				.replace("&", "&amp;")
+				.replace("'", "&apos;")
+				.replace("<", "&lt;")
+				.replace(">", "&gt;");
+	}
+
 	public SvgObject fill(String c) {
 		props+= String.format(" fill=\"%s\"",c);
 		return this;

@@ -33,7 +33,7 @@ public class SvgText extends SvgObject {
 	}
 	@Override
 	public void write(PrintStream os) {
-		os.printf("<text x=\"%d\" y=\"%d\" %s>%s</text>\n", x, y, props, txt);
+		os.printf("<text x=\"%d\" y=\"%d\" %s>%s</text>\n", x, y, props, escapeXmlEntity(txt));
 	}
 
 }

@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="apps" default="gitsvg" basedir=".">
+	<property name="JAVA_VERSION" value="1.7"/>
+	<property name="build" value="build"/>
+
+	<target name="common">
+	</target>
+	
+	<target name="gitsvg" depends="common">
+		<mkdir dir="${build}"/>
+		
+		<javac srcdir="src" destdir="${build}" debug="true" source="${JAVA_VERSION}" target="${JAVA_VERSION}" listfiles="true"
+			includeantruntime="false"
+			includes="git/**"
+			classpath="../com/bin"
+		/>
+		<jar destfile="gitsvg.jar" basedir="build">
+			<fileset dir="../com/bin">
+				<include name="sys/**"/>
+				<include name="text/**"/>
+				<include name="git/**"/>
+				<include name="svg/**"/>
+			</fileset>
+			
+			<manifest>
+			<attribute name="Main-Class" value="git.GitLog"/>
+			</manifest>
+		</jar>
+	</target>
+
+</project>
