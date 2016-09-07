@@ -59,6 +59,7 @@ import javax.swing.text.StyleContext;
 
 import sys.Log;
 import sys.Sound;
+import sys.XThread;
 import text.Ansi;
 import text.Text;
 import ui.MainPanel;
@@ -127,7 +128,15 @@ public class AnsiTerminal extends JPanel implements FocusListener,KeyListener {
 		p.setLayout(new BoxLayout(p, BoxLayout.LINE_AXIS));
 		p.add(title);
 		p.add(Box.createHorizontalGlue());
-		JButton b=new JButton("C");
+		JButton b;
+		b=new JButton("~");
+		b.setFocusable(false);
+		b.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {sendLoop("~", 10000, 150);}
+		});
+		p.add(b);
+		b=new JButton("C");
 		b.setFocusable(false);
 		b.addActionListener(new ActionListener() {
 			@Override
@@ -189,7 +198,21 @@ public class AnsiTerminal extends JPanel implements FocusListener,KeyListener {
 	        Action a = m.get(n);
 	        if (a != null) a.setEnabled(false);
 		}
-    }
+	}
+
+	private void sendLoop(final String t, final long tm, final long step) {
+		new Thread() {
+			@Override
+			public void run() {
+				Log.debug("send %s", t);
+				long stop = System.currentTimeMillis()+tm;
+				while (stop > System.currentTimeMillis()) {
+					inputBuffer.append(t);
+					XThread.sleep(step);
+				}
+			}
+		}.start();
+	}
 
 	@Override
 	public void focusGained(FocusEvent e) {
@@ -212,6 +235,7 @@ public class AnsiTerminal extends JPanel implements FocusListener,KeyListener {
 			Log.debug("HT key");
 			inputBuffer.setLength(0);
 		}
+
 		Log.debug("input %s", Ansi.toString(c));
 		inputBuffer.append(c);
 	}
@@ -301,10 +325,14 @@ public class AnsiTerminal extends JPanel implements FocusListener,KeyListener {
 			if (seq.equals(Ansi.ERASE_ALL)) eraseAll();
 			else if (seq.equals(Ansi.ERASE_BELOW)) eraseLineBelow();
 			else if (seq.equals(Ansi.ERASE_ABOVE)) eraseLineAbove();
-			else if (seq.equals(Ansi.ERASE_LN)) eraseLineRight();
+			else if (seq.equals(Ansi.ERASE_INLINE)) eraseLineRight();
 			else if (seq.equals(Ansi.CURSOR_POS)) cursorHome();
 			else if (seq.equals(Ansi.SGR_RESET)) {
 				attrib = SimpleAttributeSet.EMPTY;
+			}
+			else if (seq.endsWith("@")) {
+				int n = Integer.parseInt(seq.substring(Ansi.CSI.length(), seq.length()-1));
+				insertBlank(n);
 			}
 			else if (seq.endsWith("C")) {
 				int n = Integer.parseInt(seq.substring(Ansi.CSI.length(), seq.length()-1));
@@ -415,7 +443,7 @@ public class AnsiTerminal extends JPanel implements FocusListener,KeyListener {
 			if (outputBuffer.length() < 3) return ;
 			String  s0 = outputBuffer.substring(0, 2);
 			if (s0.equals(Ansi.CSI)) {
-				if (Character.isLetter(c)) {escSeq=false;c=0;}
+				if (Character.isLetter(c) || c=='@') {escSeq=false;c=0;}
 				else if ((c=='['||c==']'||c=='~') && outputBuffer.length() > 2) {
 					escSeq=false;
 				}
@@ -495,12 +523,12 @@ public class AnsiTerminal extends JPanel implements FocusListener,KeyListener {
 		try { Sound.dong(); } catch (Exception e) {}
 	}
 	public void cursorLocate(int x, int y) {
+		Log.debug(1,"setSursor %s", cpos.toString());
 		if (x<0) x=0;
 		else if (x > MAX_COL) x=MAX_COL;
 		if (y<=0) y=1;
 		else if (y > MAX_ROW) x=MAX_ROW;
 		cpos.x=x; cpos.y=y;
-		Log.debug("setSursor %s", cpos.toString());
 	}
 	public void cursorHome() {
 		Log.debug("cursor: home");
@@ -532,6 +560,15 @@ public class AnsiTerminal extends JPanel implements FocusListener,KeyListener {
 		if (p != p0) {
 			editor.setCaretPosition(p0);
 		}
+	}
+	public void insertBlank(int n) {
+		Log.debug(1,"buffer: blank %d",n);
+		Document doc = editor.getDocument();
+		int p0 = editor.getCaretPosition();
+		try {
+			doc.insertString(p0, Text.repeat(" ", n), attrib);
+		} catch (BadLocationException e) {}
+		editor.setCaretPosition(p0);
 	}
 	public void eraseAll() {
 		Log.debug("buffer: eraseAll");

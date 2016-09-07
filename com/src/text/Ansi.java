@@ -109,6 +109,7 @@ public class Ansi {
 	public final static String OSC_C1 = "\u009d"; //only on 8bit terminal
 	public final static String OSC = CSI_C0;
 
+	public final static String INSERT_BLANK = CSI + "@"; // CSI n @ insert n blanks
 	public final static String CURSOR_UP = CSI + "A"; // CSI n A move cursor up n times
 	public final static String CURSOR_DOWN = CSI + "B"; // CSI n A move cursor down n times
 	public final static String CURSOR_FORW = CSI + "C"; // CSI n A move cursor forward n times
@@ -122,9 +123,12 @@ public class Ansi {
 	public final static String ERASE_ABOVE = CSI + "1J"; // clear from cursor to beginning of screen
 	public final static String ERASE_ALL = CSI + "2J"; // clear entire screen
 
-	public final static String ERASE_LN = CSI + "K"; // erase line, don't change cursor position
-	public final static String SCROLL_UP = CSI + "S";
-	public final static String SCROLL_DN = CSI + "T";
+	public final static String ERASE_INLINE = CSI + "K"; // erase line, don't change cursor position
+	public final static String ERASE_TORIGTH = CSI + "1K"; // erase to the right
+	public final static String ERASE_TOLEFT = CSI + "2K"; // erase to the left
+	public final static String ERASE_LEFT = CSI + "P"; // CSI n P  Delete n Character(s) (default = 1)
+	public final static String SCROLL_UP = CSI + "S"; // CSI n S Scroll up n lines (default = 1)
+	public final static String SCROLL_DN = CSI + "T"; // CSI n T Scroll down n lines (default = 1)
 
 	public final static String SCR_MODE19 = CSI + "=19h";// 320x200 256colors
 	public final static String SCR_RESET19 = CSI + "=19l";
@@ -159,7 +163,6 @@ public class Ansi {
 	public final static String DEC_DSR = CSI + "?6n"; // DSR – Device Status Report, resp: CSI+n;mR
 	public final static String SCP = CSI + "s"; // Save cursor position
 	public final static String RCP = CSI + "u"; // Restore cursor position
-	public final static String DEL_LEFT1 = CSI + "1P"; // CSI Ps P  Delete 1 Character(s) (default = 1)
 
 	public final static String TRM_ICON_TITLE = OSC + "0";	// OSC 0;IconName BEL
 	public final static String TRM_ICON = OSC + "1";		// OSC 1;IconName BEL
