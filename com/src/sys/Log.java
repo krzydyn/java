@@ -86,7 +86,7 @@ public class Log {
 
 		final String color = level < LEVEL_ANSI_COLOR.length ? LEVEL_ANSI_COLOR[level] : "";
 		final String name = level < LEVEL_NAME.length ? LEVEL_NAME[level] : String.format("%d", level);
-		final PrintStream s = System.out;
+		final PrintStream s = System.err;
 		synchronized (lock) {
 			if (name.isEmpty()) s.printf("%s%s: ", color, tmfmt.format(new Date()));
 			else s.printf("%s%s [%s] %s: ", color, tmfmt.format(new Date()), name, ct.getName());

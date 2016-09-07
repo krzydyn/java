@@ -41,28 +41,33 @@ public class GitLog {
 	private static void usage() {
 		Log.debug("debug version");
 		System.out.println("Usage is: ");
-		System.out.println("java -jar gitsvg [-l line-height] <path-to-repo> <branch-or-commit>");
+		System.out.println("java -jar gitsvg [--line-height line-height] [--format fmt] [--svg <file>] [--log <file>] <path-to-repo> <branch-or-commit>");
 		System.exit(1);
 	}
 	public static void main(String[] args) {
 		int dy=43;
 		String fmt="";
-		String ofile="git.svg";
+		String cmtfile=null;
+		String svgfile="git.svg";
 
 		int argi=0;
 		for (; argi < args.length; ++argi) {
 			if (!args[argi].startsWith("-")) break;
-			if (args[argi].equals("-l")) {
+			if (args[argi].equals("--line-height")) {
 				++argi;
 				dy = Integer.parseInt(args[argi]);
 			}
-			else if (args[argi].equals("-f")) {
+			else if (args[argi].equals("--format")) {
 				++argi;
 				fmt=args[argi];
 			}
-			else if (args[argi].equals("-o")) {
+			else if (args[argi].equals("--svg")) {
 				++argi;
-				ofile=args[argi];
+				svgfile=args[argi];
+			}
+			else if (args[argi].equals("--log")) {
+				++argi;
+				cmtfile=args[argi];
 			}
 		}
 		if (args.length < argi+2) {
@@ -73,11 +78,26 @@ public class GitLog {
 		String branch = args[argi+1];
 
 		GitGraph graph = new GitGraph(new GitRepo(repo_path));
-		graph.setUserFormat(fmt);
+		graph.setUserFormat(fmt, cmtfile == null);
 		Svg svg = graph.buildSvg(branch, dy, limit);
 
+		if (cmtfile != null) {
+			Log.notice("Writing commits to file");
+			if (cmtfile.equals("-")) {
+				graph.saveCommits(System.out);
+			}
+			else {
+				try (OutputStream os=new FileOutputStream(cmtfile)) {
+					graph.saveCommits(os);
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+			Log.notice("Writing commits done");
+		}
+
 		Log.notice("Writing SVG to file");
-		try (OutputStream os=new FileOutputStream(ofile)) {
+		try (OutputStream os=new FileOutputStream(svgfile)) {
 			svg.write(os);
 		} catch (IOException e) {
 			e.printStackTrace();

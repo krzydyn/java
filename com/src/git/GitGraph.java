@@ -19,6 +19,8 @@
 package git;
 
 import java.awt.Point;
+import java.io.OutputStream;
+import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -37,6 +39,7 @@ public class GitGraph {
 	private final List<Commit> commits = new ArrayList<Commit>();
 	private final Map<String,Commit> hash = new HashMap<String, Commit>();
 	private String userFormat="";
+	private boolean userText=false;
 
 	public GitGraph(GitRepo repo) {
 		this.repo = repo;
@@ -221,8 +224,8 @@ public class GitGraph {
 			if (cmt.flag==1) svg.circle(cmt.cp.x, cmt.cp.y, 6).fill("red");
 			else if (cmt.flag==2) svg.circle(cmt.cp.x, cmt.cp.y, 4).stroke("red").fill("none");
 			else svg.circle(cmt.cp.x, cmt.cp.y, 4).fill("blue");
-			if (cmt.fields!=null)
-				svg.text(X0+cmt.cols*DX, cmt.cp.y+6).print(cmt.fields);
+			if (cmt.fields!=null && userText)
+				svg.text(X0+cmt.cols*DX, cmt.cp.y+6).setText(cmt.fields);
 		}
 		Log.notice("SVG done");
 		return svg;
@@ -312,7 +315,16 @@ public class GitGraph {
 		Collections.addAll(colorAvail, colors);
 		Collections.addAll(colorAll, colors);
 	}
-	public void setUserFormat(String fmt) {
+	public void setUserFormat(String fmt, boolean show) {
 		userFormat=fmt;
+		userText=show;
+	}
+
+	public void saveCommits(OutputStream os) {
+		PrintStream ps=new PrintStream(os);
+		for (Commit c : commits) {
+			if (c.fields != null)
+			ps.println(c.fields);
+		}
 	}
 }
