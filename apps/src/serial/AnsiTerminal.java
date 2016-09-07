@@ -51,11 +51,16 @@ import javax.swing.KeyStroke;
 import javax.swing.border.Border;
 import javax.swing.text.AttributeSet;
 import javax.swing.text.BadLocationException;
+import javax.swing.text.DefaultStyledDocument;
 import javax.swing.text.Document;
 import javax.swing.text.JTextComponent;
+import javax.swing.text.PlainDocument;
 import javax.swing.text.SimpleAttributeSet;
 import javax.swing.text.StyleConstants;
 import javax.swing.text.StyleContext;
+import javax.swing.text.StyledDocument;
+import javax.swing.text.TabSet;
+import javax.swing.text.TabStop;
 
 import sys.Log;
 import sys.Sound;
@@ -78,6 +83,7 @@ import ui.MainPanel;
 public class AnsiTerminal extends JPanel implements FocusListener,KeyListener {
 	private static final long serialVersionUID = 0;
 
+	final static Font font = new Font(Font.MONOSPACED,Font.PLAIN, 12);
 	final static Border focusedBorder = BorderFactory.createLineBorder(Color.GRAY, 3);
 	final static Border unfocusedBorder = BorderFactory.createEmptyBorder(3, 3, 3, 3);
 
@@ -108,7 +114,7 @@ public class AnsiTerminal extends JPanel implements FocusListener,KeyListener {
 
 		title.setText(t);
 
-		editor.setFont(Font.decode(Font.MONOSPACED));
+		editor.setFont(font);
 		editor.setEditable(editable);
 		editor.setFocusable(true); // this allow selection of text
 		editor.setBackground(Color.DARK_GRAY);
@@ -116,6 +122,24 @@ public class AnsiTerminal extends JPanel implements FocusListener,KeyListener {
 		editor.setCaretColor(Color.WHITE);
 		editor.addFocusListener(this);
 		editor.addKeyListener(this);
+		Document doc = editor.getDocument();
+		Log.error("doc is %s",doc.getClass());
+		if (doc instanceof PlainDocument)
+			doc.putProperty(PlainDocument.tabSizeAttribute, 8);
+		else if (doc instanceof StyledDocument) {
+			int ts=56; // one char is 7pixel width
+			StyleContext sc = StyleContext.getDefaultStyleContext();
+			TabSet tabs = new TabSet(new TabStop[] {
+					new TabStop(1*ts,TabStop.ALIGN_LEFT,TabStop.LEAD_EQUALS),
+					new TabStop(2*ts,TabStop.ALIGN_LEFT,TabStop.LEAD_EQUALS),
+					new TabStop(3*ts,TabStop.ALIGN_LEFT,TabStop.LEAD_EQUALS),
+					new TabStop(4*ts,TabStop.ALIGN_LEFT,TabStop.LEAD_EQUALS),
+					new TabStop(5*ts,TabStop.ALIGN_LEFT,TabStop.LEAD_EQUALS),
+			});
+			AttributeSet paraSet = sc.addAttribute(SimpleAttributeSet.EMPTY, StyleConstants.TabSet, tabs);
+			((DefaultStyledDocument)doc).setParagraphAttributes(0,Integer.MAX_VALUE,paraSet, false);
+			//((JTextPane)editor).setParagraphAttributes(paraSet, false);
+		}
 
 		//don't traversal
 		Set<KeyStroke> emptyset = new HashSet<KeyStroke>();
@@ -369,7 +393,7 @@ public class AnsiTerminal extends JPanel implements FocusListener,KeyListener {
 				int x=0;
 				try {
 					x=Integer.parseInt(code);
-					eraseLeft(x);
+					eraseChars(x);
 				}
 				catch (Exception e) {}
 			}
@@ -607,13 +631,11 @@ public class AnsiTerminal extends JPanel implements FocusListener,KeyListener {
 			editor.setCaretPosition(p0);
 		}
 	}
-	public void eraseLeft(int n) {
-		Log.debug(1,"buffer: eraseLeft");
+	public void eraseChars(int n) {
+		Log.debug(1,"buffer: eraseChars");
 		Document doc = editor.getDocument();
-		int p, p0 = editor.getCaretPosition();
-		p=p0;
-		if (p0 > n) p0-=n;
-		else p0=0;
+		int p = doc.getLength(), p0 = editor.getCaretPosition();
+		if (p0+n < p) p=p0+n;
 
 		if (p != p0) {
 			try {
