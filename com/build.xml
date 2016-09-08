@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="com" default="compile" basedir=".">
+	<property name="JAVA_VERSION" value="1.7"/>
+	<property name="build" value="build"/>
+	<property name="libdir" value="lib"/>
+	
+	<target name="compile">
+		<mkdir dir="${build}"/>
+		<javac srcdir="src" destdir="${build}" debug="false" listfiles="true"
+			encoding="UTF-8" source="${JAVA_VERSION}" target="${JAVA_VERSION}"
+			includeantruntime="false"
+			classpath="${libdir}/RXTXcomm.jar"
+		/>
+	</target>
+</project>

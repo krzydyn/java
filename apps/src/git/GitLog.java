@@ -41,7 +41,7 @@ public class GitLog {
 	private static void usage() {
 		Log.debug("debug version");
 		System.out.println("Usage is: ");
-		System.out.println("java -jar gitsvg [--line-height line-height] [--format fmt] [--svg <file>] [--log <file>] <path-to-repo> <branch-or-commit>");
+		System.out.println("java -jar gitsvg.jar [--line-height line-height] [--format fmt] [--svg <file>] [--log <file>] <path-to-repo> <branch-or-commit>");
 		System.exit(1);
 	}
 	public static void main(String[] args) {
