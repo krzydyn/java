@@ -102,7 +102,7 @@ public class Log {
 	final public static void setTestMode() { tmfmt = tmfmt_tst; }
 
 	final public static void raw(String fmt,Object ...args) {
-		System.out.printf(fmt+"\n", args);
+		System.err.printf(fmt+"\n", args);
 	}
 	final public static void error(Object ...args) {log(0, 0, args);}
 	final public static void warn(Object ...args) {log(1, 0, args);}

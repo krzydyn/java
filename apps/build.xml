@@ -7,10 +7,10 @@
 	<target name="common">
 		<ant dir="${comdir}" antfile="build.xml" target="compile" />
 	</target>
-	
+
 	<target name="gitsvg" depends="common">
 		<mkdir dir="${build}"/>
-		
+
 		<javac srcdir="src" destdir="${build}" debug="true" listfiles="true"
 			encoding="UTF-8" source="${JAVA_VERSION}" target="${JAVA_VERSION}"
 			includeantruntime="false"
@@ -25,11 +25,29 @@
 				<include name="git/**"/>
 				<include name="svg/**"/>
 			</fileset>
-			
+
 			<manifest>
 			<attribute name="Main-Class" value="git.GitLog"/>
 			</manifest>
 		</jar>
+
+	</target>
+
+	<target name="deploy" depends="gitsvg">
+		<echo>Deploing files to sever</echo>
+		<exec executable="scp" dir="." failonerror="true">
+			<arg value="gitsvg.jar"/>
+			<arg value="secosci@106.120.53.105:db_test/http/jar/"/>
+		</exec>
+	</target>
+
+	<target name="test_ssh">
+		<!-- scp,sshexec task needs 3-party libraries (jcraft) -->
+		<sshexec host="106.120.53.105"
+			username="secosci"
+			password="secosci"
+			command="ls"/>
+		<scp file="gitsvg.jar" todir="secosci@106.120.53.105:db_test/http/jar/" />
 	</target>
 
 </project>

@@ -35,7 +35,7 @@ public class SvgText extends SvgObject {
 	@Override
 	public void write(PrintStream os) {
 		if (txt != null)
-		os.printf("<text x=\"%d\" y=\"%d\" %s>%s</text>\n", x, y, props, escapeXmlEntity(txt));
+			os.printf("<text x=\"%d\" y=\"%d\" %s>%s</text>\n", x, y, props, escapeXmlEntity(txt));
 	}
 
 }

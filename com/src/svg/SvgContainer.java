@@ -22,7 +22,7 @@ import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.List;
 
-public class SvgContainer extends SvgObject {
+public abstract class SvgContainer extends SvgObject {
 	protected int width,height;
 	protected List<SvgObject> objs = new ArrayList<SvgObject>();
 	final protected String name;

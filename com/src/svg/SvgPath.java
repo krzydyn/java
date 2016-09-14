@@ -18,7 +18,6 @@
 
 package svg;
 
-import java.awt.Rectangle;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.List;
@@ -31,6 +30,7 @@ public class SvgPath extends SvgObject {
 	}
 
 	private List<PathOp> ops = new ArrayList<PathOp>();
+	private int cx,cy;
 
 	private void checkOp(char type) {
 		if (ops.size() > 0) {
@@ -45,16 +45,21 @@ public class SvgPath extends SvgObject {
 	}
 
 	public SvgPath moveTo(int x,int y) {
+		cx=x;cy=y;
 		checkOp('M');
 		ops.add(new PathOp('M',x,y));
 		return this;
 	}
 	public SvgPath moveRel(int dx,int dy) {
+		cx+=dx; cy+=dy;
+		parent.updateSize(cx+1, cy+1);
 		checkOp('m');
 		ops.add(new PathOp('m',dx,dy));
 		return this;
 	}
 	public SvgPath lineTo(int x,int y) {
+		cx=x;cy=y;
+		parent.updateSize(cx+1, cy+1);
 		checkOp('L');
 		if (ops.size() > 1) {
 			PathOp p1 = ops.get(ops.size()-1);
@@ -76,13 +81,18 @@ public class SvgPath extends SvgObject {
 		return this;
 	}
 	public SvgPath lineRel(int dx,int dy) {
+		cx+=dx; cy+=dy;
+		parent.updateSize(cx+1, cy+1);
 		checkOp('l');
 		ops.add(new PathOp('l',dx,dy));
 		return this;
 	}
 	public SvgPath curveTo(int x,int y) {
+		cx=x; cy=y;
+		parent.updateSize(cx+1, cy+1);
 		checkOp('T');
 		ops.add(new PathOp('T',x,y));
+		parent.updateSize(x+1, y+1);
 		return this;
 	}
 	public SvgPath closePath() {
@@ -91,17 +101,6 @@ public class SvgPath extends SvgObject {
 		return this;
 	}
 
-	public Rectangle getBounds() {
-		Rectangle r = new Rectangle();
-		for (PathOp op : ops) {
-			for (int i=0; i < op.data.length; i+=2) {
-				int x=op.data[i], y=op.data[i+1];
-				if (r.width==0) r.setBounds(x, y, 1, 1);
-				else r.add(x, y);
-			}
-		}
-		return r;
-	}
 	@Override
 	public void write(PrintStream os) {
 		os.printf("<path d=\"");

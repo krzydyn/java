@@ -21,8 +21,10 @@ package sys;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.URL;
+import java.util.Collection;
 
 import text.Text;
 
@@ -50,27 +52,36 @@ public class Env {
 		return p;
 	}
 
-	static public String exec(File dir, String ...cmd_args) throws IOException {
-		Log.debug("exec %s", Text.join(cmd_args, " "));
+	static public String exec(File dir, String ...args) throws IOException {
+		Log.debug("exec %s", Text.join(args, " "));
 
 		StringBuilder str = new StringBuilder();
-		Process child = Runtime.getRuntime().exec(cmd_args, null, dir);
+		//Process child = Runtime.getRuntime().exec(cmd_args, null, dir);
+		Process child = new ProcessBuilder(args).directory(dir).start();
+		//.environment(envp)
 
 		// Get output stream to write from it
 		OutputStream out = child.getOutputStream();
 		InputStream in = child.getInputStream();
 		InputStream err = child.getErrorStream();
 
-		byte[] buf = new byte[1024];
+		InputStreamReader isr = new InputStreamReader(in, Text.UTF8_Charset);
+		char[] buf = new char[1024];
 		int r;
-		while ((r=in.read(buf)) >= 0) {
-			for (int i=0; i < r; ++i)
-				str.append((char)buf[i]);
+		while ((r=isr.read(buf)) >= 0) {
+			str.append(buf, 0, r);
 		}
 
 		try {
 			int ec = child.waitFor();
-			if (ec != 0) throw new IOException("Process exit code "+ec);
+			if (ec != 0) {
+				str.setLength(0);
+				isr = new InputStreamReader(err, Text.UTF8_Charset);
+				while ((r=isr.read(buf)) >= 0) {
+					str.append(buf, 0, r);
+				}
+				throw new IOException("Exit("+ec+") "+str.toString());
+			}
 		} catch (InterruptedException e) {
 			return null;
 		} finally {
@@ -80,6 +91,11 @@ public class Env {
 		}
 
 		return str.toString();
+	}
+
+	final static private String[] stringArray={};
+	static public String exec(File dir, Collection<String> args) throws IOException {
+		return exec(dir,args.toArray(stringArray));
 	}
 
 

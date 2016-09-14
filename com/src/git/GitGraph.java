@@ -19,8 +19,8 @@
 package git;
 
 import java.awt.Point;
+import java.io.IOException;
 import java.io.OutputStream;
-import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -30,10 +30,11 @@ import java.util.Map;
 import svg.Svg;
 import svg.SvgPath;
 import sys.Log;
+import text.Text;
 
 public class GitGraph {
 	static final String[] ArrayOfString0 = new String[0];
-	static final int X0=10, DX=20;
+	static final int X0=15, DX=20;
 	private final GitRepo repo;
 
 	private final List<Commit> commits = new ArrayList<Commit>();
@@ -81,9 +82,16 @@ public class GitGraph {
 		commits.clear();
 		hash.clear();
 
-		String log;
-		if (limit < 0) log=repo.log(branch, "--topo-order", "--format=%h|%p|"+userFormat);
-		else log=repo.log(branch, "-n", String.valueOf(limit), "--topo-order", "--format=%h|%p|"+userFormat);
+		ArrayList<String> args=new ArrayList<String>();
+		args.add(branch);
+		args.add("--topo-order");
+		args.add("--format=%h|%p|"+userFormat);
+		if (limit>0) {
+			args.add("-n");
+			args.add(String.valueOf(limit));
+		}
+
+		String log = repo.log(args);
 		int n=log.length();
 		int rl=0;
 		for (int i = 0; i < n; i=rl+1) {
@@ -102,7 +110,7 @@ public class GitGraph {
 
 		Log.notice("Building graph (line-height:%d)",dy);
 		long tm = System.currentTimeMillis() + 5*1000;
-		int cy=10-dy;
+		int cy=22-dy;
 		int cn=0;
 		for (Commit cmt : commits) {
 			cy += dy;
@@ -146,7 +154,7 @@ public class GitGraph {
 					addPoint(cols.get(i).c, new Point(X0+i*DX,cy));
 			}
 
-			cmt.cp=cp;
+			cmt.cp = cp;
 			cmt.color = cols.get(cf).color;
 			cmt.cols = cols.size();
 
@@ -156,20 +164,21 @@ public class GitGraph {
 				else pcols.add(new Column(c));
 			}
 
-			if (cmt.parentHash.length==0) {
+			if (cmt.parentHash.length==0) { // End of branch
 				cmt.flag = 1;
 				retColor(cmt.color);
 				cols.set(cf, null);
 				Log.debug("** End of branch %s",cmt.hash);
 			}
-			else {
+			else { // Have one or more parents
 				Commit c = hash.get(cmt.parentHash[0]);
-				if (c==null) {
+				if (c==null) { // Parent not resolved
 					cmt.flag = 2;
 					retColor(cmt.color);
 					cols.set(cf, null);
 				}
-				else if (c.points.isEmpty()){
+				else if (c.points.isEmpty()) { // Parent not began drawing
+					//add point to parent and continue with the same Column info(color)
 					addPoint(c, cp);
 					cols.get(cf).c = c;
 				}
@@ -178,6 +187,7 @@ public class GitGraph {
 					retColor(cmt.color);
 					cols.set(cf, null);
 				}
+				// Add other parents
 				for (int i=1; i < cmt.parentHash.length; ++i) {
 					c=hash.get(cmt.parentHash[i]);
 					if (c==null) {
@@ -320,11 +330,13 @@ public class GitGraph {
 		userText=show;
 	}
 
-	public void saveCommits(OutputStream os) {
-		PrintStream ps=new PrintStream(os);
+	public void saveCommits(OutputStream os) throws IOException {
 		for (Commit c : commits) {
-			if (c.fields != null)
-			ps.println(c.fields);
+			if (c.fields != null) {
+				os.write(String.format("%d|%s\n",X0+c.cols*DX,c.fields).
+						getBytes(Text.UTF8_Charset));
+			}
+			//ps.println(c.fields);
 		}
 	}
 }

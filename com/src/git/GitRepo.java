@@ -20,6 +20,7 @@ package git;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 import sys.Env;
@@ -32,11 +33,11 @@ public class GitRepo {
 		path = new File(Env.expandEnv(p));
 	}
 
-	public String log(String ...args) throws Exception {
+	public String log(Collection<String> args) throws Exception {
 		List<String> a = new ArrayList<String>();
 		a.add(git);
 		a.add("log");
-		for (int i=0; i < args.length; ++i) a.add(args[i]);
-		return Env.exec(path, a.toArray(new String[]{}));
+		a.addAll(args);
+		return Env.exec(path, a);
 	}
 }

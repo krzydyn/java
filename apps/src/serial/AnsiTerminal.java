@@ -259,8 +259,6 @@ public class AnsiTerminal extends JPanel implements FocusListener,KeyListener {
 			Log.debug("HT key");
 			inputBuffer.setLength(0);
 		}
-
-		Log.debug("input %s", Ansi.toString(c));
 		inputBuffer.append(c);
 	}
 	@Override
@@ -331,9 +329,9 @@ public class AnsiTerminal extends JPanel implements FocusListener,KeyListener {
 		if (inputBuffer.length() == 0) return 0;
 
 		synchronized (inputBuffer) {
-			//Log.debug("Input: %s", inputBuffer.toString());
 			byte[] bi = inputBuffer.toString().getBytes();
 			int l = Math.min(b.length, bi.length);
+			Log.debug("Input: %s", Text.vis(inputBuffer.substring(0,l)));
 			for (int i = 0; i < l; ++i) b[i] = bi[i];
 			inputBuffer.delete(0, l);
 			return l;

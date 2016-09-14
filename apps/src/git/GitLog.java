@@ -82,9 +82,13 @@ public class GitLog {
 		Svg svg = graph.buildSvg(branch, dy, limit);
 
 		if (cmtfile != null) {
-			Log.notice("Writing commits to file");
+			Log.notice("Writing commits to file '%s'",cmtfile);
 			if (cmtfile.equals("-")) {
-				graph.saveCommits(System.out);
+				try {
+					graph.saveCommits(System.out);
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
 			}
 			else {
 				try (OutputStream os=new FileOutputStream(cmtfile)) {
@@ -96,13 +100,15 @@ public class GitLog {
 			Log.notice("Writing commits done");
 		}
 
-		Log.notice("Writing SVG to file");
-		try (OutputStream os=new FileOutputStream(svgfile)) {
-			svg.write(os);
-		} catch (IOException e) {
-			e.printStackTrace();
+		if (svg != null) {
+			Log.notice("Writing SVG to file");
+			try (OutputStream os=new FileOutputStream(svgfile)) {
+				svg.write(os);
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+			Log.notice("Writing SVG done");
 		}
-		Log.notice("Writing SVG done");
 	}
 
 }
