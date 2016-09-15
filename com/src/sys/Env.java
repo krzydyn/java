@@ -52,12 +52,21 @@ public class Env {
 		return p;
 	}
 
+	static public void startexec(File dir, String ...args) throws IOException {
+		Process child = new ProcessBuilder(args).directory(dir)
+				.redirectErrorStream(true)
+				.start();
+		OutputStream out = child.getOutputStream();
+		InputStream in = child.getInputStream();
+	}
+
 	static public String exec(File dir, String ...args) throws IOException {
 		Log.debug("exec %s", Text.join(" ", args));
 
 		StringBuilder str = new StringBuilder();
 		//Process child = Runtime.getRuntime().exec(cmd_args, null, dir);
-		Process child = new ProcessBuilder(args).directory(dir).start();
+		Process child = new ProcessBuilder(args).directory(dir)
+				.start();
 		//.environment(envp)
 
 		// Get output stream to write from it
@@ -68,6 +77,7 @@ public class Env {
 		InputStreamReader isr = new InputStreamReader(in, Text.UTF8_Charset);
 		char[] buf = new char[1024];
 		int r;
+
 		while ((r=isr.read(buf)) >= 0) {
 			str.append(buf, 0, r);
 		}

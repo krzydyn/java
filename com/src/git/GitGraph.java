@@ -57,7 +57,7 @@ public class GitGraph {
 		return null;
 	}
 
-	private Commit parseRecord(String log,int from, int to) {
+	private Commit parseGitOneLine(String log,int from, int to) {
 		Commit c=new Commit();
 		int f=0,r;
 		for (int j = from; j < to; j=r+1,++f) {
@@ -98,7 +98,7 @@ public class GitGraph {
 		for (int i = 0; i < n; i=rl+1) {
 			rl=log.indexOf("\n", i);
 			if (rl < 0) rl = n;
-			Commit c=parseRecord(log, i, rl);
+			Commit c=parseGitOneLine(log, i, rl);
 			commits.add(c);
 			hash.put(c.hash, c);
 		}
@@ -138,6 +138,7 @@ public class GitGraph {
 					Column c=cols.get(i);
 					if (c==null) continue;
 					if (c.c==cmt) {
+						Log.debug("connect prev to curent cmt");
 						pcols.get(i).c.points.add(cp);
 						retColor(pcols.get(i).c.color);
 						cols.set(i,null);
@@ -205,6 +206,7 @@ public class GitGraph {
 						addPoint(c, cp);
 					}
 					else {
+						//merge point to existing line
 						cmt.points.add(c.points.get(c.points.size()-1));
 					}
 				}
@@ -226,12 +228,12 @@ public class GitGraph {
 			}
 
 			if (cmt.points.size() > 0) {
-				Point p0=cmt.points.get(0);
+				Point p=cmt.points.get(0);
 				SvgPath path = svg.path();
 				path.fill("none").stroke(cmt.color);
-				path.moveTo(p0.x, p0.y);
+				path.moveTo(p.x, p.y);
 				for (int i = 1; i < cmt.points.size(); ++i) {
-					Point p=cmt.points.get(i);
+					p=cmt.points.get(i);
 					path.lineTo(p.x, p.y);
 				}
 			}
