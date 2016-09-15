@@ -105,7 +105,8 @@ public class SerialMain extends MainPanel {
 						}
 					}
 					catch (Throwable e) {
-						//Log.error("%s", e);
+						Log.error(e);
+						trm.write(String.format("Open failed: %s\n", e.getMessage()));
 						trm.setTitle("Open failed");
 					}
 				}

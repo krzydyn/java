@@ -102,7 +102,6 @@ public class AnsiTerminal extends JPanel implements FocusListener,KeyListener {
 	private StringBuilder outputBuffer = new StringBuilder();
 	private Point cpos = new Point(0, 0);
 	private int linesInBuf=0;
-	private boolean paused = false;
 	private boolean escSeq = false;
 
 	//to get focus component must satisfy: 1.visible, 2.enabled, 3. focusable
@@ -154,6 +153,7 @@ public class AnsiTerminal extends JPanel implements FocusListener,KeyListener {
 		p.add(Box.createHorizontalGlue());
 		JButton b;
 		b=new JButton("~");
+		b.setToolTipText("Generate '~' sequence");
 		b.setFocusable(false);
 		b.addActionListener(new ActionListener() {
 			@Override
@@ -162,16 +162,10 @@ public class AnsiTerminal extends JPanel implements FocusListener,KeyListener {
 		p.add(b);
 		b=new JButton("C");
 		b.setFocusable(false);
+		b.setToolTipText("Clear Screen");
 		b.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {eraseAll();}
-		});
-		p.add(b);
-		b=new JButton("P");
-		b.setFocusable(false);
-		b.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {paused=!paused;}
 		});
 		p.add(b);
 
@@ -301,6 +295,10 @@ public class AnsiTerminal extends JPanel implements FocusListener,KeyListener {
 
 	private void flushOutput() {
 		if (outputBuffer.length() == 0) return ;
+		if (escSeq) {
+			Log.error("flush inside getting escseq");
+			return ;
+		}
 		int p0 = editor.getCaretPosition();
 		try {
 			Document doc = editor.getDocument();
@@ -310,7 +308,7 @@ public class AnsiTerminal extends JPanel implements FocusListener,KeyListener {
 				doc.remove(p0, l);
 			}
 			else {
-				Log.debug("Append: %s", Text.vis(outputBuffer));
+				Log.debug("Append[%d]: %s", outputBuffer.length(), Text.vis(outputBuffer));
 			}
 			doc.insertString(p0, outputBuffer.toString(), attrib);
 			editor.setCaretPosition(p0+outputBuffer.length());
@@ -457,32 +455,34 @@ public class AnsiTerminal extends JPanel implements FocusListener,KeyListener {
 	}
 
 	public void append(char c) {
-		if (paused && !escSeq) {
-			return ;
-		}
 		if (escSeq) {
-			outputBuffer.append(c);
-			if (outputBuffer.length() < 3) return ;
-			String  s0 = outputBuffer.substring(0, 2);
-			if (s0.equals(Ansi.CSI)) {
-				if (Character.isLetter(c) || c=='@') {escSeq=false;c=0;}
-				else if ((c=='['||c==']'||c=='~') && outputBuffer.length() > 2) {
-					escSeq=false;
+			if (c >= 0x20) {
+				outputBuffer.append(c);
+				if (outputBuffer.length() < 3) return ;
+
+				String s0 = outputBuffer.substring(0, 2);
+				if (s0.equals(Ansi.CSI)) {
+					if (Character.isLetter(c) || c=='@') {escSeq=false;}
+					else if ((c=='['||c==']'||c=='~')) {escSeq=false;}
 				}
+				else if (s0.equals(Ansi.OSC)) {
+					if (c == Ansi.Code.BEL) {escSeq=false;}
+				}
+				c=0;
 			}
-			else if (s0.equals(Ansi.OSC)) {
-				if (c == Ansi.Code.BEL) {escSeq=false;c=0;}
+			else {
+				Log.error("recv %x when in escseq mode", (int)c);
+				escSeq=false;
 			}
 
 			if (!escSeq) {
 				String seq = outputBuffer.toString();
 				outputBuffer.setLength(0);
 				handleEscSeq(seq);
-				if (c!=0) outputBuffer.append(c);
-			}
-			else if (c < 0x20) {
-				escSeq=false;
-				outputBuffer.setLength(0);
+				if (c!=0) {
+					outputBuffer.append(c);
+					if (c==Ansi.Code.ESC) escSeq=true;
+				}
 			}
 		}
 		else if (c < 0x20) {
