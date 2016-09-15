@@ -41,6 +41,7 @@ public class GitGraph {
 	private final Map<String,Commit> hash = new HashMap<String, Commit>();
 	private String userFormat="";
 	private boolean userText=false;
+	private int maxShow=500;
 
 	public GitGraph(GitRepo repo) {
 		this.repo = repo;
@@ -103,8 +104,8 @@ public class GitGraph {
 		}
 		Log.debug("commits %d", commits.size());
 	}
-
 	private Svg genGitGraph(int dy) {
+
 		List<Column> pcols=new ArrayList<Column>();
 		List<Column> cols=new ArrayList<Column>();
 
@@ -147,6 +148,9 @@ public class GitGraph {
 			for (int i=cols.size(); i>cf; ) {
 				--i;
 				if (cols.get(i) == null) cols.remove(i);
+			}
+			if (cn >= maxShow && cols.size() == 1) {
+				break;
 			}
 			//Log.raw("cols: %s", Text.join(cols, " "));
 			for (int i=0; i<cols.size(); ++i) {
@@ -204,6 +208,7 @@ public class GitGraph {
 						cmt.points.add(c.points.get(c.points.size()-1));
 					}
 				}
+
 				for (int i=cols.size(); i>0; ) {
 					--i;
 					if (cols.get(i) == null) cols.remove(i);
@@ -332,6 +337,7 @@ public class GitGraph {
 
 	public void saveCommits(OutputStream os) throws IOException {
 		for (Commit c : commits) {
+			if (c.cp==null) break;
 			if (c.fields != null) {
 				os.write(String.format("%d|%s\n",X0+c.cols*DX,c.fields).
 						getBytes(Text.UTF8_Charset));
