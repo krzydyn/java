@@ -32,7 +32,7 @@ public class T_Serial extends UnitTest {
 			@Override
 			public void run() {
 				List<String> l=Serial.listPorts();
-				Log.debug("Ports: [%d] %s", l.size(), Text.join(l, "\n"));
+				Log.debug("Ports: [%d] %s", l.size(), Text.join("\n", l));
 			}
 		});
 	}

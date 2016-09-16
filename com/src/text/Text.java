@@ -44,54 +44,66 @@ public class Text {
 		return true;
 	}
 
-	private static String join_iter(Iterable<?> a, String sep) {
+	private static String join_it(String sep, Iterable<?> a, int off,int len) {
 		Iterator<?> it = a.iterator();
 		if (!it.hasNext()) return "";
 		StringBuilder b=new StringBuilder(30*(sep.length()+2));
-		b.append(it.next());
-		while (it.hasNext()) {
-			b.append(sep);
+		for (int i = 0; ;) {
+			if (i < off) {
+				it.next();
+				continue;
+			}
 			b.append(it.next());
+			if (++i == off+len) break;
+			b.append(sep);
 		}
 		return b.toString();
 	}
-	private static String join_b(byte[] a, String sep) {
+	private static String join_b(String sep, byte[] a, int off,int len) {
 		if (a.length==0) return "";
-		StringBuilder b=new StringBuilder(a.length*(sep.length()+2));
+		if (len < 0) len = a.length;
+		StringBuilder b=new StringBuilder(len*(sep.length()+2));
 		for (int i = 0; ; ) {
-			b.append(String.format("%02X", a[i]&0xff));
-			if (++i == a.length) break;
+			b.append(String.format("%02X", a[off+i]&0xff));
+			if (++i == len) break;
 			b.append(sep);
 		}
 		return b.toString();
 	}
-	private static String join_i(int[] a, String sep) {
+	private static String join_i(String sep, int[] a, int off,int len) {
 		if (a.length==0) return "";
-		StringBuilder b=new StringBuilder(a.length*(sep.length()+2));
-		b.append(a[0]);
-		for (int i = 1; i < a.length; ++i) {
+		if (len < 0) len = a.length;
+		StringBuilder b=new StringBuilder(len*(sep.length()+2));
+		for (int i = 0; ;) {
+			b.append(a[off+i]);
+			if (++i == len) break;
 			b.append(sep);
-			b.append(a[i]);
 		}
 		return b.toString();
 	}
-	private static String join_o(Object[] a, String sep) {
+	private static String join_o(String sep, Object[] a, int off,int len) {
 		if (a.length==0) return "";
-		StringBuilder b=new StringBuilder(a.length*(sep.length()+2));
+		if (len < 0) len = a.length;
+		StringBuilder b=new StringBuilder(len*(sep.length()+2));
 		b.append(a[0]);
-		for (int i = 1; i < a.length; ++i) {
+		for (int i = 0; ; ) {
+			b.append(a[off+i]);
+			if (++i == len) break;
 			b.append(sep);
-			b.append(a[i]);
 		}
 		return b.toString();
 	}
-	public static String join(Object o, String sep) {
+	public static String join(String sep,Object o, int off,int len) {
 		if (o == null) return null;
-		if (o instanceof byte[]) return join_b((byte[])o, sep);
-		if (o instanceof int[]) return join_i((int[])o, sep);
-		if (o instanceof Object[]) return join_o((Object[])o, sep);
-		if (o instanceof Iterable) return join_iter((List<?>)o, sep);
+		if (o instanceof byte[]) return join_b(sep, (byte[])o,off,len);
+		if (o instanceof int[]) return join_i(sep, (int[])o,off,len);
+		if (o instanceof Object[]) return join_o(sep, (Object[])o,off,len);
+		if (o instanceof Iterable) return join_it(sep, (List<?>)o,off,len);
 		return o.toString();
+	}
+
+	public static String join(String sep,Object o) {
+		return join(sep,o,0,-1);
 	}
 
 	public static StringBuilder repeat(StringBuilder b, CharSequence s, int n) {

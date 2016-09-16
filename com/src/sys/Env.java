@@ -53,7 +53,7 @@ public class Env {
 	}
 
 	static public String exec(File dir, String ...args) throws IOException {
-		Log.debug("exec %s", Text.join(args, " "));
+		Log.debug("exec %s", Text.join(" ", args));
 
 		StringBuilder str = new StringBuilder();
 		//Process child = Runtime.getRuntime().exec(cmd_args, null, dir);
