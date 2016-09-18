@@ -34,14 +34,14 @@ import text.Text;
 
 public class GitGraph {
 	static final String[] ArrayOfString0 = new String[0];
-	static final int X0=15, DX=20;
+	static final int X0=10, DX=15;
 	private final GitRepo repo;
 
 	private final List<Commit> commits = new ArrayList<Commit>();
 	private final Map<String,Commit> hash = new HashMap<String, Commit>();
 	private String userFormat="";
 	private boolean userText=false;
-	private int maxShow=500;
+	private final int maxShow=500;
 
 	public GitGraph(GitRepo repo) {
 		this.repo = repo;
@@ -156,7 +156,7 @@ public class GitGraph {
 			//Log.raw("cols: %s", Text.join(cols, " "));
 			for (int i=0; i<cols.size(); ++i) {
 				if (cols.get(i)!=null)
-					addPoint(cols.get(i).c, new Point(X0+i*DX,cy));
+					cols.get(i).c.points.add(new Point(X0+i*DX,cy));
 			}
 
 			cmt.cp = cp;
@@ -184,7 +184,7 @@ public class GitGraph {
 				}
 				else if (c.points.isEmpty()) { // Parent not began drawing
 					//add point to parent and continue with the same Column info(color)
-					addPoint(c, cp);
+					c.points.add(cp);
 					cols.get(cf).c = c;
 				}
 				else {
@@ -203,7 +203,7 @@ public class GitGraph {
 					else if (c.points.isEmpty()){
 						cols.add(cf+i, new Column(getColor(),c));
 						pcols.add(cf+i, null);
-						addPoint(c, cp);
+						c.points.add(cp);
 					}
 					else {
 						//merge point to existing line
@@ -254,9 +254,6 @@ public class GitGraph {
 			if (c!=null && c.c == cmt) return i;
 		}
 		return -1;
-	}
-	private void addPoint(Commit c, Point p) {
-		c.points.add(p);
 	}
 
 	static class Commit {

@@ -18,6 +18,8 @@
 
 package sys;
 
+import io.IOChannel;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -52,12 +54,13 @@ public class Env {
 		return p;
 	}
 
-	static public void startexec(File dir, String ...args) throws IOException {
+	static public IOChannel startexec(File dir, String ...args) throws IOException {
 		Process child = new ProcessBuilder(args).directory(dir)
 				.redirectErrorStream(true)
 				.start();
 		OutputStream out = child.getOutputStream();
 		InputStream in = child.getInputStream();
+		return new IOChannel(in, out);
 	}
 
 	static public String exec(File dir, String ...args) throws IOException {

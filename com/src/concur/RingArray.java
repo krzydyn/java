@@ -1,8 +1,8 @@
 package concur;
 
-// Similar to build-in ArrayDeque
+// Similar to build-in java.utils.ArrayDeque
 public class RingArray<T> extends RingCollection {
-	private T[] buf;
+	private final T[] buf;
 	@SuppressWarnings("unchecked")
 	public RingArray(int capacity) {
 		buf = (T[])new Object[capacity];

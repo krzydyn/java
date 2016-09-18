@@ -40,12 +40,12 @@ public class GitLog {
 
 	private static void usage() {
 		Log.debug("debug version");
-		System.out.println("Usage is: ");
+		System.out.println("Usage is ( from command line): ");
 		System.out.println("java -jar gitsvg.jar [--line-height line-height] [--format fmt] [--svg <file>] [--log <file>] <path-to-repo> <branch-or-commit>");
 		System.exit(1);
 	}
 	public static void main(String[] args) {
-		int dy=43;
+		int dy=20;
 		String fmt="";
 		String cmtfile=null;
 		String svgfile="git.svg";
@@ -110,5 +110,4 @@ public class GitLog {
 			Log.notice("Writing SVG done");
 		}
 	}
-
 }

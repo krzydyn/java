@@ -27,20 +27,17 @@ import java.io.OutputStreamWriter;
 import java.io.Reader;
 import java.io.Writer;
 import java.nio.CharBuffer;
-
+import java.nio.channels.spi.AbstractSelectableChannel;
 import text.Text;
 
-public class IOChannel implements Readable,Appendable,Closeable {
+public class IOChannel extends AbstractSelectableChannel implements Readable,Appendable,Closeable {
 	final Reader rd;
 	final Writer wr;
 	public IOChannel(InputStream i, OutputStream o) {
+		super(null);
 		this.rd=new InputStreamReader(i, Text.UTF8_Charset);
 		this.wr=new OutputStreamWriter(o, Text.UTF8_Charset);
-	}
-	@Override
-	public void close() throws IOException {
-		rd.close();
-		wr.close();
+
 	}
 	public void write(String str) throws IOException {
         wr.write(str);
@@ -82,5 +79,17 @@ public class IOChannel implements Readable,Appendable,Closeable {
 	}
 	public int read(char cbuf[]) throws IOException {
 		return rd.read(cbuf, 0, cbuf.length);
+	}
+	@Override
+	protected void implCloseSelectableChannel() throws IOException {
+		rd.close();
+		wr.close();
+	}
+	@Override
+	protected void implConfigureBlocking(boolean block) throws IOException {
+	}
+	@Override
+	public int validOps() {
+		return 0;
 	}
 }

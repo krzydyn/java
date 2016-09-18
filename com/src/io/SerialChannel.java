@@ -7,6 +7,11 @@ import java.nio.ByteBuffer;
 import java.nio.channels.ByteChannel;
 import java.nio.channels.Channel;
 
+/**
+ * Implements selectable SerialChannel that can be used with Selector
+ * @author krzydyn
+ *
+ */
 public class SerialChannel implements Channel,ByteChannel {
 	private CommPort commPort;
 

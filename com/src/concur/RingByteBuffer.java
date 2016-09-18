@@ -2,9 +2,9 @@ package concur;
 
 import sys.Log;
 
-//TODO wrap java.nio.ByteBuffer and add concurrency checks
+//TODO synchronize java.nio.ByteBuffer
 public class RingByteBuffer extends RingCollection {
-	private byte buf[];
+	private final byte buf[];
 
 	public RingByteBuffer() {
 		this(1024);
