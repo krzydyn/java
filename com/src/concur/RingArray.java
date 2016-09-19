@@ -1,34 +1,39 @@
 package concur;
 
-// Similar to build-in java.utils.ArrayDeque
+// Thread safe ring queue similar to build-in ArrayDeque
 public class RingArray<T> extends RingCollection {
-	private final T[] buf;
+	private T[] buf;
+	private Object canpop=new Object();
+	private Object canpush=new Object();
+
 	@SuppressWarnings("unchecked")
 	public RingArray(int capacity) {
 		buf = (T[])new Object[capacity];
 	}
 
-	boolean add(T o){
+	synchronized public boolean add(T o){
 		if (len == buf.length) return false;
 		buf[(idx+len)%buf.length]=o;
 		++len;
+		if (len==1) canpop.notify();
 		return true;
 	}
 	//Pushes an element onto the stack (inserts the element at the front)
-	boolean push(T o){
+	synchronized public boolean push(T o){
 		if (len == buf.length) return false;
 		idx=(idx+buf.length-1)%buf.length;
 		buf[idx]=o;
 		++len;
+		if (len==1) canpop.notify();
 		return true;
 	}
 	//Pops an element from the stack (removes the element at the front)
-	T pop(){
+	synchronized public T pop(){
 		if (len == 0) throw new RuntimeException("queue is empty");
 		return poll();
 	}
 	// Retrieves and removes the head of the queue
-	T poll(){
+	synchronized public T poll(){
 		if (len == 0) return null;
 		T o = buf[idx];
 		buf[idx]=null;
@@ -36,8 +41,28 @@ public class RingArray<T> extends RingCollection {
 		return o;
 	}
 	// Retrieves, but does not remove, the head of the queue
-	T peek(){
+	synchronized public T peek(){
 		if (len == 0) return null;
 		return buf[idx];
+	}
+
+	//waiting version methods
+	synchronized public void addw(T o) throws InterruptedException {
+		while (len == buf.length) {
+			canpush.wait();
+		}
+		add(o);
+	}
+	synchronized public void pushw(T o) throws InterruptedException {
+		while (len == buf.length) {
+			canpush.wait();
+		}
+		push(o);
+	}
+	synchronized public T popw(long t) throws InterruptedException {
+		while (len == 0) {
+			canpop.wait(t);
+		}
+		return poll();
 	}
 }
