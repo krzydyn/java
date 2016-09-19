@@ -153,15 +153,18 @@ public class GitGraph {
 			if (cn >= maxShow && cols.size() == 1) {
 				break;
 			}
-			//Log.raw("cols: %s", Text.join(cols, " "));
+
 			for (int i=0; i<cols.size(); ++i) {
-				if (cols.get(i)!=null)
+				if (cols.get(i)!=null) {
+					Log.debug("cont col %d to pnt=%d,%d",i,X0+i*DX,cy);
 					cols.get(i).c.points.add(new Point(X0+i*DX,cy));
+				}
 			}
 
 			cmt.cp = cp;
 			cmt.color = cols.get(cf).color;
 			cmt.cols = cols.size();
+			if (cn == 4) break;
 
 			pcols.clear();
 			for (Column c:cols) {
@@ -184,10 +187,12 @@ public class GitGraph {
 				}
 				else if (c.points.isEmpty()) { // Parent not began drawing
 					//add point to parent and continue with the same Column info(color)
+					Log.debug("start new");
 					c.points.add(cp);
 					cols.get(cf).c = c;
 				}
 				else {
+					Log.debug("join cmt to last");
 					cmt.points.add(c.points.get(c.points.size()-1));
 					retColor(cmt.color);
 					cols.set(cf, null);
@@ -203,10 +208,12 @@ public class GitGraph {
 					else if (c.points.isEmpty()){
 						cols.add(cf+i, new Column(getColor(),c));
 						pcols.add(cf+i, null);
+						Log.debug("add cp to fork");
 						c.points.add(cp);
 					}
 					else {
 						//merge point to existing line
+						Log.debug("merge");
 						cmt.points.add(c.points.get(c.points.size()-1));
 					}
 				}
