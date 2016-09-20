@@ -117,6 +117,8 @@ public class GitGraph {
 			cy += dy;
 			++cn;
 
+			Log.raw("");
+			Log.debug("Processing commit %s", cmt.hash);
 			//Log.raw("commit: %s | %s", cmt.hash, Text.join(cmt.parentHash, " "));
 			long t=System.currentTimeMillis();
 			if (tm < t) {
@@ -164,7 +166,7 @@ public class GitGraph {
 			cmt.cp = cp;
 			cmt.color = cols.get(cf).color;
 			cmt.cols = cols.size();
-			if (cn == 4) break;
+			if (cn == 20) break;
 
 			pcols.clear();
 			for (Column c:cols) {
@@ -192,8 +194,10 @@ public class GitGraph {
 					cols.get(cf).c = c;
 				}
 				else {
-					Log.debug("connect %s to %s", cmt.hash, c.hash);
-					cmt.points.add(c.points.get(c.points.size()-1));
+					Log.debug("*connect %s to %s", cmt.hash, c.hash);
+					Point a=c.points.get(c.points.size()-1);
+					//cmt.points.add(new Point(a.x,a.y+dy));
+					cmt.points.add(a);
 					retColor(cmt.color);
 					cols.set(cf, null);
 				}
@@ -208,7 +212,7 @@ public class GitGraph {
 					else if (c.points.isEmpty()){
 						cols.add(cf+i, new Column(getColor(),c));
 						pcols.add(cf+i, null);
-						Log.debug("%s starts from %d,%d",c.hash,i,cp.x,cp.y);
+						Log.debug("%s starts from %d,%d",c.hash,cp.x,cp.y);
 						c.points.add(cp);
 					}
 					else {
