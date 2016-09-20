@@ -156,7 +156,7 @@ public class GitGraph {
 
 			for (int i=0; i<cols.size(); ++i) {
 				if (cols.get(i)!=null) {
-					Log.debug("cont col %d to pnt=%d,%d",i,X0+i*DX,cy);
+					Log.debug("%s[%d] cont to %d,%d",cols.get(i).c.hash,i,X0+i*DX,cy);
 					cols.get(i).c.points.add(new Point(X0+i*DX,cy));
 				}
 			}
@@ -187,12 +187,12 @@ public class GitGraph {
 				}
 				else if (c.points.isEmpty()) { // Parent not began drawing
 					//add point to parent and continue with the same Column info(color)
-					Log.debug("start new");
+					Log.debug("%s starts from %d,%d", c.hash,cp.x,cp.y);
 					c.points.add(cp);
 					cols.get(cf).c = c;
 				}
 				else {
-					Log.debug("join cmt to last");
+					Log.debug("connect %s to %s", cmt.hash, c.hash);
 					cmt.points.add(c.points.get(c.points.size()-1));
 					retColor(cmt.color);
 					cols.set(cf, null);
@@ -208,7 +208,7 @@ public class GitGraph {
 					else if (c.points.isEmpty()){
 						cols.add(cf+i, new Column(getColor(),c));
 						pcols.add(cf+i, null);
-						Log.debug("add cp to fork");
+						Log.debug("%s starts from %d,%d",c.hash,i,cp.x,cp.y);
 						c.points.add(cp);
 					}
 					else {
