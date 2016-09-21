@@ -113,13 +113,13 @@ public class GitGraph {
 		long tm = System.currentTimeMillis() + 5*1000;
 		int cy=22-dy;
 		int cn=0;
+		Commit pcmt=null;
 		for (Commit cmt : commits) {
 			cy += dy;
 			++cn;
 
 			Log.raw("");
 			Log.debug("Processing commit %s", cmt.hash);
-			//Log.raw("commit: %s | %s", cmt.hash, Text.join(cmt.parentHash, " "));
 			long t=System.currentTimeMillis();
 			if (tm < t) {
 				Log.raw("Processed %d of %d",cn, commits.size());
@@ -194,7 +194,7 @@ public class GitGraph {
 					cols.get(cf).c = c;
 				}
 				else {
-					Log.debug("*connect %s to %s", cmt.hash, c.hash);
+					Log.debug("*merge %s to %s", cmt.hash, c.hash);
 					Point a=c.points.get(c.points.size()-1);
 					//cmt.points.add(new Point(a.x,a.y+dy));
 					cmt.points.add(a);
@@ -216,8 +216,7 @@ public class GitGraph {
 						c.points.add(cp);
 					}
 					else {
-						//merge point to existing line
-						Log.debug("merge");
+						Log.debug("**merge %s to %s", cmt.hash, c.hash);
 						cmt.points.add(c.points.get(c.points.size()-1));
 					}
 				}
