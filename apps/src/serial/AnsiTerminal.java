@@ -101,7 +101,7 @@ public class AnsiTerminal extends JPanel implements FocusListener,KeyListener {
 	private StringBuilder inputBuffer = new StringBuilder();
 	private StringBuilder outputBuffer = new StringBuilder();
 	private Point cpos = new Point(0, 0);
-	private int linesInBuf=0;
+	private int rCurPos=0;
 	private boolean escSeq = false;
 
 	//to get focus component must satisfy: 1.visible, 2.enabled, 3. focusable
@@ -202,7 +202,6 @@ public class AnsiTerminal extends JPanel implements FocusListener,KeyListener {
 				if (t.isDataFlavorSupported(DataFlavor.stringFlavor)) {
 					try {
 						s = (String)(t.getTransferData(DataFlavor.stringFlavor));
-						cursorEnd();
 						inputBuffer.append(s);
 					} catch (Exception e) {}
 				}
@@ -299,19 +298,20 @@ public class AnsiTerminal extends JPanel implements FocusListener,KeyListener {
 			Log.error("flush inside getting escseq");
 			return ;
 		}
-		int p0 = editor.getCaretPosition();
+		int p0 = rCurPos;
 		try {
 			Document doc = editor.getDocument();
 			if (p0 < doc.getLength()) {
 				int l = Math.min(doc.getLength() - p0, outputBuffer.length());
-				Log.debug("Replace @ %d %s with %s", p0, Text.vis(doc.getText(p0, l)), Text.vis(outputBuffer));
+				Log.debug(1,"Replace @ %d %s with %s", p0, Text.vis(doc.getText(p0, l)), Text.vis(outputBuffer));
 				doc.remove(p0, l);
 			}
 			else {
-				Log.debug("Append[%d]: %s", outputBuffer.length(), Text.vis(outputBuffer));
+				Log.debug(1,"Append[%d]: %s", outputBuffer.length(), Text.vis(outputBuffer));
 			}
 			doc.insertString(p0, outputBuffer.toString(), attrib);
-			editor.setCaretPosition(p0+outputBuffer.length());
+			rCurPos = p0+outputBuffer.length();
+			editor.setCaretPosition(rCurPos);
 			outputBuffer.setLength(0);
 			if (doc.getLength() > MAX_IN_BUFFER) {
 				doc.remove(0,3*MAX_IN_BUFFER/4);
@@ -501,10 +501,8 @@ public class AnsiTerminal extends JPanel implements FocusListener,KeyListener {
 				outputBuffer.append(c);
 			}
 			else if (c == Ansi.Code.VT || c == Ansi.Code.LF) {
-				cursorEnd(); //go end of line
+				cursorEnd();
 				outputBuffer.append('\n');
-				flushOutput();
-				++linesInBuf;
 			}
 			else if (c == Ansi.Code.BS) {
 				flushOutput();
@@ -554,25 +552,27 @@ public class AnsiTerminal extends JPanel implements FocusListener,KeyListener {
 	}
 	public void cursorHome() {
 		Log.debug("cursor: home");
-		editor.setCaretPosition(0);
+		//editor.setCaretPosition(0);
+		rCurPos=0;
 		cursorLocate(0, 0);
 	}
 	public void cursorEnd() {
 		Log.debug(1,"cursor: end");
 		Document doc = editor.getDocument();
-		int p0 = doc.getLength();
-		editor.setCaretPosition(p0);
+		rCurPos=doc.getLength();
 	}
 	public void cursorMove(int n) {
-		Log.debug(1,"cursor: moverel %d",n);
-		int p0 = editor.getCaretPosition();
-		if (p0+n > 0 && p0+n < editor.getDocument().getLength())
-			editor.setCaretPosition(p0+n);
+		Log.debug(1,"cursor: moverel %d (cp=%d)",n,rCurPos);
+		int p0 = rCurPos;
+		if (p0+n >= 0 && p0+n < editor.getDocument().getLength()) {
+			rCurPos = p0+n;
+			editor.setCaretPosition(rCurPos);
+		}
 	}
 	public void cursorLineBegin() {
 		Log.debug(1,"cursor: line_begin");
 		Document doc = editor.getDocument();
-		int p, p0 = editor.getCaretPosition();
+		int p, p0 = rCurPos;
 		for (p=p0; p0 > 0; --p0) {
 			try {
 				if (doc.getText(p0-1, 1).equals("\n")) break;
@@ -580,7 +580,7 @@ public class AnsiTerminal extends JPanel implements FocusListener,KeyListener {
 		}
 
 		if (p != p0) {
-			editor.setCaretPosition(p0);
+			rCurPos=p0;
 		}
 	}
 	public void insertBlank(int n) {
@@ -600,52 +600,51 @@ public class AnsiTerminal extends JPanel implements FocusListener,KeyListener {
 			try {
 				doc.remove(p0, p-p0);
 			} catch (BadLocationException e) {Log.error(e.toString());}
-			editor.setCaretPosition(p0);
+			rCurPos=p0;
 		}
-		linesInBuf=0;
 		cursorLocate(0, 0);
 	}
 	public void eraseLineAbove() {
 		Log.debug("buffer: eraseLineAbove");
 		Document doc = editor.getDocument();
-		int p, p0 = editor.getCaretPosition();
+		int p, p0 = rCurPos;
 		p = 0;
 		if (p != p0) {
 			try {
 				doc.remove(p0, p-p0);
 			} catch (BadLocationException e) {Log.error(e.toString());}
-			editor.setCaretPosition(p0);
+			rCurPos=p0;
 		}
 	}
 	public void eraseLineBelow() {
 		Document doc = editor.getDocument();
-		int p, p0 = editor.getCaretPosition();
+		int p, p0 = rCurPos;
 		p=doc.getLength();
 		if (p != p0) {
 			try {
 				Log.debug("buffer: eraseLineBelow '%s'",doc.getText(p0, p-p0));
 				doc.remove(p0, p-p0);
 			} catch (BadLocationException e) {Log.error(e.toString());}
-			editor.setCaretPosition(p0);
+			rCurPos=p0;
 		}
 	}
 	public void eraseChars(int n) {
 		Log.debug(1,"buffer: eraseChars");
 		Document doc = editor.getDocument();
-		int p = doc.getLength(), p0 = editor.getCaretPosition();
+		int p = doc.getLength(), p0 = rCurPos;
 		if (p0+n < p) p=p0+n;
 
 		if (p != p0) {
 			try {
 				doc.remove(p0, p-p0);
 			} catch (BadLocationException e) {Log.error(e.toString());}
-			editor.setCaretPosition(p0);
+			rCurPos=p0;
 		}
 	}
 	public void eraseLineLeft() {
 		Log.debug("buffer: eraseLineLeft");
 		Document doc = editor.getDocument();
-		int p, p0 = editor.getCaretPosition();
+		int p, p0 = rCurPos;
 		for (p=p0; p0 > 0; --p0) {
 			try {
 				if (doc.getText(p0-1, 1).equals("\n")) break;
@@ -656,13 +655,13 @@ public class AnsiTerminal extends JPanel implements FocusListener,KeyListener {
 			try {
 				doc.remove(p0, p-p0);
 			} catch (BadLocationException e) {Log.error(e.toString());}
-			editor.setCaretPosition(p0);
+			rCurPos=p0;
 		}
 	}
 	public void eraseLineRight() {
 		Log.debug("buffer: eraseLineRight");
 		Document doc = editor.getDocument();
-		int p,p0 = editor.getCaretPosition();
+		int p, p0 = rCurPos;
 		for (p=p0; p < doc.getLength(); ++p) {
 			try {
 				if (doc.getText(p, 1).equals("\n")) break;
@@ -673,7 +672,7 @@ public class AnsiTerminal extends JPanel implements FocusListener,KeyListener {
 			try {
 				doc.remove(p0, p-p0);
 			} catch (BadLocationException e) {Log.error(e.toString());}
-			editor.setCaretPosition(p0);
+			rCurPos=p0;
 		}
 	}
 }
