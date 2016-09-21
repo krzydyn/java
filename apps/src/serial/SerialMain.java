@@ -136,11 +136,11 @@ public class SerialMain extends MainPanel {
 				}
 				AnsiTerminal trm = editors.get(s);
 				try {
-					int r, n=3;
+					int r, n=0;
 					while ((r = s.read(buffer, 0, buffer.length)) > 0) {
 						trm.write(buffer, 0, r);
-						if (r == buffer.length) n++;
-						if (--n == 0) break;
+						if (r == buffer.length) n=0;
+						if (++n == 2) break;
 					}
 				}catch(Throwable e) {
 					Log.error(e);

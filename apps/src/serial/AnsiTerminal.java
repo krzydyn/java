@@ -88,7 +88,7 @@ public class AnsiTerminal extends JPanel implements FocusListener,KeyListener {
 	final static Border unfocusedBorder = BorderFactory.createEmptyBorder(3, 3, 3, 3);
 
 	final static Color[] colorTable = {
-		Color.GRAY, Color.RED, Color.GREEN.darker(), Color.YELLOW, new Color(0x8080FF), Color.MAGENTA.darker(), Color.CYAN, Color.WHITE
+		Color.GRAY, new Color(0xff0000), Color.GREEN.darker(), Color.YELLOW, new Color(0x8080FF), Color.MAGENTA.darker(), Color.CYAN, Color.WHITE
 	};
 
 	private static final int MAX_IN_BUFFER=1024*1024;
@@ -246,11 +246,14 @@ public class AnsiTerminal extends JPanel implements FocusListener,KeyListener {
 	public void keyTyped(KeyEvent e) {
 		char c = e.getKeyChar();
 		if (c == Ansi.Code.LF) {
-			cursorEnd();
+			//cursorEnd();
 		}
 		else if (c == Ansi.Code.HT) {
 			Log.debug("HT key");
 			inputBuffer.setLength(0);
+		}
+		else if (c < 0x20) {
+			Log.debug("Control - "+Character.getName(c));
 		}
 		inputBuffer.append(c);
 	}
@@ -428,7 +431,12 @@ public class AnsiTerminal extends JPanel implements FocusListener,KeyListener {
 					else if (n>=30 && n<38) { //text color
 						Color c = colorTable[n-30];
 						if (regIntens == 0) c=c.darker();
+						Log.debug("set color: 0x%06X",c.getRGB()&0xffffff);
 						attrib = sc.addAttribute(attrib, StyleConstants.Foreground, c);
+						if (regIntens == 0) {
+							Log.debug("set bold");
+							sc.addAttribute(attrib, StyleConstants.FontFamily, "bold");
+						}
 					}
 					else if (n>=40 && n<48) { //background color
 						Color c = colorTable[n-40];
@@ -551,7 +559,7 @@ public class AnsiTerminal extends JPanel implements FocusListener,KeyListener {
 		cpos.x=x; cpos.y=y;
 	}
 	public void cursorHome() {
-		Log.debug("cursor: home");
+		Log.debug(1,"cursor: home");
 		//editor.setCaretPosition(0);
 		rCurPos=0;
 		cursorLocate(0, 0);
@@ -620,22 +628,23 @@ public class AnsiTerminal extends JPanel implements FocusListener,KeyListener {
 		Document doc = editor.getDocument();
 		int p, p0 = rCurPos;
 		p=doc.getLength();
-		if (p != p0) {
+		if (p > p0) {
 			try {
-				Log.debug("buffer: eraseLineBelow '%s'",doc.getText(p0, p-p0));
+				String txrm=doc.getText(p0, p-p0);
+				txrm = txrm.substring(txrm.length()-10, txrm.length());
+				Log.debug(1,"eraseLineBelow '%s'",Text.vis(txrm));
 				doc.remove(p0, p-p0);
 			} catch (BadLocationException e) {Log.error(e.toString());}
 			rCurPos=p0;
 		}
 	}
 	public void eraseChars(int n) {
-		Log.debug(1,"buffer: eraseChars");
 		Document doc = editor.getDocument();
 		int p = doc.getLength(), p0 = rCurPos;
 		if (p0+n < p) p=p0+n;
-
-		if (p != p0) {
+		if (p > p0) {
 			try {
+				Log.debug(1,"eraseChars '%s'",doc.getText(p0, p-p0));
 				doc.remove(p0, p-p0);
 			} catch (BadLocationException e) {Log.error(e.toString());}
 			rCurPos=p0;
@@ -651,7 +660,7 @@ public class AnsiTerminal extends JPanel implements FocusListener,KeyListener {
 			} catch (BadLocationException e) {Log.error(e.toString());}
 		}
 
-		if (p != p0) {
+		if (p > p0) {
 			try {
 				doc.remove(p0, p-p0);
 			} catch (BadLocationException e) {Log.error(e.toString());}
@@ -668,7 +677,7 @@ public class AnsiTerminal extends JPanel implements FocusListener,KeyListener {
 			} catch (BadLocationException e) {Log.error(e.toString());}
 		}
 
-		if (p != p0) {
+		if (p > p0) {
 			try {
 				doc.remove(p0, p-p0);
 			} catch (BadLocationException e) {Log.error(e.toString());}

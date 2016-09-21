@@ -70,10 +70,10 @@ public class Ansi {
 		"SP"
 	};
 	public final static String toString(int code) {
-		if (code < 0) return String.format("<&%02X>", code);
+		if (code < 0) return String.format("<#%02x>", code&0xffff);
 		if (code < CODENAME.length) return String.format("<%s>", CODENAME[code]);
 		if (code < 0x7f) return String.format("%c", code);
-		return String.format("<&%02X>", code);
+		return String.format("<#%02X>", code&0xffff);
 	}
 
 	public final static String DEC_SCP = Code.ESC+"7";
@@ -139,6 +139,11 @@ public class Ansi {
 	public final static String SGR_ITALIC = CSI + "3m";
 	public final static String SGR_BOLDITALIC = CSI + "1;3m";
 	public final static String SGR_NORMAL = CSI + "22m";// Normal color and intensity
+	public final static String SGR_N_ITALIC = CSI + "23m";// Not italic
+	public final static String SGR_N_UNDELINE = CSI + "24m";// Not underlined
+	public final static String SGR_N_BLINK = CSI + "25m";// Not blink
+	public final static String SGR_N_INVERSE = CSI + "27m";// Not inverse
+	public final static String SGR_N_HIDDEN = CSI + "28m";// Not hidden
 
 	public final static String SGR_BLACK = CSI + "0;30m";
 	public final static String SGR_RED = CSI + "0;31m";
@@ -157,10 +162,16 @@ public class Ansi {
 	public final static String SGR_LIGHTCYAN = CSI + "1;36m";
 	public final static String SGR_WHITE = CSI + "1;37m";
 
+	// Device Status Report
+	public final static String DSR_STATUS = CSI + "5n"; // resp: CSI+0+n
+	public final static String DSR_CURSOR = CSI + "6n"; // resp: CSI+r;c+R
+	public final static String DSR_CURSOR_DEC = CSI + "?6n"; // resp: CSI+r;c+R
+
 	public final static String PDA_REQ = CSI + "c"; // Request primary device attributes
 	public final static String PDA_SND = CSI + ">"; // Send primary device attributes
 
-	public final static String DEC_DSR = CSI + "?6n"; // DSR – Device Status Report, resp: CSI+n;mR
+	public final static String SSR = CSI + "r"; // Set Scrolling Region CSI+t;b+r
+
 	public final static String SCP = CSI + "s"; // Save cursor position
 	public final static String RCP = CSI + "u"; // Restore cursor position
 
