@@ -26,6 +26,9 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 import time.LapTime;
@@ -93,6 +96,7 @@ public class UnitTest {
 				} catch (Throwable e) {}
 			}
 		}
+		Collections.sort(a);
 		return a;
 	}
 
@@ -105,6 +109,12 @@ public class UnitTest {
 		try {
 			c = cl.loadClass(unit);
 			Method[] mts = c.getDeclaredMethods();
+			Arrays.sort(mts, new Comparator<Method>() {
+				@Override
+				public int compare(Method o1, Method o2) {
+					return o1.getName().compareTo(o2.getName());
+				}
+			});
 			for (Method m : mts) {
 				if (!Modifier.isStatic(m.getModifiers())) {
 					continue;

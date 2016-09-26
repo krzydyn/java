@@ -20,37 +20,44 @@ package graphs;
 
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
+import sys.Log;
+import text.Text;
 import algebra.Combinatory;
 
 /**
  * Operate on N nodes numbered (0...N-1)
+ * Note: any graph can be converted to enumerated nodes
  * @author k.dynowski
  *
  */
 public class Graph {
-	static interface Processor {
+	static public interface Processor {
 		void process(int i);
 	}
 
 	static public class Edge {
-		Edge(int s, int e, int w){this.s=s;this.e=e;this.w=w;}
-		int s,e; // start,end node
+		Edge(int s, int d, int w){this.src=s;this.dst=d;this.w=w;}
+		int src,dst; // source,destination node
 		int w;   // weight
 	}
 
 	private int nodeCnt;
-	private final List<Edge> edges=new ArrayList<Graph.Edge>();
+	private final Map<Integer,List<Edge>> adj = new HashMap<Integer, List<Edge>>();
 	private int[] flag;
 	private long weight = 0;
+	private static final List<Edge> empty = new ArrayList<Graph.Edge>();
 
 	public Graph() {this(0);}
 	public Graph(int n) {nodeCnt=n;}
 	public void reset() {
 		nodeCnt = 0;
 		weight = 0;
-		edges.clear();
+		adj.clear();
 	}
 	public long getWeight() {
 		return weight;
@@ -61,19 +68,39 @@ public class Graph {
 
 	private void addEdge(Edge e) {
 		weight+=e.w;
-		edges.add(e);
-	}
-	public void addEdge(int s, int e, int w) {
-		if (s < e) {
-			if (e<=nodeCnt) nodeCnt=e+1;
+		List<Edge> a = adj.get(e.src);
+		if (a == null) {
+			a = new ArrayList<Graph.Edge>();
+			adj.put(e.src, a);
 		}
-		else {
-			if (s<=nodeCnt) nodeCnt=s+1;
-		}
-		addEdge(new Edge(s,e,w));
+		a.add(e);
 	}
 
-	public void dfs(int from, Processor p) {
+	public void addEdge(int src, int dst, int w) {
+		if (src < dst) {
+			if (nodeCnt <= dst) nodeCnt=dst+1;
+		}
+		else {
+			if (nodeCnt <= src) nodeCnt=src+1;
+		}
+		addEdge(new Edge(src,dst,w));
+	}
+	public void addEdge(int src, int dst) { addEdge(src,dst,1); }
+
+	public List<Edge> getEdges() {
+		List<Edge> edges = new ArrayList<Graph.Edge>();
+		for (Iterator<Integer> i = adj.keySet().iterator(); i.hasNext(); ) {
+			edges.addAll(adj.get(i.next()));
+		}
+		return edges;
+	}
+
+	public List<Edge> adj(int src) {
+		List<Edge> a = adj.get(src);
+		return a != null ? a : empty;
+	}
+
+	public void bfs(int from, Processor p) {
 		if (flag == null || flag.length < nodeCnt) {flag = new int[nodeCnt];}
 		else {for (int i=0; i < nodeCnt; ++i) flag[i]=0;}
 
@@ -83,15 +110,16 @@ public class Graph {
 			int u = q.remove(0);
 			flag[u] = 1;
 			p.process(u);
-			for (Edge e : edges) {
-				if (e.s == u && flag[e.e]==0) {
-					q.add(e.e);
+			for (Edge e : adj(u)) {
+				if (flag[e.dst]==0) {
+					q.add(e.dst);
+					flag[e.dst] = 2;
 				}
 			}
 		}
-}
+	}
 
-	public void bfs(int from, Processor p) {
+	public void dfs(int from, Processor p) {
 		if (flag == null || flag.length < nodeCnt) {flag = new int[nodeCnt];}
 		else {for (int i=0; i < nodeCnt; ++i) flag[i]=0;}
 
@@ -101,12 +129,67 @@ public class Graph {
 			int u = q.remove(q.size()-1);
 			flag[u] = 1;
 			p.process(u);
-			for (Edge e : edges) {
-				if (e.s == u && flag[e.e]==0) {
-					q.add(e.e);
+			for (Edge e : adj(u)) {
+				if (flag[e.dst]==0) {
+					q.add(e.dst);
+					flag[u] = 2;
 				}
 			}
 		}
+	}
+
+	public void shortestPathDijkstra(int src, int dst) {
+		if (flag == null || flag.length < nodeCnt) {flag = new int[nodeCnt];}
+		else {for (int i=0; i < nodeCnt; ++i) flag[i]=0;}
+		int[] dist = new int[nodeCnt];
+		int[] prev = new int[nodeCnt];
+
+		for (int i=0; i < nodeCnt; ++i) {
+			dist[i] = Integer.MAX_VALUE;
+			prev[i] = -1;
+		}
+		dist[src] = 0;
+
+		List<Integer> q = new ArrayList<Integer>();
+		q.add(src);
+		while (!q.isEmpty()) {
+			int u,im=-1, dm=Integer.MAX_VALUE;
+			//find vertex with min dist (TODO PriorityQueue)
+			for (int i=0; i < q.size(); ++i) {
+				u=dist[q.get(i)];
+				if (dm > u) {
+					dm = u;
+					im = i;
+				}
+			}
+			u = q.remove(im);
+			if (flag[u]!=0) continue;
+			flag[u] = 1;
+			if (u == dst) break;
+
+			for (Edge e : adj(u)) {
+				if (e.src == u && flag[e.dst]==0) {
+					int v = e.dst;
+					q.add(v);
+					int a = dist[u] + e.w;
+					if (dist[v] > a) {
+						dist[v] = a;
+						prev[v] = u;
+					}
+				}
+			}
+		}
+		if (dst>=0) {
+			List<Integer> s = new ArrayList<Integer>();
+			int u=dst;
+			s.add(0, u);
+			while ((u=prev[u])>=0) s.add(0, u);
+			Log.raw("path: %s", Text.join(",", s));
+		}
+		else {
+			Log.raw("dist: %s", Text.join(",", dist));
+		}
+		//return dist,prev
 	}
 
 	/**
@@ -133,51 +216,61 @@ public class Graph {
 	 * Find minimum spanning tree for a graph (Kruskal)
 	 * @return
 	 */
-	public Graph minSpanningTree() {
-		List<Edge> edges = new ArrayList<Graph.Edge>(this.edges);
-		List<Graph> trees = new ArrayList<Graph>();
-		Graph[] used = new Graph[nodeCnt]; //track three to which node belongs
+	public List<Graph> getSpanningTrees() {
+		Graph[] used = new Graph[nodeCnt]; //track tree to which node belongs
+		List<Edge> edges = getEdges();
+		Log.debug("edges = %d", edges.size());
 
 		//1. sort edges by weight
 		sortByWeight(edges);
 
+		List<Graph> trees = new ArrayList<Graph>();
 		while (edges.size() > 0) {
 			//2. remove first edge (with lowest weight)
 			Edge me = edges.remove(edges.size()-1);
+			Log.debug("proc edge %d,%d w=%d",me.src,me.dst,me.w);
 
 			//3. add edge to tree
-			if (used[me.s]==null && used[me.e]==null) { // create new tree
+			if (used[me.src]==null && used[me.dst]==null) { // create new tree
+				Log.debug("new tree");
 				Graph g = new Graph(nodeCnt);
-				used[me.s]=used[me.e]=g;
+				used[me.src]=used[me.dst]=g;
 				g.addEdge(me);
 				trees.add(g);
 			}
-			else if (used[me.s] == null) { // add to 's' tree
-				Graph g = used[me.e];
-				used[me.s]=g;
+			else if (used[me.src] == null) { // add to 's' tree
+				Graph g = used[me.dst];
+				used[me.src]=g;
 				g.addEdge(me);
 			}
-			else if (used[me.e] == null) { // add to 'e' tree
-				Graph g = used[me.s];
-				used[me.e]=g;
+			else if (used[me.dst] == null) { // add to 'e' tree
+				Graph g = used[me.src];
+				used[me.dst]=g;
 				g.addEdge(me);
 			}
-			else if (used[me.s] != used[me.e]) { // join trees
-				Graph mst = used[me.s];
-				Graph g = used[me.e];
+			else if (used[me.src] != used[me.dst]) { // join trees
+				Graph mst = used[me.src];
+				Graph g = used[me.dst];
 				trees.remove(g);
 				mst.addEdge(me);
-				used[me.e]=mst;
-				for (Edge e : g.edges) {
+				used[me.dst]=mst;
+				for (Edge e : g.getEdges()) {
 					mst.addEdge(e);
-					used[e.s]=used[e.e]=mst;
+					used[e.src]=used[e.dst]=mst;
 				}
 			}
-			else {  // cycle in the tree found
-				throw new RuntimeException("Cycle in the tree");
+			else {
+				// cycle in the tree
+				// or reversed edge in nondirected graph
 			}
 		}
+		return trees;
+	}
+
+	public Graph minSpanningTree() {
+		List<Graph> trees = getSpanningTrees();
 		if (trees.size() != 1) return null;
 		return trees.get(0);
+
 	}
 }

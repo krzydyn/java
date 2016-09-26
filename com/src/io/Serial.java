@@ -27,6 +27,7 @@ import gnu.io.CommPort;
 import gnu.io.CommPortIdentifier;
 import gnu.io.SerialPort;
 
+//TODO add support for rxtx events
 public class Serial {
 	static public class Param {
 		final static public int DATA_5 = SerialPort.DATABITS_5;
@@ -70,7 +71,7 @@ public class Serial {
 	        	commPort = portIdentifier.open(this.getClass().getName(),2000);
 	        }
 	        //setup default reading timeout
-	        commPort.enableReceiveTimeout(100);
+	        commPort.enableReceiveTimeout(20);
 		} catch (Throwable e) {
 			throw new IOException("open " + portName, e);
 		}

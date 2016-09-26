@@ -54,6 +54,7 @@ public class Text {
 				continue;
 			}
 			b.append(it.next());
+			if (len==-1 && !it.hasNext()) break;
 			if (++i == off+len) break;
 			b.append(sep);
 		}
