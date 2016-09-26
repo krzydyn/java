@@ -132,7 +132,7 @@ public class Graph {
 			for (Edge e : adj(u)) {
 				if (flag[e.dst]==0) {
 					q.add(e.dst);
-					flag[u] = 2;
+					flag[e.dst] = 2;
 				}
 			}
 		}
