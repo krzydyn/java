@@ -18,8 +18,6 @@
 
 package graphs;
 
-import graphs.AbstractGraph.Edge;
-
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -37,12 +35,11 @@ import algebra.Combinatory;
  * @author k.dynowski
  *
  */
-public class Graph {
+public class Graph extends AbstractGraph {
 	static public interface Processor {
 		void process(int i);
 	}
 
-	private int nodeCnt;
 	private final Map<Integer,List<Edge>> adj = new HashMap<Integer, List<Edge>>();
 	private int[] flag;
 	private long weight = 0;
@@ -88,6 +85,7 @@ public class Graph {
 		return edges;
 	}
 
+	@Override
 	public List<Edge> adj(int src) {
 		List<Edge> a = adj.get(src);
 		return a != null ? a : empty;
@@ -254,7 +252,7 @@ public class Graph {
 			}
 			else {
 				// cycle in the tree
-				// or reversed edge in nondirected graph
+				// or reversed edge in non-directed graph
 			}
 		}
 		return trees;
