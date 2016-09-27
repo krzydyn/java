@@ -18,6 +18,8 @@
 
 package graphs;
 
+import graphs.AbstractGraph.Edge;
+
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -40,17 +42,11 @@ public class Graph {
 		void process(int i);
 	}
 
-	static public class Edge {
-		Edge(int s, int d, int w){this.src=s;this.dst=d;this.w=w;}
-		int src,dst; // source,destination node
-		int w;   // weight
-	}
-
 	private int nodeCnt;
 	private final Map<Integer,List<Edge>> adj = new HashMap<Integer, List<Edge>>();
 	private int[] flag;
 	private long weight = 0;
-	private static final List<Edge> empty = new ArrayList<Graph.Edge>();
+	private static final List<Edge> empty = new ArrayList<Edge>();
 
 	public Graph() {this(0);}
 	public Graph(int n) {nodeCnt=n;}
@@ -62,15 +58,12 @@ public class Graph {
 	public long getWeight() {
 		return weight;
 	}
-	public int addNode() {
-		return ++nodeCnt;
-	}
 
 	private void addEdge(Edge e) {
 		weight+=e.w;
 		List<Edge> a = adj.get(e.src);
 		if (a == null) {
-			a = new ArrayList<Graph.Edge>();
+			a = new ArrayList<Edge>();
 			adj.put(e.src, a);
 		}
 		a.add(e);
@@ -88,7 +81,7 @@ public class Graph {
 	public void addEdge(int src, int dst) { addEdge(src,dst,1); }
 
 	public List<Edge> getEdges() {
-		List<Edge> edges = new ArrayList<Graph.Edge>();
+		List<Edge> edges = new ArrayList<Edge>();
 		for (Iterator<Integer> i = adj.keySet().iterator(); i.hasNext(); ) {
 			edges.addAll(adj.get(i.next()));
 		}
