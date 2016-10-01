@@ -105,24 +105,22 @@ public class GitGraph {
 		Log.debug("commits %d", commits.size());
 	}
 	private Svg genGitGraph(int dy) {
-
-		List<Column> pcols=new ArrayList<Column>();
 		List<Column> cols=new ArrayList<Column>();
 
 		Log.notice("Building graph (line-height:%d)",dy);
 		long tm = System.currentTimeMillis() + 5*1000;
 		int cy=22-dy;
-		int cn=0;
+		int nr=0;
+
 		Commit pcmt=null;
 		for (Commit cmt : commits) {
 			cy += dy;
-			++cn;
+			++nr;
 
-			Log.raw("");
-			Log.debug("Processing commit %s", cmt.hash);
+			Log.raw("");Log.debug("Processing %d commit %s", nr, cmt.hash);
 			long t=System.currentTimeMillis();
 			if (tm < t) {
-				Log.raw("Processed %d of %d",cn, commits.size());
+				Log.raw("Processed %d of %d", nr, commits.size());
 				tm=t+10*1000;
 			}
 
@@ -132,27 +130,14 @@ public class GitGraph {
 				Log.debug("** Start of branch '%s'", cmt.hash);
 				cols.add(new Column(getColor(), cmt));
 				cf = cols.size()-1;
-				cp = new Point(X0+cf*DX, cy);
 			}
-			else {
-				cp = new Point(X0+cf*DX, cy);
-				for (int i=cf+1; i<cols.size(); ++i) {
-					Column c=cols.get(i);
-					if (c==null) continue;
-					if (c.c==cmt) {
-						Log.debug("connect prev to curent cmt");
-						pcols.get(i).c.points.add(cp);
-						retColor(pcols.get(i).c.color);
-						cols.set(i,null);
-					}
-				}
-			}
+			cp = new Point(X0+cf*DX, cy);
 
 			for (int i=cols.size(); i>cf; ) {
 				--i;
 				if (cols.get(i) == null) cols.remove(i);
 			}
-			if (cn >= maxShow && cols.size() == 1) {
+			if (nr >= maxShow && cols.size() == 1) {
 				break;
 			}
 
@@ -162,23 +147,26 @@ public class GitGraph {
 					cols.get(i).c.points.add(new Point(X0+i*DX,cy));
 				}
 			}
+			if (pcmt!=null) {
+				Commit c = hash.get(pcmt.parentHash[0]);
+				Log.debug("*merge %s to %s", pcmt.hash, c.hash);
+				Point a=c.points.get(c.points.size()-1);
+				pcmt.points.add(a);
+			}
 
 			cmt.cp = cp;
 			cmt.color = cols.get(cf).color;
 			cmt.cols = cols.size();
-			if (cn == 20) break;
+			if (nr==84) break;
 
-			pcols.clear();
-			for (Column c:cols) {
-				if (c==null) pcols.add(null);
-				else pcols.add(new Column(c));
-			}
+			pcmt=cmt;
 
 			if (cmt.parentHash.length==0) { // End of branch
 				cmt.flag = 1;
 				retColor(cmt.color);
 				cols.set(cf, null);
 				Log.debug("** End of branch %s",cmt.hash);
+				pcmt=null;
 			}
 			else { // Have one or more parents
 				Commit c = hash.get(cmt.parentHash[0]);
@@ -186,18 +174,16 @@ public class GitGraph {
 					cmt.flag = 2;
 					retColor(cmt.color);
 					cols.set(cf, null);
+					pcmt=null;
 				}
-				else if (c.points.isEmpty()) { // Parent not began drawing
-					//add point to parent and continue with the same Column info(color)
-					Log.debug("%s starts from %d,%d", c.hash,cp.x,cp.y);
+				else if (c.points.isEmpty()) { // Parent had not been drawing
+					//Log.debug("%s starts from %d,%d", c.hash,cp.x,cp.y);
 					c.points.add(cp);
 					cols.get(cf).c = c;
+					c.color=cmt.color;
+					pcmt=null;
 				}
-				else {
-					Log.debug("*merge %s to %s", cmt.hash, c.hash);
-					Point a=c.points.get(c.points.size()-1);
-					//cmt.points.add(new Point(a.x,a.y+dy));
-					cmt.points.add(a);
+				else { // merge in next turn
 					retColor(cmt.color);
 					cols.set(cf, null);
 				}
@@ -207,11 +193,9 @@ public class GitGraph {
 					if (c==null) {
 						cmt.flag = 2;
 						cols.add(cf+i, null);
-						pcols.add(cf+i, null);
 					}
 					else if (c.points.isEmpty()){
 						cols.add(cf+i, new Column(getColor(),c));
-						pcols.add(cf+i, null);
 						Log.debug("%s starts from %d,%d",c.hash,cp.x,cp.y);
 						c.points.add(cp);
 					}
@@ -220,23 +204,19 @@ public class GitGraph {
 						cmt.points.add(c.points.get(c.points.size()-1));
 					}
 				}
-
-				for (int i=cols.size(); i>0; ) {
-					--i;
-					if (cols.get(i) == null) cols.remove(i);
-				}
+			}
+			for (int i=cols.size(); i>0; ) {
+				--i;
+				if (cols.get(i) == null) cols.remove(i);
 			}
 		}
 
 		Log.notice("Generating SVG");
 		Svg svg = new Svg();
 		svg.strokeWidth(2);
+		nr = 0;
 		for (Commit cmt : commits) {
-			if (cmt.cp == null) {
-				//Log.error("commit not located %s",cmt.hash);
-				break;
-			}
-
+			++nr;
 			if (cmt.points.size() > 0) {
 				Point p=cmt.points.get(0);
 				SvgPath path = svg.path();
@@ -248,11 +228,20 @@ public class GitGraph {
 				}
 			}
 
-			if (cmt.flag==1) svg.circle(cmt.cp.x, cmt.cp.y, 6).fill("red");
-			else if (cmt.flag==2) svg.circle(cmt.cp.x, cmt.cp.y, 4).stroke("red").fill("none");
-			else svg.circle(cmt.cp.x, cmt.cp.y, 4).fill("blue");
-			if (cmt.fields!=null && userText)
-				svg.text(X0+cmt.cols*DX, cmt.cp.y+6).setText(cmt.fields);
+			if (cmt.cp != null) {
+				if (cmt.fields!=null && userText) {
+					String t=cmt.fields;
+					t=String.format("%d %s",  nr, cmt.fields);
+					svg.text(X0+cmt.cols*DX, cmt.cp.y+6).setText(t);
+				}
+			}
+		}
+		for (Commit cmt : commits) {
+			if (cmt.cp != null) {
+				if (cmt.flag==1) svg.circle(cmt.cp.x, cmt.cp.y, 6).fill("red");
+				else if (cmt.flag==2) svg.circle(cmt.cp.x, cmt.cp.y, 4).stroke("red").fill("none");
+				else svg.circle(cmt.cp.x, cmt.cp.y, 4).fill("blue");
+			}
 		}
 		Log.notice("SVG done");
 		return svg;
@@ -281,6 +270,7 @@ public class GitGraph {
 		Column(String color,Commit c) {
 			this.color=color;
 			this.c=c;
+			c.color=color;
 		}
 		Column(Column o) {
 			color = o.color;
