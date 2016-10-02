@@ -18,6 +18,10 @@
 
 package wgrep;
 
+import io.IOChannel;
+
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -27,7 +31,6 @@ import org.jsoup.Connection;
 import org.jsoup.Connection.Response;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
 import sys.Log;
@@ -36,6 +39,7 @@ import time.LapTime;
 public class Wgrep {
 
 	static Pattern regex = null;
+	static String sel = null;
 
 	static String basePath;
 	static Connection conn;
@@ -47,7 +51,12 @@ public class Wgrep {
 	public static void main(String[] args) {
 		int i=0;
 
-		if (i < args.length) regex=Pattern.compile(args[i++]);
+		for (; i < args.length; ++i) {
+			String a = args[i];
+			if (!a.startsWith("-")) break;
+			if (a.equals("-sel")) sel=args[++i];
+			if (a.equals("-re")) regex=Pattern.compile(args[++i]);
+		}
 		for (; i < args.length; ++i) {
 			String u = args[i];
 			conn=null;
@@ -59,7 +68,7 @@ public class Wgrep {
 				System.out.printf("recv: %s, dirs=%d\n", lap, visitedDirs.size());
 			}
 			catch (IOException e) {
-				System.err.println(u + e.toString());
+				Log.error("%s: %s", u, e.toString());
 			}
 			catch (Throwable e) {
 				e.printStackTrace();
@@ -67,29 +76,52 @@ public class Wgrep {
 		}
 	}
 
-
+	//<div class="feed-actual-price"> 35 zł<span class="currency-subscript">PLN</span> </div>
 	private static void grepUrl(String url) throws IOException {
 		//System.err.println("grep URL "+url);
 		if (conn==null) {
 			basePath = url;
-			conn = Jsoup.connect(url);
+			conn = Jsoup.connect(url).timeout(5000);
 			conn.userAgent("Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2228.0 Safari/537.36");
 		}
 		else {
 			conn.url(url);
 		}
-		Log.debug("Connected %s", url);
-		Response resp=conn.execute();
+		Log.notice("sel: '%s'",sel);
+
+		File saved = new File("wgrep.html");
+		Document doc;
+		int len=0;
+		if (saved.exists()) {
+			doc = Jsoup.parse(saved, "UTF-8", url);
+			len = (int)saved.length();
+		}
+		else {
+			Log.debug("Connecting %s", url);
+			Response resp=conn.execute();
+			IOChannel io = new IOChannel(null, new FileOutputStream("wgrep.html"));
+			io.write(resp.body());
+			io.close();
+			doc = resp.parse();
+			len=resp.body().length();
+		}
+
 		long t=System.currentTimeMillis();
-		lap.update(t, resp.body().length());
+		lap.update(t, len);
 		if (tmPrn < t) {
 			System.out.printf("recv: %s, dirs=%d\n", lap, visitedDirs.size());
 			tmPrn += 5000;
 			lap.nextLap();
 		}
 
-		Document doc = resp.parse();
-		Elements links = doc.select("a[href]");
+
+		Elements elems = doc.select(sel);
+		System.out.println(elems.text());
+		/*for (org.jsoup.nodes.Element el : elems) {
+			System.out.println(el.ownText());
+		}*/
+
+		/*
 		List<String> dirs=new ArrayList<String>();
 		for (Element link : links) {
 			String f=link.attr("abs:href");
@@ -113,5 +145,6 @@ public class Wgrep {
 				System.err.println(u + e.toString());
 			}
 		}
+	    */
 	}
 }

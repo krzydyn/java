@@ -35,8 +35,12 @@ public class IOChannel extends AbstractSelectableChannel implements Readable,App
 	final Writer wr;
 	public IOChannel(InputStream i, OutputStream o) {
 		super(null);
-		this.rd=new InputStreamReader(i, Text.UTF8_Charset);
-		this.wr=new OutputStreamWriter(o, Text.UTF8_Charset);
+		InputStreamReader is = null;
+		OutputStreamWriter os = null;
+		if (i!=null) is = new InputStreamReader(i, Text.UTF8_Charset);
+		if (o!=null) os = new OutputStreamWriter(o, Text.UTF8_Charset);
+		this.rd=is;
+		this.wr=os;
 
 	}
 	public void write(String str) throws IOException {
@@ -82,8 +86,8 @@ public class IOChannel extends AbstractSelectableChannel implements Readable,App
 	}
 	@Override
 	protected void implCloseSelectableChannel() throws IOException {
-		rd.close();
-		wr.close();
+		if (rd!=null) rd.close();
+		if (wr!=null) wr.close();
 	}
 	@Override
 	protected void implConfigureBlocking(boolean block) throws IOException {
