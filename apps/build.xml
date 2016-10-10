@@ -34,10 +34,10 @@
 	</target>
 
 	<target name="deploy" depends="gitsvg">
-		<echo>Deploing files to sever</echo>
+		<echo>Deploing files to CI server</echo>
 		<exec executable="scp" dir="." failonerror="true">
 			<arg value="gitsvg.jar"/>
-			<arg value="secosci@106.120.53.105:db_test/http/jar/"/>
+			<arg value="secosci@106.120.53.105:/var/www/secosci/jar/"/>
 		</exec>
 	</target>
 
@@ -47,7 +47,7 @@
 			username="secosci"
 			password="secosci"
 			command="ls"/>
-		<scp file="gitsvg.jar" todir="secosci@106.120.53.105:db_test/http/jar/" />
+		<scp file="gitsvg.jar" todir="secosci@106.120.53.105:/var/www/secosci/jar/" />
 	</target>
 
 </project>

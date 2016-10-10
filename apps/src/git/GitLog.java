@@ -36,11 +36,11 @@ public class GitLog {
 	//static String branch = "--all";
 	//static String branch = "origin/devel/k.debski/openssl-20160801";
 	//static String branch = "origin/devel/anchit/gatekeeper";
-	static int limit = 8000;
+	static int limit = 800;
 
 	private static void usage() {
 		Log.debug("debug version");
-		System.out.println("Usage is ( from command line): ");
+		System.out.println("Usage is (from command line): ");
 		System.out.println("java -jar gitsvg.jar [--line-height line-height] [--format fmt] [--svg <file>] [--log <file>] <path-to-repo> <branch-or-commit>");
 		System.exit(1);
 	}

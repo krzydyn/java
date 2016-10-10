@@ -41,7 +41,6 @@ public class GitGraph {
 	private final Map<String,Commit> hash = new HashMap<String, Commit>();
 	private String userFormat="";
 	private boolean userText=false;
-	private final int maxShow=500;
 
 	public GitGraph(GitRepo repo) {
 		this.repo = repo;
@@ -49,8 +48,8 @@ public class GitGraph {
 
 	public Svg buildSvg(String branch, int dy, int limit) {
 		try {
-			readBranch(branch,limit);
-			return genGitGraph(dy);
+			readBranch(branch, limit+2000);
+			return genGitGraph(dy, limit);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -104,7 +103,7 @@ public class GitGraph {
 		}
 		Log.debug("commits %d", commits.size());
 	}
-	private Svg genGitGraph(int dy) {
+	private Svg genGitGraph(int dy, int limit) {
 		List<Column> cols=new ArrayList<Column>();
 
 		Log.notice("Building graph (line-height:%d)",dy);
@@ -137,7 +136,7 @@ public class GitGraph {
 				--i;
 				if (cols.get(i) == null) cols.remove(i);
 			}
-			if (nr >= maxShow && cols.size() == 1) {
+			if (nr >= limit && cols.size() == 1) {
 				break;
 			}
 
@@ -157,7 +156,6 @@ public class GitGraph {
 			cmt.cp = cp;
 			cmt.color = cols.get(cf).color;
 			cmt.cols = cols.size();
-			if (nr==84) break;
 
 			pcmt=cmt;
 
@@ -231,7 +229,7 @@ public class GitGraph {
 			if (cmt.cp != null) {
 				if (cmt.fields!=null && userText) {
 					String t=cmt.fields;
-					t=String.format("%d %s",  nr, cmt.fields);
+					//t=String.format("%d %s", nr, cmt.fields);
 					svg.text(X0+cmt.cols*DX, cmt.cp.y+6).setText(t);
 				}
 			}
