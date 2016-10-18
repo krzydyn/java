@@ -1,23 +1,46 @@
 package io;
 
 import gnu.io.CommPort;
+import gnu.io.UnsupportedCommOperationException;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.ByteChannel;
-import java.nio.channels.Channel;
+import java.nio.channels.SelectionKey;
+import java.nio.channels.spi.AbstractSelectableChannel;
 
 /**
  * Implements selectable SerialChannel that can be used with Selector
  * @author krzydyn
  *
  */
-public class SerialChannel implements Channel,ByteChannel {
+public class SerialChannel extends AbstractSelectableChannel implements ByteChannel {
 	private CommPort commPort;
 
-	private SerialChannel() {
-
+	protected SerialChannel() {
+		super(null);
 	}
+
+	public static SerialChannel open() throws IOException {
+        return SerialProvider.openSerialChannel();
+    }
+
+	// from AbstractSelectable
+	@Override
+	protected void implCloseSelectableChannel() throws IOException {
+		commPort.close();
+	}
+
+	// from AbstractSelectable
+	@Override
+	protected void implConfigureBlocking(boolean block) throws IOException {
+		try {
+			commPort.enableReceiveTimeout(1);
+		} catch (UnsupportedCommOperationException e) {
+			throw new IOException(e);
+		}
+	}
+
 	@Override
 	public int read(ByteBuffer dst) throws IOException {
 		// TODO Auto-generated method stub
@@ -31,16 +54,13 @@ public class SerialChannel implements Channel,ByteChannel {
 	}
 
 	@Override
-	public boolean isOpen() {
-		// TODO Auto-generated method stub
-		return false;
+	public int validOps() {
+		return SelectionKey.OP_READ|SelectionKey.OP_WRITE;
 	}
 
-	@Override
-	public void close() throws IOException {
-		// TODO Auto-generated method stub
-
+	static private class SerialProvider {
+		public static SerialChannel openSerialChannel() {
+			return new SerialChannel();
+		}
 	}
-
-
 }

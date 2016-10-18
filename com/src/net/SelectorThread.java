@@ -90,13 +90,13 @@ public class SelectorThread {
 	}
 
 	public void bind(String addr, int port, ChannelStatusHandler d) throws IOException {
-		ServerSocketChannel chn=ServerSocketChannel.open();
+		ServerSocketChannel chn=selector.provider().openServerSocketChannel();
 		chn.bind(new InetSocketAddress(port), 3);
 		addChannel(chn, SelectionKey.OP_ACCEPT, d);
 		Log.debug("bind registered " + addr);
 	}
 	public void connect(String host, int port, ChannelStatusHandler d) throws IOException {
-		SocketChannel chn=SocketChannel.open();
+		SocketChannel chn=selector.provider().openSocketChannel();
 		chn.configureBlocking(false);
 		Log.debug("connecting ... %s:%d", host, port);
 		Log.debug("resolving host ... " + host);
