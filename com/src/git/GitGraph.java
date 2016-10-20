@@ -116,10 +116,10 @@ public class GitGraph {
 			cy += dy;
 			++nr;
 
-			Log.raw("");Log.debug("Processing %d commit %s", nr, cmt.hash);
+			Log.prn("");Log.debug("Processing %d commit %s", nr, cmt.hash);
 			long t=System.currentTimeMillis();
 			if (tm < t) {
-				Log.raw("Processed %d of %d", nr, commits.size());
+				Log.prn("Processed %d of %d", nr, commits.size());
 				tm=t+10*1000;
 			}
 

@@ -175,10 +175,10 @@ public class Graph extends AbstractGraph {
 			int u=dst;
 			s.add(0, u);
 			while ((u=prev[u])>=0) s.add(0, u);
-			Log.raw("path: %s", Text.join(",", s));
+			Log.prn("path: %s", Text.join(",", s));
 		}
 		else {
-			Log.raw("dist: %s", Text.join(",", dist));
+			Log.prn("dist: %s", Text.join(",", dist));
 		}
 		//return dist,prev
 	}

@@ -21,20 +21,20 @@ public class T_Graph extends UnitTest {
 	}
 
 	static void graph_bfs() {
-		Log.raw("BFS");
+		Log.prn("BFS");
 		g.bfs(0, new Graph.Processor() {
 			@Override
 			public void process(int i) {
-				Log.raw("Node %d",i);
+				Log.prn("Node %d",i);
 			}
 		});
 	}
 	static void graph_dfs() {
-		Log.raw("DFS");
+		Log.prn("DFS");
 		g.dfs(0, new Graph.Processor() {
 			@Override
 			public void process(int i) {
-				Log.raw("Node %d",i);
+				Log.prn("Node %d",i);
 			}
 		});
 

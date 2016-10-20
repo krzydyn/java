@@ -101,7 +101,7 @@ public class Log {
 	final public static void setReleaseMode() { tmfmt = tmfmt_rel; }
 	final public static void setTestMode() { tmfmt = tmfmt_tst; }
 
-	final public static void raw(String fmt,Object ...args) {
+	final public static void prn(String fmt,Object ...args) {
 		if (tmfmt == tmfmt_rel) return ;
 		System.err.printf(fmt+"\n", args);
 	}

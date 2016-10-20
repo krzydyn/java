@@ -70,7 +70,7 @@ public class Serial {
 	        } else {
 	        	commPort = portIdentifier.open(this.getClass().getName(),2000);
 	        }
-	        //setup default reading timeout
+	        //setup default reading timeout (in 1/10 sec)
 	        commPort.enableReceiveTimeout(20);
 		} catch (Throwable e) {
 			throw new IOException("open " + portName, e);
