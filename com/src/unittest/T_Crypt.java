@@ -20,10 +20,14 @@ package unittest;
 
 import java.math.BigInteger;
 import java.security.Key;
+import java.security.Provider;
+import java.security.Security;
 
 import crypt.AES2;
 import crypt.AES3;
 import crypt.Base64;
+import crypt.CryptXProvider;
+import crypt.CryptX_AES;
 import crypt.Prime;
 import crypt.RSA;
 import crypt.SuperHash;
@@ -65,6 +69,33 @@ public class T_Crypt extends UnitTest {
 			@Override
 			public void run() {new RSA(1024,BigInteger.valueOf(0x10001));}
 		});
+	}
+
+	static void listProviders() {
+		CryptXProvider.register();
+		for (Provider provider: Security.getProviders()) {
+			System.out.println(provider.getName());
+			for (String key: provider.stringPropertyNames())
+				System.out.println("\t" + key + "\t" + provider.getProperty(key));
+		}
+
+
+		CryptX_AES.test();
+
+		//test CryptXProvider
+		try {
+			Provider p = Security.getProvider("CryptX");
+			javax.crypto.Cipher cipher;
+
+			cipher = javax.crypto.Cipher.getInstance("AES/ECB/ISO9797_1PADDING",p);
+			Log.debug("alg: %s",cipher.getAlgorithm());
+
+			cipher = javax.crypto.Cipher.getInstance("AES/ECB/ISO9797_2PADDING",p);
+			Log.debug("alg: %s",cipher.getAlgorithm());
+
+		} catch (Exception e) {
+			Log.error(e);
+		}
 	}
 
 	static void des_aes() {
