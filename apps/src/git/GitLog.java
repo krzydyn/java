@@ -25,22 +25,11 @@ import svg.Svg;
 import sys.Log;
 
 public class GitLog {
-	//static GitRepo repo = new GitRepo("~/tmp/nuclear-js");
-	//static String branch = "origin/master";
-
-	//static GitRepo repo = new GitRepo("~/tmp/linux");
-	//static String branch = "2cde51fbd0f3"; //linux octopus commit
-	//static String branch ="7c4c62a";
-
-	//static GitRepo repo = new GitRepo("~/sec-os/secos");
-	//static String branch = "--all";
-	//static String branch = "origin/devel/k.debski/openssl-20160801";
-	//static String branch = "origin/devel/anchit/gatekeeper";
 	static int limit = 800;
 
 	private static void usage() {
 		Log.debug("debug version");
-		System.out.println("Usage is (from command line): ");
+		System.out.println("Usage is: ");
 		System.out.println("java -jar gitsvg.jar [--line-height line-height] [--format fmt] [--svg <file>] [--log <file>] <path-to-repo> <branch-or-commit>");
 		System.exit(1);
 	}
