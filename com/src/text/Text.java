@@ -196,4 +196,37 @@ public class Text {
 
 		return ba.toByteArray();
 	}
+
+	public static String reverse(String s) {
+		StringBuilder b = new StringBuilder(s.length());
+		for (int i=b.length(); i>0; )
+			b.append(s.charAt(--i));
+		return b.toString();
+	}
+	public static String nextLetterEncode(String str) {
+		final String vovels="aeiou";
+		StringBuilder b = new StringBuilder(str.length());
+		for (int i=0; i<str.length(); ++i) {
+			char n=str.charAt(i);
+			if (Character.isLetter(n)) {
+				if (n=='z') n='a';
+				else if (n=='Z') n='A';
+				else ++n;
+				if (vovels.indexOf(n) >= 0)
+					n = Character.toUpperCase(n);
+			}
+			b.append(n);
+		}
+		return b.toString();
+	}
+	public static String longestWord(String str) {
+		int li=0,lm=0,l;
+		for (int i=0; i < str.length(); ++i) {
+			if (!Character.isLetterOrDigit(str.charAt(i))) continue;
+			l=1;
+			while (i+l < str.length() && Character.isLetterOrDigit(str.charAt(i+l))) ++l;
+			if (lm<l) {li=i;lm=l;}
+		}
+		return str.substring(li,li+lm);
+	}
 }
