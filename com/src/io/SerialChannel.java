@@ -1,8 +1,6 @@
 package io;
 
 import gnu.io.CommPort;
-import gnu.io.UnsupportedCommOperationException;
-
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.ByteChannel;
@@ -19,6 +17,7 @@ public class SerialChannel extends AbstractSelectableChannel implements ByteChan
 
 	protected SerialChannel() {
 		super(null);
+		//commPort =portIdentifier = CommPortIdentifier.getPortIdentifier(portName);
 	}
 
 	public static SerialChannel open() throws IOException {
@@ -34,11 +33,6 @@ public class SerialChannel extends AbstractSelectableChannel implements ByteChan
 	// from AbstractSelectable
 	@Override
 	protected void implConfigureBlocking(boolean block) throws IOException {
-		try {
-			commPort.enableReceiveTimeout(1);
-		} catch (UnsupportedCommOperationException e) {
-			throw new IOException(e);
-		}
 	}
 
 	@Override

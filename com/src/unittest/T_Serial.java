@@ -19,9 +19,12 @@
 package unittest;
 
 import java.io.IOException;
+import java.nio.channels.SelectionKey;
+import java.nio.channels.Selector;
 import java.util.List;
 
 import io.Serial;
+import io.SerialChannel;
 import sys.Log;
 import sys.UnitTest;
 import text.Text;
@@ -54,5 +57,11 @@ public class T_Serial extends UnitTest {
 				s.close();
 			}
 		});
+	}
+	static void channel() throws IOException {
+		Selector sel = Selector.open();
+		SerialChannel chn=SerialChannel.open();
+		chn.configureBlocking(false);
+		SelectionKey sk = chn.register(sel, SelectionKey.OP_READ, null);
 	}
 }
