@@ -61,7 +61,6 @@ public class Cryptarithm {
 		b.setLength(b.length()-2);
 		b.append("]");
 		return b.toString();
-		//return values.toString();
 	}
 	public void clear() {
 		values.clear();
