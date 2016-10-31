@@ -73,11 +73,11 @@ public class T_Crypt extends UnitTest {
 
 	static void listProviders() {
 		CryptXProvider.register();
-		for (Provider provider: Security.getProviders()) {
+		/*for (Provider provider: Security.getProviders()) {
 			System.out.println(provider.getName());
 			for (String key: provider.stringPropertyNames())
 				System.out.println("\t" + key + "\t" + provider.getProperty(key));
-		}
+		}*/
 
 
 		CryptX_AES.test();

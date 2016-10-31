@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import puzzles.Expression;
+import puzzles.RectPack;
 import algebra.Maths;
 import algebra.Permutate;
 import sys.UnitTest;
@@ -66,5 +67,12 @@ public class T_Algebra extends UnitTest {
 		e = new Expression("1=2");
 		r=e.evaluate();
 		check(String.format("1=2 = %d != 0",r), r==0);
+	}
+
+	static void rectinrect() {
+		RectPack.Rect r1 = new RectPack.Rect(3, 7, new RectPack.Dim(3,4));
+		RectPack.Rect r2 = new RectPack.Rect(0, 8, new RectPack.Dim(4,3));
+		check("r1 . r2", r1.intersects(r2) == true);
+		check("r2 . r1", r2.intersects(r1) == true);
 	}
 }

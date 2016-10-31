@@ -34,6 +34,7 @@ public class Log {
 	final private static String[] LEVEL_NAME = {"E", "W", "D", "T", "I", "N", ""};
 
 	private static SimpleDateFormat tmfmt = tmfmt_tst;
+	private static PrintStream prs = System.err;
 	static {
 		if (Env.checkApp())
 			tmfmt = tmfmt_rel;
@@ -86,15 +87,14 @@ public class Log {
 
 		final String color = level < LEVEL_ANSI_COLOR.length ? LEVEL_ANSI_COLOR[level] : "";
 		final String name = level < LEVEL_NAME.length ? LEVEL_NAME[level] : String.format("%d", level);
-		final PrintStream s = System.err;
 		synchronized (lock) {
-			if (name.isEmpty()) s.printf("%s%s: ", color, tmfmt.format(new Date()));
-			else s.printf("%s%s [%s] %s: ", color, tmfmt.format(new Date()), name, ct.getName());
-			if (file != null) s.printf("(%s:%d) ", file, line );
-			if (fmt != null) s.printf((Locale)null, fmt, args);
-			if (e != null) {s.println();e.printStackTrace(s);}
-			if (!color.isEmpty()) s.printf(Ansi.SGR_RESET);
-			s.println();
+			if (name.isEmpty()) prs.printf("%s%s: ", color, tmfmt.format(new Date()));
+			else prs.printf("%s%s [%s] %s: ", color, tmfmt.format(new Date()), name, ct.getName());
+			if (file != null) prs.printf("(%s:%d) ", file, line );
+			if (fmt != null) prs.printf((Locale)null, fmt, args);
+			if (e != null) {prs.println();e.printStackTrace(prs);}
+			if (!color.isEmpty()) prs.printf(Ansi.SGR_RESET);
+			prs.println();
 		}
 	}
 
@@ -103,7 +103,7 @@ public class Log {
 
 	final public static void prn(String fmt,Object ...args) {
 		if (tmfmt == tmfmt_rel) return ;
-		System.err.printf(fmt+"\n", args);
+		prs.printf(fmt+"\n", args);
 	}
 	final public static void error(Object ...args) {log(0, 0, args);}
 	final public static void warn(Object ...args) {log(1, 0, args);}

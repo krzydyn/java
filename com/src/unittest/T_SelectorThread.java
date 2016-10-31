@@ -22,6 +22,7 @@ import java.nio.ByteBuffer;
 
 import sys.Log;
 import sys.UnitTest;
+import text.Text;
 import net.ChannelStatusHandler;
 import net.ChannelWriter;
 import net.SelectorThread;
@@ -57,8 +58,8 @@ public class T_SelectorThread extends UnitTest {
 			}
 			@Override
 			public void received(SelectorThread st, ChannelWriter w, ByteBuffer buf) {
-				String rep = new String(buf.array(), buf.position(), buf.limit());
-				Log.debug("data[%d]:  %s",rep.length(), rep);
+				String rep = new String(buf.array(), buf.position(), buf.limit(), Text.UTF8_Charset);
+				Log.debug("data[%d]:  %s",rep.length(), rep.length()>20?rep.substring(0, 20)+"...":rep);
 			}
 		});
 		Thread.sleep(3000);

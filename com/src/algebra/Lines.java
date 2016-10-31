@@ -26,12 +26,12 @@ import sys.Log;
 public class Lines {
 	public static double EPS = 10e-10;
 	public enum IntersectionType {
-		OVERLAID,
-		COLINEAR,
-		PARALLEL,
-		TOUCH,
-		CROSS_IN,
-		CROSS_OUT
+		OVERLAID, // sengmets are laying on one line and have common part (implies PARALLEL)
+		COLINEAR, // segments are laying on one line but have no common parts (implies PARALLEL)
+		PARALLEL, // segments are laying on two different parallel lines
+		TOUCH,    // segemnts are laying on crossing lines and touches one the other
+		CROSS_IN, // segemnts are laying on crossing lines and are crossed
+		CROSS_OUT // segemnts are laying on crossing lines and have no common point
 	}
 
 	/**
@@ -65,7 +65,6 @@ public class Lines {
 		if (ua < -EPS || ua > 1.0+EPS) return IntersectionType.CROSS_OUT;
 		if (Math.abs(ua) < EPS || Math.abs(ua-1.0) < EPS) return IntersectionType.TOUCH;
 
-		//java.awt.geom.Line2D.linesIntersect(x1, y1, x2, y2, x3, y3, x4, y4);
 		return IntersectionType.CROSS_IN;
 	}
 

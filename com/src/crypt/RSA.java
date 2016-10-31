@@ -54,9 +54,10 @@ public class RSA {
 			e.add(TWO);
 		}
 		d = e.modInverse(phi);
-		Log.debug("modulus[%d] = %s", N.toByteArray().length, Text.hex(N.toByteArray()));
-		Log.debug("e[%d] %s", e.toByteArray().length, Text.hex(e.toByteArray()));
-		Log.debug("d[%d] = %s", d.toByteArray().length, Text.hex(d.toByteArray()));
+		Log.notice("Input: bits=%d",bits);
+		Log.info("modulus[%d] = %s", N.toByteArray().length, Text.hex(N.toByteArray()));
+		Log.info("e[%d] %s", e.toByteArray().length, Text.hex(e.toByteArray()));
+		Log.info("d[%d] = %s", d.toByteArray().length, Text.hex(d.toByteArray()));
 	}
 
 	/*
@@ -91,6 +92,7 @@ return (N, e, d)
 		BigInteger phi = p.subtract(BigInteger.ONE).multiply(q.subtract(BigInteger.ONE));
 		d = e.modInverse(phi);
 
+		Log.notice("Input: bits=%d, exponet (e)",bits);
 		Log.debug("modulus[%d] = %s", N.toByteArray().length, Text.hex(N.toByteArray()));
 		Log.debug("e[%d] %s", e.toByteArray().length, Text.hex(e.toByteArray()));
 		Log.debug("d[%d] = %s", d.toByteArray().length, Text.hex(d.toByteArray()));

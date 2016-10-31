@@ -99,7 +99,6 @@ public class SelectorThread {
 		SocketChannel chn=selector.provider().openSocketChannel();
 		chn.configureBlocking(false);
 		Log.debug("connecting ... %s:%d", host, port);
-		Log.debug("resolving host ... " + host);
 		chn.connect(new InetSocketAddress(host, port));
 		addChannel(chn, SelectionKey.OP_CONNECT|SelectionKey.OP_READ, d);
 	}

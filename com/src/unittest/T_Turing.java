@@ -46,6 +46,7 @@ public class T_Turing extends UnitTest {
 				+"q6, 1, 1, L, q6\n"
 				);
 
-		Log.info("r: %s", tm.run("q0", "#,1,1,1"));
+		Log.debug("r: %s", tm.run("q0", "#,1,1,1"));
+		check(tm.run("q0", "#,1,1,1"), "1,1,1,1,1,1");
 	}
 }

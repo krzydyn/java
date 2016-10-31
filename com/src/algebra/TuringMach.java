@@ -106,9 +106,8 @@ public class TuringMach {
 		for (String s : tape.split("[,\\s]+"))
 			t.add(s);
 
-		Log.debug("%s", Text.join(",", t));
 		t=run(initState, t);
-		return Text.join("", t).replaceFirst("#+", "");
+		return Text.join(",", t).replaceFirst("(#,)+", "");
 	}
 	public List<String> run(String initState, List<String> tape) {
 		currentState = mkState(initState);
@@ -123,8 +122,8 @@ public class TuringMach {
 				Log.error("undefined input '%s' in state '%s'", key.inp, key.state.name);
 				break;
 			}
-			Log.info("tape: %s",Text.join("", tape));
-			Log.info("      %s^   write %s",Text.repeat(" ", idx),a.out);
+			//Log.debug("tape: %s",Text.join("", tape));
+			//Log.debug("      %s^   write %s",Text.repeat(" ", idx),a.out);
 			tape.set(idx, a.out);
 			idx += a.mv;
 			if (idx < 0) {
