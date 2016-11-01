@@ -8,8 +8,9 @@ import sys.Log;
 public class RectPack {
 	private int cx,cy;
 	final private List<Rect> rects = new ArrayList<Rect>();
-	final private List<Rect> best = new ArrayList<Rect>();
 	final private Dim sheet;
+	private final Dim rect = new Dim(0,0);
+	private final Dim lay[] = new Dim[2];
 
 	public static class Dim {
 		public int w, h;
@@ -17,18 +18,22 @@ public class RectPack {
 		Dim(Dim d) {w=d.w; h=d.h;}
 		void rot() { int t=w; w=h; h=t;}
 		public Dim rotated() { Dim d=new Dim(this); d.rot(); return d;}
+		public boolean contains(Rect r) {
+			return 0<=r.x && 0<=r.y && r.x+r.s.w<=w && r.y+r.s.h<=h;
+		}
 	}
 	public static class Rect {
-		int x, y;
-		Dim s;
+		public int x, y;
+		public Dim s;
 		public Rect(int x,int y,Dim s) {
-			this.x=x; this.y=y;
-			this.s=s;
+			set(x, y, s);
 		}
 		Rect(Rect r) {set(r);}
+		void set(int x,int y,Dim s) {
+			this.x=x; this.y=y; this.s=s;
+		}
 		void set(Rect r) {
-			x=r.x; y=r.y;
-			s=r.s;
+			set(r.x,r.y,r.s);
 		}
 		@Override
 		public String toString() {
@@ -42,68 +47,40 @@ public class RectPack {
 	public RectPack(Dim sheet) {
 		this.sheet=sheet;
 	}
+	public void setRect(Dim r) {
+		rect.w=r.w;
+		rect.h=r.h;
+		rects.clear();
+		lay[0] = rect;
+		lay[1] = rect.rotated();
+	}
 
 	private Rect overlaps(Rect r) {
-		for (int i=0; i < rects.size(); ++i)
+		for (int i=rects.size(); i>0; ) {
+			--i;
 			if (r.intersects(rects.get(i))) return rects.get(i);
+		}
 		return null;
 	}
-	private int solve_r(Dim small_rect) {
-		Dim d1 = small_rect;
-		Dim d2 = small_rect.rotated();
-		Rect r;
-
-		long n=0,nmax=0,tm0=System.currentTimeMillis()+1000;
-		cx=cy=0;
-		for (;;) {
-
-			while (cy < sheet.h) {
-				while (cx < sheet.w) {
-					if (cx+d1.w <= sheet.w && cy+d1.h <= sheet.h)
-						r = new Rect(cx, cy, d1);
-					else if (cx+d2.w <= sheet.w && cy+d2.h <= sheet.h)
-						r = new Rect(cx, cy, d2);
-					else break;
-					Rect o=overlaps(r);
-					if (o == null) {
-						rects.add(o=r);
-					}
-					cx = o.x+o.s.w;
-				}
-				++cy; cx=0;
-			}
+	private int solve_r() {
+		rects.clear();
+		int n=0,nbest=0,nmax=0;
+		long tm0=System.currentTimeMillis()+1000;
+		while (!next()) {
 			++n;
-
-			if (best.size() == rects.size()) ++nmax;
-			else if (best.size() < rects.size()) {
+			if (nbest == rects.size()) ++nmax;
+			else if (nbest < rects.size()) {
 				nmax=1;
-				for (int i=0; i < rects.size(); ++i) {
-					if (best.size() <= i) best.add(new Rect(rects.get(i)));
-					else best.get(i).set(rects.get(i));
-				}
+				nbest=rects.size();
 			}
-
-			if (tm0 < System.currentTimeMillis()) {
-				Log.debug("n=%d, nmax=%d, rects=%d",n,nmax,best.size());
-				tm0+=2000;
-			}
-
-			do {
-				r=rects.get(rects.size()-1);
-				if (r.s==d1 && r.x+d2.w <= sheet.w && r.y+d2.h <= sheet.h) break;
-				rects.remove(r);
-			} while (rects.size()>0);
-
-			if (r.s==d2) break;
-			r.s = d2;
-			//cx = r.x+d2.w; cy=r.y;
-			cx = 0; cy = 0;
 		}
-		for (int i=0; i < best.size(); ++i) {
-			Log.prn("rect[%d]: %s", i, best.get(i));
+
+		if (tm0 < System.currentTimeMillis()) {
+			Log.info("n=%d, rects=%d",n,rects.size());
+			tm0+=2000;
 		}
-		Log.debug("n=%d, nmax=%d, rects=%d",n,nmax,best.size());
-		return best.size();
+		Log.info("n=%d, best=%d(%d)",n,nbest,nmax);
+		return nbest;
 	}
 
 	private int solve_sq(int s) {
@@ -111,7 +88,7 @@ public class RectPack {
 		int nh = sheet.h/s;
 		return nw*nh;
 	}
-	public int solve(Dim rect) {
+	public int solve() {
 		//trivial case
 		if (rect.w > sheet.w && rect.w > sheet.h) return 0;
 		if (rect.h > sheet.w && rect.h > sheet.h) return 0;
@@ -124,6 +101,58 @@ public class RectPack {
 		if (sheet.w % rect.h == 0 && sheet.h % rect.w == 0)
 			return (sheet.w/rect.h)*(sheet.h/rect.w);
 
-		return solve_r(rect);
+		return solve_r();
+	}
+
+	public List<Rect> getRects() { return rects; }
+
+	public boolean next() {
+		if (rect.h<=0 || rect.w<=0) return false;
+		Rect tr=new Rect(0,0,null);
+		Rect r;
+
+		if (rects.size() > 0) {
+			do {
+				r=rects.remove(rects.size()-1);
+				int idx = -1;
+				for (int i=0; i < lay.length; ++i)
+					if (r.s == lay[i]) {idx=i;break;}
+				if (idx < 0) throw new RuntimeException();
+
+				tr.set(r); r=null;
+				for (int i=idx+1; i < lay.length; ++i) {
+					tr.s = lay[i];
+					if (sheet.contains(tr) && overlaps(tr) == null) {
+						r=tr; break;
+					}
+				}
+				if (r == null) continue;
+				rects.add(new Rect(r.x,r.y,r.s));
+				cx = r.x+r.s.w; cy=r.y;
+				break;
+			} while (rects.size()>0);
+			if (rects.size() == 0) return false;
+		}
+		else {
+			cx=cy=0;
+		}
+
+		while (cy < sheet.h) {
+			while (cx < sheet.w) {
+				r=null;
+				for (int i=0; i < lay.length; ++i) {
+					tr.set(cx,cy,lay[i]);
+					if (sheet.contains(tr)) { r=tr; break; }
+				}
+				if (r == null) break;
+				Rect o=overlaps(tr);
+				if (o == null) {
+					rects.add(o = new Rect(r.x,r.y,r.s));
+				}
+				cx=o.x+o.s.w;
+			}
+			++cy; cx=0;
+		}
+		return true;
 	}
 }

@@ -94,9 +94,7 @@ public class MainPanel extends JPanel{
 	static private MainPanel create(final Class<? extends MainPanel> mainclass, String[] args) throws Exception {
 		try {
 			return mainclass.getConstructor(String[].class).newInstance(new Object[]{args});
-		}catch (Exception e) {
-			Log.error("%s: %s", e.getClass().getName(), e.getMessage());
-		}
+		}catch (NoSuchMethodException e) {}
 		return mainclass.newInstance();
 	}
 	static private void intern_start(final Class<? extends MainPanel> mainclass, final String[] args) throws Exception {
