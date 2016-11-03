@@ -15,12 +15,16 @@ import ui.MainPanel;
 @SuppressWarnings("serial")
 public class RectsOnSheet extends MainPanel {
 	private volatile boolean running;
+	/*
+	 * (L,W,l,w) -> num
+	 * (49,28,8,3) -> 57 boxes
+	 * (1600,1230,137,95) -> 147
+	 */
 
 	private final List<RectPack.Rect> rects=new ArrayList<RectPack.Rect>();
 	private final List<RectPack.Rect> best=new ArrayList<RectPack.Rect>();
-	RectPack.Dim sheet = new RectPack.Dim(1600,1230); //(137,95): ans=147
-	//RectPack.Dim sheet = new RectPack.Dim(1600,243);
-	RectPack.Dim rect = new RectPack.Dim(137,95);
+	RectPack.Dim sheet = new RectPack.Dim(19,17);
+	RectPack.Dim rect = new RectPack.Dim(5,3);
 
 	private final RectPanel rectpanel = new RectPanel(sheet, rects);
 	private final JLabel labSt = new JLabel("STATUS");

@@ -68,7 +68,7 @@ public class BasicTokenizer {
 		return Character.isWhitespace(c);
 	}
 	protected boolean isAlnum(char c) {
-		return Character.isAlphabetic(c)||Character.isDigit(c)||c=='_';
+		return Character.isLetterOrDigit(c)||c=='_';
 	}
 	public int getLineNo() {return line;}
 

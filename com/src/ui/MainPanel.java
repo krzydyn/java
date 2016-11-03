@@ -38,6 +38,24 @@ import javax.swing.text.JTextComponent;
 
 import sys.Log;
 
+/*
+ * The Dock
+
+The com.apple.eawt.Application class includes the following methods for managing your Java application’s Dock icon:
+
+public java.awt.Image getDockIconImage()
+public void setDockIconImage(java.awt.Image)
+public java.awt.PopupMenu getDockMenu()
+public void setDockMenu(java.awt.PopupMenu)
+public void setDockIconBadge(String)
+
+//http://www.oracle.com/technetwork/articles/javase/javatomac-140486.html
+System.setProperty("com.apple.macos.useScreenMenuBar", "true");
+System.setProperty("com.apple.mrj.application.apple.menu.about.name","xxx");//not works
+System.setProperty("com.apple.mrj.application.growbox.intrudes","false");
+
+ */
+
 @SuppressWarnings("serial")
 public class MainPanel extends JPanel{
 
@@ -120,7 +138,7 @@ public class MainPanel extends JPanel{
 					f.pack();
 					f.setLocation(10,10);
 					f.setVisible(true);
-				} catch (Exception e) {
+				} catch (Throwable e) {
 					Log.error(e);
 				}
 			}
