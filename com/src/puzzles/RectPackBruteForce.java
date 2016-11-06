@@ -5,31 +5,33 @@ import java.util.List;
 
 import sys.Log;
 
-public class RectPack {
+public class RectPackBruteForce {
 	private int cx,cy;
 	final private List<Rect> rects = new ArrayList<Rect>();
-	final private Dim sheet;
-	private final Dim rect = new Dim(0,0);
-	private final Dim lay[] = new Dim[2];
+	final private Box sheet;
+	private final Box rect = new Box(0,0);
+	private final Box lay[] = new Box[2];
 
-	public static class Dim {
+	public static class Box {
 		public int w, h;
-		public Dim(int w,int h) {this.w=w; this.h=h;}
-		Dim(Dim d) {w=d.w; h=d.h;}
+		public Box(int w,int h) {set(w,h);}
+		Box(Box d) {set(d.w,d.h);}
+		public void set(int w,int h) {this.w=w; this.h=h;}
 		void rot() { int t=w; w=h; h=t;}
-		public Dim rotated() { Dim d=new Dim(this); d.rot(); return d;}
+		public Box rotated() { Box d=new Box(this); d.rot(); return d;}
 		public boolean contains(Rect r) {
 			return 0<=r.x && 0<=r.y && r.x+r.s.w<=w && r.y+r.s.h<=h;
 		}
+		public boolean contains(Box r) {return r.w<=w && r.h<=h;}
 	}
 	public static class Rect {
 		public int x, y;
-		public Dim s;
-		public Rect(int x,int y,Dim s) {
+		public Box s;
+		public Rect(int x,int y,Box s) {
 			set(x, y, s);
 		}
 		Rect(Rect r) {set(r);}
-		void set(int x,int y,Dim s) {
+		void set(int x,int y,Box s) {
 			this.x=x; this.y=y; this.s=s;
 		}
 		void set(Rect r) {
@@ -44,10 +46,10 @@ public class RectPack {
 		}
 	}
 
-	public RectPack(Dim sheet) {
+	public RectPackBruteForce(Box sheet) {
 		this.sheet=sheet;
 	}
-	public void setRect(Dim r) {
+	public void setRect(Box r) {
 		rect.w=r.w;
 		rect.h=r.h;
 		rects.clear();
