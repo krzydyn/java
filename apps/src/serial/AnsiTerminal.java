@@ -105,7 +105,7 @@ public class AnsiTerminal extends JPanel implements FocusListener,KeyListener {
 	private boolean escSeq = false;
 
 	//to get focus component must satisfy: 1.visible, 2.enabled, 3. focusable
-	public AnsiTerminal(String t, boolean editable) {
+	public AnsiTerminal(String t) {
 		super(new BorderLayout());
 		setName(t);
 
@@ -114,7 +114,7 @@ public class AnsiTerminal extends JPanel implements FocusListener,KeyListener {
 		title.setText(t);
 
 		editor.setFont(font);
-		editor.setEditable(editable);
+		editor.setEditable(false);
 		editor.setFocusable(true); // this allow selection of text
 		editor.setBackground(Color.DARK_GRAY);
 		editor.setForeground(Color.LIGHT_GRAY);
@@ -551,12 +551,12 @@ public class AnsiTerminal extends JPanel implements FocusListener,KeyListener {
 		try { Sound.dong(); } catch (Exception e) {}
 	}
 	public void cursorLocate(int x, int y) {
-		Log.debug(1,"setSursor %s", cpos.toString());
 		if (x<0) x=0;
 		else if (x > MAX_COL) x=MAX_COL;
 		if (y<=0) y=1;
 		else if (y > MAX_ROW) x=MAX_ROW;
 		cpos.x=x; cpos.y=y;
+		Log.debug(1,"setSursor %s", cpos.toString());
 	}
 	public void cursorHome() {
 		Log.debug(1,"cursor: home");

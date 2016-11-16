@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.Map;
 
 import javax.swing.JPanel;
+import javax.swing.JSplitPane;
 
 import sys.Log;
 import ui.MainPanel;
@@ -54,16 +55,36 @@ public class SerialMain extends MainPanel {
 			//ports.add(new Serial("/dev/ttyUSB1"));
 			//ports.add(new Serial("/dev/ttyUSB2"));
 		}
-		int cols = 1;
-		while (cols*cols < ports.size()) ++cols;
-		JPanel p = new JPanel(new GridLayout(0,cols));
-
-		for (Serial sp : ports) {
-			AnsiTerminal e = new AnsiTerminal(sp.getName(), false);
+		JPanel p = null;
+		if (ports.size()==1) {
+			p = new JPanel(new BorderLayout());
+			Serial sp = ports.get(0);
+			AnsiTerminal e = new AnsiTerminal(sp.getName());
 			p.add(e);
 			editors.put(sp, e);
 		}
-
+		else if (ports.size()==2) {
+			p = new JPanel(new BorderLayout());
+			Serial sp1 = ports.get(0);
+			Serial sp2 = ports.get(1);
+			AnsiTerminal e1 = new AnsiTerminal(sp1.getName());
+			AnsiTerminal e2 = new AnsiTerminal(sp2.getName());
+			editors.put(sp1, e1);
+			editors.put(sp2, e2);
+			JSplitPane s = createSplitPanel(JSplitPane.HORIZONTAL_SPLIT,e1,e2);
+			s.setDividerLocation(500);
+			p.add(s);
+		}
+		else {
+			int cols = 1;
+			while (cols*cols < ports.size()) ++cols;
+			p = new JPanel(new GridLayout(0,cols));
+			for (Serial sp : ports) {
+				AnsiTerminal e = new AnsiTerminal(sp.getName());
+				p.add(e);
+				editors.put(sp, e);
+			}
+		}
 		add(p,BorderLayout.CENTER);
 
 		new Thread(new Runnable() {
