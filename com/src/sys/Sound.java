@@ -23,44 +23,97 @@ import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.SourceDataLine;
 
 public class Sound {
-	enum Note {
-		REST, A4, A4$, B4, C4, C4$, D4, D4$, E4, F4, F4$, G4, G4$, A5;
+	//public static final int SAMPLE_RATE = 16 * 1024; // ~16KHz
+	public static final int SAMPLE_RATE = 44100; // ~16KHz
+	public static final int LINE_BUFER = 2200;
 
-		public static final int SAMPLE_RATE = 16 * 1024; // ~16KHz
-		public static final int SECONDS = 1;
-		private byte[] waveform = new byte[SECONDS * SAMPLE_RATE];
+	private static final byte[] lineBuffer=new byte[LINE_BUFER];
 
-		Note() {
-			int n = this.ordinal();
-			if (n > 0) {
-				double exp = ((double) n - 1) / 12d;
-				double f = 440d * Math.pow(2d, exp);
-				double period = SAMPLE_RATE / f;
-				for (int i = 0; i < waveform.length; i++) {
-					double angle = 2.0 * Math.PI * i / period;
-					waveform[i] = (byte)(Math.sin(angle) * 127f);
-				}
+	public enum Note {
+		/*  0.00*/ VOID,
+		/* 16.35*/ C0, C0h, D0, D0h, E0, F0, F0h, G0, G0h, A0, A0h, B0,
+		/* 32.70*/ C1, C1h, D1, D1h, E1, F1, F1h, G1, G1h, A1, A1h, B1,
+		/* 65.40*/ C2, C2h, D2, D2h, E2, F2, F2h, G2, G2h, A2, A2h, B2,
+		/*130.80*/ C3, C3h, D3, D3h, E3, F3, F3h, G3, G3h, A3, A3h, B3,
+		/*261.60*/ C4, C4h, D4, D4h, E4, F4, F4h, G4, G4h, A4, A4h, B4,
+		/*523.30*/ C5,
+		;
+
+		private final byte[] waveform;
+
+		static private double idx2freq(int i) {
+			if (i > 0) {
+				double exp = (i - 1) / 12.0;
+				return 16.3516 * Math.pow(2.0, exp);
+			}
+			return 0d;
+		}
+
+		private Note() {
+			waveform = createWaveform(idx2freq(this.ordinal()));
+			//double f = idx2freq(this.ordinal());
+			//Log.debug("Note %s is %.3f Hz  period= %.3f ms samples=%d",this.name(),f,1000/f,waveform.length);
+		}
+	}
+
+	static private byte[] createWaveform(double f) {
+		byte[] waveform;
+		if (f<=0) {
+			waveform = new byte[1];
+		}
+		else {
+			double soundtime = 1.0 / f; //one full period
+			waveform = new byte[(int)(soundtime * SAMPLE_RATE)];
+			for (int i = 0; i < waveform.length; i++) {
+				double angle = 2.0 * Math.PI * i / waveform.length;
+				waveform[i] = (byte)(Math.sin(angle) * 127f);
 			}
 		}
-
-		public byte[] data() {
-			return waveform;
-		}
+		return waveform;
 	}
 
-	private static void play(SourceDataLine line, Note note, int ms) {
-		ms = Math.min(ms, Note.SECONDS * 1000);
-		int length = Note.SAMPLE_RATE * ms / 1000;
-		line.write(note.data(), 0, length);
-	}
-
-	static public void play(Note n, int ms) throws Exception {
-		final AudioFormat af = new AudioFormat(Note.SAMPLE_RATE, 8, 1, true, true);
-		SourceDataLine line = AudioSystem.getSourceDataLine(af);
-		line.open(af, Note.SAMPLE_RATE);
+	static private void play(SourceDataLine line, byte[] waveform, long ms) {
+		long offs = 0;
+		long length = (SAMPLE_RATE * ms + 999) / 1000;
+		Log.debug("plaing samples %d, wave.len=%d", length, waveform.length);
 		line.start();
-		play(line, n, ms);
+		while (offs < length) {
+			int l = waveform.length;
+			if (line.write(waveform, 0, l) != l) {
+				Log.error("no all samples written");
+			}
+			offs+=l;
+		}
 		line.drain();
+	}
+
+	static public void play(Note n, long ms) throws Exception {
+		final AudioFormat af = new AudioFormat(SAMPLE_RATE, 8, 1, true, true);
+		SourceDataLine line = AudioSystem.getSourceDataLine(af);
+
+		int bufferSize = (int)(af.getSampleRate() * af.getFrameSize());
+		Log.debug("buffer size: %d",bufferSize);
+		line.open(af, LINE_BUFER);
+		play(line, n.waveform, ms);
+		line.close();
+	}
+
+	static public void play(double freq, long ms) throws Exception {
+		final AudioFormat af = new AudioFormat(SAMPLE_RATE, 8, 1, true, true);
+		SourceDataLine line = AudioSystem.getSourceDataLine(af);
+
+		int bufferSize = (int)(af.getSampleRate() * af.getFrameSize());
+		Log.debug("buffer size: %d",bufferSize);
+		line.open(af, LINE_BUFER);
+		play(line, createWaveform(freq), ms);
+		line.close();
+	}
+
+	static public void play(byte[] waveform) throws Exception {
+		final AudioFormat af = new AudioFormat(SAMPLE_RATE, 8, 1, true, true);
+		SourceDataLine line = AudioSystem.getSourceDataLine(af);
+		line.open(af, LINE_BUFER);
+		play(line, waveform, waveform.length*1000/SAMPLE_RATE);
 		line.close();
 	}
 

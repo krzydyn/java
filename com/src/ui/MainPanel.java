@@ -30,6 +30,7 @@ import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.JScrollBar;
 import javax.swing.JScrollPane;
+import javax.swing.JSplitPane;
 import javax.swing.JTextPane;
 import javax.swing.ScrollPaneConstants;
 import javax.swing.text.BadLocationException;
@@ -61,7 +62,6 @@ public class MainPanel extends JPanel{
 
 	public MainPanel(LayoutManager l) {
 		super(l);
-		setPreferredSize(new Dimension(800,600));
 	}
 	public MainPanel() {
 		this(new BorderLayout());
@@ -74,8 +74,7 @@ public class MainPanel extends JPanel{
 		try {
 			Document doc = t.getDocument();
 			doc.insertString(doc.getLength(), s, null);
-		} catch (BadLocationException e) {
-		}
+		} catch (BadLocationException e) {}
 	}
 
 	static public JScrollPane createScrolledPanel(JComponent c) {
@@ -98,6 +97,16 @@ public class MainPanel extends JPanel{
 		sb=sp.getHorizontalScrollBar();
 		sb.setFocusable(false);
 		return sp;
+	}
+
+	static public JSplitPane createSplitPanel(int orientation,JComponent c1,JComponent c2) {
+		JSplitPane split = new JSplitPane(orientation, c1, c2);
+		split.setContinuousLayout(false);
+		split.setOneTouchExpandable(true);
+		//split.setDividerLocation(0.5);
+		split.setResizeWeight(0.5);
+		//split.setDividerLocation(500);
+		return split;
 	}
 
 	static public void start(final Class<? extends MainPanel> mainclass, String[] args) {
@@ -135,6 +144,7 @@ public class MainPanel extends JPanel{
 					});
 					f.setTitle(main.getName());
 					f.setContentPane(main);
+					f.setPreferredSize(new Dimension(800, 600));
 					f.pack();
 					f.setLocation(10,10);
 					f.setVisible(true);
