@@ -4,7 +4,7 @@ import puzzles.Cryptarithm;
 
 public class CryptarithmSolver {
 	static private final String[] ex1 = {"3*mroz=zima", "dcxciii+dcccxcv+mdcccxv=mmmcdiii"};
-	static private final String[] ex2 = {"-x0", "vive * la = france"};
+	static private final String[] ex2 = {"-x0", "vive*la =france"};
 
 	private static void solve(String[] args) {
 		Cryptarithm c=new Cryptarithm();

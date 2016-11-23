@@ -62,8 +62,8 @@ import javax.swing.text.StyledDocument;
 import javax.swing.text.TabSet;
 import javax.swing.text.TabStop;
 
+import snd.Sound;
 import sys.Log;
-import sys.Sound;
 import sys.XThread;
 import text.Ansi;
 import text.Text;

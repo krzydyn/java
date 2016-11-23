@@ -143,6 +143,7 @@ public class SudokuSolver {
 		SudokuFast fast=new SudokuFast(3);
 		int exnum=0,exmax=0;
 		long tmax=0;
+
 		for (String ex : examples) {
 			int i;
 			long t0;

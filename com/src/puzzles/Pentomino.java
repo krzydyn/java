@@ -18,7 +18,7 @@ public class Pentomino {
 		}
 	}
 
-	final private GameBoard.Bool board;
+	final private GameBoard board;
 	final private int[] typeUsed = new int[baseFig.length];
 
 	public Pentomino(int w,int h) {
@@ -51,10 +51,7 @@ public class Pentomino {
 
 	private boolean put(Fig f, int x0, int y0) {
 		if (x0<0 || y0 < 0) return false;
-		if (f.type == 0) {
-			if (x0 + f.w > board.width/2 || y0 + f.h > board.height/2) return false;
-		}
-		else if (x0 + f.w > board.width || y0 + f.h > board.height) return false;
+		if (x0 + f.w > board.w || y0 + f.h > board.h) return false;
 
 		for (int i=0; i < ELEMS; ++i) {
 			if (board.get(x0+f.x[i], y0+f.y[i])) return false;
@@ -151,7 +148,7 @@ public class Pentomino {
 		new Fig(0,0,1,0,2,0,3,0,4,0),
 	};
 	final private static List<Fig> figs = genAllFigs();
-	final static List<Fig> genAllFigs() {
+	final private static List<Fig> genAllFigs() {
 		List<Fig> figs = new ArrayList<>();
 
 		for (int fi=0; fi < baseFig.length; ++fi) {

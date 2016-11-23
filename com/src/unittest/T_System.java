@@ -20,8 +20,8 @@ package unittest;
 
 import java.io.PrintStream;
 
+import snd.Sound;
 import sys.Log;
-import sys.Sound;
 import sys.UnitTest;
 import text.Ansi;
 
