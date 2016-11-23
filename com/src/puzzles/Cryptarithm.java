@@ -104,6 +104,7 @@ public class Cryptarithm {
 		return Permutate.nextPermutation(values);
 	}
 	public void solve() {
+		if (symbols.isEmpty()) return ;
 		do {
 			if (verify()) {
 				System.out.println(symbols);
