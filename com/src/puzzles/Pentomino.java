@@ -40,8 +40,8 @@ public class Pentomino {
 	public void solve() {
 		List<FigPos> list=new ArrayList<Pentomino.FigPos>();
 
+		int found=0;
 		FigPos cfp = new FigPos(figs.get(0),1,0);
-
 		while (cfp.y<board.h/2) {
 			// put first fig on board
 			Log.debug("start with %s at %d,%d", cfp.fig, cfp.x, cfp.y);
@@ -50,12 +50,18 @@ public class Pentomino {
 			Point cp = new Point(0,0);
 			int figfrom=1;
 			while (findFree(cp)) {
+				Log.debug("trying to cover %d,%d", cp.x,cp.y);
 				// try to cover cp with fig
 				for (int i=figfrom; i < figs.size(); ++i) {
 					Fig f = figs.get(i);
 					if (figUsed[f.type] != null) continue;
 					for (int x=0; x < f.w; ++x) {
 						if (put(f,cp.x-x,cp.y)) {
+							if (!board.get(cp.x, cp.y)) {
+								remove(f,cp.x-x,cp.y);
+								Log.debug("fig taken but cx,cy not covered");
+								continue;
+							}
 							list.add(new FigPos(f, cp.x-x, cp.y));
 							Log.debug("put fig %s at %d,%d",f,cp.x-x,cp.y);
 							break;
@@ -64,10 +70,15 @@ public class Pentomino {
 							Log.debug("can't put fig %s at %d,%d",f,cp.x-x,cp.y);
 						}
 					}
-					if (figUsed[f.type]!=null) break;
+					if (figUsed[f.type]!=null)
+						break;
 				}
 
-				if (!board.get(cp.x, cp.y)) {
+				if (board.get(cp.x, cp.y)) {
+					FigPos fp = list.get(list.size()-1);
+					Log.debug("covered %d,%d by %s", cp.x, cp.y, fp.fig);
+				}
+				else {
 					Log.debug("can't cover %d,%d", cp.x, cp.y);
 					if (list.isEmpty()) break;
 
@@ -78,8 +89,15 @@ public class Pentomino {
 					figfrom=figs.indexOf(fp.fig)+1;
 				}
 
-
-				if (list.isEmpty()) break;
+				if (list.size() == 12) {
+					Log.debug(" *** FOUND ***");
+					++found;
+					FigPos fp=list.remove(list.size()-1);
+					Log.debug("remove fig %s at %d,%d",fp.fig, fp.x, fp.y);
+					remove(fp.fig, fp.x, fp.y);
+					cp.x=fp.x; cp.y=fp.y;
+					figfrom=figs.indexOf(fp.fig)+1;
+				}
 			}
 
 			// remove first fig from board
@@ -91,6 +109,7 @@ public class Pentomino {
 			}
 			break;
 		}
+		Log.debug(" *** FOUND %d ***", found);
 	}
 
 	private boolean put(Fig f, int x0, int y0) {
@@ -99,7 +118,7 @@ public class Pentomino {
 		}
 
 		if (x0 < 0 || y0 < 0) return false;
-		if (x0 + f.w > board.w || y0 + f.h > board.h) return false;
+		if (x0 + f.w >= board.w || y0 + f.h >= board.h) return false;
 
 		for (int i=0; i < STONES; ++i) {
 			if (board.get(x0+f.x[i], y0+f.y[i])) return false;
