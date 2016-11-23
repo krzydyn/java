@@ -1,12 +1,13 @@
 package puzzles;
 
 public abstract class GameBoard {
+
 	int w,h;
 	public GameBoard(int w, int h) {
 		this.w=w; this.h=h;
 	}
-	abstract public boolean get(int i, int j);
-	abstract public void set(int i, int j, boolean b);
+	abstract public boolean get(int x, int y);
+	abstract public void set(int x, int y, boolean b);
 
 	static public class Bool extends GameBoard {
 		final boolean[] board;
@@ -16,14 +17,14 @@ public abstract class GameBoard {
 		}
 
 		@Override
-		public boolean get(int i, int j) {
-			if (i<0 || j<0 || i>=w || j>=h) throw new IndexOutOfBoundsException();
-			return board[j*w+i];
+		public boolean get(int x, int y) {
+			if (x<0 || y<0 || x>=w || y>=h) throw new IndexOutOfBoundsException(String.format("%d,%d",x,y));
+			return board[y*w+x];
 		}
 		@Override
-		public void set(int i, int j, boolean b) {
-			if (i<0 || j<0 || i>=w || j>=h) throw new IndexOutOfBoundsException();
-			board[j*w+i] = b;
+		public void set(int x, int y, boolean b) {
+			if (x<0 || y<0 || x>=w || y>=h) throw new IndexOutOfBoundsException();
+			board[y*w+x] = b;
 		}
 	}
 

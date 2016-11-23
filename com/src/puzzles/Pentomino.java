@@ -1,5 +1,6 @@
 package puzzles;
 
+import java.awt.Point;
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.List;
@@ -7,7 +8,7 @@ import java.util.List;
 import sys.Log;
 
 public class Pentomino {
-	static final int ELEMS=5;
+	static final int STONES = 5;
 
 	public static class FigPos {
 		public Fig fig;
@@ -19,52 +20,104 @@ public class Pentomino {
 	}
 
 	final private GameBoard board;
-	final private int[] typeUsed = new int[baseFig.length];
+	final private Fig[] figUsed = new Fig[baseFig.length];
 
 	public Pentomino(int w,int h) {
 		board = new GameBoard.Bool(w, h);
 	}
+	private boolean findFree(Point cp) {
+		for (;;) {
+			if (cp.x >= board.w) {
+				cp.x=0;
+				++cp.y;
+			}
+			if (cp.y >= board.h) break;
+			if (!board.get(cp.x, cp.y)) return true;
+			++cp.x;
+		}
+		return false;
+	}
 	public void solve() {
 		List<FigPos> list=new ArrayList<Pentomino.FigPos>();
-		int typesCnt=0;
-		int f0x=0,f0y=0;
-		int cx=0,cy=0;
-		for (int fi=0; fi < figs.size(); ++fi) {
-			Fig f=figs.get(fi);
-			if (typeUsed[f.type] > 0) continue;
-			if (f.type==0) {
-				if (!put(f,f0x,f0y)) {
-					++f0y; f0x=0;
-					if (!put(f,f0x,f0y)) break;
+
+		FigPos cfp = new FigPos(figs.get(0),1,0);
+
+		while (cfp.y<board.h/2) {
+			// put first fig on board
+			Log.debug("start with %s at %d,%d", cfp.fig, cfp.x, cfp.y);
+			put(cfp.fig, cfp.x, cfp.y);
+
+			Point cp = new Point(0,0);
+			int figfrom=1;
+			while (findFree(cp)) {
+				// try to cover cp with fig
+				for (int i=figfrom; i < figs.size(); ++i) {
+					Fig f = figs.get(i);
+					if (figUsed[f.type] != null) continue;
+					for (int x=0; x < f.w; ++x) {
+						if (put(f,cp.x-x,cp.y)) {
+							list.add(new FigPos(f, cp.x-x, cp.y));
+							Log.debug("put fig %s at %d,%d",f,cp.x-x,cp.y);
+							break;
+						}
+						else {
+							Log.debug("can't put fig %s at %d,%d",f,cp.x-x,cp.y);
+						}
+					}
+					if (figUsed[f.type]!=null) break;
 				}
+
+				if (!board.get(cp.x, cp.y)) {
+					Log.debug("can't cover %d,%d", cp.x, cp.y);
+					if (list.isEmpty()) break;
+
+					FigPos fp=list.remove(list.size()-1);
+					Log.debug("remove fig %s at %d,%d",fp.fig, fp.x, fp.y);
+					remove(fp.fig, fp.x, fp.y);
+					cp.x=fp.x; cp.y=fp.y;
+					figfrom=figs.indexOf(fp.fig)+1;
+				}
+
+
+				if (list.isEmpty()) break;
 			}
-			list.add(new FigPos(f,cx,cy));
-			typeUsed[f.type]=fi+1;
-			++typesCnt;
-			if (typesCnt == baseFig.length) {
-				Log.prn("Found");
-				FigPos fp = list.remove(list.size()-1);
-				remove(fp.fig, fp.x, fp.y);
+
+			// remove first fig from board
+			remove(cfp.fig, cfp.x, cfp.y);
+			++cfp.x;
+			if (cfp.x >= board.w/2) {
+				cfp.x=0;
+				++cfp.y;
 			}
+			break;
 		}
 	}
 
 	private boolean put(Fig f, int x0, int y0) {
-		if (x0<0 || y0 < 0) return false;
+		if (figUsed[f.type] != null) {
+			throw new RuntimeException(String.format("Fig %s already put", f));
+		}
+
+		if (x0 < 0 || y0 < 0) return false;
 		if (x0 + f.w > board.w || y0 + f.h > board.h) return false;
 
-		for (int i=0; i < ELEMS; ++i) {
+		for (int i=0; i < STONES; ++i) {
 			if (board.get(x0+f.x[i], y0+f.y[i])) return false;
 		}
-		for (int i=0; i < ELEMS; ++i) {
+		for (int i=0; i < STONES; ++i) {
 			board.set(x0+f.x[i], y0+f.y[i], true);
 		}
+		figUsed[f.type] = f;
 		return true;
 	}
 	private void remove(Fig f, int x0, int y0) {
-		for (int i=0; i < ELEMS; ++i) {
+		if (figUsed[f.type] == null) {
+			throw new RuntimeException(String.format("Fig %s not on board", f));
+		}
+		for (int i=0; i < STONES; ++i) {
 			board.set(x0+f.x[i], y0+f.y[i], false);
 		}
+		figUsed[f.type] = null;
 	}
 
 	final public static void printAllFigs() {
@@ -75,7 +128,7 @@ public class Pentomino {
 		System.out.printf("There is %d figs\n", figs.size());
 	}
 	final public static void printFigs() {
-		System.out.printf("There is %d figs\n", baseFig.length);
+		System.out.printf("Primary figs %d\n", baseFig.length);
 		for (Fig f : baseFig) {
 			f.print();
 		}
@@ -176,45 +229,54 @@ public class Pentomino {
 	}
 
 	public static class Fig {
+		static private String typeName = "XFTZWVPULYNI";
+		static private short[] subtypeCnt = new short[12];
 		static private int typeCounter=0;
 		final private int type;
-		final int[] x=new int[ELEMS];
-		final int[] y=new int[ELEMS];
+		private int subtype;
+		final int[] x=new int[STONES];
+		final int[] y=new int[STONES];
 		private int w,h;
 		Fig(int x0,int y0,int x1,int y1,int x2,int y2,int x3,int y3,int x4,int y4) {
 			type=typeCounter++;
+			subtype=subtypeCnt[type]=0;
 			x[0]=x0;y[0]=y0;
 			x[1]=x1;y[1]=y1;
 			x[2]=x2;y[2]=y2;
 			x[3]=x3;y[3]=y3;
 			x[4]=x4;y[4]=y4;
 			w=h=0;
-			for (int i=0; i < ELEMS; ++i) {
+			for (int i=0; i < STONES; ++i) {
 				if (w < x[i]) w=x[i];
 				if (h < y[i]) h=y[i];
 			}
 		}
 		Fig(Fig o) {
 			type=o.type;
+			subtype=subtypeCnt[type]++;
 			w=o.w; h=o.h;
-			for (int i=0; i < ELEMS; ++i) {
+			for (int i=0; i < STONES; ++i) {
 				x[i]=o.x[i];
 				y[i]=o.y[i];
 			}
 		}
+		@Override
+		public String toString() {
+			return typeName.substring(type, type+1)+subtype;
+		}
 		void rotate() {
 			int t=w; w=h; h=t;
-			for (int i=0; i < ELEMS; ++i) {
+			for (int i=0; i < STONES; ++i) {
 				t=x[i]; x[i]=y[i]; y[i]=t;
 			}
 			flipX();
 		}
 		void flipX() {
-			for (int i=0; i < ELEMS; ++i)
+			for (int i=0; i < STONES; ++i)
 				x[i]=w-x[i];
 		}
 		void flipY() {
-			for (int i=0; i < ELEMS; ++i)
+			for (int i=0; i < STONES; ++i)
 				y[i]=h-y[i];
 		}
 		@Override
@@ -222,23 +284,23 @@ public class Pentomino {
 			if (!(other instanceof Fig)) return false;
 			Fig o = (Fig)other;
 			if (w!=o.w || h!=o.h) return false;
-			BitSet s1=new BitSet(ELEMS*ELEMS);
-			BitSet s2=new BitSet(ELEMS*ELEMS);
-			for (int i=0; i < ELEMS; ++i) {
-				s1.set(y[i]*ELEMS+x[i]);
-				s2.set(o.y[i]*ELEMS+o.x[i]);
+			BitSet s1=new BitSet(STONES*STONES);
+			BitSet s2=new BitSet(STONES*STONES);
+			for (int i=0; i < STONES; ++i) {
+				s1.set(y[i]*STONES+x[i]);
+				s2.set(o.y[i]*STONES+o.x[i]);
 			}
 			return s1.equals(s2);
 		}
 		void print() {
-			byte[] m = new byte[ELEMS*ELEMS];
+			byte[] m = new byte[STONES*STONES];
 			for (int i=0; i < m.length; ++i) m[i]=' ';
-			for (int i=0; i < ELEMS; ++i) {
+			for (int i=0; i < STONES; ++i) {
 				int x=this.x[i], y=this.y[i];
-				m[y*ELEMS+x] = 'X';
+				m[y*STONES+x] = 'X';
 			}
 			for (int y=0; y <= this.h; ++y) {
-				System.out.write(m, y*ELEMS, this.w+1);
+				System.out.write(m, y*STONES, this.w+1);
 				System.out.println();
 			}
 			System.out.printf("size %d x %d\n",this.w+1,this.h+1);
