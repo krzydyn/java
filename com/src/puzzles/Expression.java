@@ -132,10 +132,11 @@ public class Expression {
 		List<Long> stack = new ArrayList<Long>();
 		for (Token t : rpn) {
 			if (t.type == TYPE_OP) {
+				Character op = (Character)t.rep;
 				long b = stack.remove(stack.size()-1);
 				long a = stack.remove(stack.size()-1);
-				Character op = (Character)t.rep;
-				if (op == '+') a = a+b;
+				if (op == '^') a = (long)Math.pow(a, b);
+				else if (op == '+') a = a+b;
 				else if (op == '-') a = a-b;
 				else if (op == '*') a = a*b;
 				else if (op == '/') a = a/b;
