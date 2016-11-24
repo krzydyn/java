@@ -10,6 +10,10 @@ import sys.Log;
 public class Pentomino {
 	static final int STONES = 5;
 
+	public static interface ChangeListener {
+		public void boardChanged(List<FigPos> list);
+	}
+
 	public static class FigPos {
 		public Fig fig;
 		public int x,y;
@@ -17,14 +21,22 @@ public class Pentomino {
 			this.fig=fig;
 			this.x=x; this.y=y;
 		}
+		public boolean getPoint(int i, Point p) {
+			if (i >= STONES) return false;
+			p.setLocation(x+fig.x[i],y+fig.y[i]);
+			return true;
+		}
 	}
 
-	final private GameBoard board;
+	private ChangeListener listener;
+	final private GameBoard<Boolean> board;
 	final private Fig[] figUsed = new Fig[baseFig.length];
+
 
 	public Pentomino(int w,int h) {
 		board = new GameBoard.Bool(w, h);
 	}
+	public void setListener(ChangeListener l) {listener=l;}
 	private boolean findFree(Point cp) {
 		for (;;) {
 			if (cp.x >= board.w) {
@@ -46,32 +58,28 @@ public class Pentomino {
 			// put first fig on board
 			Log.debug("start with %s at %d,%d", cfp.fig, cfp.x, cfp.y);
 			put(cfp.fig, cfp.x, cfp.y);
+			list.clear();
+			list.add(new FigPos(cfp.fig, cfp.x, cfp.y));
 
 			Point cp = new Point(0,0);
-			int figfrom=1;
 			while (findFree(cp)) {
 				Log.debug("trying to cover %d,%d", cp.x,cp.y);
 				// try to cover cp with fig
-				for (int i=figfrom; i < figs.size(); ++i) {
+				for (int i=1; i < figs.size(); ++i) {
 					Fig f = figs.get(i);
 					if (figUsed[f.type] != null) continue;
-					for (int x=0; x < f.w; ++x) {
-						if (put(f,cp.x-x,cp.y)) {
-							if (!board.get(cp.x, cp.y)) {
-								remove(f,cp.x-x,cp.y);
-								Log.debug("fig taken but cx,cy not covered");
-								continue;
-							}
-							list.add(new FigPos(f, cp.x-x, cp.y));
-							Log.debug("put fig %s at %d,%d",f,cp.x-x,cp.y);
-							break;
-						}
-						else {
-							Log.debug("can't put fig %s at %d,%d",f,cp.x-x,cp.y);
-						}
+					int xmin=f.w;
+					for (int j=0; j < STONES; ++j) {
+						if (f.y[j]>0) continue;
+						if (xmin>f.x[j]) xmin=f.x[j];
 					}
-					if (figUsed[f.type]!=null)
+					if (put(f,cp.x-xmin,cp.y)) {
+						if (!board.get(cp.x, cp.y)) throw new RuntimeException("not possible");
+						list.add(new FigPos(f, cp.x-xmin, cp.y));
+						Log.debug("put fig %s at %d,%d",f,cp.x-xmin,cp.y);
+						if (listener!=null) listener.boardChanged(list);
 						break;
+					}
 				}
 
 				if (board.get(cp.x, cp.y)) {
@@ -80,23 +88,23 @@ public class Pentomino {
 				}
 				else {
 					Log.debug("can't cover %d,%d", cp.x, cp.y);
-					if (list.isEmpty()) break;
+					if (list.size()==1) break;
 
 					FigPos fp=list.remove(list.size()-1);
 					remove(fp.fig, fp.x, fp.y);
 					cp.x=fp.x; cp.y=fp.y;
-					figfrom=figs.indexOf(fp.fig)+1;
-					Log.debug("remove fig %s at %d,%d and restart from %s",fp.fig, fp.x, fp.y, figs.get(figfrom));
+					Log.debug("remove fig %s at %d,%d and restart",fp.fig, fp.x, fp.y);
+					if (listener!=null) listener.boardChanged(list);
 				}
 
 				if (list.size() == 12) {
 					Log.debug(" *** FOUND ***");
 					++found;
 					FigPos fp=list.remove(list.size()-1);
-					Log.debug("remove fig %s at %d,%d",fp.fig, fp.x, fp.y);
 					remove(fp.fig, fp.x, fp.y);
 					cp.x=fp.x; cp.y=fp.y;
-					figfrom=figs.indexOf(fp.fig)+1;
+					Log.debug("remove fig %s at %d,%d",fp.fig, fp.x, fp.y);
+					if (listener!=null) listener.boardChanged(list);
 				}
 			}
 
@@ -107,7 +115,7 @@ public class Pentomino {
 				cfp.x=0;
 				++cfp.y;
 			}
-			break;
+			//break;
 		}
 		Log.debug(" *** FOUND %d ***", found);
 	}
@@ -251,11 +259,12 @@ public class Pentomino {
 		static private String typeName = "XFTZWVPULYNI";
 		static private short[] subtypeCnt = new short[12];
 		static private int typeCounter=0;
-		final private int type;
+		public final int type;
 		private int subtype;
-		final int[] x=new int[STONES];
-		final int[] y=new int[STONES];
+		private final int[] x=new int[STONES];
+		private final int[] y=new int[STONES];
 		private int w,h;
+
 		Fig(int x0,int y0,int x1,int y1,int x2,int y2,int x3,int y3,int x4,int y4) {
 			type=typeCounter++;
 			subtype=subtypeCnt[type]=0;
