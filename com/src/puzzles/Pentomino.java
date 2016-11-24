@@ -83,10 +83,10 @@ public class Pentomino {
 					if (list.isEmpty()) break;
 
 					FigPos fp=list.remove(list.size()-1);
-					Log.debug("remove fig %s at %d,%d",fp.fig, fp.x, fp.y);
 					remove(fp.fig, fp.x, fp.y);
 					cp.x=fp.x; cp.y=fp.y;
 					figfrom=figs.indexOf(fp.fig)+1;
+					Log.debug("remove fig %s at %d,%d and restart from %s",fp.fig, fp.x, fp.y, figs.get(figfrom));
 				}
 
 				if (list.size() == 12) {
