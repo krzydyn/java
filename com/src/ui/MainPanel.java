@@ -144,8 +144,20 @@ public class MainPanel extends JPanel{
 					});
 					f.setTitle(main.getName());
 					f.setContentPane(main);
-					f.setPreferredSize(new Dimension(800, 600));
+					Dimension d=main.getPreferredSize();
+					if (d.width==0 || d.height==0) {
+						d.width=800; d.height=600;
+						f.setPreferredSize(d);
+					}
 					f.pack();
+					d=main.getMinimumSize();
+					if (d.width!=0 || d.height!=0) {
+						Dimension d1=f.getSize();
+						Dimension d2=main.getSize();
+						d.width += d1.width-d2.width;
+						d.height += d1.height-d2.height;
+						f.setMinimumSize(d);
+					}
 					f.setLocation(10,10);
 					f.setVisible(true);
 				} catch (Throwable e) {
