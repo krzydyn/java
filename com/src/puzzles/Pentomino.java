@@ -36,36 +36,57 @@ public class Pentomino {
 	public Pentomino(int w,int h) {
 		board = new GameBoard.Bool(w, h);
 	}
+	public int getWidth() {return board.w;}
+	public int getHeight() {return board.h;}
 	public void setListener(ChangeListener l) {listener=l;}
 	private boolean findFree(Point cp) {
-		for (;;) {
-			if (cp.x >= board.w) {
-				cp.x=0;
+		cp.x=cp.y=0;
+		/*if (board.w>board.h) {
+			for (;;) {
+				if (cp.y >= board.h) {
+					cp.y=0;
+					++cp.x;
+				}
+				if (cp.x >= board.w) break;
+				if (!board.get(cp.x, cp.y)) return true;
 				++cp.y;
 			}
-			if (cp.y >= board.h) break;
-			if (!board.get(cp.x, cp.y)) return true;
-			++cp.x;
+		}
+		else*/ {
+			for (;;) {
+				if (cp.x >= board.w) {
+					cp.x=0;
+					++cp.y;
+				}
+				if (cp.y >= board.h) break;
+				if (!board.get(cp.x, cp.y)) return true;
+				++cp.x;
+			}
 		}
 		return false;
 	}
 	public void solve() {
 		List<FigPos> list=new ArrayList<Pentomino.FigPos>();
 
-		int found=0;
 		FigPos cfp = new FigPos(figs.get(0),1,0);
-		while (cfp.y<board.h/2) {
+		while (2*cfp.y <= board.h-cfp.fig.h) {
 			// put first fig on board
-			Log.debug("start with %s at %d,%d", cfp.fig, cfp.x, cfp.y);
-			put(cfp.fig, cfp.x, cfp.y);
 			list.clear();
+			Log.debug("start with %s at %d,%d", cfp.fig, cfp.x, cfp.y);
+			if (!put(cfp.fig, cfp.x, cfp.y)) {
+				Log.debug("can't put cfp here");
+				cfp.x=0;
+				++cfp.y;
+				continue;
+			}
 			list.add(new FigPos(cfp.fig, cfp.x, cfp.y));
 
 			Point cp = new Point(0,0);
+			int findFrom=1;
 			while (findFree(cp)) {
-				Log.debug("trying to cover %d,%d", cp.x,cp.y);
+				//Log.debug("trying to cover %d,%d", cp.x,cp.y);
 				// try to cover cp with fig
-				for (int i=1; i < figs.size(); ++i) {
+				for (int i=findFrom; i < figs.size(); ++i) {
 					Fig f = figs.get(i);
 					if (figUsed[f.type] != null) continue;
 					int xmin=f.w;
@@ -74,50 +95,39 @@ public class Pentomino {
 						if (xmin>f.x[j]) xmin=f.x[j];
 					}
 					if (put(f,cp.x-xmin,cp.y)) {
-						if (!board.get(cp.x, cp.y)) throw new RuntimeException("not possible");
 						list.add(new FigPos(f, cp.x-xmin, cp.y));
-						Log.debug("put fig %s at %d,%d",f,cp.x-xmin,cp.y);
+						findFrom=1;
+						//Log.debug("put fig %s at %d,%d",f,cp.x-xmin,cp.y);
 						if (listener!=null) listener.boardChanged(list);
 						break;
 					}
 				}
 
 				if (board.get(cp.x, cp.y)) {
-					FigPos fp = list.get(list.size()-1);
-					Log.debug("covered %d,%d by %s", cp.x, cp.y, fp.fig);
+					if (list.size() == 12) {
+						FigPos fp=list.remove(list.size()-1);
+						remove(fp.fig, fp.x, fp.y);
+						cp.x=fp.x; cp.y=fp.y;
+						findFrom = figs.indexOf(fp.fig)+1;
+					}
 				}
 				else {
-					Log.debug("can't cover %d,%d", cp.x, cp.y);
 					if (list.size()==1) break;
-
 					FigPos fp=list.remove(list.size()-1);
 					remove(fp.fig, fp.x, fp.y);
 					cp.x=fp.x; cp.y=fp.y;
-					Log.debug("remove fig %s at %d,%d and restart",fp.fig, fp.x, fp.y);
-					if (listener!=null) listener.boardChanged(list);
-				}
-
-				if (list.size() == 12) {
-					Log.debug(" *** FOUND ***");
-					++found;
-					FigPos fp=list.remove(list.size()-1);
-					remove(fp.fig, fp.x, fp.y);
-					cp.x=fp.x; cp.y=fp.y;
-					Log.debug("remove fig %s at %d,%d",fp.fig, fp.x, fp.y);
-					if (listener!=null) listener.boardChanged(list);
+					findFrom = figs.indexOf(fp.fig)+1;
 				}
 			}
 
 			// remove first fig from board
 			remove(cfp.fig, cfp.x, cfp.y);
 			++cfp.x;
-			if (cfp.x >= board.w/2) {
+			if (2*cfp.x > board.w-cfp.fig.w) {
 				cfp.x=0;
 				++cfp.y;
 			}
-			//break;
 		}
-		Log.debug(" *** FOUND %d ***", found);
 	}
 
 	private boolean put(Fig f, int x0, int y0) {
@@ -126,7 +136,7 @@ public class Pentomino {
 		}
 
 		if (x0 < 0 || y0 < 0) return false;
-		if (x0 + f.w >= board.w || y0 + f.h >= board.h) return false;
+		if (x0 + f.w > board.w || y0 + f.h > board.h) return false;
 
 		for (int i=0; i < STONES; ++i) {
 			if (board.get(x0+f.x[i], y0+f.y[i])) return false;
@@ -147,19 +157,6 @@ public class Pentomino {
 		figUsed[f.type] = null;
 	}
 
-	final public static void printAllFigs() {
-		for (Fig f : figs) {
-			System.out.printf("Fig type %d:\n", f.type);
-			f.print();
-		}
-		System.out.printf("There is %d figs\n", figs.size());
-	}
-	final public static void printFigs() {
-		System.out.printf("Primary figs %d\n", baseFig.length);
-		for (Fig f : baseFig) {
-			f.print();
-		}
-	}
 	final private static Fig[] baseFig = {
 		/*   0 1 2
 		 * 0   X
@@ -260,7 +257,7 @@ public class Pentomino {
 		static private short[] subtypeCnt = new short[12];
 		static private int typeCounter=0;
 		public final int type;
-		private int subtype;
+		private final int subtype;
 		private final int[] x=new int[STONES];
 		private final int[] y=new int[STONES];
 		private int w,h;
@@ -273,11 +270,12 @@ public class Pentomino {
 			x[2]=x2;y[2]=y2;
 			x[3]=x3;y[3]=y3;
 			x[4]=x4;y[4]=y4;
-			w=h=0;
+			w=h=-1;
 			for (int i=0; i < STONES; ++i) {
 				if (w < x[i]) w=x[i];
 				if (h < y[i]) h=y[i];
 			}
+			++w; ++h;
 		}
 		Fig(Fig o) {
 			type=o.type;
@@ -301,11 +299,11 @@ public class Pentomino {
 		}
 		void flipX() {
 			for (int i=0; i < STONES; ++i)
-				x[i]=w-x[i];
+				x[i]=w-x[i]-1;
 		}
 		void flipY() {
 			for (int i=0; i < STONES; ++i)
-				y[i]=h-y[i];
+				y[i]=h-y[i]-1;
 		}
 		@Override
 		public boolean equals(Object other) {
@@ -319,20 +317,6 @@ public class Pentomino {
 				s2.set(o.y[i]*STONES+o.x[i]);
 			}
 			return s1.equals(s2);
-		}
-		void print() {
-			byte[] m = new byte[STONES*STONES];
-			for (int i=0; i < m.length; ++i) m[i]=' ';
-			for (int i=0; i < STONES; ++i) {
-				int x=this.x[i], y=this.y[i];
-				m[y*STONES+x] = 'X';
-			}
-			for (int y=0; y <= this.h; ++y) {
-				System.out.write(m, y*STONES, this.w+1);
-				System.out.println();
-			}
-			System.out.printf("size %d x %d\n",this.w+1,this.h+1);
-			System.out.println("--------------");
 		}
 	}
 }
