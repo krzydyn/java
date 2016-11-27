@@ -31,7 +31,7 @@ public class Pentomino {
 	private ChangeListener listener;
 	final private GameBoard<Boolean> board;
 	final private Fig[] figUsed = new Fig[baseFig.length];
-
+	private boolean running=false;
 
 	public Pentomino(int w,int h) {
 		board = new GameBoard.Bool(w, h);
@@ -65,7 +65,11 @@ public class Pentomino {
 		}
 		return false;
 	}
+	public void stop() {
+		running=false;
+	}
 	public void solve() {
+		running=true;
 		List<FigPos> list=new ArrayList<Pentomino.FigPos>();
 
 		FigPos cfp = new FigPos(figs.get(0),1,0);
@@ -84,6 +88,7 @@ public class Pentomino {
 			Point cp = new Point(0,0);
 			int findFrom=1;
 			while (findFree(cp)) {
+				if (!running) return ;
 				//Log.debug("trying to cover %d,%d", cp.x,cp.y);
 				// try to cover cp with fig
 				for (int i=findFrom; i < figs.size(); ++i) {
@@ -128,6 +133,7 @@ public class Pentomino {
 				++cfp.y;
 			}
 		}
+		running=false;
 	}
 
 	private boolean put(Fig f, int x0, int y0) {

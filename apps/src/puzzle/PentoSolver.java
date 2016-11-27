@@ -1,6 +1,7 @@
 package puzzle;
 
 import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Point;
@@ -25,22 +26,25 @@ public class PentoSolver extends MainPanel implements ChangeListener {
 	 * 6x10     2339     10.597
 	 * 12x5     1308    228.494
 	 * 5x12     1308      4.945
+	 * 15x4      402    255.718
+	 * 4x15      402      2.442
+	 * 20x3        0 ???
+	 * 3x20        4      1.594
 	 */
 	Pentomino pentomino = new Pentomino(6,10);
 	int cnt=0;
 	boolean done=false;
-	long t0=0;
-	public PentoSolver() {
-		new Thread() {
-			@Override
-			public void run() {
-				pentomino.setListener(PentoSolver.this);
-				t0=System.currentTimeMillis();
-				pentomino.solve();
-				done=true;
-				repaint();
-			}
-		}.start();
+	long t0=0,elapsed=0;
+	public PentoSolver() {}
+
+	@Override
+	public Dimension getMinimumSize() {
+		return getPreferredSize();
+	}
+	@Override
+	public Dimension getPreferredSize() {
+		int w=pentomino.getWidth(), h=pentomino.getHeight();
+		return new Dimension((w+1)*20, (h+3)*20);
 	}
 
 	@Override
@@ -53,7 +57,7 @@ public class PentoSolver extends MainPanel implements ChangeListener {
 			g2.setColor(Color.BLACK);
 			g2.drawRect(9, 9, w*20+1, h*20+1);
 			g2.drawString(
-					String.format("found: %d, time: %d ms", cnt, System.currentTimeMillis()-t0),
+					String.format("found: %d, time: %d ms", cnt, elapsed),
 					10,20*(h+1)+10);
 			if (done) g2.drawString("DONE",10,20*(h+2)+10);
 			for (FigPos fp : current) {
@@ -74,11 +78,31 @@ public class PentoSolver extends MainPanel implements ChangeListener {
 			current.clear();
 			current.addAll(list);
 		}
+		elapsed=System.currentTimeMillis()-t0;
 		repaint(100);
 		if (list.size()==12) ++cnt;
 		//if (list.size()==12) XThread.sleep(1000);
 		//else XThread.sleep(10);
 		//XThread.sleep(100);
+	}
+
+	@Override
+	public void windowOpened() {
+		new Thread("Solver") {
+			@Override
+			public void run() {
+				pentomino.setListener(PentoSolver.this);
+				t0=System.currentTimeMillis();
+				pentomino.solve();
+				done=true;
+				repaint();
+			}
+		}.start();
+	}
+
+	@Override
+	public void windowClosed() {
+		pentomino.stop();
 	}
 
 	public static void main(String[] args) {
