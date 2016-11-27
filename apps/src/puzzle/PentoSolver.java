@@ -18,7 +18,7 @@ public class PentoSolver extends MainPanel implements ChangeListener {
 	final List<FigPos> current = new ArrayList<Pentomino.FigPos>(12);
 
 	final static Color[] colorTable = {
-		Color.GRAY, Color.GREEN, Color.YELLOW, Color.MAGENTA, Color.CYAN, Color.WHITE
+		Color.RED, Color.GREEN, Color.YELLOW, Color.MAGENTA, Color.CYAN, Color.BLUE
 	};
 
 	/* size  solutions time[sec]
@@ -52,7 +52,7 @@ public class PentoSolver extends MainPanel implements ChangeListener {
 		Graphics2D g2 = (Graphics2D)g;
 		int w=pentomino.getWidth(), h=pentomino.getHeight();
 		synchronized (current) {
-			g2.setBackground(Color.LIGHT_GRAY);
+			g2.setBackground(getBackground());
 			g2.clearRect(0, 0, getWidth(),getHeight());
 			g2.setColor(Color.BLACK);
 			g2.drawRect(9, 9, w*20+1, h*20+1);
