@@ -22,16 +22,16 @@ public class PentoSolver extends MainPanel implements ChangeListener {
 	};
 
 	/* size  solutions time[sec]
-	 * 10x6     2339    102.448
-	 * 6x10     2339     10.597
-	 * 12x5     1308    228.494
-	 * 5x12     1308      4.945
-	 * 15x4      402    255.718
-	 * 4x15      402      2.442
-	 * 20x3        0 ???
-	 * 3x20        4      1.594
+	 * 10x6     2339      8.556
+	 * 6x10     2339      8.787
+	 * 12x5     1308      3.877
+	 * 5x12     1308      3.889
+	 * 15x4      402      0.947
+	 * 4x15      402      0.987
+	 * 20x3        4      0.185
+	 * 3x20        4      0.188
 	 */
-	Pentomino pentomino = new Pentomino(6,10);
+	Pentomino pentomino = new Pentomino(3,20);
 	int cnt=0;
 	boolean done=false;
 	long t0=0,elapsed=0;

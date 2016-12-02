@@ -39,9 +39,9 @@ public class Pentomino {
 	public int getWidth() {return board.w;}
 	public int getHeight() {return board.h;}
 	public void setListener(ChangeListener l) {listener=l;}
-	private boolean findFree(Point cp) {
+	private boolean nextFree(Point cp) {
 		cp.x=cp.y=0;
-		/*if (board.w>board.h) {
+		if (board.w>board.h) {
 			for (;;) {
 				if (cp.y >= board.h) {
 					cp.y=0;
@@ -52,7 +52,7 @@ public class Pentomino {
 				++cp.y;
 			}
 		}
-		else*/ {
+		else {
 			for (;;) {
 				if (cp.x >= board.w) {
 					cp.x=0;
@@ -68,9 +68,48 @@ public class Pentomino {
 	public void stop() {
 		running=false;
 	}
+	private void sortX() {
+		for (Fig f : figs) {
+			int xmin=f.w;
+			int jm=-1;
+			for (int j=0; j < STONES; ++j) {
+				if (f.y[j]>0) continue;
+				if (xmin>f.x[j]) {xmin=f.x[j];jm=j;}
+			}
+			if (jm>0) {
+				int t=f.x[0];
+				f.x[0]=f.x[jm];
+				f.x[jm]=t;
+				t=f.y[0];
+				f.y[0]=f.y[jm];
+				f.y[jm]=t;
+			}
+		}
+	}
+	private void sortY() {
+		for (Fig f : figs) {
+			int ymin=f.h;
+			int jm=-1;
+			for (int j=0; j < STONES; ++j) {
+				if (f.x[j]>0) continue;
+				if (ymin>f.y[j]) {ymin=f.y[j];jm=j;}
+			}
+			if (jm>0) {
+				int t=f.x[0];
+				f.x[0]=f.x[jm];
+				f.x[jm]=t;
+				t=f.y[0];
+				f.y[0]=f.y[jm];
+				f.y[jm]=t;
+			}
+		}
+	}
 	public void solve() {
 		running=true;
 		List<FigPos> list=new ArrayList<Pentomino.FigPos>();
+
+		if (board.w>board.h) sortY();
+		else sortX();
 
 		FigPos cfp = new FigPos(figs.get(0),1,0);
 		while (2*cfp.y <= board.h-cfp.fig.h) {
@@ -87,20 +126,16 @@ public class Pentomino {
 
 			Point cp = new Point(0,0);
 			int findFrom=1;
-			while (findFree(cp)) {
+			while (nextFree(cp)) {
 				if (!running) return ;
 				//Log.debug("trying to cover %d,%d", cp.x,cp.y);
 				// try to cover cp with fig
 				for (int i=findFrom; i < figs.size(); ++i) {
 					Fig f = figs.get(i);
 					if (figUsed[f.type] != null) continue;
-					int xmin=f.w;
-					for (int j=0; j < STONES; ++j) {
-						if (f.y[j]>0) continue;
-						if (xmin>f.x[j]) xmin=f.x[j];
-					}
-					if (put(f,cp.x-xmin,cp.y)) {
-						list.add(new FigPos(f, cp.x-xmin, cp.y));
+					int x=cp.x-f.x[0], y=cp.y-f.y[0];
+					if (put(f,x,y)) {
+						list.add(new FigPos(f, x, y));
 						findFrom=1;
 						//Log.debug("put fig %s at %d,%d",f,cp.x-xmin,cp.y);
 						if (listener!=null) listener.boardChanged(list);
