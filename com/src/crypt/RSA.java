@@ -28,20 +28,27 @@ import text.Text;
 
 public class RSA {
 	static BigInteger TWO = BigInteger.valueOf(2);
-	private BigInteger N;
-	private BigInteger e;
-	private BigInteger d;
+	private BigInteger e,d,N;
+	private BigInteger p,q;
 
 	public RSA(BigInteger e, BigInteger d, BigInteger N) {
-		this.e = e;
-		this.d = d;
-		this.N = N;
+		this.e = e; // public exponent
+		this.d = d; // private exponent
+		this.N = N; // modulus
+
+		//recover p,q
+		//N=p*q
+		//phi=(p-1)*(q-1)
+		//d=e^-1 mod phi
+		BigInteger k = d.multiply(e).subtract(BigInteger.ONE);
+		if (!k.testBit(0)) return ; //no prime factors
+
 	}
 
 	public RSA(int bits) {
 		Random r = new Random();
-		BigInteger p = BigInteger.probablePrime(bits, r);
-		BigInteger q = BigInteger.probablePrime(bits, r);
+		p = BigInteger.probablePrime(bits, r);
+		q = BigInteger.probablePrime(bits, r);
 		N = p.multiply(q);
 
 		/* phi = (p-1)*(q-1);
@@ -69,14 +76,12 @@ repeat
    q ← genprime(k - k/2)
 until (q mod e) ≠ 1
 N ← pq
-L ← (p-1)(q-1)
-d ← modinv(e, L)
+phi ← (p-1)(q-1)
+d ← modinv(e, phi)
 return (N, e, d)
 	 */
 	public RSA(int bits, BigInteger e) {
 		Random r = new Random();
-		BigInteger p;
-		BigInteger q;
 
 		do {
 			p = BigInteger.probablePrime(bits, r);
