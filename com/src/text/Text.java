@@ -82,6 +82,17 @@ public class Text {
 		}
 		return b.toString();
 	}
+	private static String join_i(String sep, short[] a, int off,int len) {
+		if (a.length==0) return "";
+		if (len < 0) len = a.length;
+		StringBuilder b=new StringBuilder(len*(sep.length()+2));
+		for (int i = 0; ;) {
+			b.append(a[off+i]);
+			if (++i == len) break;
+			b.append(sep);
+		}
+		return b.toString();
+	}
 	private static String join_o(String sep, Object[] a, int off,int len) {
 		if (a.length==0) return "";
 		if (len < 0) len = a.length;
@@ -97,6 +108,7 @@ public class Text {
 	public static String join(String sep,Object o, int off,int len) {
 		if (o == null) return null;
 		if (o instanceof byte[]) return join_b(sep, (byte[])o,off,len);
+		if (o instanceof short[]) return join_i(sep, (short[])o,off,len);
 		if (o instanceof int[]) return join_i(sep, (int[])o,off,len);
 		if (o instanceof Object[]) return join_o(sep, (Object[])o,off,len);
 		if (o instanceof Iterable) return join_it(sep, (List<?>)o,off,len);
