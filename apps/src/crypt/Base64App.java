@@ -1,6 +1,6 @@
 package crypt;
 
-import crypt.GenSecosCrypt.Log;
+import sys.Log;
 
 public class Base64App {
 

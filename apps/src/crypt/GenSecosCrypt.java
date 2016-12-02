@@ -29,7 +29,7 @@ public class GenSecosCrypt {
 			return hexstr(b, s, off, len).toString();
 		}
 	}
-	static class Log {
+	private static class Log {
 		final public static void prn(String fmt,Object ...args) {
 			System.err.printf(fmt+"\n", args);
 		}
