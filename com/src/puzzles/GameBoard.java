@@ -2,7 +2,7 @@ package puzzles;
 
 public abstract class GameBoard<T> {
 
-	int w,h;
+	final public int w,h;
 	public GameBoard(int w, int h) {
 		this.w=w; this.h=h;
 	}
@@ -14,6 +14,14 @@ public abstract class GameBoard<T> {
 	final public void set(int x, int y, T b){
 		if (x<0 || y<0 || x>=w || y>=h) throw new IndexOutOfBoundsException(String.format("%d,%d",x,y));
 		set(y*w+x,b);
+	}
+	public void print() {
+		for (int y=0; y < h; ++y) {
+			for (int x=0; x < w; ++x) {
+				System.out.print(get(x,y));
+			}
+			System.out.println();
+		}
 	}
 	abstract public T get(int i);
 	abstract public void set(int i, T b);
