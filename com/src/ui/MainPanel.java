@@ -151,9 +151,12 @@ public class MainPanel extends JPanel{
 					}
 					f.pack();
 					d=main.getMinimumSize();
-					if (d.width!=0 || d.height!=0) {
+					Log.debug("main minSize %d x %d", d.width, d.height);
+					if (d.width!=0 && d.height!=0) {
 						Dimension d1=f.getSize();
 						Dimension d2=main.getSize();
+						Log.debug("frame size %d x %d", d.width, d.height);
+						Log.debug("main size %d x %d", d.width, d.height);
 						d.width += d1.width-d2.width;
 						d.height += d1.height-d2.height;
 						f.setMinimumSize(d);

@@ -11,6 +11,7 @@ import java.util.List;
 import puzzles.Pentomino;
 import puzzles.Pentomino.ChangeListener;
 import puzzles.Pentomino.FigPos;
+import sys.Log;
 import ui.MainPanel;
 
 @SuppressWarnings("serial")
@@ -31,7 +32,7 @@ public class PentoSolver extends MainPanel implements ChangeListener {
 	 * 20x3        4      0.185
 	 * 3x20        4      0.188
 	 */
-	Pentomino pentomino = new Pentomino(3,20);
+	Pentomino pentomino = new Pentomino(10,6);
 	int cnt=0;
 	boolean done=false;
 	long t0=0,elapsed=0;
@@ -44,7 +45,9 @@ public class PentoSolver extends MainPanel implements ChangeListener {
 	@Override
 	public Dimension getPreferredSize() {
 		int w=pentomino.getWidth(), h=pentomino.getHeight();
-		return new Dimension((w+1)*20, (h+3)*20);
+		Dimension d = new Dimension((w+1)*20, (h+2)*20);
+		Log.debug("getPreferredSize %d x %d",d.width,d.height);
+		return d;
 	}
 
 	@Override
