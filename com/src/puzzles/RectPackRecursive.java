@@ -4,23 +4,23 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import puzzles.RectPackBruteForce.Box;
+import puzzles.GameBoard.Sheet;
 import sys.Log;
 import text.Text;
 
 public class RectPackRecursive {
 	int cachew;
 	int[] cache;
-	List<Box>[] cacheBox;
-	private final Box box = new Box(0,0);
-	private final Box rbox = new Box(0,0);
+	List<Sheet>[] cacheBox;
+	private final Sheet box = new Sheet(0,0);
+	private final Sheet rbox = new Sheet(0,0);
 	private final List<Integer> grid=new ArrayList<>();
 
-	public RectPackRecursive(Box r) {
+	public RectPackRecursive(Sheet r) {
 		box.set(r.w,r.h);
 		rbox.set(r.h,r.w);
 	}
-	public int solve(Box page) {
+	public int solve(Sheet page) {
 		cachew=page.w;
 		cache = new int[cachew*(page.h+1)+1];
 		//cacheBox = new ArrayList[page.w*page.h+1];
@@ -46,13 +46,13 @@ public class RectPackRecursive {
 		return n;
 	}
 
-	public int psolve(Box page) {
+	public int psolve(Sheet page) {
 		if (cache.length <= cachew*page.h+page.w) {
 			Log.error("index = %d > %d", cachew*page.h+page.w, cache.length);
 		}
 		if (cache[cachew*page.h+page.w] >= 0) return cache[cachew*page.h+page.w];
 
-		Box p1,p2,p3;
+		Sheet p1,p2,p3;
 		int sum=-1;
 		if (page.contains(box)) {
 			if (page.h == box.h) sum=page.w/box.w;
@@ -76,17 +76,17 @@ public class RectPackRecursive {
 			for (int x : grid) {
 				if (x >= page.w) break;
 				int s1=0,s=0;
-				p1 = new Box(x,y);
+				p1 = new Sheet(x,y);
 				s1 = psolve(p1);
 
-				p2 = new Box(page.w,page.h-y);
-				p3 = new Box(page.w-x,y);
+				p2 = new Sheet(page.w,page.h-y);
+				p3 = new Sheet(page.w-x,y);
 				s = psolve(p2);
 				s += psolve(p3);
 				if (sum < s1+s) sum=s1+s;
 
-				p2 = new Box(page.w-x,page.h);
-				p3 = new Box(x,page.h-y);
+				p2 = new Sheet(page.w-x,page.h);
+				p3 = new Sheet(x,page.h-y);
 				s = psolve(p2);
 				s += psolve(p3);
 				if (sum < s1+s) sum=s1+s;
@@ -97,7 +97,7 @@ public class RectPackRecursive {
 	}
 
 
-	int nsolve_prv(Box page) {
+	int nsolve_prv(Sheet page) {
 		int n,m;
 		m=n=0;
 		if (!page.contains(box) && !page.contains(rbox)) {
@@ -127,11 +127,11 @@ public class RectPackRecursive {
 
 		//Log.prn("page %dx%d n(%dx%d)+m(%dx%d) + %d",page.w,page.h,n,box.w,m,box.h,page.w-n*box.w-m*box.h);
 		int s=n+m;
-		if (n>0 && page.h > box.h) s += nsolve(new Box(n*box.w, page.h-box.h));
-		if (page.h > box.w) s += nsolve(new Box(page.w - n*box.w, page.h-box.w));
+		if (n>0 && page.h > box.h) s += nsolve(new Sheet(n*box.w, page.h-box.h));
+		if (page.h > box.w) s += nsolve(new Sheet(page.w - n*box.w, page.h-box.w));
 		return s;
 	}
-	int nsolve(Box page) {
+	int nsolve(Sheet page) {
 		//Log.prn("case1 %d x %d",page.w,page.h);
 		int n1 = nsolve_prv(page);
 		//Log.prn("case2 %d x %d",page.w,page.h);
@@ -144,20 +144,20 @@ public class RectPackRecursive {
 	 */
 	public static void main(String[] args) {
 		RectPackRecursive r;
-		r = new RectPackRecursive(new Box(5,3));
+		r = new RectPackRecursive(new Sheet(5,3));
 		Log.prn("---------------");
-		Log.prn("r = %d",r.solve(new Box(28,27)));
-		Log.prn("nr = %d",r.nsolve(new Box(28,27)));
+		Log.prn("r = %d",r.solve(new Sheet(28,27)));
+		Log.prn("nr = %d",r.nsolve(new Sheet(28,27)));
 
-		r = new RectPackRecursive(new Box(8,3));
-		System.out.printf("r = %d\n",r.solve(new Box(49,28)));
-		System.out.printf("nr = %d\n",r.nsolve(new Box(49,28)));
-		System.out.printf("nr = %d\n",r.nsolve(new Box(28,49)));
+		r = new RectPackRecursive(new Sheet(8,3));
+		System.out.printf("r = %d\n",r.solve(new Sheet(49,28)));
+		System.out.printf("nr = %d\n",r.nsolve(new Sheet(49,28)));
+		System.out.printf("nr = %d\n",r.nsolve(new Sheet(28,49)));
 
-		r = new RectPackRecursive(new Box(137,95));
-		System.out.printf("nr = %d\n",r.nsolve(new Box(1600,1230)));
-		System.out.printf("nr = %d\n",r.nsolve(new Box(1230,1600)));
-		r.solve(new Box(1230,1600));
+		r = new RectPackRecursive(new Sheet(137,95));
+		System.out.printf("nr = %d\n",r.nsolve(new Sheet(1600,1230)));
+		System.out.printf("nr = %d\n",r.nsolve(new Sheet(1230,1600)));
+		r.solve(new Sheet(1230,1600));
 		//System.out.printf("r = %d\n",r.solve(new Box(1230,1600)));
 	}
 }

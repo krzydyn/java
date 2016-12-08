@@ -9,6 +9,8 @@ import java.util.List;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 
+import puzzles.GameBoard.Rect;
+import puzzles.GameBoard.Sheet;
 import puzzles.RectPackBruteForce;
 import sys.Log;
 import ui.MainPanel;
@@ -21,10 +23,10 @@ public class RectsOnSheet extends MainPanel {
 	 * (1600,1230,137,95) -> 147
 	 */
 
-	private final List<RectPackBruteForce.Rect> rects=new ArrayList<RectPackBruteForce.Rect>();
-	private final List<RectPackBruteForce.Rect> best=new ArrayList<RectPackBruteForce.Rect>();
-	RectPackBruteForce.Box sheet = new RectPackBruteForce.Box(19,17);
-	RectPackBruteForce.Box rect = new RectPackBruteForce.Box(5,3);
+	private final List<Rect> rects=new ArrayList<Rect>();
+	private final List<Rect> best=new ArrayList<Rect>();
+	Sheet sheet = new Sheet(19,17);
+	Sheet rect = new Sheet(5,3);
 
 	private final RectPanel rectpanel = new RectPanel(sheet, rects);
 	private final JLabel labSt = new JLabel("STATUS");
@@ -63,7 +65,7 @@ public class RectsOnSheet extends MainPanel {
 		running=false;
 	}
 
-	private int quality(List<RectPackBruteForce.Rect> list) {
+	private int quality(List<Rect> list) {
 		int q=0, n=list.size();
 		for (int i=0; i < n; ++i) {
 			if (list.get(i).y == list.get((i+1)%n).y) ++q;
@@ -88,7 +90,7 @@ public class RectsOnSheet extends MainPanel {
 				else if (bestq < q) {
 					bestq=q; nq=1;
 					best.clear();
-					for (RectPackBruteForce.Rect r : rp.getRects()) {
+					for (Rect r : rp.getRects()) {
 						best.add(r);
 					}
 				}
@@ -98,7 +100,7 @@ public class RectsOnSheet extends MainPanel {
 				bestq=quality(rp.getRects());
 				nq=1;
 				best.clear(); nmax=1;
-				for (RectPackBruteForce.Rect r : rp.getRects()) {
+				for (Rect r : rp.getRects()) {
 					best.add(r);
 				}
 				draw=true;
@@ -110,7 +112,7 @@ public class RectsOnSheet extends MainPanel {
 			if (draw) {
 				if (rectpanel.waitRedy()) {
 					rects.clear();
-					for (RectPackBruteForce.Rect r : rp.getRects()) {
+					for (Rect r : rp.getRects()) {
 						rects.add(r);
 					}
 					rectpanel.repaint();
@@ -124,7 +126,7 @@ public class RectsOnSheet extends MainPanel {
 		Log.debug("n=%d, rects=%d(%d,%d) left:%d",n,best.size(),nmax,nq,sheet.w*sheet.h-best.size()*rs);
 		rectpanel.waitRedy();
 		rects.clear();
-		for (RectPackBruteForce.Rect r : best) {
+		for (Rect r : best) {
 			rects.add(r);
 		}
 		repaint();
@@ -138,9 +140,9 @@ public class RectsOnSheet extends MainPanel {
 class RectPanel extends JPanel {
 	private volatile boolean ready=true;
 	private final Object readyLock = new Object();
-	private final RectPackBruteForce.Box sheet;
-	private final List<RectPackBruteForce.Rect> list;
-	public RectPanel(RectPackBruteForce.Box sheet, List<RectPackBruteForce.Rect> list) {
+	private final Sheet sheet;
+	private final List<Rect> list;
+	public RectPanel(Sheet sheet, List<Rect> list) {
 		super(null);
 		this.sheet=sheet;
 		this.list=list;
@@ -169,13 +171,13 @@ class RectPanel extends JPanel {
 		//Graphics2D g2 = (Graphics2D)g;
 		g.clearRect(0, 0, getWidth(), getHeight());
 
-		RectPackBruteForce.Rect r;
+		Rect r;
 		g.setColor(Color.BLACK);
 		for (int i=0; i < list.size(); ++i) {
 			r=list.get(i);
 			g.drawRect((int)(r.x*s), (int)(r.y*s), (int)(r.s.w*s), (int)(r.s.h*s));
 		}
-		r = new RectPackBruteForce.Rect(0,0,sheet);
+		r = new Rect(0,0,sheet);
 		g.setColor(Color.BLUE);
 		g.drawRect((int)(r.x*s), (int)(r.y*s), (int)(r.s.w*s), (int)(r.s.h*s));
 		synchronized (readyLock) {

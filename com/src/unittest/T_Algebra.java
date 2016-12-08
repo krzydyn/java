@@ -21,7 +21,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import puzzles.Expression;
-import puzzles.RectPackBruteForce;
+import puzzles.GameBoard.Rect;
+import puzzles.GameBoard.Sheet;
 import algebra.Maths;
 import algebra.Permutate;
 import sys.UnitTest;
@@ -70,8 +71,8 @@ public class T_Algebra extends UnitTest {
 	}
 
 	static void rectinrect() {
-		RectPackBruteForce.Rect r1 = new RectPackBruteForce.Rect(3, 7, new RectPackBruteForce.Box(3,4));
-		RectPackBruteForce.Rect r2 = new RectPackBruteForce.Rect(0, 8, new RectPackBruteForce.Box(4,3));
+		Rect r1 = new Rect(3, 7, new Sheet(3,4));
+		Rect r2 = new Rect(0, 8, new Sheet(4,3));
 		check("r1 . r2", r1.intersects(r2) == true);
 		check("r2 . r1", r2.intersects(r1) == true);
 	}

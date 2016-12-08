@@ -3,53 +3,21 @@ package puzzles;
 import java.util.ArrayList;
 import java.util.List;
 
+import puzzles.GameBoard.Rect;
+import puzzles.GameBoard.Sheet;
 import sys.Log;
 
 public class RectPackBruteForce {
 	private int cx,cy;
 	final private List<Rect> rects = new ArrayList<Rect>();
-	final private Box sheet;
-	private final Box rect = new Box(0,0);
-	private final Box lay[] = new Box[2];
+	final private Sheet sheet;
+	private final Sheet rect = new Sheet(0,0);
+	private final Sheet lay[] = new Sheet[2];
 
-	public static class Box {
-		public int w, h;
-		public Box(int w,int h) {set(w,h);}
-		Box(Box d) {set(d.w,d.h);}
-		public void set(int w,int h) {this.w=w; this.h=h;}
-		void rot() { int t=w; w=h; h=t;}
-		public Box rotated() { Box d=new Box(this); d.rot(); return d;}
-		public boolean contains(Rect r) {
-			return 0<=r.x && 0<=r.y && r.x+r.s.w<=w && r.y+r.s.h<=h;
-		}
-		public boolean contains(Box r) {return r.w<=w && r.h<=h;}
-	}
-	public static class Rect {
-		public int x, y;
-		public Box s;
-		public Rect(int x,int y,Box s) {
-			set(x, y, s);
-		}
-		Rect(Rect r) {set(r);}
-		void set(int x,int y,Box s) {
-			this.x=x; this.y=y; this.s=s;
-		}
-		void set(Rect r) {
-			set(r.x,r.y,r.s);
-		}
-		@Override
-		public String toString() {
-			return String.format("(%d,%d,%d,%d)", x,y,s.w,s.h);
-		}
-		public boolean intersects(Rect r) {
-			return x < r.x+r.s.w && r.x < x+s.w && y < r.y+r.s.h && r.y < y+s.h;
-		}
-	}
-
-	public RectPackBruteForce(Box sheet) {
+	public RectPackBruteForce(Sheet sheet) {
 		this.sheet=sheet;
 	}
-	public void setRect(Box r) {
+	public void setRect(Sheet r) {
 		rect.w=r.w;
 		rect.h=r.h;
 		rects.clear();

@@ -22,9 +22,9 @@ public class PentoSolver extends MainPanel implements ChangeListener {
 		Color.RED, Color.GREEN, Color.YELLOW, Color.MAGENTA, Color.CYAN, Color.BLUE
 	};
 
-	/* size  solutions time[sec]
-	 * 10x6     2339      8.556
-	 * 6x10     2339      8.787
+	/* size  solutions latop[sec]  PC 3.6GHz[sec]
+	 * 10x6     2339      8.556      3.261
+	 * 6x10     2339      8.787      3.005
 	 * 12x5     1308      3.877
 	 * 5x12     1308      3.889
 	 * 15x4      402      0.947
@@ -32,7 +32,7 @@ public class PentoSolver extends MainPanel implements ChangeListener {
 	 * 20x3        4      0.185
 	 * 3x20        4      0.188
 	 */
-	Pentomino pentomino = new Pentomino(10,6);
+	Pentomino pentomino = new Pentomino(6,10);
 	int cnt=0;
 	boolean done=false;
 	long t0=0,elapsed=0;
@@ -40,7 +40,12 @@ public class PentoSolver extends MainPanel implements ChangeListener {
 
 	@Override
 	public Dimension getMinimumSize() {
-		return getPreferredSize();
+		Dimension d=getPreferredSize();
+		//return getPreferredSize();
+		//return super.getMaximumSize();
+		d.width-=10;
+		d.height-=10;
+		return d;
 	}
 	@Override
 	public Dimension getPreferredSize() {
@@ -53,6 +58,9 @@ public class PentoSolver extends MainPanel implements ChangeListener {
 	@Override
 	public void paintComponent(Graphics g) {
 		Graphics2D g2 = (Graphics2D)g;
+		//Dimension scr = getSize();
+		//Log.debug("getSize %d x %d",scr.width,scr.height);
+
 		int w=pentomino.getWidth(), h=pentomino.getHeight();
 		synchronized (current) {
 			g2.setBackground(getBackground());
@@ -91,6 +99,8 @@ public class PentoSolver extends MainPanel implements ChangeListener {
 
 	@Override
 	public void windowOpened() {
+		Dimension scr = getSize();
+		Log.debug("getSize %d x %d",scr.width,scr.height);
 		new Thread("Solver") {
 			@Override
 			public void run() {
@@ -106,6 +116,11 @@ public class PentoSolver extends MainPanel implements ChangeListener {
 	@Override
 	public void windowClosed() {
 		pentomino.stop();
+	}
+	@Override
+	public void windowResized() {
+		//Dimension scr = getSize();
+		//Log.debug("resized getSize %d x %d",scr.width,scr.height);
 	}
 
 	public static void main(String[] args) {

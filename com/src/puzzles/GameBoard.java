@@ -73,4 +73,40 @@ public abstract class GameBoard<T> {
 			board[i] = b;
 		}
 	}
+
+	public static class Sheet {
+		public int w, h;
+		public Sheet(int w,int h) {set(w,h);}
+		public Sheet(Sheet d) {set(d.w,d.h);}
+		public void set(int w,int h) {this.w=w; this.h=h;}
+		public void rot() { int t=w; w=h; h=t;}
+		public Sheet rotated() { Sheet d=new Sheet(this); d.rot(); return d;}
+		public boolean contains(Rect r) {
+			return 0<=r.x && 0<=r.y && r.x+r.s.w<=w && r.y+r.s.h<=h;
+		}
+		public boolean contains(Sheet r) {return r.w<=w && r.h<=h;}
+	}
+	public static class Rect {
+		public int x, y;
+		public Sheet s;
+		public Rect(int x,int y,Sheet s) {
+			set(x, y, s);
+		}
+		Rect(Rect r) {set(r);}
+		void set(int x,int y,Sheet s) {
+			this.x=x; this.y=y; this.s=s;
+		}
+		void set(Rect r) {
+			set(r.x,r.y,r.s);
+		}
+		@Override
+		public String toString() {
+			return String.format("(%d,%d,%d,%d)", x,y,s.w,s.h);
+		}
+		public boolean intersects(Rect r) {
+			return x < r.x+r.s.w && r.x < x+s.w && y < r.y+r.s.h && r.y < y+s.h;
+		}
+	}
+
+
 }

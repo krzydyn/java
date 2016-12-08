@@ -38,9 +38,12 @@ public class Pentomino {
 	}
 	public int getWidth() {return board.w;}
 	public int getHeight() {return board.h;}
+	public void setBlack(int x,int y) {
+		board.set(x, y, true);
+	}
 	public void setListener(ChangeListener l) {listener=l;}
 	private boolean nextFree(Point cp) {
-		cp.x=cp.y=0;
+		//cp.x=cp.y=0;
 		if (board.w>board.h) {
 			for (;;) {
 				if (cp.y >= board.h) {

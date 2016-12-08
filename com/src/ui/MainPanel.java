@@ -22,6 +22,8 @@ import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.EventQueue;
 import java.awt.LayoutManager;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 
@@ -69,6 +71,7 @@ public class MainPanel extends JPanel{
 
 	protected void windowClosed(){}
 	protected void windowOpened() {}
+	protected void windowResized() {}
 
 	static public void append(JTextPane t, String s) {
 		try {
@@ -140,6 +143,12 @@ public class MainPanel extends JPanel{
 						@Override
 						public void windowOpened(WindowEvent e) {
 							main.windowOpened();
+						}
+					});
+					f.addComponentListener(new ComponentAdapter() {
+						@Override
+						public void componentResized(ComponentEvent e) {
+							main.windowResized();
 						}
 					});
 					f.setTitle(main.getName());
