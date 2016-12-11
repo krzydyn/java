@@ -15,7 +15,7 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License
  */
-package puzzles;
+package algebra;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -37,7 +37,7 @@ public class Expression {
 	}
 	private SymbolGetter symget = null;
 	//RPN (postfix) representation
-	private List<Token> rpn = new ArrayList<Token>();
+	private final List<Token> rpn = new ArrayList<Token>();
 
 	public Expression(String expr, SymbolGetter symget) {
 		this.symget = symget;
