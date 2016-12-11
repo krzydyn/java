@@ -3,15 +3,24 @@ package algebra;
 import java.util.ArrayList;
 import java.util.List;
 
-public class HeapTree<T extends Comparable<T>> {
-	final List<T> heap;
+import sys.Log;
 
+public class HeapTree<T extends Comparable<T>> {
+	private final List<T> heap;
+	private final boolean lazyBuild=true;
+	private boolean builded=false;
+
+	private HeapTree(List<T> a) {
+		heap=a;
+		//buildHeap();
+	}
 	public HeapTree() {
 		this(0);
 	}
 	public HeapTree(int capa) {
-		if (capa<=0) heap = new ArrayList<>();
-		else heap = new ArrayList<>(capa);
+		if (capa<=0) heap = new ArrayList<T>();
+		else heap = new ArrayList<T>(capa);
+		if (!lazyBuild) builded=true;
 	}
 
 	private void swap(int i, int j) {
@@ -23,47 +32,92 @@ public class HeapTree<T extends Comparable<T>> {
 	private int left(int i) {return 2*i+1;}
 	//private int right(int i) {return 2*i+2;}
 
-	private void moveDown(int first, int last) {
-		int l = left(first);
-		while (l <= last) {
-			if (l < last && heap.get(l).compareTo(heap.get(l+1)) < 0) ++l;
-			if (heap.get(first).compareTo(heap.get(l)) < 0) {
-				swap(first, l);
-				first = l;
-				l = left(first);
-			}
-			else {
-				l = last+1;
-			}
-		}
+	private void buildHeap() {
+		if (builded) return ;
+		for (int i=1; i<heap.size(); ++i)
+			moveUp(i);
+		builded = true;
 	}
 
-	public void add(T o) {
-		heap.add(o);
-		int p, v = heap.size();
+	private void moveUp(int v) {
+		int p;
 		while (v>0 && heap.get(p=parent(v)).compareTo(heap.get(v)) < 0) {
 			swap(p,v);
 			v=p;
 		}
 	}
-	//public void remove(int i) {}
-	public T removeRoot() {
-		if (heap.size() == 0) return null;
-		if (heap.size() == 1) return heap.remove(0);
-		T t = heap.get(0);
-		heap.set(0, heap.remove(heap.size()-1));
-		int v,p=0;
-		while ((v=left(p)) < heap.size()) {
-			int x = heap.get(v+1).compareTo(heap.get(v)) < 0 ? v : v+1;
-			if (heap.get(p).compareTo(heap.get(x)) < 0) {
-				swap(p,x);
-				p = x+1;
+	private void moveDown(int p, int s) {
+		int v;
+		while ((v = left(p)) < s) {
+			if (v+1 < s && heap.get(v).compareTo(heap.get(v+1)) < 0)
+				++v;
+			if (heap.get(p).compareTo(heap.get(v)) < 0) {
+				swap(p, v);
+				p = v;
 			}
 			else break;
 		}
-		return t;
+	}
+
+	public void add(T o) {
+		heap.add(o);
+		if (builded) moveUp(heap.size()-1);
+	}
+
+	public T remove(int i) {
+		buildHeap();
+		int s = heap.size();
+		if (i < 0 || i >= s) throw new ArrayIndexOutOfBoundsException(i);
+		if (s <= 2) return heap.remove(i);
+		--s;
+		if (i < s) {
+			swap(i, s);
+			moveDown(i, s);
+		}
+		return heap.remove(s);
 	}
 	public T root() {
+		buildHeap();
+		int s = heap.size();
+		if (s == 0) return null;
+		if (s <= 2) return heap.remove(0);
+		--s;
+		swap(0, s);            // put max on the end
+		moveDown(0, s);        // fix heap tree
+		return heap.remove(s); // remove & return last object
+	}
+	public T top() {
+		buildHeap();
 		return heap.get(0);
+	}
+	public List<T> sort() {
+		buildHeap();
+		for (int i=heap.size()-1; i>0; ) {
+			swap(0, i);     // put max on the end
+			--i;            // shrink heap
+			moveDown(0, i); //fix heap tree
+		}
+		return heap;
+	}
+	public void print() {
+		buildHeap();
+		StringBuilder s=new StringBuilder(heap.size());
+		int nl=1,c=1,sum=1;
+		for (Object i : heap) {
+			s.append(i.toString());
+			s.append(" ");
+			if (sum==c) {
+				s.append("\n");
+				nl*=2;
+				sum+=nl;
+			}
+			++c;
+		}
+		Log.prn("tree:\n%s", s.toString());
+	}
+
+	static public <T extends Comparable<T>> void sort(List<T> a) {
+		HeapTree<T> h = new HeapTree<T>(a);
+		h.sort();
 	}
 }

@@ -19,15 +19,19 @@ package unittest;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
-import puzzles.Expression;
 import puzzles.GameBoard.Rect;
 import puzzles.GameBoard.Sheet;
+import algebra.Expression;
+import algebra.HeapTree;
 import algebra.Maths;
 import algebra.Permutate;
+import sys.Log;
 import sys.UnitTest;
 
 public class T_Algebra extends UnitTest {
+	static final int sortN = 100000;
 	static void permutation() {
 		List<Integer> l = new ArrayList<Integer>();
 		l.add(2);
@@ -75,5 +79,28 @@ public class T_Algebra extends UnitTest {
 		Rect r2 = new Rect(0, 8, new Sheet(4,3));
 		check("r1 . r2", r1.intersects(r2) == true);
 		check("r2 . r1", r2.intersects(r1) == true);
+	}
+	static void heap1() {
+		Log.info("loader");
+	}
+	static void heap2() {
+		Random rnd=new Random(100);
+		HeapTree<Integer> tree=new HeapTree<>(sortN);
+		for (int i=0; i < sortN; ++i)
+			tree.add(rnd.nextInt(10*sortN));
+
+		Log.info("sorting...");
+		List<Integer> list = tree.sort();
+		//Log.prn("%s", Text.join(" ", list));
+	}
+	static void heapsort() {
+		Random rnd=new Random(100);
+		List<Integer> list = new ArrayList<>(sortN);
+		for (int i=0; i < sortN; ++i)
+			list.add(rnd.nextInt(10*sortN));
+
+		Log.info("sorting...");
+		HeapTree.sort(list);
+		//Log.prn("%s", Text.join(" ", list));
 	}
 }

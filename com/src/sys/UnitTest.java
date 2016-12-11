@@ -103,8 +103,6 @@ public class UnitTest {
 	static public void test(String prefix, String unit) {
 		ClassLoader cl = getClassLoader();
 
-		time.reset(0);
-		Log.info("* TestUnit: %s start", unit);
 		Class<?> c;
 		try {
 			c = cl.loadClass(unit);
@@ -115,6 +113,8 @@ public class UnitTest {
 					return o1.getName().compareTo(o2.getName());
 				}
 			});
+			Log.info("* TestUnit: %s start", unit);
+			time.reset(0);
 			for (Method m : mts) {
 				if (!Modifier.isStatic(m.getModifiers())) {
 					continue;
@@ -127,22 +127,27 @@ public class UnitTest {
 				current.testunit = unit;
 				current.testcase = m.getName();
 				current.elapsed = -1;
+				try {
+					// allow access to non public method
+					m.setAccessible(true);
+				} catch (Throwable e) {
+					Log.error(e,"method not accessible in %s.%s", unit, m.getName());
+					continue;
+				}
 
-				time.nextLap();
 				Log.info("  ** Testcase: %s start", m.getName());
 				try {
 					++current.checks;
-					// allow access to non public method
-					m.setAccessible(true);
+					time.update(0);
 					m.invoke(null, empty);
 				} catch (Throwable e) {
 					++current.errors;
 					if (e.getCause() != null) e=e.getCause();
-					Log.error(e,"Exeception in %s.%s", unit, m.getName());
+					Log.error(e,"Exception in %s.%s", unit, m.getName());
 				} finally {
-					time.update(0);
+					time.nextLap();
 					current.elapsed = time.getTime();
-					Log.info("  ** Testcase: %s end in %.3f sec", m.getName(), time.getTime()/1000.0);
+					Log.info("  ** Testcase: %s end in %.3f sec", m.getName(), current.elapsed/1000.0);
 					current=null;
 				}
 			}

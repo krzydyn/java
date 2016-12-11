@@ -41,4 +41,7 @@ public class Combinatory {
 		   }
 	}
 
+	static public <T extends Comparable<T>> void heapSort(List<T> a) {
+		HeapTree.sort(a);
+	}
 }

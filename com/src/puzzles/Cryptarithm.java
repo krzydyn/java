@@ -20,8 +20,9 @@ package puzzles;
 import java.util.ArrayList;
 import java.util.List;
 
-import puzzles.Expression.SymbolGetter;
+import algebra.Expression;
 import algebra.Permutate;
+import algebra.Expression.SymbolGetter;
 
 public class Cryptarithm {
 	final int BASE=10;
