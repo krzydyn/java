@@ -160,7 +160,6 @@ public class MainPanel extends JPanel{
 					}
 					f.pack();
 					d=main.getMinimumSize();
-					Log.debug("main minSize %d x %d", d.width, d.height);
 					if (d.width!=0 && d.height!=0) {
 						Dimension d1=f.getSize();
 						Dimension d2=main.getSize();

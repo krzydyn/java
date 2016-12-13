@@ -147,12 +147,12 @@ public class SudokuSolver {
 		for (String ex : examples) {
 			int i;
 			long t0;
-			//ex=examples[58];
+
 			++exnum;
+			//if (exnum != 59) continue;
 			System.out.printf("Example: %d\n", exnum);
 			fast.parse(ex);
 
-			//fast.print();
 			System.out.println(fast.toString());
 
 			/*t0=System.currentTimeMillis();

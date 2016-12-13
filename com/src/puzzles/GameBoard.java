@@ -18,13 +18,14 @@ public abstract class GameBoard<T> {
 	public void print() {
 		for (int y=0; y < h; ++y) {
 			for (int x=0; x < w; ++x) {
-				System.out.print(get(x,y));
+				System.out.printf(" %s",get(x,y));
 			}
 			System.out.println();
 		}
 	}
 	abstract public T get(int i);
 	abstract public void set(int i, T b);
+	abstract public void clear();
 
 	static public class Bool extends GameBoard<Boolean> {
 		final boolean[] board;
@@ -40,6 +41,10 @@ public abstract class GameBoard<T> {
 		public void set(int i, Boolean b) {
 			board[i] = b;
 		}
+		@Override
+		public void clear(){
+			for (int i=0; i < board.length; ++i) board[i]=false;
+		}
 	}
 	static public class Char extends GameBoard<Character> {
 		final char[] board;
@@ -54,6 +59,10 @@ public abstract class GameBoard<T> {
 		@Override
 		public void set(int i, Character b) {
 			board[i] = b;
+		}
+		@Override
+		public void clear(){
+			for (int i=0; i < board.length; ++i) board[i]=0;
 		}
 	}
 
@@ -71,6 +80,10 @@ public abstract class GameBoard<T> {
 		@Override
 		public void set(int i, T b) {
 			board[i] = b;
+		}
+		@Override
+		public void clear(){
+			for (int i=0; i < board.length; ++i) board[i]=null;
 		}
 	}
 

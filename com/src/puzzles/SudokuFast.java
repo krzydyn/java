@@ -46,6 +46,7 @@ public class SudokuFast extends SudokuSimple {
 				usedInCol[y][x]=false;
 				usedInBox[y][x]=false;
 			}
+		for (int i=0; i < DIM2; ++i) map[i]=i;
 	}
 	@Override
 	public void reset() {
@@ -62,6 +63,7 @@ public class SudokuFast extends SudokuSimple {
 				for (int x=0; x<DIM; ++x) {
 					if (hints[y][x]) setUsed(x, y, a[y][x]-1);
 				}
+			for (int i=0; i < DIM2; ++i) map[i]=i;
 		}
 	}
 	final private int getbox(int x,int y) {
@@ -98,7 +100,7 @@ public class SudokuFast extends SudokuSimple {
 		for (int y=0; y<ORDER; ++y)
 			swapRows(y1+y,y2+y);
 	}
-	/*private void swapCols(int x1,int x2) {
+	private void swapCols(int x1,int x2) {
 		for (int y=0; y<DIM; ++y) {
 			int t=map[y*DIM+x1];
 			map[y*DIM+x1] = map[y*DIM+x2];
@@ -106,10 +108,9 @@ public class SudokuFast extends SudokuSimple {
 		}
 	}
 	private void swapBigCols(int x1,int x2) {
-		Log.info("swapBigCols");
 		for (int x=0; x<ORDER; ++x)
 			swapCols(x1+x,x2+x);
-	}*/
+	}
 	private void transpose() {
 		int t;
 		for (int y=0; y<DIM; ++y) {
@@ -123,9 +124,8 @@ public class SudokuFast extends SudokuSimple {
 	@Override
 	protected void init() {
 		super.init();
-		for (int i=0; i < DIM2; ++i) map[i]=i;
 
-		//box histogram
+		//calc histogram for each ORDER x ORDER square
 		int hist[] = new int[DIM];
 		for (int y=0; y<DIM; ++y) {
 			for (int x=0; x<DIM; ++x) {
@@ -158,6 +158,10 @@ public class SudokuFast extends SudokuSimple {
 		//move max row to top
 		if (br!=0)
 			swapBigRows(0,br*ORDER);
+		//swapBigCols(0, 2*ORDER);
+		//swapCols(0, 2);
+		//super.print();
+		//System.out.println();
 		//printmapped();
 	}
 
@@ -180,6 +184,11 @@ public class SudokuFast extends SudokuSimple {
 			else System.out.printf(" .");
 		}
 		System.out.println();
+	}
+
+	@Override
+	public void print() {
+		printmapped();
 	}
 
 	//order of visiting fields

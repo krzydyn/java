@@ -32,6 +32,12 @@ public class BigTacToe extends MainPanel{
 			PlayerMove op = (PlayerMove)o;
 			return op.x==x && op.y==y;
 		}
+
+		@Override
+		protected void finalize() throws Throwable {
+			super.finalize();
+			System.out.println("finalize PlayMove");
+		}
 	}
 	char startSym = 'X';
 	char oponent(char p) {
@@ -95,7 +101,14 @@ public class BigTacToe extends MainPanel{
 
 		g2.setTransform(tr);
 	}
+	@Override
+	public void windowClosed() {
+		moves.clear();
+		System.gc();
+	}
+
 	public static void main(String[] args) {
 		start(BigTacToe.class);
 	}
+
 }
