@@ -16,7 +16,7 @@
  *  limitations under the License
  */
 
-package check;
+package checker;
 
 import java.io.IOException;
 
