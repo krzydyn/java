@@ -20,6 +20,7 @@ package algebra;
 import java.util.ArrayList;
 import java.util.List;
 
+import sys.Log;
 import text.tokenize.BasicTokenizer;
 
 public class Expression {
@@ -27,10 +28,47 @@ public class Expression {
 		long getValue(String s);
 	}
 
-	final private static int TYPE_OP = 0;
-	final private static int TYPE_CONST = 1;
-	final private static int TYPE_VAR = 2;
-	final private static int TYPE_FUNC = 3;
+	//token type
+	final private static int TYPE_OP = 0;    //operator
+	final private static int TYPE_CONST = 1; //constant
+	final private static int TYPE_VAR = 2;   //variable
+	final private static int TYPE_FUNC = 3;  //function
+
+	//operator type
+	static enum OpType {
+		OP_ASGN,   // =
+		OP_ADD,    // +
+		OP_SUB,    // -
+		OP_MUL,    // *
+		OP_DIV,    // /
+		OP_REM,    // %
+		OP_INC,    // ++
+		OP_DEC,    // --
+		OP_INCN,   // +=
+		OP_DECN,   // -=
+		OP_EQ,     // ==
+		OP_NEQ,    // !=
+		OP_GT,     // >
+		OP_GE,     // >=
+		OP_LT,     // <
+		OP_LE,     // <=
+
+		OP_NOT,    // !
+		OP_AND,    // &&
+		OP_OR,     // ||
+		OP_XOR,    // ^^
+
+		OP_BNOT,   // ~
+		OP_BAND,   // &
+		OP_BOR,    // |
+		OP_BXOR,   // ^
+		OP_LSH,    // <<
+		OP_RSH,    // >>
+		OP_RSHU,   // >>>
+
+		OP_POW,    // ?
+	}
+
 	final private static class Token {
 		int type;
 		Object rep;
@@ -51,16 +89,18 @@ public class Expression {
 	}
 
 	private int priority(char ch) {
-		if (ch == '^') return 3;
 		if (ch == '/' || ch == '*' || ch == '%') return 2;
 		if (ch == '+' || ch == '-') return 1;
 		return 0;
+	}
+	private boolean isOp(char c) {
+		return c=='=' || c=='+' || c=='-' || c=='|' || c=='&';
 	}
 	private void fromInfix(String expr) throws Exception {
 		BasicTokenizer tok = new BasicTokenizer(expr);
 		StringBuilder s=new StringBuilder();
 		rpn.clear();
-		List<Character> op = new ArrayList<Character>();
+		List<String> op = new ArrayList<String>();
 		while (tok.next(s)) {
 			char c = s.charAt(0);
 			if (Character.isWhitespace(c)) continue;
@@ -78,40 +118,53 @@ public class Expression {
 				rpn.add(t);
 			}
 			else if (c == '(') {
-
 				if (rpn.size() > 0) {
 					Token t = rpn.get(rpn.size()-1);
 					if (t.type == TYPE_VAR) t.type = TYPE_FUNC;
 				}
-				op.add(c);
+				op.add(s.toString());
 			}
 			else if (c == ')') {
 				while (op.size() > 0) {
-					c = op.remove(op.size()-1);
+					String x = op.remove(op.size()-1);
+					c = x.charAt(0);
 					if (c=='(') break;
 					Token t = new Token();
 					t.type = TYPE_OP;
-					t.rep = c;
+					t.rep = x;
 					rpn.add(t);
 				}
 			}
 			else {
+				StringBuilder s2 = new StringBuilder(2);
+				if (isOp(c)) {
+					while (tok.next(s2)) {
+						c = s2.charAt(0);
+						if (!isOp(c)) break;
+						s.append(s2);
+					}
+					tok.unread(s2);
+				}
+
 				while (op.size() > 0) {
-					if (priority(c) > priority(op.get(op.size()-1))) break;
+					String x = op.get(op.size()-1);
+					if (x.charAt(0) == '(') break;
+					if (priority(c) > priority(x.charAt(0))) break;
 					Token t = new Token();
 					t.type = TYPE_OP;
 					t.rep = op.remove(op.size()-1);
 					rpn.add(t);
 				}
-				op.add(c);
+				Log.debug("add op %s",s);
+				op.add(s.toString());
 			}
 		}
 		while (op.size() > 0) {
-			char c = op.remove(op.size()-1);
-			if (c == '(') continue;
+			String x = op.remove(op.size()-1);
+			if (x.charAt(0) == '(') continue;
 			Token t = new Token();
 			t.type = TYPE_OP;
-			t.rep = c;
+			t.rep = x;
 			rpn.add(t);
 		}
 	}
@@ -129,19 +182,21 @@ public class Expression {
 	}
 
 	public long evaluate() {
+		Log.prn("===============");
 		List<Long> stack = new ArrayList<Long>();
 		for (Token t : rpn) {
 			if (t.type == TYPE_OP) {
-				Character op = (Character)t.rep;
+				String op = (String)t.rep;
 				long b = stack.remove(stack.size()-1);
 				long a = stack.remove(stack.size()-1);
-				if (op == '^') a = (long)Math.pow(a, b);
-				else if (op == '+') a = a+b;
-				else if (op == '-') a = a-b;
-				else if (op == '*') a = a*b;
-				else if (op == '/') a = a/b;
-				else if (op == '%') a = a%b;
-				else if (op == '=') a = (a==b ? 1 : 0);
+				Log.prn("perform %s on %d %d", op, a, b);
+				if (op.equals("+")) a = a+b;
+				else if (op.equals("-")) a = a-b;
+				else if (op.equals("*")) a = a*b;
+				else if (op.equals("/")) a = a/b;
+				else if (op.equals("%")) a = a%b;
+				else if (op.equals("==")) a = (a==b ? 1 : 0);
+				else throw new RuntimeException("Usuported operand "+op);
 				stack.add(a);
 			}
 			else if (t.type == TYPE_CONST) {

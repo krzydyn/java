@@ -67,11 +67,12 @@ public class T_Algebra extends UnitTest {
 		long r=e.evaluate();
 		check(String.format("9/3 = %d != 3",r), r==3);
 		e = new Expression("1+(1+2)*2");
+		Log.prn("%s",e.toString());
 		r=e.evaluate();
 		check(String.format("1+(1+2)*2 = %d != 7",r), r==7);
-		e = new Expression("1=2");
+		e = new Expression("1==2");
 		r=e.evaluate();
-		check(String.format("1=2 = %d != 0",r), r==0);
+		check(String.format("1==2 = %d != 0",r), r==0);
 	}
 
 	static void rectinrect() {

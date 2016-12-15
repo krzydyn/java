@@ -143,7 +143,7 @@ public class UnitTest {
 				} catch (Throwable e) {
 					++current.errors;
 					if (e.getCause() != null) e=e.getCause();
-					Log.error(e,"Exception in %s.%s", unit, m.getName());
+					Log.error(-1,e,"Exception in %s.%s", unit, m.getName());
 				} finally {
 					time.nextLap();
 					current.elapsed = time.getTime();
