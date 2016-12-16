@@ -18,13 +18,14 @@
 package algebra;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
-import sys.Log;
 import text.tokenize.BasicTokenizer;
 
 public class Expression {
-	static public interface SymbolGetter {
+	static public interface SymbolMapper {
 		long getValue(String s);
 	}
 
@@ -36,49 +37,121 @@ public class Expression {
 
 	//operator type
 	static enum OpType {
-		OP_ASGN,   // =
-		OP_ADD,    // +
-		OP_SUB,    // -
-		OP_MUL,    // *
-		OP_DIV,    // /
-		OP_REM,    // %
-		OP_INC,    // ++
-		OP_DEC,    // --
-		OP_INCN,   // +=
-		OP_DECN,   // -=
-		OP_EQ,     // ==
-		OP_NEQ,    // !=
-		OP_GT,     // >
-		OP_GE,     // >=
-		OP_LT,     // <
-		OP_LE,     // <=
+		OP_ASGN(1){    // =
+			@Override
+			public long calc(long ...a) { return a[0]; }
+		},
+		OP_ADD{    // +
+			@Override
+			public long calc(long ...a) { return a[0]+a[1]; }
+		},
+		OP_SUB{    // -
+			@Override
+			public long calc(long ...a) { return a[0]-a[1]; }
+		},
+		OP_MUL{    // *
+			@Override
+			public long calc(long ...a) { return a[0]*a[1]; }
+		},
+		OP_DIV{    // /
+			@Override
+			public long calc(long ...a) { return a[0]/a[1]; }
+		},
+		OP_REM{    // %
+			@Override
+			public long calc(long ...a) { return a[0]%a[1]; }
+		},
+		OP_INC(1){    // ++
+			@Override
+			public long calc(long ...a) { return a[0]+1; }
+		},
+		OP_DEC(1){    // --
+			@Override
+			public long calc(long ...a) { return a[0]-1; }
+		},
+		OP_INCN{   // +=
+			@Override
+			public long calc(long ...a) { return a[0]+a[1]; }
+		},
+		OP_DECN{   // -=
+			@Override
+			public long calc(long ...a) { return a[0]-a[1]; }
+		},
+		OP_EQ{     // ==
+			@Override
+			public long calc(long ...a) { return a[0]==a[1]?1:0; }
+		},
+		OP_NEQ{    // !=
+			@Override
+			public long calc(long ...a) { return a[0]!=a[1]?1:0; }
+		},
+		OP_GT{     // >
+		},
+		OP_GE{     // >=
+		},
+		OP_LT{     // <
+		},
+		OP_LE{     // <=
+		},
 
-		OP_NOT,    // !
-		OP_AND,    // &&
-		OP_OR,     // ||
-		OP_XOR,    // ^^
+		OP_NOT(1){    // !
+		},
+		OP_AND{    // &&
+		},
+		OP_OR{     // ||
+		},
+		OP_XOR{    // ^^
+		},
 
-		OP_BNOT,   // ~
-		OP_BAND,   // &
-		OP_BOR,    // |
-		OP_BXOR,   // ^
-		OP_LSH,    // <<
-		OP_RSH,    // >>
-		OP_RSHU,   // >>>
+		OP_BNOT(1){   // ~
+		},
+		OP_BAND{   // &
+		},
+		OP_BOR{    // |
+		},
+		OP_BXOR{   // ^
+		},
+		OP_LSH{    // <<
+		},
+		OP_RSH{    // >>
+		},
+		OP_RSHU{   // >>>
+		},
 
-		OP_POW,    // ?
+		OP_POW;    // power
+
+		final int args;
+		private OpType() {args=2;}
+		private OpType(int a) {args=a;}
+		public long calc(long ...args) {
+			throw new RuntimeException("not implemented");
+		}
+
+	}
+	private static Map<String,OpType> opMap = new HashMap<String, Expression.OpType>();
+	static {
+		opMap.put("=", OpType.OP_ASGN);
+		opMap.put("+", OpType.OP_ADD);
+		opMap.put("-", OpType.OP_SUB);
+		opMap.put("*", OpType.OP_MUL);
+		opMap.put("/", OpType.OP_DIV);
+		opMap.put("%", OpType.OP_REM);
+		opMap.put("++", OpType.OP_INC);
+		opMap.put("--", OpType.OP_DEC);
+		opMap.put("==", OpType.OP_EQ);
+		opMap.put("!=", OpType.OP_NEQ);
 	}
 
 	final private static class Token {
 		int type;
 		Object rep;
 	}
-	private SymbolGetter symget = null;
+	private SymbolMapper symbols = null;
 	//RPN (postfix) representation
 	private final List<Token> rpn = new ArrayList<Token>();
 
-	public Expression(String expr, SymbolGetter symget) {
-		this.symget = symget;
+	public Expression(String expr, SymbolMapper symmap) {
+		this.symbols = symmap;
 		try {
 			fromInfix(expr);
 			//Log.debug("RPN(%s): %s", expr, toString());
@@ -93,7 +166,7 @@ public class Expression {
 		if (ch == '+' || ch == '-') return 1;
 		return 0;
 	}
-	private boolean isOp(char c) {
+	private boolean isOperand(char c) {
 		return c=='=' || c=='+' || c=='-' || c=='|' || c=='&';
 	}
 	private void fromInfix(String expr) throws Exception {
@@ -121,6 +194,7 @@ public class Expression {
 				if (rpn.size() > 0) {
 					Token t = rpn.get(rpn.size()-1);
 					if (t.type == TYPE_VAR) t.type = TYPE_FUNC;
+
 				}
 				op.add(s.toString());
 			}
@@ -131,16 +205,16 @@ public class Expression {
 					if (c=='(') break;
 					Token t = new Token();
 					t.type = TYPE_OP;
-					t.rep = x;
+					t.rep = opMap.get(x);
 					rpn.add(t);
 				}
 			}
 			else {
 				StringBuilder s2 = new StringBuilder(2);
-				if (isOp(c)) {
+				if (isOperand(c)) {
 					while (tok.next(s2)) {
 						c = s2.charAt(0);
-						if (!isOp(c)) break;
+						if (!isOperand(c)) break;
 						s.append(s2);
 					}
 					tok.unread(s2);
@@ -152,10 +226,9 @@ public class Expression {
 					if (priority(c) > priority(x.charAt(0))) break;
 					Token t = new Token();
 					t.type = TYPE_OP;
-					t.rep = op.remove(op.size()-1);
+					t.rep = opMap.get(op.remove(op.size()-1));
 					rpn.add(t);
 				}
-				Log.debug("add op %s",s);
 				op.add(s.toString());
 			}
 		}
@@ -164,7 +237,7 @@ public class Expression {
 			if (x.charAt(0) == '(') continue;
 			Token t = new Token();
 			t.type = TYPE_OP;
-			t.rep = x;
+			t.rep = opMap.get(x);
 			rpn.add(t);
 		}
 	}
@@ -172,7 +245,6 @@ public class Expression {
 	@Override
 	public String toString() {
 		if (rpn.size()==0) return "";
-
 		StringBuilder s = new StringBuilder();
 		for (Token t : rpn) {
 			s.append(String.format("%s,",t.rep));
@@ -182,20 +254,21 @@ public class Expression {
 	}
 
 	public long evaluate() {
-		Log.prn("===============");
+		//Log.prn("eval rpn %s", toString());
 		List<Long> stack = new ArrayList<Long>();
 		for (Token t : rpn) {
 			if (t.type == TYPE_OP) {
-				String op = (String)t.rep;
-				long b = stack.remove(stack.size()-1);
-				long a = stack.remove(stack.size()-1);
-				Log.prn("perform %s on %d %d", op, a, b);
-				if (op.equals("+")) a = a+b;
-				else if (op.equals("-")) a = a-b;
-				else if (op.equals("*")) a = a*b;
-				else if (op.equals("/")) a = a/b;
-				else if (op.equals("%")) a = a%b;
-				else if (op.equals("==")) a = (a==b ? 1 : 0);
+				OpType op = (OpType)t.rep;
+				long a;
+				if (op.args==1) {
+					a = stack.remove(stack.size()-1);
+					a=op.calc(a);
+				}
+				else if (op.args==2){
+					long b = stack.remove(stack.size()-1);
+					a = stack.remove(stack.size()-1);
+					a=op.calc(a,b);
+				}
 				else throw new RuntimeException("Usuported operand "+op);
 				stack.add(a);
 			}
@@ -203,9 +276,15 @@ public class Expression {
 				stack.add((Long)t.rep);
 			}
 			else if (t.type == TYPE_VAR) {
-				if (symget == null) stack.add((long)0);
-				else stack.add(symget.getValue((String)t.rep));
+				if (symbols == null) stack.add((long)0);
+				else stack.add(symbols.getValue((String)t.rep));
 			}
+			else if (t.type == TYPE_FUNC) {
+				throw new RuntimeException("not implemented yet");
+			}
+		}
+		if (stack.size() > 1) {
+			throw new RuntimeException("too many values on stack");
 		}
 		return stack.remove(0);
 	}

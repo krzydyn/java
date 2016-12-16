@@ -22,7 +22,7 @@ import java.util.List;
 
 import algebra.Expression;
 import algebra.Permutate;
-import algebra.Expression.SymbolGetter;
+import algebra.Expression.SymbolMapper;
 
 public class Cryptarithm {
 	final int BASE=10;
@@ -35,7 +35,7 @@ public class Cryptarithm {
 		if (i<0) return -1;
 		return values.get(i);
 	}
-	final SymbolGetter symval = new SymbolGetter() {
+	final SymbolMapper symval = new SymbolMapper() {
 		@Override
 		public long getValue(String s) {
 			long x=0;
