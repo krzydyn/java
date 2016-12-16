@@ -118,7 +118,7 @@ public class Pentomino {
 		while (2*cfp.y <= board.h-cfp.fig.h) {
 			// put first fig on board
 			list.clear();
-			Log.debug("start with %s at %d,%d", cfp.fig, cfp.x, cfp.y);
+			//Log.debug("start with %s at %d,%d", cfp.fig, cfp.x, cfp.y);
 			if (!put(cfp.fig, cfp.x, cfp.y)) {
 				Log.debug("can't put cfp here");
 				cfp.x=0;

@@ -32,7 +32,7 @@ public class PentoSolver extends MainPanel implements ChangeListener {
 	 * 20x3        4      0.185
 	 * 3x20        4      0.188
 	 */
-	Pentomino pentomino = new Pentomino(6,10);
+	Pentomino pentomino = new Pentomino(10,6);
 	int cnt=0;
 	boolean done=false;
 	long t0=0,elapsed=0;
