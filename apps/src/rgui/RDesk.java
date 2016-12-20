@@ -3,6 +3,8 @@ package rgui;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Image;
+import java.awt.MouseInfo;
+import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.Robot;
 import java.awt.event.ActionEvent;
@@ -20,8 +22,10 @@ public class RDesk extends MainPanel implements ActionListener{
 	private boolean running=false;
 	private Image img;
 	private boolean paintDone=false;
+	private Point mouseLoc;
 	public RDesk() {
 		super(null);
+		mouseLoc = MouseInfo.getPointerInfo().getLocation();
 		Robot r = null;
 		try {
 			r = new Robot();
@@ -115,6 +119,7 @@ public class RDesk extends MainPanel implements ActionListener{
 	@Override
 	protected void windowClosed() {
 		running=false;
+		robot.mouseMove(mouseLoc.x, mouseLoc.y);
 	}
 	public static void main(String[] args) {
 		start(RDesk.class);
