@@ -21,6 +21,7 @@ package net;
 import java.io.EOFException;
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.net.StandardSocketOptions;
 import java.nio.ByteBuffer;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.SelectableChannel;
@@ -36,7 +37,7 @@ import java.util.List;
 import sys.Log;
 import sys.XThread;
 
-public class SelectorThread {
+public class SelectorThread2 {
 	private final Selector selector;
 	private static final int RWBUFLEN=4*1024; //by default it is 8kB
 	private final List<ByteBuffer> bpool=new ArrayList<ByteBuffer>();
@@ -45,7 +46,7 @@ public class SelectorThread {
 
 	private final List<SelectionKey> writeFlag=new ArrayList<SelectionKey>();
 
-	static class ChannelState {
+	static private class ChannelState {
 		public ChannelState(SelectableChannel c, ChannelStatusHandler h) {
 			chn=c;
 			hnd=h;
@@ -57,7 +58,7 @@ public class SelectorThread {
 
 		ChannelWriter write = new ChannelWriter() {
 			@Override
-			public void write(SelectorThread st, ByteBuffer b) {
+			public void write(SelectorThread2 st, ByteBuffer b) {
 				st.write(chn, b);
 			}
 		};
@@ -65,7 +66,7 @@ public class SelectorThread {
 
 	//private final Map<Channel,ChannelState> chns=new HashMap<Channel, ChannelState>();
 
-	public SelectorThread() throws IOException {
+	public SelectorThread2() throws IOException {
 		selector = Selector.open();
 	}
 
@@ -90,16 +91,20 @@ public class SelectorThread {
 	}
 
 	public void bind(String addr, int port, ChannelStatusHandler d) throws IOException {
+		Log.debug("bind try");
 		ServerSocketChannel chn=selector.provider().openServerSocketChannel();
-		chn.bind(new InetSocketAddress(port), 3);
+		chn.setOption(StandardSocketOptions.SO_REUSEADDR, true);
+		if (addr == null || addr.isEmpty()) chn.bind(new InetSocketAddress(port), 3);
+		else chn.bind(new InetSocketAddress(addr, port), 3);
+		Log.debug("bind done");
 		addChannel(chn, SelectionKey.OP_ACCEPT, d);
-		Log.debug("bind registered " + addr);
+		Log.debug("bind registered " + chn.getLocalAddress());
 	}
-	public void connect(String host, int port, ChannelStatusHandler d) throws IOException {
+	public void connect(String addr, int port, ChannelStatusHandler d) throws IOException {
 		SocketChannel chn=selector.provider().openSocketChannel();
 		chn.configureBlocking(false);
-		Log.debug("connecting ... %s:%d", host, port);
-		chn.connect(new InetSocketAddress(host, port));
+		Log.debug("connecting ... %s:%d", addr, port);
+		chn.connect(new InetSocketAddress(addr, port));
 		addChannel(chn, SelectionKey.OP_CONNECT|SelectionKey.OP_READ, d);
 	}
 
@@ -173,7 +178,7 @@ public class SelectorThread {
 			}
 			int n=selector.select(1000);
 			if (n==0) {
-				Log.debug("idle: no active channels");
+				//Log.debug("idle: no active channels");
 				idle();
 				continue;
 			}
@@ -194,7 +199,7 @@ public class SelectorThread {
 					SelectableChannel c = sk.channel();
 					Log.error("%s: %s", c, e.getMessage());
 					c.close();
-					sk.cancel(); //remove from selecif (writeFlag.size() > 0) {tor
+					sk.cancel(); //remove from selector
 				} catch (Throwable e) {
 				}
 			}

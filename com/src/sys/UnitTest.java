@@ -122,23 +122,23 @@ public class UnitTest {
 				if ("main".equals(m.getName()) || m.getName().startsWith("no_")) continue;
 				if (!(unit + "." + m.getName()).startsWith(prefix)) continue;
 
-				current = new TestSummary();
-				summary.add(current);
-				current.testunit = unit;
-				current.testcase = m.getName();
-				current.elapsed = -1;
 				try {
-					// allow access to non public method
-					m.setAccessible(true);
+					m.setAccessible(true); // allow access to non public method
 				} catch (Throwable e) {
 					Log.error(e,"method not accessible in %s.%s", unit, m.getName());
 					continue;
 				}
 
+				current = new TestSummary();
+				summary.add(current);
+				current.testunit = unit;
+				current.testcase = m.getName();
+				current.elapsed = -1;
+
+				time.update(0);
 				Log.info("  ** Testcase: %s start", m.getName());
 				try {
 					++current.checks;
-					time.update(0);
 					m.invoke(null, empty);
 				} catch (Throwable e) {
 					++current.errors;
@@ -150,6 +150,7 @@ public class UnitTest {
 					Log.info("  ** Testcase: %s end in %.3f sec", m.getName(), current.elapsed/1000.0);
 					current=null;
 				}
+				System.gc();
 			}
 		} catch (ClassNotFoundException e) {
 			Log.error(1,"Can't load unit %s", unit);

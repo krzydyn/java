@@ -61,7 +61,8 @@ public class HeapTree<T extends Comparable<T>> {
 
 	public void add(T o) {
 		heap.add(o);
-		if (builded) moveUp(heap.size()-1);
+		//if (builded) moveUp(heap.size()-1);
+		builded=false;
 	}
 
 	public T remove(int i) {

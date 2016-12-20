@@ -25,7 +25,7 @@ import sys.UnitTest;
 import text.Text;
 import net.ChannelStatusHandler;
 import net.ChannelWriter;
-import net.SelectorThread;
+import net.SelectorThread2;
 
 public class T_SelectorThread extends UnitTest {
 	//static String HOST = "stackoverflow.com";
@@ -33,7 +33,7 @@ public class T_SelectorThread extends UnitTest {
 	//static String HOST = "104.16.33.249";
 
 	static void startStop() throws Exception {
-		SelectorThread t=new SelectorThread();
+		SelectorThread2 t=new SelectorThread2();
 		t.start();
 		Thread.sleep(1000);
 		t.stop();
@@ -48,16 +48,16 @@ public class T_SelectorThread extends UnitTest {
 		data.put(CRLF); data.put(CRLF);
 		//while (data.remaining() > CRLF.length) data.put(CRLF);
 		data.flip();
-		SelectorThread t=new SelectorThread();
+		SelectorThread2 t=new SelectorThread2();
 		t.start();
 		t.connect(HOST, 80, new ChannelStatusHandler(){
 			@Override
-			public void connected(SelectorThread st, ChannelWriter w) {
+			public void connected(SelectorThread2 st, ChannelWriter w) {
 				Log.debug("connected!");
 				w.write(st, data);
 			}
 			@Override
-			public void received(SelectorThread st, ChannelWriter w, ByteBuffer buf) {
+			public void received(SelectorThread2 st, ChannelWriter w, ByteBuffer buf) {
 				String rep = new String(buf.array(), buf.position(), buf.limit(), Text.UTF8_Charset);
 				Log.debug("data[%d]:  %s",rep.length(), rep.length()>20?rep.substring(0, 20)+"...":rep);
 			}

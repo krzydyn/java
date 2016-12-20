@@ -10,7 +10,6 @@ public class Sudoku9 {
 		genmat();
 	}
 	public void genmat() {
-		int[] nr = new int[324];
 		int i, j, k, r, c, c2;
 		for (i = r = 0; i < 9; ++i) // generate c[729][4]
 			for (j = 0; j < 9; ++j)
@@ -21,6 +20,8 @@ public class Sudoku9 {
 					C[r][1] = (i/3*3 + j/3) * 9 + k + 81; // box-number constraint
 					++r;
 				}
+
+		int[] nr = new int[324];
 		for (c = 0; c < 324; ++c) nr[c] = 0;
 		for (r = 0; r < 729; ++r) // generate r[][] from c[][]
 			for (c2 = 0; c2 < 4; ++c2) {
