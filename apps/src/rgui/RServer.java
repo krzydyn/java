@@ -6,19 +6,20 @@ import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.Robot;
 import java.awt.Toolkit;
-import java.awt.image.BufferedImage;
+import java.awt.image.RenderedImage;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
 import javax.imageio.ImageIO;
-
-import com.sun.xml.internal.messaging.saaj.util.ByteOutputStream;
 
 import net.ChannelStatusHandler;
 import net.ChannelWriter;
 import net.SelectorThread2;
 
 public class RServer implements ChannelStatusHandler {
+	int inlen;
+	ByteBuffer inmsg = ByteBuffer.allocate(10*1024);
 	final SelectorThread2 selector;
 	private final Robot robot;
 	private final Point mouseLoc;
@@ -37,21 +38,82 @@ public class RServer implements ChannelStatusHandler {
 		w.write(st, ByteBuffer.wrap("hello\n".getBytes()));
 	}
 
+
+	private int collectInput(int limit, ByteBuffer src) {
+		if (inmsg.position() + src.remaining() < limit) {
+			inmsg.put(src);
+		}
+		else {
+			inmsg.put(src.array(), src.position(), limit - inmsg.position());
+		}
+		return inmsg.position();
+	}
+
 	@Override
 	public void received(SelectorThread2 st, ChannelWriter w, ByteBuffer buf) {
-		Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
-		BufferedImage img = robot.createScreenCapture(new Rectangle(screenSize));
-		ByteOutputStream os = new ByteOutputStream();
-		try {
-			ImageIO.write(img, "jpg", os);
-			w.write(st, ByteBuffer.wrap(os.getBytes()));
-		} catch (IOException e) {
-			e.printStackTrace();
+		int intbytes = 4;
+		//must process all data from buf
+		while (!buf.hasRemaining()) {
+			if (inlen==0) {
+				if (collectInput(intbytes, buf) < intbytes)
+					continue;
+				inmsg.flip();
+				inlen = inmsg.getInt();
+				inmsg.clear();
+			}
+			if (collectInput(inlen, buf) < inlen)
+				continue;
+			inmsg.flip();
+			processMsg(st,w);
+			inmsg.clear();
+			inlen=0;
 		}
 	}
 
+	private void send(SelectorThread2 st, ChannelWriter w, ByteBuffer b) {
+		ByteBuffer lenbuf = ByteBuffer.allocate(4);
+		lenbuf.putInt(b.remaining());
+		lenbuf.flip();
+		w.write(st, lenbuf);
+		w.write(st, b);
+	}
+
+	private void processMsg(SelectorThread2 st, ChannelWriter w) {
+		short type = inmsg.getShort();
+		if (type == 0) {
+
+		}
+		else if (type == 1) {
+			int x=inmsg.getInt();
+			int y=inmsg.getInt();
+			mounseMove(x, y);
+		}
+		else if (type == 2) {
+			int buttons=inmsg.getInt();
+			mounseClick(buttons);
+		}
+		else if (type == 3) {
+			String s = new String(inmsg.array(),inmsg.position(),inmsg.remaining());
+			keyType(s);
+		}
+		else if (type == 4) {
+			RenderedImage img = getScreen();
+			ByteArrayOutputStream os = new ByteArrayOutputStream();
+			try {
+				ImageIO.write(img, "jpg", os);
+				send(st,w,ByteBuffer.wrap(os.toByteArray()));
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+	}
+
+	private RenderedImage getScreen() {
+		Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+		return robot.createScreenCapture(new Rectangle(screenSize));
+	}
 	private void mounseMove(int x,int y) {
-		robot.mouseMove(2540, 260);
+		robot.mouseMove(x, y);
 	}
 	private void mounseClick(int buttons) {
 		robot.mousePress(buttons);
@@ -77,10 +139,7 @@ public class RServer implements ChannelStatusHandler {
 	private void keyType(String s) {
 		for (int i=0; i < s.length(); ++i) {
 			int c = getkeycode(s.charAt(i));
-			if (c >= 0) {
-				robot.keyPress(c);
-				robot.keyRelease(c);
-			}
+			if (c >= 0) keyType(c);
 		}
 	}
 	private void run() {
