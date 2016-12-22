@@ -211,6 +211,7 @@ public class SelectorThread2 {
 					c.close();
 					sk.cancel(); //remove from selector
 				} catch (Throwable e) {
+					Log.error(e);
 				}
 			}
 		}

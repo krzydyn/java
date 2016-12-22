@@ -10,8 +10,13 @@ import java.awt.image.RenderedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.channels.SelectableChannel;
 
+import javax.imageio.IIOImage;
 import javax.imageio.ImageIO;
+import javax.imageio.ImageWriteParam;
+import javax.imageio.ImageWriter;
+import javax.imageio.plugins.jpeg.JPEGImageWriteParam;
 
 import sys.Log;
 import net.ChannelStatusHandler;
@@ -19,11 +24,16 @@ import net.ChannelWriter;
 import net.SelectorThread2;
 
 public class RServer implements ChannelStatusHandler {
-	int inlen;
-	ByteBuffer inmsg = ByteBuffer.allocate(10*1024);
+	private int inlen;
+	private ByteBuffer inmsg = ByteBuffer.allocate(10*1024);
 	final SelectorThread2 selector;
 	private final Robot robot;
 	private final Point mouseLoc;
+	private boolean useQualuty=true;
+
+	SelectableChannel chn;
+	private RenderedImage curScreen;
+
 	private RServer() throws Exception {
 		mouseLoc = MouseInfo.getPointerInfo().getLocation();
 		robot = new Robot();
@@ -48,6 +58,7 @@ public class RServer implements ChannelStatusHandler {
 		ByteBuffer lenbuf = ByteBuffer.allocate(4);
 		lenbuf.putInt(b.remaining());
 		lenbuf.flip();
+		//Log.debug("writeTCP(payload=%d)",b.remaining());
 		w.write(lenbuf);
 		w.write(b);
 	}
@@ -90,9 +101,9 @@ public class RServer implements ChannelStatusHandler {
 		}
 	}
 
-	private void processMsg(ChannelWriter w) {
+	private void processMsg(ChannelWriter wr) {
 		short type = inmsg.getShort();
-		Log.debug("msgtype = %d, payload %d", type, inmsg.remaining());
+
 		if (type == 0) {
 		}
 		else if (type == 1) {
@@ -109,22 +120,29 @@ public class RServer implements ChannelStatusHandler {
 			keyType(s);
 		}
 		else if (type == 4) {
-			RenderedImage img = getScreen();
-			ByteArrayOutputStream os = new ByteArrayOutputStream();
-			os.write(0);os.write(4);
-			try {
-				ImageIO.write(img, "jpg", os);
-				writeTCP(w,ByteBuffer.wrap(os.toByteArray()));
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
+			int w = inmsg.getShort();
+			int h = inmsg.getShort();
+			float q = inmsg.getFloat();
+			//Log.debug("sendImage(%d,%d,%.2f)",w,h,q);
+			sendImage(wr,w, h, q);
+		}
+		else {
+			Log.error("msgtype = %d, payload %d", type, inmsg.remaining());
 		}
 	}
 
-	private RenderedImage getScreen() {
+	private RenderedImage getScreen(int w, int h) {
 		Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
-		return robot.createScreenCapture(new Rectangle(screenSize));
+		if (screenSize.width > w) screenSize.width=w;
+		if (screenSize.height > h) screenSize.height=h;
+		synchronized (this) {
+			//if (curScreen == null) {
+				curScreen = robot.createScreenCapture(new Rectangle(screenSize));
+			//}
+			return curScreen;
+		}
 	}
+
 	private void mounseMove(int x,int y) {
 		robot.mouseMove(x, y);
 	}
@@ -155,8 +173,43 @@ public class RServer implements ChannelStatusHandler {
 			if (c >= 0) keyType(c);
 		}
 	}
+	private void sendImage(ChannelWriter wr,int w, int h, float q) {
+		RenderedImage img = getScreen(w,h);
+		ByteArrayOutputStream os = new ByteArrayOutputStream(512*1024);
+		os.write(0);os.write(4);
+		try {
+			if (useQualuty) {
+				JPEGImageWriteParam jpegParams = new JPEGImageWriteParam(null);
+				jpegParams.setCompressionMode(ImageWriteParam.MODE_EXPLICIT);
+				jpegParams.setCompressionQuality(q);
+				ImageWriter writer = ImageIO.getImageWritersByFormatName("jpg").next();
+				writer.setOutput(ImageIO.createImageOutputStream(os));
+				writer.write(null, new IIOImage(img, null, null), jpegParams);
+
+				writer.dispose();
+			}
+			else
+				ImageIO.write(img, "jpg", os);
+			//Log.debug("img size is %d", os.size());
+			writeTCP(wr,ByteBuffer.wrap(os.toByteArray()));
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
+	private boolean imageEqual(RenderedImage im1, RenderedImage im2) {
+		return false;
+	}
 	private void run() {
-		robot.mouseMove(mouseLoc.x, mouseLoc.y);
+		/*Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+		while (true) {
+			RenderedImage im = robot.createScreenCapture(new Rectangle(screenSize));
+			if (imageEqual(im, curScreen)) {
+				curScreen = im;
+				sendImage(wr,w,h,0.5f);
+			}
+			XThread.sleep(100);
+		}*/
 	}
 
 	public static void main(String[] args) {

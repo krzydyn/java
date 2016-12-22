@@ -40,7 +40,7 @@ public class RDesk extends MainPanel implements ActionListener, ChannelStatusHan
 		//selector.connect("192.168.1.110", 3367, this);
 		chn = selector.connect("localhost", 3367, this);
 
-		setPreferredSize(new Dimension(2000,800));
+		setPreferredSize(new Dimension(1600,800));
 
 		JButton b;
 		add(b=new JButton("test"));
@@ -64,7 +64,7 @@ public class RDesk extends MainPanel implements ActionListener, ChannelStatusHan
 			@Override
 			public void run() {
 				while (selector.isRunning()) {
-					if (pendingReq < 1) {
+					if (pendingReq < 2) {
 						getScreenReq();
 						XThread.sleep(1000/25);
 					}
@@ -154,6 +154,9 @@ public class RDesk extends MainPanel implements ActionListener, ChannelStatusHan
 		++pendingReq;
 		ByteBuffer b = ByteBuffer.allocate(10);
 		b.putShort((short)4);//read screen
+		b.putShort((short)getWidth());
+		b.putShort((short)getHeight());
+		b.putFloat(0.5f);
 		b.flip();
 		writeTCP(selector.getWriter(chn), b);
 	}
