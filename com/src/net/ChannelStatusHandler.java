@@ -21,6 +21,6 @@ package net;
 import java.nio.ByteBuffer;
 
 public interface ChannelStatusHandler {
-	public void connected(SelectorThread2 st, ChannelWriter w);
-	public void received(SelectorThread2 st, ChannelWriter w, ByteBuffer buf);
+	public void connected(ChannelWriter w);
+	public void received(ChannelWriter w, ByteBuffer buf);
 }

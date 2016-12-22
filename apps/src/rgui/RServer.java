@@ -13,6 +13,7 @@ import java.nio.ByteBuffer;
 
 import javax.imageio.ImageIO;
 
+import sys.Log;
 import net.ChannelStatusHandler;
 import net.ChannelWriter;
 import net.SelectorThread2;
@@ -33,55 +34,66 @@ public class RServer implements ChannelStatusHandler {
 		selector.bind(null, 3367, this);
 	}
 
-	@Override
-	public void connected(SelectorThread2 st, ChannelWriter w) {
-		w.write(st, ByteBuffer.wrap("hello\n".getBytes()));
-	}
 
-
-	private int collectInput(int limit, ByteBuffer src) {
+	private int readTCP(int limit, ByteBuffer src) {
 		if (inmsg.position() + src.remaining() < limit) {
 			inmsg.put(src);
 		}
 		else {
-			inmsg.put(src.array(), src.position(), limit - inmsg.position());
+			while (inmsg.position() < limit) inmsg.put(src.get());
 		}
 		return inmsg.position();
 	}
+	private void writeTCP(ChannelWriter w, ByteBuffer b) {
+		ByteBuffer lenbuf = ByteBuffer.allocate(4);
+		lenbuf.putInt(b.remaining());
+		lenbuf.flip();
+		w.write(lenbuf);
+		w.write(b);
+	}
+
 
 	@Override
-	public void received(SelectorThread2 st, ChannelWriter w, ByteBuffer buf) {
+	public void connected(ChannelWriter w) {
+		Log.debug("connected");
+		inmsg.clear();
+		inlen=0;
+
+		ByteBuffer b = ByteBuffer.allocate(100);
+		byte[] str = "hello\n".getBytes();
+		b.putShort((short) 0); b.put(str, 0, str.length);
+		writeTCP(w,b);
+	}
+
+	@Override
+	public void received(ChannelWriter w, ByteBuffer buf) {
 		int intbytes = 4;
 		//must process all data from buf
-		while (!buf.hasRemaining()) {
+		while (buf.hasRemaining()) {
 			if (inlen==0) {
-				if (collectInput(intbytes, buf) < intbytes)
+				if (readTCP(intbytes, buf) < intbytes)
 					continue;
 				inmsg.flip();
 				inlen = inmsg.getInt();
 				inmsg.clear();
 			}
-			if (collectInput(inlen, buf) < inlen)
+			if (readTCP(inlen, buf) < inlen) {
 				continue;
+			}
 			inmsg.flip();
-			processMsg(st,w);
+			processMsg(w);
 			inmsg.clear();
 			inlen=0;
 		}
+		if (inlen > 0) {
+			//Log.debug("read %d of %d bytes", inmsg.position(),inlen);
+		}
 	}
 
-	private void send(SelectorThread2 st, ChannelWriter w, ByteBuffer b) {
-		ByteBuffer lenbuf = ByteBuffer.allocate(4);
-		lenbuf.putInt(b.remaining());
-		lenbuf.flip();
-		w.write(st, lenbuf);
-		w.write(st, b);
-	}
-
-	private void processMsg(SelectorThread2 st, ChannelWriter w) {
+	private void processMsg(ChannelWriter w) {
 		short type = inmsg.getShort();
+		Log.debug("msgtype = %d, payload %d", type, inmsg.remaining());
 		if (type == 0) {
-
 		}
 		else if (type == 1) {
 			int x=inmsg.getInt();
@@ -99,9 +111,10 @@ public class RServer implements ChannelStatusHandler {
 		else if (type == 4) {
 			RenderedImage img = getScreen();
 			ByteArrayOutputStream os = new ByteArrayOutputStream();
+			os.write(0);os.write(4);
 			try {
 				ImageIO.write(img, "jpg", os);
-				send(st,w,ByteBuffer.wrap(os.toByteArray()));
+				writeTCP(w,ByteBuffer.wrap(os.toByteArray()));
 			} catch (IOException e) {
 				e.printStackTrace();
 			}

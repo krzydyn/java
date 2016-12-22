@@ -52,12 +52,12 @@ public class T_SelectorThread extends UnitTest {
 		t.start();
 		t.connect(HOST, 80, new ChannelStatusHandler(){
 			@Override
-			public void connected(SelectorThread2 st, ChannelWriter w) {
+			public void connected(ChannelWriter w) {
 				Log.debug("connected!");
-				w.write(st, data);
+				w.write(data);
 			}
 			@Override
-			public void received(SelectorThread2 st, ChannelWriter w, ByteBuffer buf) {
+			public void received(ChannelWriter w, ByteBuffer buf) {
 				String rep = new String(buf.array(), buf.position(), buf.limit(), Text.UTF8_Charset);
 				Log.debug("data[%d]:  %s",rep.length(), rep.length()>20?rep.substring(0, 20)+"...":rep);
 			}

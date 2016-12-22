@@ -21,5 +21,5 @@ package net;
 import java.nio.ByteBuffer;
 
 public interface ChannelWriter {
-	public void write(SelectorThread2 st, ByteBuffer b);
+	public void write(ByteBuffer b);
 }
