@@ -41,31 +41,27 @@ public class SelectorThread2 {
 	private final Selector selector;
 	private static final int RWBUFLEN=4*1024; //by default it is 8kB
 	private final List<ByteBuffer> bpool=new ArrayList<ByteBuffer>();
-	private int bufcnt = 0;
 	private boolean running = false;
 	private boolean stopReq = false;
 	private boolean registerReq = false;
 
 	private final List<SelectionKey> writeFlag=new ArrayList<SelectionKey>();
 
-	static private class ChannelState {
-		public ChannelState(SelectorThread2 s, SelectableChannel c, ChannelStatusHandler h) {
+	final static public class QueueChannel {
+		private QueueChannel(SelectorThread2 s, SelectableChannel c, ChannelHandler h) {
 			sel=s;
 			chn=c;
 			hnd=h;
 		}
 
-		final SelectorThread2 sel;
-		final SelectableChannel chn;
-		final ChannelStatusHandler hnd;
-		List<ByteBuffer> writeq;
+		private final SelectorThread2 sel;
+		private final SelectableChannel chn;
+		private final ChannelHandler hnd;
+		private List<ByteBuffer> writeq;
 
-		ChannelWriter write = new ChannelWriter() {
-			@Override
-			public void write(ByteBuffer b) {
-				sel.write(chn, b);
-			}
-		};
+		public void write(ByteBuffer b) {
+			sel.write(chn, b);
+		}
 	};
 
 	//private final Map<Channel,ChannelState> chns=new HashMap<Channel, ChannelState>();
@@ -94,36 +90,28 @@ public class SelectorThread2 {
 		selector.wakeup();
 	}
 
-	public ChannelWriter getWriter(SelectableChannel chn) {
-		SelectionKey sk = chn.keyFor(selector);
-		ChannelState chnst = (ChannelState)sk.attachment();
-		return chnst.write;
-	}
-
-	public SelectableChannel bind(String addr, int port, ChannelStatusHandler d) throws IOException {
+	public SelectionKey bind(String addr, int port, ChannelHandler d) throws IOException {
 		Log.debug("binding %s:%d",addr,port);
 		ServerSocketChannel chn=selector.provider().openServerSocketChannel();
 		chn.setOption(StandardSocketOptions.SO_REUSEADDR, true);
 		if (addr == null || addr.isEmpty()) chn.bind(new InetSocketAddress(port), 3);
 		else chn.bind(new InetSocketAddress(addr, port), 3);
-		addChannel(chn, SelectionKey.OP_ACCEPT, d);
-		return chn;
+		return addChannel(chn, SelectionKey.OP_ACCEPT, d);
 	}
-	public SelectableChannel connect(String addr, int port, ChannelStatusHandler d) throws IOException {
+	public SelectionKey connect(String addr, int port, ChannelHandler d) throws IOException {
 		SocketChannel chn=selector.provider().openSocketChannel();
 		chn.configureBlocking(false);
 		Log.debug("connecting ... %s:%d", addr, port);
 		chn.connect(new InetSocketAddress(addr, port));
-		addChannel(chn, SelectionKey.OP_CONNECT|SelectionKey.OP_READ, d);
-		return chn;
+		return addChannel(chn, SelectionKey.OP_CONNECT|SelectionKey.OP_READ, d);
 	}
 
 	//low level
-	public SelectionKey addChannel(SelectableChannel chn, int ops, ChannelStatusHandler d) throws IOException {
+	public SelectionKey addChannel(SelectableChannel chn, int ops, ChannelHandler d) throws IOException {
 		if (chn.isBlocking()) chn.configureBlocking(false);//must be non blocking !!!
 		registerReq=true;
 		if (running) selector.wakeup();
-		SelectionKey sk = chn.register(selector, ops, new ChannelState(this, chn, d));
+		SelectionKey sk = chn.register(selector, ops, new QueueChannel(this, chn, d));
 		registerReq=false;
 		return sk;
 	}
@@ -134,7 +122,7 @@ public class SelectorThread2 {
 
 	public void write(SelectableChannel chn, ByteBuffer buf) {
 		SelectionKey sk = chn.keyFor(selector);
-		ChannelState chnst = (ChannelState)sk.attachment();
+		QueueChannel chnst = (QueueChannel)sk.attachment();
 		//Log.debug("writing to queue " + buf);
 		while (buf.position() < buf.limit()) {
 			ByteBuffer dst = getbuf();
@@ -166,7 +154,6 @@ public class SelectorThread2 {
 		if (b==null){
 			b=ByteBuffer.allocate(RWBUFLEN);
 			if (b==null) throw new NullPointerException("ByteBuffer.allocate");
-			++bufcnt;
 			//Log.debug("created buf[%d]", bufcnt);
 		}
 		return b;
@@ -220,17 +207,17 @@ public class SelectorThread2 {
 
 	private void accept(SelectionKey sk) throws IOException {
 		ServerSocketChannel chn = (ServerSocketChannel)sk.channel();
-		ChannelState chnst = (ChannelState)sk.attachment();
+		QueueChannel qchn = (QueueChannel)sk.attachment();
 		SocketChannel client = chn.accept();
-		sk = addChannel(client, SelectionKey.OP_READ, chnst.hnd);
-		chnst = (ChannelState)sk.attachment();
-		chnst.hnd.connected(chnst.write);
+		sk = addChannel(client, SelectionKey.OP_READ, qchn.hnd);
+		qchn = (QueueChannel)sk.attachment();
+		qchn.hnd.connected(qchn);
 	}
 	private void finishConnect(SelectionKey sk) throws IOException {
 		SocketChannel chn = (SocketChannel)sk.channel();
 		chn.finishConnect();
-		ChannelState chnst = (ChannelState)sk.attachment();
-		chnst.hnd.connected(chnst.write);
+		QueueChannel chnst = (QueueChannel)sk.attachment();
+		chnst.hnd.connected(chnst);
 		sk.interestOps(SelectionKey.OP_READ);
 	}
 	private void read(SelectionKey sk) throws IOException {
@@ -240,13 +227,13 @@ public class SelectorThread2 {
 			throw new EOFException("End of stream");
 		}
 		b.flip();
-		ChannelState chnst = (ChannelState)sk.attachment();
-		chnst.hnd.received(chnst.write, b);
+		QueueChannel chnst = (QueueChannel)sk.attachment();
+		chnst.hnd.received(chnst, b);
 		releasebuf(b);
 	}
 	private void write(SelectionKey sk) throws IOException {
 		WritableByteChannel c=(WritableByteChannel)sk.channel();
-		ChannelState chnst = (ChannelState)sk.attachment();
+		QueueChannel chnst = (QueueChannel)sk.attachment();
 		ByteBuffer b;
 		synchronized (chnst) {
 			b = chnst.writeq.get(0);

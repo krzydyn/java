@@ -8,27 +8,25 @@ import java.awt.event.ActionListener;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.nio.channels.SelectableChannel;
-
 import javax.imageio.ImageIO;
 import javax.swing.JButton;
 
-import net.ChannelStatusHandler;
-import net.ChannelWriter;
+import net.ChannelHandler;
 import net.SelectorThread2;
+import net.SelectorThread2.QueueChannel;
 import sys.Log;
 import sys.XThread;
 import ui.MainPanel;
 
 @SuppressWarnings("serial")
-public class RDesk extends MainPanel implements ActionListener, ChannelStatusHandler{
+public class RDesk extends MainPanel implements ActionListener, ChannelHandler{
 	final SelectorThread2 selector;
 
 	ByteBuffer inmsg = ByteBuffer.allocate(1024*1024);
 	int inlen;
 	private Image img;
 	private boolean paintDone=false;
-	SelectableChannel chn;
+	QueueChannel chn;
 	int pendingReq=0;
 
 	public RDesk() throws Exception{
@@ -38,7 +36,7 @@ public class RDesk extends MainPanel implements ActionListener, ChannelStatusHan
 		selector = new SelectorThread2();
 		selector.start();
 		//selector.connect("192.168.1.110", 3367, this);
-		chn = selector.connect("localhost", 3367, this);
+		chn = (QueueChannel)selector.connect("localhost", 3367, this).attachment();
 
 		setPreferredSize(new Dimension(1600,800));
 
@@ -89,23 +87,23 @@ public class RDesk extends MainPanel implements ActionListener, ChannelStatusHan
 		}
 		return inmsg.position();
 	}
-	private void writeTCP(ChannelWriter w, ByteBuffer b) {
+	private void writeTCP(QueueChannel chn, ByteBuffer b) {
 		ByteBuffer lenbuf = ByteBuffer.allocate(4);
 		lenbuf.putInt(b.remaining());
 		lenbuf.flip();
-		w.write(lenbuf);
-		w.write(b);
+		chn.write(lenbuf);
+		chn.write(b);
 	}
 
 
 	@Override
-	public void connected(ChannelWriter w) {
+	public void connected(QueueChannel chn) {
 		Log.debug("connected");
 		inmsg.clear();
 		inlen=0;
 	}
 	@Override
-	public void received(ChannelWriter w, ByteBuffer buf) {
+	public void received(QueueChannel chn, ByteBuffer buf) {
 		int intbytes = 4;
 		//must process all data from buf
 		while (buf.hasRemaining()) {
@@ -120,7 +118,7 @@ public class RDesk extends MainPanel implements ActionListener, ChannelStatusHan
 				continue;
 			}
 			inmsg.flip();
-			processMsg(w);
+			processMsg(chn);
 			inmsg.clear();
 			inlen=0;
 		}
@@ -128,7 +126,7 @@ public class RDesk extends MainPanel implements ActionListener, ChannelStatusHan
 			//Log.debug("read %d of %d bytes", inmsg.position(),inlen);
 		}
 	}
-	private void processMsg(ChannelWriter w) {
+	private void processMsg(QueueChannel chn) {
 		short type = inmsg.getShort();
 		Log.debug("msgtype = %d, payload %d", type, inmsg.remaining());
 		if (type == 0) {
@@ -158,7 +156,7 @@ public class RDesk extends MainPanel implements ActionListener, ChannelStatusHan
 		b.putShort((short)getHeight());
 		b.putFloat(0.5f);
 		b.flip();
-		writeTCP(selector.getWriter(chn), b);
+		writeTCP(chn, b);
 	}
 
 	public static void main(String[] args) {

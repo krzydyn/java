@@ -23,9 +23,9 @@ import java.nio.ByteBuffer;
 import sys.Log;
 import sys.UnitTest;
 import text.Text;
-import net.ChannelStatusHandler;
-import net.ChannelWriter;
+import net.ChannelHandler;
 import net.SelectorThread2;
+import net.SelectorThread2.QueueChannel;
 
 public class T_SelectorThread extends UnitTest {
 	//static String HOST = "stackoverflow.com";
@@ -50,14 +50,14 @@ public class T_SelectorThread extends UnitTest {
 		data.flip();
 		SelectorThread2 t=new SelectorThread2();
 		t.start();
-		t.connect(HOST, 80, new ChannelStatusHandler(){
+		t.connect(HOST, 80, new ChannelHandler(){
 			@Override
-			public void connected(ChannelWriter w) {
+			public void connected(QueueChannel chn) {
 				Log.debug("connected!");
-				w.write(data);
+				chn.write(data);
 			}
 			@Override
-			public void received(ChannelWriter w, ByteBuffer buf) {
+			public void received(QueueChannel chn, ByteBuffer buf) {
 				String rep = new String(buf.array(), buf.position(), buf.limit(), Text.UTF8_Charset);
 				Log.debug("data[%d]:  %s",rep.length(), rep.length()>20?rep.substring(0, 20)+"...":rep);
 			}
