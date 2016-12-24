@@ -192,12 +192,20 @@ public class SelectorThread2 {
 						if (sk.isWritable()) write(sk);
 						if (sk.isReadable()) read(sk);
 					}
-				} catch (IOException e) {
+				}
+				catch (EOFException e) {
 					SelectableChannel c = sk.channel();
-					Log.error("%s: %s", c, e.getMessage());
+					Log.error("%s: %s",c, "peer closed connection");
 					c.close();
 					sk.cancel(); //remove from selector
-				} catch (Throwable e) {
+				}
+				catch (IOException e) {
+					SelectableChannel c = sk.channel();
+					Log.error("%s: %s", e.getClass().getName(), e.getMessage());
+					c.close();
+					sk.cancel(); //remove from selector
+				}
+				catch (Throwable e) {
 					Log.error(e);
 				}
 			}

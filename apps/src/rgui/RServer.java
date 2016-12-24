@@ -24,12 +24,13 @@ import net.SelectorThread2;
 import net.SelectorThread2.QueueChannel;
 
 public class RServer implements ChannelHandler {
+	final int MAXSCREEN_BUF = 16*1024;
 	private int inlen;
-	private ByteBuffer inmsg = ByteBuffer.allocate(10*1024);
+	private final ByteBuffer inmsg = ByteBuffer.allocate(MAXSCREEN_BUF);
 	final SelectorThread2 selector;
 	private final Robot robot;
 	private final Point mouseLoc;
-	private boolean useQualuty=true;
+	private final boolean useQuality=true;
 
 	SelectableChannel chn;
 	private RenderedImage curScreen;
@@ -178,14 +179,13 @@ public class RServer implements ChannelHandler {
 		ByteArrayOutputStream os = new ByteArrayOutputStream(512*1024);
 		os.write(0);os.write(4);
 		try {
-			if (useQualuty) {
+			if (useQuality) {
 				JPEGImageWriteParam jpegParams = new JPEGImageWriteParam(null);
 				jpegParams.setCompressionMode(ImageWriteParam.MODE_EXPLICIT);
 				jpegParams.setCompressionQuality(q);
 				ImageWriter writer = ImageIO.getImageWritersByFormatName("jpg").next();
 				writer.setOutput(ImageIO.createImageOutputStream(os));
 				writer.write(null, new IIOImage(img, null, null), jpegParams);
-
 				writer.dispose();
 			}
 			else

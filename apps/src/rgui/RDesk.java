@@ -64,7 +64,7 @@ public class RDesk extends MainPanel implements ActionListener, ChannelHandler{
 				while (selector.isRunning()) {
 					if (pendingReq < 2) {
 						getScreenReq();
-						XThread.sleep(1000/25);
+						XThread.sleep(200);
 					}
 					else XThread.sleep(100);
 				}
@@ -128,7 +128,7 @@ public class RDesk extends MainPanel implements ActionListener, ChannelHandler{
 	}
 	private void processMsg(QueueChannel chn) {
 		short type = inmsg.getShort();
-		Log.debug("msgtype = %d, payload %d", type, inmsg.remaining());
+		//Log.debug("msgtype = %d, payload %d", type, inmsg.remaining());
 		if (type == 0) {
 		}
 		else if (type == 4) {
