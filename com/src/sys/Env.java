@@ -26,7 +26,9 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 import text.Text;
 
@@ -126,5 +128,18 @@ public class Env {
 			Log.error(e);
 		}
 		return false;
+	}
+
+	static public List<File> getDirs(File parent, int level){
+		List<File> dirs = new ArrayList<File>();
+		File[] files = parent.listFiles();
+		if (files == null) return dirs;
+		for(File f: files){
+			if(f.isDirectory()) {
+				 if (level==0) dirs.add(f);
+				 else if (level > 0) dirs.addAll(getDirs(f,level-1));
+			}
+		}
+		return dirs;
 	}
 }

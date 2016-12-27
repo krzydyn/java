@@ -18,8 +18,8 @@
 
 package unittest;
 
+import java.io.File;
 import java.io.PrintStream;
-
 import snd.Sound;
 import sys.Log;
 import sys.UnitTest;
@@ -44,6 +44,11 @@ public class T_System extends UnitTest {
 	public static void listPackages() throws Exception {
 		System.out.println(UnitTest.getClasses("unittest"));
 	}
+
+	public static void listDirs() throws Exception {
+		System.out.println(sys.Env.getDirs(new File("/home"), 2));
+	}
+
 
 	public static void ansiSequences() throws Exception {
 		PrintStream p = System.out;
