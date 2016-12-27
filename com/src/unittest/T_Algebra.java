@@ -23,6 +23,7 @@ import java.util.Random;
 
 import puzzles.GameBoard.Rect;
 import puzzles.GameBoard.Sheet;
+import algebra.Combinations;
 import algebra.Expression;
 import algebra.HeapTree;
 import algebra.Maths;
@@ -51,6 +52,19 @@ public class T_Algebra extends UnitTest {
 			//Log.debug("%d: %s", n, l.toString());
 		} while (Permutate.nextPermutation(l));
 		check("should be 720 permutations", n == 720);
+	}
+
+	static void combinatory() {
+		List<Character> l = new ArrayList<Character>();
+		for (int i=0; i < 5; ++i) l.add((char)('a'+i));
+		Combinations comb = new Combinations(l,2);
+		int n=0;
+		do {
+			++n;
+			comb.getSelection(l);
+			Log.debug("%d: %s", n, l.toString());
+		} while (comb.next());
+		Log.debug("num = %d", n);
 	}
 
 	static void blackjack() {

@@ -24,12 +24,12 @@ import java.util.Comparator;
 import java.util.List;
 
 public class Permutate {
-	final int ord[];
-	final List<Object> list;
-	public Permutate(List<Object> l) {
-		ord = new int[l.size()];
-		list=new ArrayList<Object>(l);
-		for (int i=0; i < l.size(); ++i) ord[i]=i;
+	final int pos[];
+	final List<Object> set;
+	public Permutate(List<?> l) {
+		pos = new int[l.size()];
+		set=new ArrayList<Object>(l);
+		for (int i=0; i < pos.length; ++i) pos[i]=i;
 	}
 
 	static private void swap(int a[], int s,int e) {
@@ -38,52 +38,52 @@ public class Permutate {
 		a[e] = temp;
 	}
 	static private void reverse(int a[], int s,int e) {
-		while (s<e)
-		{
+		while (s<e) {
 			int temp = a[s];
 			a[s] = a[e];
 			a[e] = temp;
 			++s; --e;
 		}
 	}
-
-	public boolean next(List<Object> l) {
-		int i = ord.length - 2;
-		while (i >= 0 && ord[i] >= ord[i+1]) --i;
+	public boolean next() {
+		int i = pos.length - 2;
+		while (i >= 0 && pos[i] >= pos[i+1]) --i;
 		if (i < 0) return false;
 
-		int j = ord.length - 1;
-		while (ord[i] >= ord[j]) --j;
+		int j = pos.length - 1;
+		while (pos[i] >= pos[j]) --j;
 
-		swap(ord,i,j);
-		reverse(ord, i+1,ord.length);
-		for (i=0; i < ord.length; ++i)
-			l.set(i, list.get(ord[i]));
+		swap(pos,i,j);
+		reverse(pos, i+1,pos.length);
 		return true;
 	}
 
+	public void getSelection(List<?> l) {
+		@SuppressWarnings("unchecked")
+		List<Object> ll = (List<Object>)l;
+		for (int i=0; i < pos.length; ++i)
+			ll.set(i, set.get(pos[i]));
+	}
+
 	static public <T extends Comparable<T>> boolean nextPermutation(List<T> a) {
-		int i = a.size() - 2;
-		while (i >= 0 && a.get(i).compareTo(a.get(i + 1)) >= 0) --i;
-		if (i < 0) return false;
+		Comparator<T> cmp = new Comparator<T>() {
+			@Override
+			public int compare(T o1, T o2) {
+				//if (o1 == o2) return 0;
+				return o1.compareTo(o2);
+			}
+		};
 
-		int j = a.size() - 1;
-		while (a.get(i).compareTo(a.get(j)) >= 0) --j;
-
-		Collections.swap(a, i, j);
-		Collections.reverse(a.subList(i + 1, a.size()));
-		return true;
+		return nextPermutation(a, cmp);
 	}
 
 	static public <T extends Object> boolean nextPermutation(List<T> a, Comparator<T> cmp) {
 		int i = a.size() - 2;
-
-		while (i >= 0 && cmp.compare(a.get(i),a.get(i + 1)) >= 0) i--;
-
+		while (i >= 0 && cmp.compare(a.get(i),a.get(i + 1)) >= 0) --i;
 		if (i < 0) return false;
 
 		int j = a.size() - 1;
-		while (cmp.compare(a.get(i),a.get(j)) >= 0) j--;
+		while (cmp.compare(a.get(i),a.get(j)) >= 0) --j;
 
 		Collections.swap(a, i, j);
 		Collections.reverse(a.subList(i + 1, a.size()));

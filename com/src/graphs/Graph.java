@@ -27,7 +27,7 @@ import java.util.Map;
 
 import sys.Log;
 import text.Text;
-import algebra.Combinatory;
+import algebra.Sorting;
 
 /**
  * Operate on N nodes numbered (0...N-1)
@@ -194,7 +194,7 @@ public class Graph extends AbstractGraph {
 				return o2.w-o1.w;
 			}
 		});*/
-		Combinatory.comboSort(edges, new Comparator<Edge>() {
+		Sorting.comboSort(edges, new Comparator<Edge>() {
 			@Override
 			public int compare(Edge o1, Edge o2) {
 				return o2.w-o1.w;
