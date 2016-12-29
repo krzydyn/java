@@ -45,6 +45,7 @@ public class Sorting {
 		}
 	}
 
+
 	static public <T extends Object> void comboSort(List<T> a, Comparator<T> cmp) {
 		int gap = a.size();
 		boolean swapped=false;
@@ -57,10 +58,44 @@ public class Sorting {
 			for (int i = 0; i + gap < a.size(); ++i) {
 				if (cmp.compare(a.get(i), a.get(i + gap)) > 0) {
 					Collections.swap(a, i, i + gap);
-		            swapped = true;
-		           }
-		      }
-		   }
+					swapped = true;
+				}
+			}
+		}
+	}
+
+	static private void insertionSort(int[] a, int gap) {
+		for (int i = gap; i < a.length; ++i) {
+			int temp = a[i];
+			int j = i;
+			while (j >= gap && temp < a[j-gap]) {
+				a[j] = a[j-gap];
+				j -= gap;
+			}
+			a[j] = temp;
+		}
+	}
+	// Shell sort id generalization of insertion sort algorithm
+	// time complexity unknown (depends on gap sequence)
+	public static void shellSort(int[] a) {
+		final int gaps[] = {701, 301, 132, 57, 23, 10, 4, 1};
+		int gap = a.length;
+		int gapi=-1;
+		while (gap > 1) {
+			if (gapi < 0) {
+				if (2*gap > gaps[gapi]) {
+					gap = 100*gap/225;
+				}
+				else {
+					gapi=0;
+					while (gap < gaps[gapi]) ++gapi;
+					gap = gaps[gapi];
+				}
+			}
+			else gap = gaps[++gapi];
+			if (gap<=0) gap=1;
+			insertionSort(a, gap);
+		}
 	}
 
 	static public <T extends Comparable<T>> void heapSort(List<T> a) {
