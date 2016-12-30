@@ -37,53 +37,53 @@ public class Expression {
 
 	//operator type
 	static enum OpType {
-		OP_ASGN(1){    // =
+		OP_ASGN{    // a = b
 			@Override
-			public long calc(long ...a) { return a[0]; }
+			public Object calc(Object ...a) { return (long)a[1]; }
 		},
 		OP_ADD{    // +
 			@Override
-			public long calc(long ...a) { return a[0]+a[1]; }
+			public Object calc(Object ...a) { return (long)a[0]+(long)a[1]; }
 		},
 		OP_SUB{    // -
 			@Override
-			public long calc(long ...a) { return a[0]-a[1]; }
+			public Object calc(Object ...a) { return (long)a[0]-(long)a[1]; }
 		},
 		OP_MUL{    // *
 			@Override
-			public long calc(long ...a) { return a[0]*a[1]; }
+			public Object calc(Object ...a) { return (long)a[0]*(long)a[1]; }
 		},
 		OP_DIV{    // /
 			@Override
-			public long calc(long ...a) { return a[0]/a[1]; }
+			public Object calc(Object ...a) { return (long)a[0]/(long)a[1]; }
 		},
 		OP_REM{    // %
 			@Override
-			public long calc(long ...a) { return a[0]%a[1]; }
+			public Object calc(Object ...a) { return (long)a[0]%(long)a[1]; }
 		},
 		OP_INC(1){    // ++
 			@Override
-			public long calc(long ...a) { return a[0]+1; }
+			public Object calc(Object ...a) { return (long)a[0]+1; }
 		},
 		OP_DEC(1){    // --
 			@Override
-			public long calc(long ...a) { return a[0]-1; }
+			public Object calc(Object ...a) { return (long)a[0]-1; }
 		},
 		OP_INCN{   // +=
 			@Override
-			public long calc(long ...a) { return a[0]+a[1]; }
+			public Object calc(Object ...a) { return (long)a[0]+(long)a[1]; }
 		},
 		OP_DECN{   // -=
 			@Override
-			public long calc(long ...a) { return a[0]-a[1]; }
+			public Object calc(Object ...a) { return (long)a[0]-(long)a[1]; }
 		},
 		OP_EQ{     // ==
 			@Override
-			public long calc(long ...a) { return a[0]==a[1]?1:0; }
+			public Object calc(Object ...a) { return a[0].equals(a[1]) ? 1l : 0l; }
 		},
 		OP_NEQ{    // !=
 			@Override
-			public long calc(long ...a) { return a[0]!=a[1]?1:0; }
+			public Object calc(Object ...a) { return a[0].equals(a[1]) ? 0l : 1l; }
 		},
 		OP_GT{     // >
 		},
@@ -123,7 +123,7 @@ public class Expression {
 		final int args;
 		private OpType() {args=2;}
 		private OpType(int a) {args=a;}
-		public long calc(long ...args) {
+		public Object calc(Object ...args) {
 			throw new RuntimeException("not implemented");
 		}
 
@@ -193,8 +193,10 @@ public class Expression {
 			else if (c == '(') {
 				if (rpn.size() > 0) {
 					Token t = rpn.get(rpn.size()-1);
-					if (t.type == TYPE_VAR) t.type = TYPE_FUNC;
-
+					if (t.type == TYPE_VAR) {
+						t.type = TYPE_FUNC;
+						//TODO parse function args
+					}
 				}
 				op.add(s.toString());
 			}
@@ -255,25 +257,25 @@ public class Expression {
 
 	public long evaluate() {
 		//Log.prn("eval rpn %s", toString());
-		List<Long> stack = new ArrayList<Long>();
+		List<Object> stack = new ArrayList<Object>();
 		for (Token t : rpn) {
 			if (t.type == TYPE_OP) {
 				OpType op = (OpType)t.rep;
-				long a;
+				Object a;
 				if (op.args==1) {
 					a = stack.remove(stack.size()-1);
-					a=op.calc(a);
+					a = op.calc(a);
 				}
 				else if (op.args==2){
-					long b = stack.remove(stack.size()-1);
+					Object b = stack.remove(stack.size()-1);
 					a = stack.remove(stack.size()-1);
-					a=op.calc(a,b);
+					a = op.calc(a,b);
 				}
 				else throw new RuntimeException("Usuported operand "+op);
 				stack.add(a);
 			}
 			else if (t.type == TYPE_CONST) {
-				stack.add((Long)t.rep);
+				stack.add(t.rep);
 			}
 			else if (t.type == TYPE_VAR) {
 				if (symbols == null) stack.add((long)0);
@@ -286,6 +288,6 @@ public class Expression {
 		if (stack.size() > 1) {
 			throw new RuntimeException("too many values on stack");
 		}
-		return stack.remove(0);
+		return (long)stack.remove(0);
 	}
 }
