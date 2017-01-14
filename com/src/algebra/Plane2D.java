@@ -15,13 +15,12 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License
  */
-
 package algebra;
 
 import java.awt.Dimension;
 import java.util.ArrayList;
 
-public class Planes {
+public class Plane2D {
 	public static interface Raster {
 		public int getPixel(int x,int y);
 		public void drawHline(int x1, int x2,int y, int v);
@@ -82,8 +81,8 @@ public class Planes {
 		}
 	}
 
-	static class Coord {
-		public Coord(int x,int y) {
+	static class Point {
+		public Point(int x,int y) {
 			this.x=x; this.y=y;
 		}
 		int x,y;
@@ -93,18 +92,17 @@ public class Planes {
 		if (sval==dval) return ;
 
 		Dimension d = t.getSize();
-		ArrayList<Coord> q = new ArrayList<Coord>();
-		q.add(new Coord(x, y));
+		ArrayList<Point> q = new ArrayList<Point>();
+		q.add(new Point(x, y));
 
 		while (!q.isEmpty()) {
-			Coord c=q.remove(q.size()-1);
+			Point c=q.remove(q.size()-1);
 			x=c.x;y=c.y;
 			t.drawHline(x, x+1, y, dval);
-			if (x>0 && t.getPixel(x-1,y)==1) q.add(new Coord(x-1, y));
-			if (x+1<d.width && t.getPixel(x+1,y)==1) q.add(new Coord(x+1, y));
-			if (y>0 && t.getPixel(x,y-1)==1) q.add(new Coord(x, y-1));
-			if (y+1<d.height && t.getPixel(x,y+1)==1) q.add(new Coord(x, y+1));
+			if (x>0 && t.getPixel(x-1,y)==1) q.add(new Point(x-1, y));
+			if (x+1<d.width && t.getPixel(x+1,y)==1) q.add(new Point(x+1, y));
+			if (y>0 && t.getPixel(x,y-1)==1) q.add(new Point(x, y-1));
+			if (y+1<d.height && t.getPixel(x,y+1)==1) q.add(new Point(x, y+1));
 		}
 	}
-
 }
