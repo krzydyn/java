@@ -28,8 +28,10 @@ import algebra.Expression;
 import algebra.HeapTree;
 import algebra.Maths;
 import algebra.Permutate;
+import algebra.Sorting;
 import sys.Log;
 import sys.UnitTest;
+import text.Text;
 
 public class T_Algebra extends UnitTest {
 	static final int sortN = 100000;
@@ -117,5 +119,29 @@ public class T_Algebra extends UnitTest {
 		Log.info("sorting...");
 		HeapTree.sort(list);
 		//Log.prn("%s", Text.join(" ", list));
+	}
+	static void quicksort() {
+		//int[] a0 = {1,1,2,2,3,3,5,5,7,7,9,9};
+		int[] a0 = {9,9,7,7,5,5,3,3,2,2,1,1};
+		int[] a = new int[a0.length];
+		Log.info("sorting...");
+		System.arraycopy(a0, 0, a, 0, a.length);
+		Sorting.quickSort(a);
+		Log.prn("quick: %d, %s",Sorting.opCnt, Text.join(",",a));
+		System.arraycopy(a0, 0, a, 0, a.length);
+		Sorting.selectionSort(a);
+		Log.prn("selection: %d, %s",Sorting.opCnt, Text.join(",",a));
+		System.arraycopy(a0, 0, a, 0, a.length);
+		Sorting.insertionSort(a);
+		Log.prn("insertion: %d, %s",Sorting.opCnt, Text.join(",",a));
+		System.arraycopy(a0, 0, a, 0, a.length);
+		Sorting.comboSort(a);
+		Log.prn("combo: %d, %s",Sorting.opCnt, Text.join(",",a));
+		System.arraycopy(a0, 0, a, 0, a.length);
+		Sorting.shellSort(a);
+		Log.prn("shell: %d, %s",Sorting.opCnt, Text.join(",",a));
+		System.arraycopy(a0, 0, a, 0, a.length);
+		HeapTree.sort(a);
+		Log.prn("heap: %d, %s",Sorting.opCnt, Text.join(",",a));
 	}
 }

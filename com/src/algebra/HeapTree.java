@@ -14,6 +14,10 @@ public class HeapTree<T extends Comparable<T>> {
 		heap=a;
 		//buildHeap();
 	}
+	@SuppressWarnings("unchecked")
+	private HeapTree(int[] a) {
+		heap = (List<T>) new IntArrayList(a);
+	}
 	public HeapTree() {
 		this(0);
 	}
@@ -27,6 +31,7 @@ public class HeapTree<T extends Comparable<T>> {
 		T t = heap.get(i);
 		heap.set(i, heap.get(j));
 		heap.set(j, t);
+		Sorting.opCnt+=2;
 	}
 	private int parent(int i) {return (i-1)/2;}
 	private int left(int i) {return 2*i+1;}
@@ -92,6 +97,7 @@ public class HeapTree<T extends Comparable<T>> {
 		return heap.get(0);
 	}
 	public List<T> sort() {
+		Sorting.opCnt=0;
 		buildHeap();
 		for (int i=heap.size()-1; i>0; ) {
 			swap(0, i);     // put max on the end
@@ -119,6 +125,10 @@ public class HeapTree<T extends Comparable<T>> {
 
 	static public <T extends Comparable<T>> void sort(List<T> a) {
 		HeapTree<T> h = new HeapTree<T>(a);
+		h.sort();
+	}
+	static public void sort(int[] a) {
+		HeapTree<Integer> h = new HeapTree<Integer>(a);
 		h.sort();
 	}
 }
