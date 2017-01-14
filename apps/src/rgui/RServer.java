@@ -1,8 +1,6 @@
 package rgui;
 
 import java.awt.Dimension;
-import java.awt.MouseInfo;
-import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.Robot;
 import java.awt.Toolkit;
@@ -10,8 +8,6 @@ import java.awt.image.RenderedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.nio.channels.SelectableChannel;
-
 import javax.imageio.IIOImage;
 import javax.imageio.ImageIO;
 import javax.imageio.ImageWriteParam;
@@ -22,21 +18,16 @@ import sys.Log;
 import net.ChannelHandler;
 import net.SelectorThread2;
 import net.SelectorThread2.QueueChannel;
+import net.TcpFilter;
 
 public class RServer implements ChannelHandler {
-	final int MAXSCREEN_BUF = 16*1024;
-	private int inlen;
-	private final ByteBuffer inmsg = ByteBuffer.allocate(MAXSCREEN_BUF);
 	final SelectorThread2 selector;
 	private final Robot robot;
-	private final Point mouseLoc;
 	private final boolean useQuality=true;
 
-	SelectableChannel chn;
 	private RenderedImage curScreen;
 
 	private RServer() throws Exception {
-		mouseLoc = MouseInfo.getPointerInfo().getLocation();
 		robot = new Robot();
 		robot.setAutoDelay(10);
 
@@ -45,93 +36,66 @@ public class RServer implements ChannelHandler {
 		selector.bind(null, 3367, this);
 	}
 
-
-	private int readTCP(int limit, ByteBuffer src) {
-		if (inmsg.position() + src.remaining() < limit) {
-			inmsg.put(src);
-		}
-		else {
-			while (inmsg.position() < limit) inmsg.put(src.get());
-		}
-		return inmsg.position();
-	}
-	private void writeTCP(QueueChannel chn, ByteBuffer b) {
-		ByteBuffer lenbuf = ByteBuffer.allocate(4);
-		lenbuf.putInt(b.remaining());
-		lenbuf.flip();
-		//Log.debug("writeTCP(payload=%d)",b.remaining());
-		chn.write(lenbuf);
-		chn.write(b);
-	}
-
-
 	@Override
-	public void connected(QueueChannel chn) {
-		Log.debug("connected");
-		inmsg.clear();
-		inlen=0;
-
-		ByteBuffer b = ByteBuffer.allocate(100);
-		byte[] str = "hello\n".getBytes();
-		b.putShort((short) 0); b.put(str, 0, str.length);
-		writeTCP(chn,b);
+	public ChannelHandler createFilter() {
+		return new TcpFilter(this);
 	}
-
+	@Override
+	public void connected(QueueChannel qchn) {
+		Log.debug("connected");
+		write(qchn,ByteBuffer.wrap("hello\n".getBytes()));
+	}
+	@Override
+	public void disconnected(QueueChannel chnst) {
+		Log.debug("disconnected");
+	}
 	@Override
 	public void received(QueueChannel chn, ByteBuffer buf) {
-		int intbytes = 4;
-		//must process all data from buf
-		while (buf.hasRemaining()) {
-			if (inlen==0) {
-				if (readTCP(intbytes, buf) < intbytes)
-					continue;
-				inmsg.flip();
-				inlen = inmsg.getInt();
-				inmsg.clear();
-			}
-			if (readTCP(inlen, buf) < inlen) {
-				continue;
-			}
-			inmsg.flip();
-			processMsg(chn);
-			inmsg.clear();
-			inlen=0;
-		}
-		if (inlen > 0) {
-			//Log.debug("read %d of %d bytes", inmsg.position(),inlen);
-		}
+		processMsg(chn, buf);
+	}
+	@Override
+	public void write(QueueChannel qchn, ByteBuffer buf) {
+		qchn.hnd.write(qchn,buf);
 	}
 
-	private void processMsg(QueueChannel chn) {
-		short type = inmsg.getShort();
+	private void processMsg(QueueChannel chn, ByteBuffer msg) {
+		short type = msg.getShort();
 
 		if (type == 0) {
 		}
 		else if (type == 1) {
-			int x=inmsg.getInt();
-			int y=inmsg.getInt();
+			int x=msg.getInt();
+			int y=msg.getInt();
 			mounseMove(x, y);
 		}
 		else if (type == 2) {
-			int buttons=inmsg.getInt();
+			int buttons=msg.getInt();
 			mounseClick(buttons);
 		}
 		else if (type == 3) {
-			String s = new String(inmsg.array(),inmsg.position(),inmsg.remaining());
+			String s = new String(msg.array(),msg.position(),msg.remaining());
 			keyType(s);
 		}
 		else if (type == 4) {
-			int w = inmsg.getShort();
-			int h = inmsg.getShort();
-			float q = inmsg.getFloat();
+			int w = msg.getShort();
+			int h = msg.getShort();
+			float q = msg.getFloat();
 			//Log.debug("sendImage(%d,%d,%.2f)",w,h,q);
-			sendImage(chn,w, h, q);
+			sendImage(chn, w, h, q);
+		}
+		else if (type == 5) {
+			int w = msg.getShort();
+			int h = msg.getShort();
+			registerMonitor(chn, w, h);
 		}
 		else {
-			Log.error("msgtype = %d, payload %d", type, inmsg.remaining());
+			Log.error("msgtype = %d, payload %d", type, msg.remaining());
 		}
 	}
 
+	private void registerMonitor(QueueChannel chn, int w ,int h) {
+
+	}
 	private RenderedImage getScreen(int w, int h) {
 		Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
 		if (screenSize.width > w) screenSize.width=w;
@@ -165,7 +129,6 @@ public class RServer implements ChannelHandler {
 		if (c == '\n' || c == '\t') return c;
 		if (c >= ' ' && c <= 'Z') return c;
 		if (c >= 'a' && c <= 'x') return c-32;
-
 		return -1;
 	}
 	private void keyType(String s) {
@@ -191,13 +154,13 @@ public class RServer implements ChannelHandler {
 			else
 				ImageIO.write(img, "jpg", os);
 			//Log.debug("img size is %d", os.size());
-			writeTCP(chn,ByteBuffer.wrap(os.toByteArray()));
+			write(chn,ByteBuffer.wrap(os.toByteArray()));
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 	}
 
-	private boolean imageEqual(RenderedImage im1, RenderedImage im2) {
+	private boolean imageEqual(RenderedImage im1, RenderedImage im2, Rectangle roi) {
 		return false;
 	}
 	private void run() {
@@ -219,4 +182,5 @@ public class RServer implements ChannelHandler {
 			e.printStackTrace();
 		}
 	}
+
 }

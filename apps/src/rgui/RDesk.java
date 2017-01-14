@@ -8,6 +8,7 @@ import java.awt.event.ActionListener;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+
 import javax.imageio.ImageIO;
 import javax.swing.JButton;
 
@@ -47,8 +48,11 @@ public class RDesk extends MainPanel implements ActionListener, ChannelHandler{
 	}
 	@Override
 	protected void paintComponent(Graphics g) {
-		//super.paintComponent(g);
-		if (img!=null) g.drawImage(img, 0, 0, null);
+		Image i = null;
+		synchronized (this) {
+			i=img;
+		}
+		if (i!=null) g.drawImage(i, 0, 0, null);
 		paintDone=true;
 	}
 	@Override
@@ -95,12 +99,19 @@ public class RDesk extends MainPanel implements ActionListener, ChannelHandler{
 		chn.write(b);
 	}
 
-
+	@Override
+	public ChannelHandler createFilter() {
+		return null;
+	}
 	@Override
 	public void connected(QueueChannel chn) {
 		Log.debug("connected");
 		inmsg.clear();
 		inlen=0;
+	}
+	@Override
+	public void disconnected(QueueChannel chnst) {
+		Log.debug("disconnected");
 	}
 	@Override
 	public void received(QueueChannel chn, ByteBuffer buf) {
@@ -126,6 +137,10 @@ public class RDesk extends MainPanel implements ActionListener, ChannelHandler{
 			//Log.debug("read %d of %d bytes", inmsg.position(),inlen);
 		}
 	}
+	@Override
+	public void write(QueueChannel qchn, ByteBuffer buf) {
+		writeTCP(qchn, buf);
+	}
 	private void processMsg(QueueChannel chn) {
 		short type = inmsg.getShort();
 		//Log.debug("msgtype = %d, payload %d", type, inmsg.remaining());
@@ -133,18 +148,15 @@ public class RDesk extends MainPanel implements ActionListener, ChannelHandler{
 		}
 		else if (type == 4) {
 			--pendingReq;
-			if (!paintDone) {
-				Log.debug("paint not done");
-				return ;
-			}
 			ByteArrayInputStream is = new ByteArrayInputStream(inmsg.array(),inmsg.position(),inmsg.remaining());
-			try {
-				img = ImageIO.read(is);
-				paintDone=false;
-				repaint();
-			} catch (IOException e) {
-				e.printStackTrace();
+			Image i=null;
+			try { i = ImageIO.read(is);}
+			catch (IOException e) {Log.error(e);}
+			synchronized (this) {
+				if (i!=null) img=i;
 			}
+			if (paintDone || pendingReq==0)
+				repaint();
 		}
 	}
 

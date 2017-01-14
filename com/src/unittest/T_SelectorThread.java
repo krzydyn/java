@@ -52,14 +52,26 @@ public class T_SelectorThread extends UnitTest {
 		t.start();
 		t.connect(HOST, 80, new ChannelHandler(){
 			@Override
+			public ChannelHandler createFilter() {
+				return null;
+			}
+			@Override
 			public void connected(QueueChannel chn) {
 				Log.debug("connected!");
 				chn.write(data);
 			}
 			@Override
+			public void disconnected(QueueChannel chnst) {
+				Log.debug("disconnected!");
+			}
+			@Override
 			public void received(QueueChannel chn, ByteBuffer buf) {
 				String rep = new String(buf.array(), buf.position(), buf.limit(), Text.UTF8_Charset);
 				Log.debug("data[%d]:  %s",rep.length(), rep.length()>20?rep.substring(0, 20)+"...":rep);
+			}
+			@Override
+			public void write(QueueChannel qchn, ByteBuffer buf) {
+				qchn.write(buf);
 			}
 		});
 		Thread.sleep(3000);

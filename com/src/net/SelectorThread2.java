@@ -21,6 +21,7 @@ package net;
 import java.io.EOFException;
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import java.net.StandardSocketOptions;
 import java.nio.ByteBuffer;
 import java.nio.channels.ReadableByteChannel;
@@ -56,7 +57,7 @@ public class SelectorThread2 {
 
 		private final SelectorThread2 sel;
 		private final SelectableChannel chn;
-		private final ChannelHandler hnd;
+		public final ChannelHandler hnd;
 		private List<ByteBuffer> writeq;
 
 		public void write(ByteBuffer b) {
@@ -81,7 +82,10 @@ public class SelectorThread2 {
 				running=true;
 				try { loop(); }
 				catch (Throwable e) {}
-				finally {running=false;}
+				finally {
+					running=false;
+					closeAll();
+				}
 			}
 		}.start();
 	}
@@ -90,8 +94,17 @@ public class SelectorThread2 {
 		selector.wakeup();
 	}
 
+	private void closeAll() {
+		for (Iterator<SelectionKey> i = selector.keys().iterator(); i.hasNext(); ) {
+			SelectionKey sk = i.next();
+			Object o = sk.attachment();
+			if (o instanceof SocketChannel)
+				disconect(sk, null);
+		}
+	}
+
 	public SelectionKey bind(String addr, int port, ChannelHandler d) throws IOException {
-		Log.debug("binding %s:%d",addr,port);
+		Log.debug("binding to %s:%d",addr==null?"*":addr,port);
 		ServerSocketChannel chn=selector.provider().openServerSocketChannel();
 		chn.setOption(StandardSocketOptions.SO_REUSEADDR, true);
 		if (addr == null || addr.isEmpty()) chn.bind(new InetSocketAddress(port), 3);
@@ -116,11 +129,7 @@ public class SelectorThread2 {
 		return sk;
 	}
 
-	public void write(SelectableChannel chn, byte[] buf, int offs, int len) {
-		write(chn, ByteBuffer.wrap(buf, offs, len));
-	}
-
-	public void write(SelectableChannel chn, ByteBuffer buf) {
+	private void write(SelectableChannel chn, ByteBuffer buf) {
 		SelectionKey sk = chn.keyFor(selector);
 		QueueChannel chnst = (QueueChannel)sk.attachment();
 		//Log.debug("writing to queue " + buf);
@@ -193,17 +202,8 @@ public class SelectorThread2 {
 						if (sk.isReadable()) read(sk);
 					}
 				}
-				catch (EOFException e) {
-					SelectableChannel c = sk.channel();
-					Log.error("%s: %s",c, "peer closed connection");
-					c.close();
-					sk.cancel(); //remove from selector
-				}
 				catch (IOException e) {
-					SelectableChannel c = sk.channel();
-					Log.error("%s: %s", e.getClass().getName(), e.getMessage());
-					c.close();
-					sk.cancel(); //remove from selector
+					disconect(sk, e);
 				}
 				catch (Throwable e) {
 					Log.error(e);
@@ -213,11 +213,27 @@ public class SelectorThread2 {
 		Log.debug("loop finished");
 	}
 
+	private void disconect(SelectionKey sk, IOException ioe) {
+		QueueChannel qchn = (QueueChannel)sk.attachment();
+		sk.attach(null);  //unref chnst
+		sk.cancel();      //remove from selector
+		SocketChannel c = (SocketChannel)sk.channel();
+		SocketAddress addr = null;
+		try { addr = c.getRemoteAddress(); } catch (Exception e) {}
+		if (ioe == null) ;
+		else if (ioe instanceof EOFException)
+			Log.error("%s: peer closed connection", addr);
+		else
+			Log.error("%s(%s): %s", ioe.getClass().getName(), addr, ioe.getMessage());
+		try {c.close();} catch (IOException e) { Log.error(e);}
+		qchn.hnd.disconnected(qchn);
+	}
+
 	private void accept(SelectionKey sk) throws IOException {
 		ServerSocketChannel chn = (ServerSocketChannel)sk.channel();
 		QueueChannel qchn = (QueueChannel)sk.attachment();
 		SocketChannel client = chn.accept();
-		sk = addChannel(client, SelectionKey.OP_READ, qchn.hnd);
+		sk = addChannel(client, SelectionKey.OP_READ, qchn.hnd.createFilter());
 		qchn = (QueueChannel)sk.attachment();
 		qchn.hnd.connected(qchn);
 	}
@@ -258,5 +274,4 @@ public class SelectorThread2 {
 			}
 		}
 	}
-
 }
