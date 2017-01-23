@@ -2,8 +2,6 @@ package rgui;
 
 import java.awt.GraphicsDevice;
 import java.awt.GraphicsEnvironment;
-import java.awt.MouseInfo;
-import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.Robot;
 import java.awt.image.RenderedImage;
@@ -24,8 +22,6 @@ import net.TcpFilter;
 
 public class RServer implements ChannelHandler {
 	final int MAXSCREEN_BUF = 16*1024;
-	private int inlen;
-	private final ByteBuffer inmsg = ByteBuffer.allocate(MAXSCREEN_BUF);
 	private final SelectorThread2 selector;
 	private final Robot robot;
 	private final boolean useQuality=true;
@@ -160,7 +156,7 @@ public class RServer implements ChannelHandler {
 			}
 			else
 				ImageIO.write(img, "jpg", os);
-			writeTCP(chn,ByteBuffer.wrap(os.toByteArray()));
+			write(chn,ByteBuffer.wrap(os.toByteArray()));
 		} catch (IOException e) {
 			e.printStackTrace();
 		}

@@ -37,7 +37,7 @@ public class Cryptarithm {
 	}
 	final SymbolMapper symval = new SymbolMapper() {
 		@Override
-		public long getValue(String s) {
+		public Object getValue(String s) {
 			long x=0;
 			for (int i=0; i < s.length(); ++i) {
 				x *= BASE;
@@ -76,7 +76,7 @@ public class Cryptarithm {
 				break;
 			}
 	}
-	public long getValue(String s) {
+	public Object getValue(String s) {
 		return symval.getValue(s);
 	}
 	public List<Character> getSymbols() {

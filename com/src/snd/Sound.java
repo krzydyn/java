@@ -18,6 +18,7 @@
 
 package snd;
 
+import java.io.OutputStream;
 import java.net.URL;
 
 import javax.sound.sampled.AudioFormat;
@@ -26,20 +27,29 @@ import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.Clip;
 import javax.sound.sampled.LineUnavailableException;
 import javax.sound.sampled.SourceDataLine;
+import javax.sound.sampled.TargetDataLine;
 
 import sys.Log;
 
 public class Sound {
 	//public static final int SAMPLE_RATE = 16 * 1024; // ~16KHz
 	public static final int SAMPLE_RATE = 44100;
-	public static final int LINE_BUFER = 2200;
+	public static final int LINE_BUFFER = 2200;
 
-	final static SourceDataLine line = createLine();
+	final static SourceDataLine srcline = createSource();
+	final static TargetDataLine tgtline = createTarget();
 
-	private static SourceDataLine createLine() {
+	private static SourceDataLine createSource() {
 		SourceDataLine l=null;
 		try {
 			l=AudioSystem.getSourceDataLine(new AudioFormat(SAMPLE_RATE, 8, 1, true, true));
+		} catch (LineUnavailableException e) {}
+		return l;
+	}
+	private static TargetDataLine createTarget() {
+		TargetDataLine l=null;
+		try {
+			l=AudioSystem.getTargetDataLine(new AudioFormat(SAMPLE_RATE, 8, 1, true, true));
 		} catch (LineUnavailableException e) {}
 		return l;
 	}
@@ -121,23 +131,16 @@ public class Sound {
 		long length = (SAMPLE_RATE*ms+500) / 1000;
 		Log.debug("samples to play %d, wave.len=%d, freq:%.1fHz", length, n.waveform.length, n.freq());
 
-		if (!line.isOpen())
-			line.open(line.getFormat(), LINE_BUFER);
-		play(line, n.waveform, ms);
+		if (!srcline.isOpen())
+			srcline.open(srcline.getFormat(), LINE_BUFFER);
+		play(srcline, n.waveform, ms);
 		//line.close();
 	}
 
 	static public void play(double freq, long ms) throws Exception {
-		if (!line.isOpen())
-			line.open(line.getFormat(), LINE_BUFER);
-		play(line, createWaveform(freq), ms);
-		//line.close();
-	}
-
-	static public void play(byte[] waveform) throws Exception {
-		if (!line.isOpen())
-			line.open(line.getFormat(), LINE_BUFER);
-		play(line, waveform, waveform.length*1000/SAMPLE_RATE);
+		if (!srcline.isOpen())
+			srcline.open(srcline.getFormat(), LINE_BUFFER * 5);
+		play(srcline, createWaveform(freq), ms);
 		//line.close();
 	}
 
@@ -153,5 +156,16 @@ public class Sound {
 		clip.open(audioInputStream);
 		clip.start();
 		return clip;
+	}
+
+	static public void capture(OutputStream os, int secs) throws Exception {
+		tgtline.open(tgtline.getFormat(), LINE_BUFFER * 5);
+		byte[] data = new byte[tgtline.getBufferSize() / 5];
+		tgtline.start();
+		while (secs > 0) {
+			int r =  tgtline.read(data, 0, data.length);
+			os.write(data, 0, r);
+			secs-=1;
+		}
 	}
 }

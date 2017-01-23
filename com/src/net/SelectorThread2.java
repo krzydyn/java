@@ -214,7 +214,7 @@ public class SelectorThread2 {
 
 	private void disconect(SelectionKey sk, IOException ioe) {
 		QueueChannel qchn = (QueueChannel)sk.attachment();
-		sk.attach(null);  //unref chnst
+		sk.attach(null);  //unref qchn
 		sk.cancel();      //remove from selector
 		SocketChannel c = (SocketChannel)sk.channel();
 		SocketAddress addr = null;

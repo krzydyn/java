@@ -26,7 +26,7 @@ import text.tokenize.BasicTokenizer;
 
 public class Expression {
 	static public interface SymbolMapper {
-		long getValue(String s);
+		Object getValue(String s);
 	}
 
 	//token type
