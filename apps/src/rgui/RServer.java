@@ -8,6 +8,7 @@ import java.awt.image.RenderedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+
 import javax.imageio.IIOImage;
 import javax.imageio.ImageIO;
 import javax.imageio.ImageWriteParam;
@@ -15,6 +16,7 @@ import javax.imageio.ImageWriter;
 import javax.imageio.plugins.jpeg.JPEGImageWriteParam;
 
 import sys.Log;
+import sys.XThread;
 import net.ChannelHandler;
 import net.SelectorThread2;
 import net.SelectorThread2.QueueChannel;
@@ -180,17 +182,21 @@ public class RServer implements ChannelHandler {
 		}
 		screenRect.x -= shiftX;
 		screenRect.y -= shiftY;
-		Log.debug("screen bounds (%d,%d %dx%d)",screenRect.x,screenRect.y,screenRect.width,screenRect.height);
+		Log.info("screen bounds (%d,%d %dx%d)",screenRect.x,screenRect.y,screenRect.width,screenRect.height);
 
 		selector.start();
 		selector.bind(null, 3367, this);
+		while (selector.isRunning()) {
+			XThread.sleep(1000);
+		}
+		Log.error("seelctor stopped running");
 	}
 
 	public static void main(String[] args) {
 		try {
 			new RServer().run();
-		} catch (Exception e) {
-			e.printStackTrace();
+		} catch (Throwable e) {
+			Log.error(e);
 		}
 	}
 

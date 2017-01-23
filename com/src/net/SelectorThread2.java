@@ -80,7 +80,9 @@ public class SelectorThread2 {
 			public void run() {
 				running=true;
 				try { loop(); }
-				catch (Throwable e) {}
+				catch (Throwable e) {
+					Log.error(e);
+				}
 				finally {
 					running=false;
 					closeAll();
@@ -129,6 +131,7 @@ public class SelectorThread2 {
 	}
 
 	private void write(SelectableChannel chn, ByteBuffer buf) {
+		if (!chn.isOpen()) return ;
 		SelectionKey sk = chn.keyFor(selector);
 		QueueChannel chnst = (QueueChannel)sk.attachment();
 		//Log.debug("writing to queue " + buf);

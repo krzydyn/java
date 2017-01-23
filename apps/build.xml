@@ -50,4 +50,32 @@
 		<scp file="gitsvg.jar" todir="secosci@106.120.53.105:/var/www/secosci/jar/" />
 	</target>
 
+	<target name="rserver" depends="common">
+		<echo>Building Remote Server app</echo>
+		<mkdir dir="${build}"/>
+
+		<javac srcdir="src" destdir="${build}" debug="true" listfiles="true"
+			encoding="UTF-8" source="${JAVA_VERSION}" target="${JAVA_VERSION}"
+			includeantruntime="false"
+			includes="rgui/RServer*"
+			classpath="${comdir}/${build}"
+		/>
+		<jar destfile="rserver.jar" basedir="${build}">
+			<fileset dir="${comdir}/${build}">
+				<include name="sys/Env*"/>
+				<include name="sys/Log*"/>
+				<include name="sys/XThread*"/>
+				<include name="net/**"/>
+				<include name="text/Text*"/>
+			</fileset>
+			<fileset dir=".">
+				<include name="rgui/RServer*"/>
+			</fileset>	
+
+			<manifest>
+			<attribute name="Main-Class" value="rgui.RServer"/>
+			</manifest>
+		</jar>
+	</target>
+
 </project>
