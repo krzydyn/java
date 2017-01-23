@@ -25,6 +25,7 @@ public class RDesk extends MainPanel implements ActionListener, ChannelHandler{
 
 	ByteBuffer inmsg = ByteBuffer.allocate(1024*1024);
 	int inlen;
+	private final Object imgLock = new Object();
 	private Image img;
 	private boolean paintDone=false;
 	QueueChannel chn;
@@ -49,9 +50,7 @@ public class RDesk extends MainPanel implements ActionListener, ChannelHandler{
 	@Override
 	protected void paintComponent(Graphics g) {
 		Image i = null;
-		synchronized (this) {
-			i=img;
-		}
+		synchronized (imgLock) { i=img; }
 		if (i!=null) g.drawImage(i, 0, 0, null);
 		paintDone=true;
 	}
@@ -66,11 +65,8 @@ public class RDesk extends MainPanel implements ActionListener, ChannelHandler{
 			@Override
 			public void run() {
 				while (selector.isRunning()) {
-					if (pendingReq < 2) {
-						getScreenReq();
-						XThread.sleep(200);
-					}
-					else XThread.sleep(100);
+					if (pendingReq < 2) getScreenReq();
+					else XThread.sleep(20);
 				}
 			}
 		}.start();
@@ -142,21 +138,23 @@ public class RDesk extends MainPanel implements ActionListener, ChannelHandler{
 		writeTCP(qchn, buf);
 	}
 	private void processMsg(QueueChannel chn) {
-		short type = inmsg.getShort();
+		short cmd = inmsg.getShort();
 		//Log.debug("msgtype = %d, payload %d", type, inmsg.remaining());
-		if (type == 0) {
+		if (cmd == 0) {
 		}
-		else if (type == 4) {
+		else if (cmd == 4) {
 			--pendingReq;
 			ByteArrayInputStream is = new ByteArrayInputStream(inmsg.array(),inmsg.position(),inmsg.remaining());
 			Image i=null;
 			try { i = ImageIO.read(is);}
 			catch (IOException e) {Log.error(e);}
-			synchronized (this) {
-				if (i!=null) img=i;
+			if (i!=null) {
+				synchronized (imgLock) { img=i; }
+				if (paintDone) {
+					paintDone=false;
+					repaint();
+				}
 			}
-			if (paintDone || pendingReq==0)
-				repaint();
 		}
 	}
 
