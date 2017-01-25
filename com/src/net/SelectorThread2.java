@@ -59,7 +59,11 @@ public class SelectorThread2 {
 		public final ChannelHandler hnd;
 		private List<ByteBuffer> writeq;
 
+		public boolean isOpen() {return chn.isOpen();}
 		public void write(ByteBuffer b) {
+			if (!chn.isOpen()) {
+				throw new RuntimeException("chn is not opened");
+			}
 			sel.write(chn, b);
 		}
 	};
@@ -131,9 +135,8 @@ public class SelectorThread2 {
 	}
 
 	private void write(SelectableChannel chn, ByteBuffer buf) {
-		if (!chn.isOpen()) return ;
 		SelectionKey sk = chn.keyFor(selector);
-		QueueChannel chnst = (QueueChannel)sk.attachment();
+		QueueChannel qchn = (QueueChannel)sk.attachment();
 		//Log.debug("writing to queue " + buf);
 		while (buf.position() < buf.limit()) {
 			ByteBuffer dst = getbuf();
@@ -141,9 +144,9 @@ public class SelectorThread2 {
 			dst.put(buf.array(), buf.position(), maxbytes);
 			buf.position(buf.position() + maxbytes);
 			dst.flip();
-			synchronized (chnst) {
-				if (chnst.writeq == null) chnst.writeq = new ArrayList<ByteBuffer>();
-				chnst.writeq.add(dst);
+			synchronized (qchn) {
+				if (qchn.writeq == null) qchn.writeq = new ArrayList<ByteBuffer>();
+				qchn.writeq.add(dst);
 			}
 		}
 		synchronized (writeFlag) {
@@ -204,29 +207,26 @@ public class SelectorThread2 {
 						if (sk.isReadable()) read(sk);
 					}
 				}
-				catch (IOException e) {
-					disconect(sk, e);
-				}
 				catch (Throwable e) {
-					Log.error(e);
+					disconect(sk, e);
 				}
 			}
 		}
 		Log.debug("loop finished");
 	}
 
-	private void disconect(SelectionKey sk, IOException ioe) {
+	private void disconect(SelectionKey sk, Throwable thr) {
 		QueueChannel qchn = (QueueChannel)sk.attachment();
 		sk.attach(null);  //unref qchn
 		sk.cancel();      //remove from selector
 		SocketChannel c = (SocketChannel)sk.channel();
 		SocketAddress addr = null;
 		try { addr = c.getRemoteAddress(); } catch (Exception e) {}
-		if (ioe == null) ;
-		else if (ioe instanceof EOFException)
+		if (thr == null) ;
+		else if (thr instanceof EOFException)
 			Log.error("%s: peer closed connection", addr);
 		else
-			Log.error("%s(%s): %s", ioe.getClass().getName(), addr, ioe.getMessage());
+			Log.error("%s(%s): %s", thr.getClass().getName(), addr, thr.getMessage());
 		try {c.close();} catch (IOException e) { Log.error(e);}
 		qchn.hnd.disconnected(qchn);
 	}

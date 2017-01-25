@@ -113,9 +113,9 @@ public class Env {
 		return exec(dir,args.toArray(stringArray));
 	}
 
-	static public String exec(Collection<String> args) throws IOException {
+	static public Process exec(Collection<String> args) throws IOException {
 		Process child = Runtime.getRuntime().exec(args.toArray(stringArray));
-		return null;
+		return child;
 	}
 
 	static boolean checkApp() {

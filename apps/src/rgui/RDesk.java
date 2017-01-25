@@ -3,24 +3,27 @@ package rgui;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Image;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import java.awt.event.InputEvent;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
 import javax.imageio.ImageIO;
-import javax.swing.JButton;
 
 import net.ChannelHandler;
 import net.SelectorThread2;
 import net.SelectorThread2.QueueChannel;
 import sys.Log;
 import sys.XThread;
+import text.Text;
 import ui.MainPanel;
 
 @SuppressWarnings("serial")
-public class RDesk extends MainPanel implements ActionListener, ChannelHandler{
+public class RDesk extends MainPanel {
 	final SelectorThread2 selector;
 
 	ByteBuffer inmsg = ByteBuffer.allocate(1024*1024);
@@ -28,8 +31,66 @@ public class RDesk extends MainPanel implements ActionListener, ChannelHandler{
 	private final Object imgLock = new Object();
 	private Image img;
 	private boolean paintDone=false;
-	QueueChannel chn;
+	QueueChannel qchn;
 	int pendingReq=0;
+
+	ChannelHandler chnHandler = new ChannelHandler() {
+		@Override
+		public ChannelHandler createFilter() {
+			return null;
+		}
+		@Override
+		public void connected(QueueChannel chn) {
+			Log.debug("connected");
+			inmsg.clear();
+			inlen=0;
+		}
+		@Override
+		public void disconnected(QueueChannel chn) {
+			Log.debug("disconnected");
+		}
+		private int readTCP(int limit, ByteBuffer src) {
+			if (inmsg.position() + src.remaining() < limit) {
+				inmsg.put(src);
+			}
+			else {
+				while (inmsg.position() < limit) inmsg.put(src.get());
+			}
+			return inmsg.position();
+		}
+		@Override
+		public void received(QueueChannel chn, ByteBuffer buf) {
+			int intbytes = 4;
+			//must process all data from buf
+			while (buf.hasRemaining()) {
+				if (inlen==0) {
+					if (readTCP(intbytes, buf) < intbytes)
+						continue;
+					inmsg.flip();
+					inlen = inmsg.getInt();
+					inmsg.clear();
+				}
+				if (readTCP(inlen, buf) < inlen) {
+					continue;
+				}
+				inmsg.flip();
+				processMsg(chn);
+				inmsg.clear();
+				inlen=0;
+			}
+			if (inlen > 0) {
+				//Log.debug("read %d of %d bytes", inmsg.position(),inlen);
+			}
+		}
+		@Override
+		public void write(QueueChannel chn, ByteBuffer buf) {
+			ByteBuffer lenbuf = ByteBuffer.allocate(4);
+			lenbuf.putInt(buf.remaining());
+			lenbuf.flip();
+			chn.write(lenbuf);
+			chn.write(buf);
+		}
+	};
 
 	public RDesk() throws Exception{
 		super(null);
@@ -37,16 +98,34 @@ public class RDesk extends MainPanel implements ActionListener, ChannelHandler{
 		//robot.setAutoWaitForIdle(true);
 		selector = new SelectorThread2();
 		selector.start();
-		//selector.connect("192.168.1.110", 3367, this);
-		chn = (QueueChannel)selector.connect("localhost", 3367, this).attachment();
+		//qchn = (QueueChannel)selector.connect("localhost", 3367, this).attachment();
+		qchn = (QueueChannel)selector.connect("106.120.52.62", 3367, chnHandler).attachment();
 
 		setPreferredSize(new Dimension(1600,800));
 
-		JButton b;
-		add(b=new JButton("test"));
-		b.setBounds(0, 0, 50, 20);
-		b.addActionListener(this);
+		addKeyListener(new KeyAdapter() {
+			@Override
+			public void keyTyped(KeyEvent e) {
+				sendKeyType(e.getKeyChar());
+			}
+		});
+
+
+		MouseAdapter mouseHnadler = new MouseAdapter() {
+			@Override
+			public void mouseMoved(MouseEvent e) {
+				sendMouseMove(e.getX(), e.getY());
+			}
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				//Log.debug("mouseClick(%d,%d,%x) mod=%x  but=%d",e.getX(), e.getY(), e.getModifiersEx(), e.getModifiers(), e.getButton());
+				sendMouseClick(e.getX(), e.getY(), InputEvent.getMaskForButton(e.getButton()));
+			}
+		};
+		addMouseListener(mouseHnadler);
+		addMouseMotionListener(mouseHnadler);
 	}
+
 	@Override
 	protected void paintComponent(Graphics g) {
 		Image i = null;
@@ -54,20 +133,17 @@ public class RDesk extends MainPanel implements ActionListener, ChannelHandler{
 		if (i!=null) g.drawImage(i, 0, 0, null);
 		paintDone=true;
 	}
-	@Override
-	public void actionPerformed(ActionEvent e) {
-		getScreenReq();
-	}
 
 	@Override
 	protected void windowOpened() {
-		new Thread() {
+		new Thread("PollScreen") {
 			@Override
 			public void run() {
-				while (selector.isRunning()) {
+				while (selector.isRunning() && qchn.isOpen()) {
 					if (pendingReq < 2) getScreenReq();
 					else XThread.sleep(20);
 				}
+				selector.stop();
 			}
 		}.start();
 	}
@@ -78,65 +154,6 @@ public class RDesk extends MainPanel implements ActionListener, ChannelHandler{
 	}
 
 
-	private int readTCP(int limit, ByteBuffer src) {
-		if (inmsg.position() + src.remaining() < limit) {
-			inmsg.put(src);
-		}
-		else {
-			while (inmsg.position() < limit) inmsg.put(src.get());
-		}
-		return inmsg.position();
-	}
-	private void writeTCP(QueueChannel chn, ByteBuffer b) {
-		ByteBuffer lenbuf = ByteBuffer.allocate(4);
-		lenbuf.putInt(b.remaining());
-		lenbuf.flip();
-		chn.write(lenbuf);
-		chn.write(b);
-	}
-
-	@Override
-	public ChannelHandler createFilter() {
-		return null;
-	}
-	@Override
-	public void connected(QueueChannel chn) {
-		Log.debug("connected");
-		inmsg.clear();
-		inlen=0;
-	}
-	@Override
-	public void disconnected(QueueChannel chnst) {
-		Log.debug("disconnected");
-	}
-	@Override
-	public void received(QueueChannel chn, ByteBuffer buf) {
-		int intbytes = 4;
-		//must process all data from buf
-		while (buf.hasRemaining()) {
-			if (inlen==0) {
-				if (readTCP(intbytes, buf) < intbytes)
-					continue;
-				inmsg.flip();
-				inlen = inmsg.getInt();
-				inmsg.clear();
-			}
-			if (readTCP(inlen, buf) < inlen) {
-				continue;
-			}
-			inmsg.flip();
-			processMsg(chn);
-			inmsg.clear();
-			inlen=0;
-		}
-		if (inlen > 0) {
-			//Log.debug("read %d of %d bytes", inmsg.position(),inlen);
-		}
-	}
-	@Override
-	public void write(QueueChannel qchn, ByteBuffer buf) {
-		writeTCP(qchn, buf);
-	}
 	private void processMsg(QueueChannel chn) {
 		short cmd = inmsg.getShort();
 		//Log.debug("msgtype = %d, payload %d", type, inmsg.remaining());
@@ -158,6 +175,35 @@ public class RDesk extends MainPanel implements ActionListener, ChannelHandler{
 		}
 	}
 
+	private void sendMouseMove(int x,int y) {
+		if (!qchn.isOpen()) return ;
+		ByteBuffer b = ByteBuffer.allocate(14);
+		b.putShort((short)1);//mouse move
+		b.putInt(x);
+		b.putInt(y);
+		b.flip();
+		chnHandler.write(qchn, b);
+	}
+	private void sendMouseClick(int x,int y,int button) {
+		ByteBuffer b = ByteBuffer.allocate(14);
+		b.putShort((short)2);//mouse click
+		b.putInt(x);
+		b.putInt(y);
+		b.putInt(button);
+		b.flip();
+		chnHandler.write(qchn, b);
+	}
+	private void sendKeyType(char c) {
+		sendKeyType(new String(new char[]{c}));
+	}
+	private void sendKeyType(String s) {
+		byte[] a = s.getBytes(Text.UTF8_Charset);
+		ByteBuffer b = ByteBuffer.allocate(2+a.length);
+		b.putShort((short)3);//key type
+		b.put(a, 0, a.length);
+		b.flip();
+		chnHandler.write(qchn, b);
+	}
 	private void getScreenReq() {
 		++pendingReq;
 		ByteBuffer b = ByteBuffer.allocate(10);
@@ -166,7 +212,7 @@ public class RDesk extends MainPanel implements ActionListener, ChannelHandler{
 		b.putShort((short)getHeight());
 		b.putFloat(0.5f);
 		b.flip();
-		writeTCP(chn, b);
+		chnHandler.write(qchn, b);
 	}
 
 	public static void main(String[] args) {

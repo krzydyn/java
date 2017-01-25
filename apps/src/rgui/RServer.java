@@ -4,6 +4,7 @@ import java.awt.GraphicsDevice;
 import java.awt.GraphicsEnvironment;
 import java.awt.Rectangle;
 import java.awt.Robot;
+import java.awt.event.InputEvent;
 import java.awt.image.RenderedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -17,6 +18,7 @@ import javax.imageio.plugins.jpeg.JPEGImageWriteParam;
 
 import sys.Log;
 import sys.XThread;
+import text.Text;
 import net.ChannelHandler;
 import net.SelectorThread2;
 import net.SelectorThread2.QueueChannel;
@@ -27,6 +29,7 @@ public class RServer implements ChannelHandler {
 	private final SelectorThread2 selector;
 	private final Robot robot;
 	private final boolean useQuality=true;
+	private final int mouseButtonMask;
 
 	private RenderedImage curScreen;
 	private Rectangle screenRect;
@@ -34,6 +37,9 @@ public class RServer implements ChannelHandler {
 	private RServer() throws Exception {
 		robot = new Robot();
 		robot.setAutoDelay(10); // delay before generating even
+
+		mouseButtonMask = InputEvent.BUTTON1_MASK|InputEvent.BUTTON2_MASK|InputEvent.BUTTON3_MASK |
+					InputEvent.BUTTON1_DOWN_MASK|InputEvent.BUTTON2_DOWN_MASK|InputEvent.BUTTON3_DOWN_MASK;
 
 		selector = new SelectorThread2();
 	}
@@ -53,7 +59,11 @@ public class RServer implements ChannelHandler {
 	}
 	@Override
 	public void received(QueueChannel chn, ByteBuffer buf) {
-		processMsg(chn, buf);
+		try {
+			processMsg(chn, buf);
+		}catch (Throwable e) {
+			Log.error(e);
+		}
 	}
 	@Override
 	public void write(QueueChannel qchn, ByteBuffer buf) {
@@ -61,37 +71,40 @@ public class RServer implements ChannelHandler {
 	}
 
 	private void processMsg(QueueChannel chn, ByteBuffer msg) {
-		short type = msg.getShort();
+		short cmd = msg.getShort();
 
-		if (type == 0) {
+		if (cmd == 0) {
 		}
-		else if (type == 1) {
+		else if (cmd == 1) {
 			int x=msg.getInt();
 			int y=msg.getInt();
 			mounseMove(x, y);
 		}
-		else if (type == 2) {
+		else if (cmd == 2) {
+			int x=msg.getInt();
+			int y=msg.getInt();
 			int buttons=msg.getInt();
-			mounseClick(buttons);
+			mounseClick(x, y, buttons);
 		}
-		else if (type == 3) {
-			String s = new String(msg.array(),msg.position(),msg.remaining());
+		else if (cmd == 3) {
+			String s = new String(msg.array(),msg.position(),msg.remaining(),Text.UTF8_Charset);
 			keyType(s);
 		}
-		else if (type == 4) {
+		else if (cmd == 4) {
 			int w = msg.getShort();
 			int h = msg.getShort();
 			float q = msg.getFloat();
 			//Log.debug("sendImage(%d,%d,%.2f)",w,h,q);
 			sendImage(chn, w, h, q);
 		}
-		else if (type == 5) {
+		else if (cmd == 5) {
 			int w = msg.getShort();
 			int h = msg.getShort();
 			registerMonitor(chn, w, h);
 		}
 		else {
-			Log.error("msgtype = %d, payload %d", type, msg.remaining());
+			Log.error("wrong cmd:%d, payload %d", cmd, msg.remaining());
+
 		}
 	}
 
@@ -116,7 +129,11 @@ public class RServer implements ChannelHandler {
 	private void mounseMove(int x,int y) {
 		robot.mouseMove(x, y);
 	}
-	private void mounseClick(int buttons) {
+	private void mounseClick(int x,int y,int buttons) {
+		Log.info("mouseClick(%d,%d,%x) / %x",x,y,buttons,mouseButtonMask);
+		buttons &= mouseButtonMask;
+		//InputEvent.getMaskForButton();
+		robot.mouseMove(x, y);
 		robot.mousePress(buttons);
 		robot.mouseRelease(buttons);
 	}
@@ -137,6 +154,7 @@ public class RServer implements ChannelHandler {
 		return -1;
 	}
 	private void keyType(String s) {
+		Log.info("keyType %s",s);
 		for (int i=0; i < s.length(); ++i) {
 			int c = getkeycode(s.charAt(i));
 			if (c >= 0) keyType(c);
@@ -189,7 +207,7 @@ public class RServer implements ChannelHandler {
 		while (selector.isRunning()) {
 			XThread.sleep(1000);
 		}
-		Log.error("seelctor stopped running");
+		Log.error("selctor stopped running");
 	}
 
 	public static void main(String[] args) {

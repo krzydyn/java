@@ -18,6 +18,7 @@
 
 package sys;
 
+import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -26,8 +27,6 @@ import java.util.Locale;
 import text.Ansi;
 
 public class Log {
-	final private static Object lock=new Object();
-
 	final private static SimpleDateFormat tmfmt_rel = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
 	final private static SimpleDateFormat tmfmt_tst = new SimpleDateFormat("HH:mm:ss.SSS");
 	final private static String[] LEVEL_ANSI_COLOR = {Ansi.SGR_RED, Ansi.SGR_YELLOW, Ansi.SGR_BLUE, Ansi.SGR_CYAN, "", Ansi.SGR_GREEN, Ansi.SGR_LIGHTMAGENTA };
@@ -51,6 +50,7 @@ public class Log {
 		if (tmfmt == tmfmt_rel && level==2 || level==3) //no debug/trace
 			return ;
 
+		Date tmstamp = new Date();
 		String file = null;
 		int line = -1;
 
@@ -76,7 +76,7 @@ public class Log {
 
 
 		Thread ct = Thread.currentThread();
-		if (tmfmt == tmfmt_tst && traceOffs >= 0) {
+		if ((level<=0 || tmfmt == tmfmt_tst) && traceOffs >= 0) {
 			StackTraceElement[] bt = ct.getStackTrace();
 			if (bt.length > 3+traceOffs) {
 				file = bt[3+traceOffs].getFileName();
@@ -87,15 +87,22 @@ public class Log {
 
 		final String color = level < LEVEL_ANSI_COLOR.length ? LEVEL_ANSI_COLOR[level] : "";
 		final String name = level < LEVEL_NAME.length ? LEVEL_NAME[level] : String.format("%d", level);
-		synchronized (lock) {
-			if (name.isEmpty()) prs.printf("%s%s: ", color, tmfmt.format(new Date()));
-			else prs.printf("%s%s [%s] %s: ", color, tmfmt.format(new Date()), name, ct.getName());
-			if (file != null) prs.printf("(%s:%d) ", file, line );
-			if (fmt != null) prs.printf((Locale)null, fmt, args);
-			if (e != null) {prs.println();e.printStackTrace(prs);}
-			if (!color.isEmpty()) prs.printf(Ansi.SGR_RESET);
-			prs.println();
-		}
+		ByteArrayOutputStream bas = new ByteArrayOutputStream();
+		PrintStream pr = new PrintStream(bas);
+		if (name.isEmpty())pr.printf("%s%s: ", color, tmfmt.format(tmstamp));
+		else pr.printf("%s%s [%s] %s: ", color, tmfmt.format(tmstamp), name, ct.getName());
+		if (file != null) pr.printf("(%s:%d) ", file, line );
+		if (fmt != null) pr.printf((Locale)null, fmt, args);
+		if (e != null) {pr.println();e.printStackTrace(pr);}
+		if (!color.isEmpty()) pr.printf(Ansi.SGR_RESET);
+		pr.println();
+		pr.close();
+
+		//PrintStream is synchronized
+		try {
+			prs.write(bas.toByteArray());
+			prs.flush();
+		}catch (Throwable ee){}
 	}
 
 	final public static void setReleaseMode() { tmfmt = tmfmt_rel; }
@@ -103,7 +110,8 @@ public class Log {
 
 	final public static void prn(String fmt,Object ...args) {
 		if (tmfmt == tmfmt_rel) return ;
-		prs.printf(fmt+"\n", args);
+		prs.printf(fmt, args);
+		prs.println();
 	}
 	final public static void error(Object ...args) {log(0, 0, args);}
 	final public static void warn(Object ...args) {log(1, 0, args);}

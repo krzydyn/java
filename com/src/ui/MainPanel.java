@@ -67,6 +67,9 @@ public class MainPanel extends JPanel{
 	}
 	public MainPanel() {
 		this(new BorderLayout());
+		setEnabled(true);
+		setFocusable(true);
+		setRequestFocusEnabled(true);
 	}
 
 	protected void windowClosed(){}
@@ -142,6 +145,7 @@ public class MainPanel extends JPanel{
 						}
 						@Override
 						public void windowOpened(WindowEvent e) {
+							main.requestFocusInWindow();
 							main.windowOpened();
 						}
 					});
