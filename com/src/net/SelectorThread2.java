@@ -139,14 +139,26 @@ public class SelectorThread2 {
 		QueueChannel qchn = (QueueChannel)sk.attachment();
 		//Log.debug("writing to queue " + buf);
 		while (buf.position() < buf.limit()) {
-			ByteBuffer dst = getbuf();
+			ByteBuffer dst =  getbuf();
 			int maxbytes = Math.min(dst.remaining(), buf.remaining());
 			dst.put(buf.array(), buf.position(), maxbytes);
 			buf.position(buf.position() + maxbytes);
 			dst.flip();
 			synchronized (qchn) {
 				if (qchn.writeq == null) qchn.writeq = new ArrayList<ByteBuffer>();
-				qchn.writeq.add(dst);
+				/*if (qchn.writeq.size() > 0) {
+					ByteBuffer lst = qchn.writeq.get(qchn.writeq.size()-1);
+					if (lst.capacity() - lst.limit() >= dst.remaining()) {
+						int oldp = lst.position();
+						lst.position(lst.limit());
+						lst.limit(lst.capacity());
+						lst.put(dst);
+						lst.limit(lst.position());
+						lst.position(oldp);
+					}
+				}*/
+				if (dst!=null)
+					qchn.writeq.add(dst);
 			}
 		}
 		synchronized (writeFlag) {
@@ -162,7 +174,7 @@ public class SelectorThread2 {
 			int s=bpool.size();
 			if (s > 0) {
 				b=bpool.remove(s-1);
-				b.clear();
+				b.clear();//pos=0; limit=capa
 			}
 		}
 		if (b==null){

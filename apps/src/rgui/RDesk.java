@@ -98,8 +98,8 @@ public class RDesk extends MainPanel {
 		//robot.setAutoWaitForIdle(true);
 		selector = new SelectorThread2();
 		selector.start();
-		//qchn = (QueueChannel)selector.connect("localhost", 3367, this).attachment();
-		qchn = (QueueChannel)selector.connect("106.120.52.62", 3367, chnHandler).attachment();
+		qchn = (QueueChannel)selector.connect("localhost", 3367, chnHandler).attachment();
+		//qchn = (QueueChannel)selector.connect("106.120.52.62", 3367, chnHandler).attachment();
 
 		setPreferredSize(new Dimension(1600,800));
 

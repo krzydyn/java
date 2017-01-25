@@ -57,12 +57,12 @@ public class TcpFilter implements ChannelHandler {
 	}
 
 	@Override
-	public void write(QueueChannel chn, ByteBuffer b) {
+	public void write(QueueChannel qchn, ByteBuffer b) {
 		ByteBuffer lenbuf = ByteBuffer.allocate(4);
 		lenbuf.putInt(b.remaining());
 		lenbuf.flip();
 		//Log.debug("writeTCP(payload=%d)",b.remaining());
-		chn.write(lenbuf);
-		chn.write(b);
+		qchn.write(lenbuf);
+		qchn.write(b);
 	}
 }
