@@ -67,6 +67,7 @@
 				<include name="sys/XThread*"/>
 				<include name="net/**"/>
 				<include name="text/Text*"/>
+				<include name="text/Ansi*"/>
 			</fileset>
 			<fileset dir=".">
 				<include name="rgui/RServer*"/>

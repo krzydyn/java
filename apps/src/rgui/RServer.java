@@ -5,6 +5,7 @@ import java.awt.GraphicsEnvironment;
 import java.awt.Rectangle;
 import java.awt.Robot;
 import java.awt.event.InputEvent;
+import java.awt.event.KeyEvent;
 import java.awt.image.RenderedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -102,6 +103,26 @@ public class RServer implements ChannelHandler {
 			int h = msg.getShort();
 			registerMonitor(chn, w, h);
 		}
+		else if (cmd == 6) {
+			int keycode=msg.getInt();
+			keyPressed(keycode);
+		}
+		else if (cmd == 7) {
+			int keycode=msg.getInt();
+			keyReleased(keycode);
+		}
+		else if (cmd == 8) {
+			int buttons=msg.getInt();
+			mousePressed(buttons);
+		}
+		else if (cmd == 9) {
+			int buttons=msg.getInt();
+			mouseReleased(buttons);
+		}
+		else if (cmd == 10) {
+			int rot=msg.getInt();
+			mouseWheel(rot);
+		}
 		else {
 			Log.error("wrong cmd:%d, payload %d", cmd, msg.remaining());
 
@@ -132,33 +153,97 @@ public class RServer implements ChannelHandler {
 	private void mounseClick(int x,int y,int buttons) {
 		Log.info("mouseClick(%d,%d,%x) / %x",x,y,buttons,mouseButtonMask);
 		buttons &= mouseButtonMask;
-		//InputEvent.getMaskForButton();
 		robot.mouseMove(x, y);
 		robot.mousePress(buttons);
 		robot.mouseRelease(buttons);
 	}
-	static int FLAGS_BITS = 7;
-	static int FLAGS_MASK = 0xf << FLAGS_BITS;
-	static int FLAG_SHIFT = 1;
-	static int FLAG_CTRL = 2;
-	static int FLAG_ALT = 4;
-	static int FLAG_META = 8;
 	private void keyType(int keycode) {
-		robot.keyPress(keycode);
-		robot.keyRelease(keycode);
+		int key = keycode&0xffff;
+		int mod = (keycode>>16)&0xffff;
+		if (mod!=0) {
+			if (mod==KeyEvent.VK_ALT_GRAPH) {
+				robot.keyPress(KeyEvent.VK_ALT);
+				robot.keyPress(KeyEvent.VK_CONTROL);
+			}
+			else
+				robot.keyPress(mod);
+			robot.keyPress(key);
+			robot.keyRelease(key);
+			if (mod==KeyEvent.VK_ALT_GRAPH) {
+				robot.keyRelease(KeyEvent.VK_ALT);
+				robot.keyRelease(KeyEvent.VK_CONTROL);
+			}
+			else
+				robot.keyRelease(mod);
+		}
+		else {
+			robot.keyPress(key);
+			robot.keyRelease(key);
+		}
 	}
 	private int getkeycode(char c) {
-		if (c == '\n' || c == '\t') return c;
-		if (c >= ' ' && c <= 'Z') return c;
-		if (c >= 'a' && c <= 'x') return c-32;
+		if (c == KeyEvent.VK_ENTER || c == KeyEvent.VK_TAB || c == KeyEvent.VK_BACK_SPACE ||
+			c == KeyEvent.VK_SPACE || c == KeyEvent.VK_ESCAPE)
+			return c;
+		if (c > 0 && c <= 26) return KeyEvent.VK_A+(c-1) | (KeyEvent.VK_CONTROL<<16);
+
+		if (c >= ',' && c <= '/') return KeyEvent.VK_COMMA+(c-'.');
+		if (c >= '0' && c <= '0') return KeyEvent.VK_0+(c-'0');
+		if (c >= 'A' && c <= 'Z') return KeyEvent.VK_A+(c-'A') | (KeyEvent.VK_SHIFT<<16);
+		if (c >= 'a' && c <= 'z') return KeyEvent.VK_A+(c-'a');
+		if (c == 0x7F) return KeyEvent.VK_DELETE;
+		if (c == 0x105) return KeyEvent.VK_A | (KeyEvent.VK_ALT_GRAPH<<16);
+		if (c == 0x107) return KeyEvent.VK_C | (KeyEvent.VK_ALT_GRAPH<<16);
+		if (c == 0x119) return KeyEvent.VK_E | (KeyEvent.VK_ALT_GRAPH<<16);
+		if (c == 0x142) return KeyEvent.VK_L | (KeyEvent.VK_ALT_GRAPH<<16);
+		if (c == 0x144) return KeyEvent.VK_N | (KeyEvent.VK_ALT_GRAPH<<16);
+		if (c == 0xF3) return KeyEvent.VK_O | (KeyEvent.VK_ALT_GRAPH<<16);
+		if (c == 0x15B) return KeyEvent.VK_S | (KeyEvent.VK_ALT_GRAPH<<16);
+		if (c == 0x17A) return KeyEvent.VK_X | (KeyEvent.VK_ALT_GRAPH<<16);
+		if (c == 0x17C) return KeyEvent.VK_Z | (KeyEvent.VK_ALT_GRAPH<<16);
 		return -1;
 	}
 	private void keyType(String s) {
-		Log.info("keyType %s",s);
 		for (int i=0; i < s.length(); ++i) {
 			int c = getkeycode(s.charAt(i));
-			if (c >= 0) keyType(c);
+			if (c != 0) keyType(c);
 		}
+	}
+	private boolean altPressed=false;
+	private void keyPressed(int keycode) {
+		if(keycode == KeyEvent.VK_ALT) altPressed=true;
+		if (keycode==KeyEvent.VK_ALT_GRAPH) {
+			robot.keyPress(KeyEvent.VK_ALT);
+			robot.keyPress(KeyEvent.VK_CONTROL);
+		}
+		else
+			robot.keyPress(keycode);
+	}
+	private void keyReleased(int keycode) {
+		if(keycode == KeyEvent.VK_ALT) {
+			if (altPressed) altPressed=false;
+		}
+		if (keycode==KeyEvent.VK_ALT_GRAPH) {
+			robot.keyRelease(KeyEvent.VK_ALT);
+			robot.keyRelease(KeyEvent.VK_CONTROL);
+		}
+		else
+			robot.keyRelease(keycode);
+		if (altPressed) {
+			robot.keyRelease(KeyEvent.VK_ALT);
+			altPressed=false;
+		}
+	}
+	private void mousePressed(int buttons) {
+		buttons &= mouseButtonMask;
+		robot.mousePress(buttons);
+	}
+	private void mouseReleased(int buttons) {
+		buttons &= mouseButtonMask;
+		robot.mouseRelease(buttons);
+	}
+	private void mouseWheel(int rot) {
+		robot.mouseWheel(rot);
 	}
 	private void sendImage(QueueChannel chn, int w, int h, float q) {
 		RenderedImage img = getScreen(w,h);

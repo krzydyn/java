@@ -8,6 +8,7 @@ import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.event.MouseWheelEvent;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -98,15 +99,26 @@ public class RDesk extends MainPanel {
 		//robot.setAutoWaitForIdle(true);
 		selector = new SelectorThread2();
 		selector.start();
-		qchn = (QueueChannel)selector.connect("localhost", 3367, chnHandler).attachment();
-		//qchn = (QueueChannel)selector.connect("106.120.52.62", 3367, chnHandler).attachment();
+		//qchn = (QueueChannel)selector.connect("localhost", 3367, chnHandler).attachment();
+		qchn = (QueueChannel)selector.connect("106.120.52.62", 3367, chnHandler).attachment();
 
 		setPreferredSize(new Dimension(1600,800));
 
 		addKeyListener(new KeyAdapter() {
 			@Override
 			public void keyTyped(KeyEvent e) {
-				sendKeyType(e.getKeyChar());
+				//Log.info("keyType %02x",(int)e.getKeyChar());
+				//sendKeyType(e.getKeyChar());
+			}
+			@Override
+			public void keyPressed(KeyEvent e) {
+				Log.info("keyPressed #%02X",e.getKeyCode());
+				sendKeyPressed(e.getKeyCode());
+			}
+			@Override
+			public void keyReleased(KeyEvent e) {
+				Log.info("keyReleased #%02X",e.getKeyCode());
+				sendKeyReleased(e.getKeyCode());
 			}
 		});
 
@@ -119,11 +131,28 @@ public class RDesk extends MainPanel {
 			@Override
 			public void mouseClicked(MouseEvent e) {
 				//Log.debug("mouseClick(%d,%d,%x) mod=%x  but=%d",e.getX(), e.getY(), e.getModifiersEx(), e.getModifiers(), e.getButton());
-				sendMouseClick(e.getX(), e.getY(), InputEvent.getMaskForButton(e.getButton()));
+				//sendMouseClick(e.getX(), e.getY(), InputEvent.getMaskForButton(e.getButton()));
+			}
+			@Override
+			public void mousePressed(MouseEvent e) {
+				sendMousePressed(InputEvent.getMaskForButton(e.getButton()));
+			}
+			@Override
+			public void mouseReleased(MouseEvent e) {
+				sendMouseReleased(InputEvent.getMaskForButton(e.getButton()));
+			}
+			@Override
+			public void mouseDragged(MouseEvent e) {
+				sendMouseMove(e.getX(), e.getY());
+			}
+			@Override
+			public void mouseWheelMoved(MouseWheelEvent e) {
+				sendWheelMove(e.getWheelRotation());
 			}
 		};
 		addMouseListener(mouseHnadler);
 		addMouseMotionListener(mouseHnadler);
+		addMouseWheelListener(mouseHnadler);
 	}
 
 	@Override
@@ -211,6 +240,42 @@ public class RDesk extends MainPanel {
 		b.putShort((short)getWidth());
 		b.putShort((short)getHeight());
 		b.putFloat(0.5f);
+		b.flip();
+		chnHandler.write(qchn, b);
+	}
+	private void sendKeyPressed(int keycode) {
+		ByteBuffer b = ByteBuffer.allocate(2+4);
+		b.putShort((short)6);//key pressed
+		b.putInt(keycode);
+		b.flip();
+		chnHandler.write(qchn, b);
+	}
+	private void sendKeyReleased(int keycode) {
+		ByteBuffer b = ByteBuffer.allocate(2+4);
+		b.putShort((short)7);//key released
+		b.putInt(keycode);
+		b.flip();
+		chnHandler.write(qchn, b);
+	}
+	private void sendMousePressed(int buttons) {
+		ByteBuffer b = ByteBuffer.allocate(2+4);
+		b.putShort((short)8);//key pressed
+		b.putInt(buttons);
+		b.flip();
+		chnHandler.write(qchn, b);
+	}
+	private void sendMouseReleased(int buttons) {
+		ByteBuffer b = ByteBuffer.allocate(2+4);
+		b.putShort((short)9);//key released
+		b.putInt(buttons);
+		b.flip();
+		chnHandler.write(qchn, b);
+	}
+	private void sendWheelMove(int rot) {
+		if (!qchn.isOpen()) return ;
+		ByteBuffer b = ByteBuffer.allocate(14);
+		b.putShort((short)10);//mouse move
+		b.putInt(rot);
 		b.flip();
 		chnHandler.write(qchn, b);
 	}
