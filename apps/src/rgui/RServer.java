@@ -317,8 +317,11 @@ public class RServer implements ChannelHandler {
 		selector.bind(null, 3367, this);
 		Rectangle rect = new Rectangle(0,0,(int)screenRect.getMaxX(),(int)screenRect.getMaxY());
 		while (selector.isRunning()) {
-			synchronized (this) {
-				screenImg = robot.createScreenCapture(rect);
+			BufferedImage i = robot.createScreenCapture(rect);
+			BufferedImage p;
+			synchronized (this) { p=screenImg; screenImg = i; }
+			if (p != null) {
+				//find diffs p ^ i
 			}
 			XThread.sleep(100);
 		}
