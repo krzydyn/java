@@ -31,6 +31,7 @@ public class RDesk extends MainPanel {
 	int inlen;
 	private final Object imgLock = new Object();
 	private Image img;
+	private int imgX,imgY;
 	private boolean paintDone=false;
 	QueueChannel qchn;
 	int pendingReq=0;
@@ -45,6 +46,7 @@ public class RDesk extends MainPanel {
 			Log.debug("connected");
 			inmsg.clear();
 			inlen=0;
+			sendRegister();
 		}
 		@Override
 		public void disconnected(QueueChannel chn) {
@@ -99,8 +101,8 @@ public class RDesk extends MainPanel {
 		//robot.setAutoWaitForIdle(true);
 		selector = new SelectorThread2();
 		selector.start();
-		//qchn = (QueueChannel)selector.connect("localhost", 3367, chnHandler).attachment();
-		qchn = (QueueChannel)selector.connect("106.120.52.62", 3367, chnHandler).attachment();
+		qchn = (QueueChannel)selector.connect("localhost", 3367, chnHandler).attachment();
+		//qchn = (QueueChannel)selector.connect("106.120.52.62", 3367, chnHandler).attachment();
 
 		setPreferredSize(new Dimension(1600,800));
 
@@ -158,8 +160,9 @@ public class RDesk extends MainPanel {
 	@Override
 	protected void paintComponent(Graphics g) {
 		Image i = null;
-		synchronized (imgLock) { i=img; }
-		if (i!=null) g.drawImage(i, 0, 0, null);
+		int x, y;
+		synchronized (imgLock) { i=img; x=imgX; y=imgY; }
+		if (i!=null) g.drawImage(i, x, y, null);
 		paintDone=true;
 	}
 
@@ -170,7 +173,7 @@ public class RDesk extends MainPanel {
 			public void run() {
 				while (selector.isRunning() && qchn.isOpen()) {
 					if (pendingReq < 2) getScreenReq();
-					else XThread.sleep(20);
+					XThread.sleep(1000);
 				}
 				selector.stop();
 			}
@@ -190,20 +193,31 @@ public class RDesk extends MainPanel {
 		}
 		else if (cmd == 4) {
 			--pendingReq;
+			int x = inmsg.getInt();
+			int y = inmsg.getInt();
 			ByteArrayInputStream is = new ByteArrayInputStream(inmsg.array(),inmsg.position(),inmsg.remaining());
 			Image i=null;
 			try { i = ImageIO.read(is);}
 			catch (IOException e) {Log.error(e);}
 			if (i!=null) {
-				synchronized (imgLock) { img=i; }
+				synchronized (imgLock) { img=i; imgX=x; imgY=y;}
 				if (paintDone) {
 					paintDone=false;
 					repaint();
 				}
 			}
 		}
+		else {
+			Log.error("unknown cmd:%d, payload %d", cmd, inmsg.remaining());
+		}
 	}
 
+	private void sendRegister() {
+		ByteBuffer b = ByteBuffer.allocate(2);
+		b.putShort((short)5);//regiser
+		b.flip();
+		chnHandler.write(qchn, b);
+	}
 	private void sendMouseMove(int x,int y) {
 		if (!qchn.isOpen()) return ;
 		ByteBuffer b = ByteBuffer.allocate(14);

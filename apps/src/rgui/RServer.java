@@ -6,10 +6,14 @@ import java.awt.Rectangle;
 import java.awt.Robot;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
+import java.awt.image.BufferedImage;
 import java.awt.image.RenderedImage;
 import java.io.ByteArrayOutputStream;
+import java.io.DataOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.imageio.IIOImage;
 import javax.imageio.ImageIO;
@@ -32,8 +36,9 @@ public class RServer implements ChannelHandler {
 	private final boolean useQuality=true;
 	private final int mouseButtonMask;
 
-	private RenderedImage curScreen;
+	private BufferedImage screenImg;
 	private Rectangle screenRect;
+	private List<QueueChannel> clients=new ArrayList<QueueChannel>();
 
 	private RServer() throws Exception {
 		robot = new Robot();
@@ -73,8 +78,11 @@ public class RServer implements ChannelHandler {
 
 	private void processMsg(QueueChannel chn, ByteBuffer msg) {
 		short cmd = msg.getShort();
+		int xcode=-1;
 
+		try {
 		if (cmd == 0) {
+			getScreenInfo();
 		}
 		else if (cmd == 1) {
 			int x=msg.getInt();
@@ -85,66 +93,71 @@ public class RServer implements ChannelHandler {
 			int x=msg.getInt();
 			int y=msg.getInt();
 			int buttons=msg.getInt();
+			xcode=buttons;
 			mounseClick(x, y, buttons);
 		}
 		else if (cmd == 3) {
 			String s = new String(msg.array(),msg.position(),msg.remaining(),Text.UTF8_Charset);
+			xcode = s.charAt(0);
 			keyType(s);
 		}
-		else if (cmd == 4) {
+		else if (cmd == 4) { // getImage
 			int w = msg.getShort();
 			int h = msg.getShort();
 			float q = msg.getFloat();
-			//Log.debug("sendImage(%d,%d,%.2f)",w,h,q);
-			sendImage(chn, w, h, q);
+			sendImage(chn, 0, 0, w, h, q);
 		}
 		else if (cmd == 5) {
-			int w = msg.getShort();
-			int h = msg.getShort();
-			registerMonitor(chn, w, h);
+			registerMonitor(chn);
 		}
 		else if (cmd == 6) {
 			int keycode=msg.getInt();
+			xcode=keycode;
 			keyPressed(keycode);
 		}
 		else if (cmd == 7) {
 			int keycode=msg.getInt();
+			xcode=keycode;
 			keyReleased(keycode);
 		}
 		else if (cmd == 8) {
 			int buttons=msg.getInt();
+			xcode=buttons;
 			mousePressed(buttons);
 		}
 		else if (cmd == 9) {
 			int buttons=msg.getInt();
+			xcode=buttons;
 			mouseReleased(buttons);
 		}
 		else if (cmd == 10) {
 			int rot=msg.getInt();
+			xcode=rot;
 			mouseWheel(rot);
 		}
 		else {
-			Log.error("wrong cmd:%d, payload %d", cmd, msg.remaining());
+			Log.error("unknown cmd:%d, payload %d", cmd, msg.remaining());
 
 		}
+		}catch (IllegalArgumentException e) {
+			Log.error(e, "xcode = %d",xcode);
+		}
+
 	}
 
-	private void registerMonitor(QueueChannel chn, int w ,int h) {
+	private void getScreenInfo() {
 
 	}
-	private RenderedImage getScreen(int w, int h) {
-		Rectangle r = new Rectangle();
-		r.x=0; r.y=0;
-		if (w > screenRect.x+screenRect.width) w = screenRect.x+screenRect.width;
-		if (h > screenRect.y+screenRect.height) h = screenRect.y+screenRect.height;
-		r.width=w;
-		r.height=h;
+
+	private BufferedImage getScreen(int x, int y, int w, int h) {
+		Rectangle r = new Rectangle(x,y,w,h);
+		BufferedImage i = null;
 		synchronized (this) {
-			//if (curScreen == null) {
-				curScreen = robot.createScreenCapture(r);
-			//}
-			return curScreen;
+			if (screenImg==null) return null;
+			//screenImg = robot.createScreenCapture(r);
+			i=screenImg;
 		}
+		return i.getSubimage(x, y, w, h);
 	}
 
 	private void mounseMove(int x,int y) {
@@ -209,6 +222,10 @@ public class RServer implements ChannelHandler {
 			if (c != 0) keyType(c);
 		}
 	}
+	private void registerMonitor(QueueChannel chn) {
+		//clients.put(key, value)
+		clients.add(chn);
+	}
 	private boolean altPressed=false;
 	private void keyPressed(int keycode) {
 		if(keycode == KeyEvent.VK_ALT) altPressed=true;
@@ -245,31 +262,40 @@ public class RServer implements ChannelHandler {
 	private void mouseWheel(int rot) {
 		robot.mouseWheel(rot);
 	}
-	private void sendImage(QueueChannel chn, int w, int h, float q) {
-		RenderedImage img = getScreen(w,h);
+	private void sendImage(QueueChannel chn, int x, int y, int w, int h, float q) {
+		if (x >= screenRect.x+screenRect.width) x=screenRect.x+screenRect.width;
+		else if (x < screenRect.x) { w -= x; x = screenRect.x; }
+		if (y >= screenRect.y+screenRect.height) y=screenRect.y+screenRect.height;
+		else if (y < screenRect.y) { h -= y; y = screenRect.y; }
+		if (x+w > screenRect.x+screenRect.width) w = screenRect.x+screenRect.width-x;
+		if (y+h > screenRect.y+screenRect.height) h = screenRect.y+screenRect.height-y;
+
+		RenderedImage img = getScreen(x,y,w,h);
 		ByteArrayOutputStream os = new ByteArrayOutputStream(512*1024);
-		os.write(0);os.write(4);
+		DataOutputStream dos = new DataOutputStream(os);
 		try {
+			dos.writeShort(4);
+			dos.writeInt(x);
+			dos.writeInt(y);
+
 			if (useQuality) {
 				JPEGImageWriteParam jpegParams = new JPEGImageWriteParam(null);
 				jpegParams.setCompressionMode(ImageWriteParam.MODE_EXPLICIT);
 				jpegParams.setCompressionQuality(q);
 				ImageWriter writer = ImageIO.getImageWritersByFormatName("jpg").next();
-				writer.setOutput(ImageIO.createImageOutputStream(os));
+				writer.setOutput(ImageIO.createImageOutputStream(dos));
 				writer.write(null, new IIOImage(img, null, null), jpegParams);
 				writer.dispose();
 			}
 			else
-				ImageIO.write(img, "jpg", os);
+				ImageIO.write(img, "jpg", dos);
+			dos.close();
 			write(chn,ByteBuffer.wrap(os.toByteArray()));
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 	}
 
-	private boolean imageEqual(RenderedImage im1, RenderedImage im2, Rectangle roi) {
-		return false;
-	}
 	private void run() throws Exception {
 		screenRect = null;
 		int shiftX=0,shiftY=0;
@@ -289,10 +315,14 @@ public class RServer implements ChannelHandler {
 
 		selector.start();
 		selector.bind(null, 3367, this);
+		Rectangle rect = new Rectangle(0,0,(int)screenRect.getMaxX(),(int)screenRect.getMaxY());
 		while (selector.isRunning()) {
-			XThread.sleep(1000);
+			synchronized (this) {
+				screenImg = robot.createScreenCapture(rect);
+			}
+			XThread.sleep(100);
 		}
-		Log.error("selctor stopped running");
+		Log.error("rserver finished");
 	}
 
 	public static void main(String[] args) {
