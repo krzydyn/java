@@ -20,9 +20,6 @@ package unittest;
 
 import java.math.BigInteger;
 import java.security.Key;
-import java.security.Provider;
-import java.security.Security;
-
 import crypt.AES2;
 import crypt.AES3;
 import crypt.Base64;
@@ -57,6 +54,7 @@ public class T_Crypt extends UnitTest {
 		check(Base64.decode("Nzg5MEFC"), new byte[] {'7','8','9','0', 'A', 'B'});
 	}
 	static void rsa() {
+
 		checkNoThrow(new RunThrowable() {
 			@Override
 			public void run() {new RSA(1024);}
@@ -69,6 +67,14 @@ public class T_Crypt extends UnitTest {
 			@Override
 			public void run() {new RSA(1024,BigInteger.valueOf(0x10001));}
 		});
+
+		final byte[] msg = new byte[1024/8/2];
+		for (int i=0; i < msg.length; ++i) msg[i]=(byte)(i+1);
+		RSA r=new RSA(1024);
+		byte[]x = r.encrypt(msg);
+		byte[]m = r.decrypt(x);
+		check(m, msg, m.length);
+
 	}
 
 	static void listProviders() {
@@ -83,6 +89,7 @@ public class T_Crypt extends UnitTest {
 		CryptX_AES.test();
 
 		//test CryptXProvider
+		/*
 		try {
 			Provider p = Security.getProvider("CryptX");
 			javax.crypto.Cipher cipher;
@@ -95,7 +102,7 @@ public class T_Crypt extends UnitTest {
 
 		} catch (Exception e) {
 			Log.error(e);
-		}
+		}*/
 	}
 
 	static void des_aes() {
@@ -187,6 +194,6 @@ public class T_Crypt extends UnitTest {
 			h.update(data, 0, data.length);
 		}
 		//Log.raw("hash = %s", Text.join(h.finish(), ""));
-		check(h.finish(), new byte[]{(byte)0xe5,(byte)0xf2,(byte)0xf9,(byte)0xfc});
+		check(h.finish(), new byte[]{(byte)0xe5,(byte)0xf2,(byte)0xf9,(byte)0xfc},0);
 	}
 }

@@ -119,7 +119,8 @@ public class UnitTest {
 				if (!Modifier.isStatic(m.getModifiers())) {
 					continue;
 				}
-				if ("main".equals(m.getName()) || m.getName().startsWith("no_")) continue;
+				if ("main".equals(m.getName()) || m.getName().contains("$")) continue;
+				if (m.getName().startsWith("no_")) continue;
 				if (!(unit + "." + m.getName()).startsWith(prefix)) continue;
 
 				try {
@@ -219,20 +220,36 @@ public class UnitTest {
 	protected static void check(String t1, String t2) {
 		++current.checks;
 		if (!t1.equals(t2)) {
-			Log.error(1, "check failed: '%s'!='%s'", t1, t2);
+			Log.error(1,"check failed: '%s'!='%s'", t1, t2);
 			++current.errors;
 		}
 	}
 	protected static void check(byte[] t1, byte[] t2) {
+		check_prv(t1, t2, 0);
+	}
+	protected static void check(byte[] t1, byte[] t2, int n) {
+		check_prv(t1, t2, n);
+	}
+	private static void check_prv(byte[] t1, byte[] t2, int n) {
 		++current.checks;
-		if (t1.length != t2.length) {
-			Log.error(1, "check failed: length %d!=%d", t1.length, t2.length);
-			++current.errors;
-			return ;
+		if (n > 0) {
+			if (t1.length < n || t2.length < n) {
+				Log.error(2, "check failed: length %d!=%d", t1.length, t2.length);
+				++current.errors;
+				return ;
+			}
 		}
-		for (int i =0; i < t1.length; ++i) {
+		else {
+			if (t1.length != t2.length) {
+				Log.error(2,"check failed: length %d!=%d", t1.length, t2.length);
+				++current.errors;
+				return ;
+			}
+			n=t1.length;
+		}
+		for (int i=0; i < n; ++i) {
 			if (t1[i] != t2[i]) {
-				Log.error(1, "check failed: byte[%d] %d!=%d", i, t1[i], t2[i]);
+				Log.error(2, "check failed: byte[%d] %d!=%d", i, t1[i], t2[i]);
 				++current.errors;
 				return ;
 			}
@@ -256,7 +273,7 @@ public class UnitTest {
 			n=t1.length;
 		}
 
-		for (int i =0; i < n; ++i) {
+		for (int i=0; i < n; ++i) {
 			if (t1[i] != t2[i]) {
 				Log.error(1, "check failed: int[%d] %d!=%d", i, t1[i], t2[i]);
 				++current.errors;
