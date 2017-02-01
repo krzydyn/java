@@ -46,7 +46,7 @@ public class RDesk extends MainPanel {
 			Log.debug("connected");
 			inmsg.clear();
 			inlen=0;
-			sendRegister();
+			sendScreenInfoReq();
 		}
 		@Override
 		public void disconnected(QueueChannel chn) {
@@ -101,8 +101,8 @@ public class RDesk extends MainPanel {
 		//robot.setAutoWaitForIdle(true);
 		selector = new SelectorThread2();
 		selector.start();
-		qchn = (QueueChannel)selector.connect("localhost", 3367, chnHandler).attachment();
-		//qchn = (QueueChannel)selector.connect("106.120.52.62", 3367, chnHandler).attachment();
+		//qchn = (QueueChannel)selector.connect("localhost", 3367, chnHandler).attachment();
+		qchn = (QueueChannel)selector.connect("106.120.52.62", 3367, chnHandler).attachment();
 
 		setPreferredSize(new Dimension(1600,800));
 
@@ -114,12 +114,10 @@ public class RDesk extends MainPanel {
 			}
 			@Override
 			public void keyPressed(KeyEvent e) {
-				Log.info("keyPressed #%02X",e.getKeyCode());
 				sendKeyPressed(e.getKeyCode());
 			}
 			@Override
 			public void keyReleased(KeyEvent e) {
-				Log.info("keyReleased #%02X",e.getKeyCode());
 				sendKeyReleased(e.getKeyCode());
 			}
 		});
@@ -172,7 +170,7 @@ public class RDesk extends MainPanel {
 			@Override
 			public void run() {
 				while (selector.isRunning() && qchn.isOpen()) {
-					if (pendingReq < 2) getScreenReq();
+					if (pendingReq < 2) sendScreenReq();
 					XThread.sleep(1000);
 				}
 				selector.stop();
@@ -185,13 +183,26 @@ public class RDesk extends MainPanel {
 		selector.stop();
 	}
 
+	private String getUTF(ByteBuffer b) {
+		int l=b.getShort();
+		byte[] a = new byte[l];
+		b.get(a);
+		return new String(a,Text.UTF8_Charset);
+	}
 
 	private void processMsg(QueueChannel chn) {
 		short cmd = inmsg.getShort();
 		//Log.debug("msgtype = %d, payload %d", type, inmsg.remaining());
-		if (cmd == 0) {
+		if (cmd == RCommand.SCREEN_INFO) {
+			String id = getUTF(inmsg);
+			int x = inmsg.getInt();
+			int y = inmsg.getInt();
+			int w = inmsg.getInt();
+			int h = inmsg.getInt();
+			Log.info("%s: %d %d %d %d",id,x,y,w,h);
+			sendRegister();
 		}
-		else if (cmd == 4) {
+		else if (cmd == RCommand.SCREEN_IMG) {
 			--pendingReq;
 			int x = inmsg.getInt();
 			int y = inmsg.getInt();
@@ -212,16 +223,16 @@ public class RDesk extends MainPanel {
 		}
 	}
 
-	private void sendRegister() {
-		ByteBuffer b = ByteBuffer.allocate(2);
-		b.putShort((short)5);//regiser
+	private void sendScreenInfoReq() {
+		ByteBuffer b = ByteBuffer.allocate(4);
+		b.putShort(RCommand.SCREEN_INFO);
 		b.flip();
 		chnHandler.write(qchn, b);
 	}
 	private void sendMouseMove(int x,int y) {
 		if (!qchn.isOpen()) return ;
 		ByteBuffer b = ByteBuffer.allocate(14);
-		b.putShort((short)1);//mouse move
+		b.putShort(RCommand.MOUSE_MOVE);
 		b.putInt(x);
 		b.putInt(y);
 		b.flip();
@@ -229,7 +240,7 @@ public class RDesk extends MainPanel {
 	}
 	private void sendMouseClick(int x,int y,int button) {
 		ByteBuffer b = ByteBuffer.allocate(14);
-		b.putShort((short)2);//mouse click
+		b.putShort(RCommand.MOUSE_CLICK);
 		b.putInt(x);
 		b.putInt(y);
 		b.putInt(button);
@@ -242,45 +253,51 @@ public class RDesk extends MainPanel {
 	private void sendKeyType(String s) {
 		byte[] a = s.getBytes(Text.UTF8_Charset);
 		ByteBuffer b = ByteBuffer.allocate(2+a.length);
-		b.putShort((short)3);//key type
+		b.putShort(RCommand.TEXT_TYPE);//key type
 		b.put(a, 0, a.length);
 		b.flip();
 		chnHandler.write(qchn, b);
 	}
-	private void getScreenReq() {
+	private void sendScreenReq() {
 		++pendingReq;
 		ByteBuffer b = ByteBuffer.allocate(10);
-		b.putShort((short)4);//read screen
+		b.putShort(RCommand.SCREEN_IMG);
 		b.putShort((short)getWidth());
 		b.putShort((short)getHeight());
 		b.putFloat(0.5f);
 		b.flip();
 		chnHandler.write(qchn, b);
 	}
+	private void sendRegister() {
+		ByteBuffer b = ByteBuffer.allocate(2);
+		b.putShort(RCommand.CLIENT_REGISTER);
+		b.flip();
+		chnHandler.write(qchn, b);
+	}
 	private void sendKeyPressed(int keycode) {
 		ByteBuffer b = ByteBuffer.allocate(2+4);
-		b.putShort((short)6);//key pressed
+		b.putShort(RCommand.KEY_PRESS);
 		b.putInt(keycode);
 		b.flip();
 		chnHandler.write(qchn, b);
 	}
 	private void sendKeyReleased(int keycode) {
 		ByteBuffer b = ByteBuffer.allocate(2+4);
-		b.putShort((short)7);//key released
+		b.putShort(RCommand.KEY_RELEASE);
 		b.putInt(keycode);
 		b.flip();
 		chnHandler.write(qchn, b);
 	}
 	private void sendMousePressed(int buttons) {
 		ByteBuffer b = ByteBuffer.allocate(2+4);
-		b.putShort((short)8);//key pressed
+		b.putShort(RCommand.MOUSE_PRESS);
 		b.putInt(buttons);
 		b.flip();
 		chnHandler.write(qchn, b);
 	}
 	private void sendMouseReleased(int buttons) {
 		ByteBuffer b = ByteBuffer.allocate(2+4);
-		b.putShort((short)9);//key released
+		b.putShort(RCommand.MOUSE_RELEASE);
 		b.putInt(buttons);
 		b.flip();
 		chnHandler.write(qchn, b);
@@ -288,7 +305,7 @@ public class RDesk extends MainPanel {
 	private void sendWheelMove(int rot) {
 		if (!qchn.isOpen()) return ;
 		ByteBuffer b = ByteBuffer.allocate(14);
-		b.putShort((short)10);//mouse move
+		b.putShort(RCommand.MOUSE_WHEEL);
 		b.putInt(rot);
 		b.flip();
 		chnHandler.write(qchn, b);

@@ -57,7 +57,6 @@ public class RServer implements ChannelHandler {
 	@Override
 	public void connected(QueueChannel qchn) {
 		Log.debug("connected");
-		write(qchn,ByteBuffer.wrap("hello\n".getBytes()));
 	}
 	@Override
 	public void disconnected(QueueChannel chnst) {
@@ -81,56 +80,56 @@ public class RServer implements ChannelHandler {
 		int xcode=-1;
 
 		try {
-		if (cmd == 0) {
-			getScreenInfo();
+		if (cmd == RCommand.SCREEN_INFO) {
+			getScreenInfo(chn);
 		}
-		else if (cmd == 1) {
+		else if (cmd == RCommand.MOUSE_MOVE) {
 			int x=msg.getInt();
 			int y=msg.getInt();
 			mounseMove(x, y);
 		}
-		else if (cmd == 2) {
+		else if (cmd == RCommand.MOUSE_CLICK) {
 			int x=msg.getInt();
 			int y=msg.getInt();
 			int buttons=msg.getInt();
 			xcode=buttons;
 			mounseClick(x, y, buttons);
 		}
-		else if (cmd == 3) {
+		else if (cmd == RCommand.TEXT_TYPE) {
 			String s = new String(msg.array(),msg.position(),msg.remaining(),Text.UTF8_Charset);
 			xcode = s.charAt(0);
 			keyType(s);
 		}
-		else if (cmd == 4) { // getImage
+		else if (cmd == RCommand.SCREEN_IMG) {
 			int w = msg.getShort();
 			int h = msg.getShort();
 			float q = msg.getFloat();
 			sendImage(chn, 0, 0, w, h, q);
 		}
-		else if (cmd == 5) {
+		else if (cmd == RCommand.CLIENT_REGISTER) {
 			registerMonitor(chn);
 		}
-		else if (cmd == 6) {
+		else if (cmd == RCommand.KEY_PRESS) {
 			int keycode=msg.getInt();
 			xcode=keycode;
 			keyPressed(keycode);
 		}
-		else if (cmd == 7) {
+		else if (cmd == RCommand.KEY_RELEASE) {
 			int keycode=msg.getInt();
 			xcode=keycode;
 			keyReleased(keycode);
 		}
-		else if (cmd == 8) {
+		else if (cmd == RCommand.MOUSE_PRESS) {
 			int buttons=msg.getInt();
 			xcode=buttons;
 			mousePressed(buttons);
 		}
-		else if (cmd == 9) {
+		else if (cmd == RCommand.MOUSE_RELEASE) {
 			int buttons=msg.getInt();
 			xcode=buttons;
 			mouseReleased(buttons);
 		}
-		else if (cmd == 10) {
+		else if (cmd == RCommand.MOUSE_WHEEL) {
 			int rot=msg.getInt();
 			xcode=rot;
 			mouseWheel(rot);
@@ -145,16 +144,31 @@ public class RServer implements ChannelHandler {
 
 	}
 
-	private void getScreenInfo() {
-
+	private void getScreenInfo(QueueChannel chn) {
+		ByteArrayOutputStream os = new ByteArrayOutputStream(512*1024);
+		DataOutputStream dos = new DataOutputStream(os);
+		try {
+			dos.writeShort(RCommand.SCREEN_INFO);
+			for (GraphicsDevice gd : GraphicsEnvironment.getLocalGraphicsEnvironment().getScreenDevices()) {
+				Rectangle r = gd.getDefaultConfiguration().getBounds();
+				Log.debug("device %s: %s",gd.getIDstring(),r);
+				dos.writeUTF(gd.getIDstring());
+				dos.writeInt(r.x);
+				dos.writeInt(r.y);
+				dos.writeInt(r.width);
+				dos.writeInt(r.height);
+			}
+			dos.close();
+			write(chn,ByteBuffer.wrap(os.toByteArray()));
+		} catch (IOException e) {
+			Log.error(e);
+		}
 	}
 
 	private BufferedImage getScreen(int x, int y, int w, int h) {
-		Rectangle r = new Rectangle(x,y,w,h);
 		BufferedImage i = null;
 		synchronized (this) {
 			if (screenImg==null) return null;
-			//screenImg = robot.createScreenCapture(r);
 			i=screenImg;
 		}
 		return i.getSubimage(x, y, w, h);
@@ -274,7 +288,7 @@ public class RServer implements ChannelHandler {
 		ByteArrayOutputStream os = new ByteArrayOutputStream(512*1024);
 		DataOutputStream dos = new DataOutputStream(os);
 		try {
-			dos.writeShort(4);
+			dos.writeShort(RCommand.SCREEN_IMG);
 			dos.writeInt(x);
 			dos.writeInt(y);
 
@@ -292,13 +306,14 @@ public class RServer implements ChannelHandler {
 			dos.close();
 			write(chn,ByteBuffer.wrap(os.toByteArray()));
 		} catch (IOException e) {
-			e.printStackTrace();
+			Log.error(e);
 		}
 	}
 
 	private void run() throws Exception {
 		screenRect = null;
 		int shiftX=0,shiftY=0;
+
 		for (GraphicsDevice gd : GraphicsEnvironment.getLocalGraphicsEnvironment().getScreenDevices()) {
 			Rectangle r = gd.getDefaultConfiguration().getBounds();
 			Log.debug("device %s: %s",gd.getIDstring(),r);
@@ -325,7 +340,7 @@ public class RServer implements ChannelHandler {
 			}
 			XThread.sleep(100);
 		}
-		Log.error("rserver finished");
+		Log.info("rserver finished");
 	}
 
 	public static void main(String[] args) {
