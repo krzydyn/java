@@ -74,15 +74,11 @@ public class Log {
 		}
 		moveLeft(args,pa);
 
-
 		Thread ct = Thread.currentThread();
 		if ((level<=0 || tmfmt == tmfmt_tst) && traceOffs >= 0) {
 			StackTraceElement[] bt = ct.getStackTrace();
-			/*prs.printf("traceOffs=%d\n", traceOffs);
-			for (int i=0; i <= 3+traceOffs; ++i) {
-				prs.printf("    [%d] (%s:%d)\n", i, bt[i].getFileName(),bt[i].getLineNumber());
-			}*/
 			if (bt.length > 3+traceOffs) {
+				if (bt[3+traceOffs].getLineNumber()==1) ++traceOffs;
 				file = bt[3+traceOffs].getFileName();
 				line = bt[3+traceOffs].getLineNumber();
 			}
