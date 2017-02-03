@@ -89,9 +89,10 @@ public class Log {
 		final String name = level < LEVEL_NAME.length ? LEVEL_NAME[level] : String.format("%d", level);
 		ByteArrayOutputStream bas = new ByteArrayOutputStream();
 		PrintStream pr = new PrintStream(bas);
-		if (name.isEmpty())pr.printf("%s%s: ", color, tmfmt.format(tmstamp));
-		else pr.printf("%s%s [%s] %s: ", color, tmfmt.format(tmstamp), name, ct.getName());
-		if (file != null) pr.printf("(%s:%d) ", file, line );
+		if (name.isEmpty())pr.printf("%s%s", color, tmfmt.format(tmstamp));
+		else pr.printf("%s%s [%s] %s", color, tmfmt.format(tmstamp), name, ct.getName());
+		if (file != null) pr.printf(" (%s:%d)", file, line );
+		pr.print(": ");
 		if (fmt != null) pr.printf((Locale)null, fmt, args);
 		if (e != null) {pr.println();e.printStackTrace(pr);}
 		if (!color.isEmpty()) pr.printf(Ansi.SGR_RESET);

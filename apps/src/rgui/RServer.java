@@ -2,6 +2,8 @@ package rgui;
 
 import java.awt.GraphicsDevice;
 import java.awt.GraphicsEnvironment;
+import java.awt.MouseInfo;
+import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.Robot;
 import java.awt.event.InputEvent;
@@ -30,15 +32,18 @@ import net.SelectorThread2.QueueChannel;
 import net.TcpFilter;
 
 public class RServer implements ChannelHandler {
-	final int MAXSCREEN_BUF = 16*1024;
+	static final int MAXSCREEN_BUF = 16*1024;
+	static final int FORCE_ACTION_TIME = 60*1000;
 	private final SelectorThread2 selector;
 	private final Robot robot;
 	private final boolean useQuality=true;
 	private final int mouseButtonMask;
 
+	private long forceActionTm=0;
 	private BufferedImage screenImg;
+	private final Rectangle screenRoi = new Rectangle();
 	private Rectangle screenRect;
-	private List<QueueChannel> clients=new ArrayList<QueueChannel>();
+	private final List<QueueChannel> clients=new ArrayList<QueueChannel>();
 
 	private RServer() throws Exception {
 		robot = new Robot();
@@ -176,6 +181,7 @@ public class RServer implements ChannelHandler {
 
 	private void mounseMove(int x,int y) {
 		robot.mouseMove(x, y);
+		forceActionTm = System.currentTimeMillis()+FORCE_ACTION_TIME;
 	}
 	private void mounseClick(int x,int y,int buttons) {
 		Log.info("mouseClick(%d,%d,%x) / %x",x,y,buttons,mouseButtonMask);
@@ -183,6 +189,7 @@ public class RServer implements ChannelHandler {
 		robot.mouseMove(x, y);
 		robot.mousePress(buttons);
 		robot.mouseRelease(buttons);
+		forceActionTm = System.currentTimeMillis()+FORCE_ACTION_TIME;
 	}
 	private void keyType(int keycode) {
 		int key = keycode&0xffff;
@@ -237,7 +244,6 @@ public class RServer implements ChannelHandler {
 		}
 	}
 	private void registerMonitor(QueueChannel chn) {
-		//clients.put(key, value)
 		clients.add(chn);
 	}
 	private boolean altPressed=false;
@@ -272,9 +278,11 @@ public class RServer implements ChannelHandler {
 	private void mouseReleased(int buttons) {
 		buttons &= mouseButtonMask;
 		robot.mouseRelease(buttons);
+		forceActionTm = System.currentTimeMillis()+FORCE_ACTION_TIME;
 	}
 	private void mouseWheel(int rot) {
 		robot.mouseWheel(rot);
+		forceActionTm = System.currentTimeMillis()+FORCE_ACTION_TIME;
 	}
 	private void sendImage(QueueChannel chn, int x, int y, int w, int h, float q) {
 		if (x >= screenRect.x+screenRect.width) x=screenRect.x+screenRect.width;
@@ -304,7 +312,9 @@ public class RServer implements ChannelHandler {
 			else
 				ImageIO.write(img, "jpg", dos);
 			dos.close();
-			write(chn,ByteBuffer.wrap(os.toByteArray()));
+			byte[] ba=os.toByteArray();
+			Log.info("send img %d bytes",ba.length);
+			write(chn,ByteBuffer.wrap(ba));
 		} catch (IOException e) {
 			Log.error(e);
 		}
@@ -333,10 +343,16 @@ public class RServer implements ChannelHandler {
 		Rectangle rect = new Rectangle(0,0,(int)screenRect.getMaxX(),(int)screenRect.getMaxY());
 		while (selector.isRunning()) {
 			BufferedImage i = robot.createScreenCapture(rect);
-			BufferedImage p;
-			synchronized (this) { p=screenImg; screenImg = i; }
+			BufferedImage p=screenImg;
 			if (p != null) {
-				//find diffs p ^ i
+
+			}
+			synchronized (this) { screenImg = i; }
+			if (forceActionTm < System.currentTimeMillis()) {
+				Point m = MouseInfo.getPointerInfo().getLocation();
+				robot.mouseMove(m.x>0?m.x-1:m.x+1, m.y);
+				robot.mouseMove(m.x, m.y);
+				forceActionTm = System.currentTimeMillis()+FORCE_ACTION_TIME;
 			}
 			XThread.sleep(100);
 		}

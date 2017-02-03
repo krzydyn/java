@@ -39,7 +39,7 @@ import sys.XThread;
 
 public class SelectorThread2 {
 	private final Selector selector;
-	private static final int RWBUFLEN=4*1024; //by default it is 8kB
+	private static final int RWBUFLEN=8*1024; //by default it is 8kB
 	private final List<ByteBuffer> bpool=new ArrayList<ByteBuffer>();
 	private boolean running = false;
 	private boolean stopReq = false;
@@ -58,6 +58,11 @@ public class SelectorThread2 {
 		private final SelectableChannel chn;
 		public final ChannelHandler hnd;
 		private List<ByteBuffer> writeq;
+		private Object userData;
+
+		public void setUserData(Object o) {userData=o;}
+		public Object getUserData() {return userData;}
+		public int queueSize() { return writeq.size(); }
 
 		public boolean isOpen() {return chn.isOpen();}
 		public void write(ByteBuffer b) {
@@ -137,6 +142,11 @@ public class SelectorThread2 {
 	private void write(SelectableChannel chn, ByteBuffer buf) {
 		SelectionKey sk = chn.keyFor(selector);
 		QueueChannel qchn = (QueueChannel)sk.attachment();
+		if (qchn.writeq != null) {
+			int limit = (buf.limit()/RWBUFLEN+1)*2+10;
+			if (qchn.writeq.size() > limit)
+				throw new RuntimeException("Output buffer overload, limit="+limit);
+		}
 		//Log.debug("writing to queue " + buf);
 		while (buf.position() < buf.limit()) {
 			ByteBuffer dst =  getbuf();
@@ -237,10 +247,16 @@ public class SelectorThread2 {
 		if (thr == null) ;
 		else if (thr instanceof EOFException)
 			Log.error("%s: peer closed connection", addr);
-		else
+		else if (thr instanceof IOException)
 			Log.error("%s(%s): %s", thr.getClass().getName(), addr, thr.getMessage());
+		else
+			Log.error(thr, "addr: %s", addr);
 		try {c.close();} catch (IOException e) { Log.error(e);}
 		qchn.hnd.disconnected(qchn);
+		if (qchn.writeq != null) {
+			qchn.writeq.clear();
+			qchn.writeq=null;
+		}
 	}
 
 	private void accept(SelectionKey sk) throws IOException {
@@ -254,8 +270,8 @@ public class SelectorThread2 {
 	private void finishConnect(SelectionKey sk) throws IOException {
 		SocketChannel chn = (SocketChannel)sk.channel();
 		chn.finishConnect();
-		QueueChannel chnst = (QueueChannel)sk.attachment();
-		chnst.hnd.connected(chnst);
+		QueueChannel qchn = (QueueChannel)sk.attachment();
+		qchn.hnd.connected(qchn);
 		sk.interestOps(SelectionKey.OP_READ);
 	}
 	private void read(SelectionKey sk) throws IOException {
@@ -265,21 +281,21 @@ public class SelectorThread2 {
 			throw new EOFException("End of stream");
 		}
 		b.flip();
-		QueueChannel chnst = (QueueChannel)sk.attachment();
-		chnst.hnd.received(chnst, b);
+		QueueChannel qchn = (QueueChannel)sk.attachment();
+		qchn.hnd.received(qchn, b);
 		releasebuf(b);
 	}
 	private void write(SelectionKey sk) throws IOException {
 		WritableByteChannel c=(WritableByteChannel)sk.channel();
-		QueueChannel chnst = (QueueChannel)sk.attachment();
+		QueueChannel qchn = (QueueChannel)sk.attachment();
 		ByteBuffer b;
-		synchronized (chnst) {
-			b = chnst.writeq.get(0);
+		synchronized (qchn) {
+			b = qchn.writeq.get(0);
 			int r = c.write(b);
 			if (b.remaining() == 0) {
 				releasebuf(b);
-				chnst.writeq.remove(0);
-				if (chnst.writeq.isEmpty()) {
+				qchn.writeq.remove(0);
+				if (qchn.writeq.isEmpty()) {
 					sk.interestOps(SelectionKey.OP_READ);
 				}
 			}

@@ -3,6 +3,7 @@ package rgui;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Image;
+import java.awt.Point;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
@@ -34,7 +35,7 @@ public class RDesk extends MainPanel {
 	private int imgX,imgY;
 	private boolean paintDone=false;
 	QueueChannel qchn;
-	int pendingReq=0;
+	Point prevMouseLoc = new Point();
 
 	ChannelHandler chnHandler = new ChannelHandler() {
 		@Override
@@ -77,12 +78,13 @@ public class RDesk extends MainPanel {
 					continue;
 				}
 				inmsg.flip();
+				Log.debug("received all of %d bytes", inlen);
 				processMsg(chn);
 				inmsg.clear();
 				inlen=0;
 			}
 			if (inlen > 0) {
-				//Log.debug("read %d of %d bytes", inmsg.position(),inlen);
+				Log.debug("received %d of %d bytes", inmsg.position(),inlen);
 			}
 		}
 		@Override
@@ -157,6 +159,7 @@ public class RDesk extends MainPanel {
 
 	@Override
 	protected void paintComponent(Graphics g) {
+		paintDone=false;
 		Image i = null;
 		int x, y;
 		synchronized (imgLock) { i=img; x=imgX; y=imgY; }
@@ -170,7 +173,7 @@ public class RDesk extends MainPanel {
 			@Override
 			public void run() {
 				while (selector.isRunning() && qchn.isOpen()) {
-					if (pendingReq < 2) sendScreenReq();
+					if (qchn.queueSize() < 2) sendScreenReq();
 					XThread.sleep(1000);
 				}
 				selector.stop();
@@ -203,7 +206,6 @@ public class RDesk extends MainPanel {
 			sendRegister();
 		}
 		else if (cmd == RCommand.SCREEN_IMG) {
-			--pendingReq;
 			int x = inmsg.getInt();
 			int y = inmsg.getInt();
 			ByteArrayInputStream is = new ByteArrayInputStream(inmsg.array(),inmsg.position(),inmsg.remaining());
@@ -213,9 +215,9 @@ public class RDesk extends MainPanel {
 			if (i!=null) {
 				synchronized (imgLock) { img=i; imgX=x; imgY=y;}
 				if (paintDone) {
-					paintDone=false;
 					repaint();
 				}
+				else Log.error("prev repaint not finished");
 			}
 		}
 		else {
@@ -231,6 +233,8 @@ public class RDesk extends MainPanel {
 	}
 	private void sendMouseMove(int x,int y) {
 		if (!qchn.isOpen()) return ;
+		if (Math.abs(prevMouseLoc.x-x) + Math.abs(prevMouseLoc.y-y) < 5) return ;
+		prevMouseLoc.setLocation(x, y);
 		ByteBuffer b = ByteBuffer.allocate(14);
 		b.putShort(RCommand.MOUSE_MOVE);
 		b.putInt(x);
@@ -259,7 +263,6 @@ public class RDesk extends MainPanel {
 		chnHandler.write(qchn, b);
 	}
 	private void sendScreenReq() {
-		++pendingReq;
 		ByteBuffer b = ByteBuffer.allocate(10);
 		b.putShort(RCommand.SCREEN_IMG);
 		b.putShort((short)getWidth());
