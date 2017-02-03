@@ -66,7 +66,21 @@ package crypt;
  * <li>CTR (Counter, Integer Counter Mode)<br>
  * 		CTR[i] = CTR[i-1]+1, CTR[0]=0<br>
  * 		C[i] = P[i] XOR encrypt(K,CTR[i])<br>
- * 		P[i] = C[i] XOR encrypt(K,CTR[i])
+ * 		P[i] = C[i] XOR decrypt(K,CTR[i])
+ *
+ * <li>GCM (Galois Counter Mode) https://en.wikipedia.org/wiki/Galois/Counter_Mode<br>
+ * 		CTR[i] = CTR[i-1]+1, CTR[0]=0<br>
+ * 		C[i] = P[i] XOR encrypt(K,CTR[i])<br>
+ * 		P[i] = C[i] XOR encrypt(K,CTR[i])<br>
+ * 		H[i] = C[i] XOR H[i-1], H[0]=AuthData1  (AAD)<br>
+ * 		AuthTag = H[n] XOR (len(P)||len(C)) XOR encrypt(CTR[0])
+ *
+ * <li>CCM (Counter with CBC-MAC)<br>
+ *		P' = Flags || Nonce || P
+ *		Flags = 0(1bit) || Adata(1bit) || M'(3bits) || L'(3bits)
+ *		Adata bit: 0 if len(A)==0, 1 if len(A)>0
+ *		M' = (M-2)/2, where 4 <= M <= 16, M=len(AUTH_FIELD)
+ *		L' = L-1, where 2 <= L <= 8, L=len(LENGTH_FIELD)
  * </ul>
  *
  * @author krzydyn
