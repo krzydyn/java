@@ -53,6 +53,8 @@ public class RDesk extends MainPanel {
 		public void disconnected(QueueChannel chn) {
 			Log.debug("disconnected");
 		}
+
+		//TODO use com.net.TcpFilter
 		private int readTCP(int limit, ByteBuffer src) {
 			if (inmsg.position() + src.remaining() < limit) {
 				inmsg.put(src);
@@ -73,6 +75,11 @@ public class RDesk extends MainPanel {
 					inmsg.flip();
 					inlen = inmsg.getInt();
 					inmsg.clear();
+					if (inlen==0) {
+						inmsg.put((byte)0);
+						continue;
+					}
+					if (inlen < 0) throw new RuntimeException("Message outof sync");
 				}
 				if (readTCP(inlen, buf) < inlen) {
 					continue;
@@ -84,7 +91,7 @@ public class RDesk extends MainPanel {
 				inlen=0;
 			}
 			if (inlen > 0) {
-				Log.debug("received %d of %d bytes", inmsg.position(),inlen);
+				//Log.debug("received %d of %d bytes", inmsg.position(),inlen);
 			}
 		}
 		@Override
@@ -93,7 +100,7 @@ public class RDesk extends MainPanel {
 			lenbuf.putInt(buf.remaining());
 			lenbuf.flip();
 			chn.write(lenbuf);
-			chn.write(buf);
+			chn.write(buf, true);
 		}
 	};
 

@@ -65,11 +65,17 @@ public class SelectorThread2 {
 		public int queueSize() { return writeq.size(); }
 
 		public boolean isOpen() {return chn.isOpen();}
-		public void write(ByteBuffer b) {
-			if (!chn.isOpen()) {
-				throw new RuntimeException("chn is not opened");
+		public void write(ByteBuffer b,boolean part) {
+			if (!chn.isOpen()) throw new RuntimeException("chn is not opened");
+			if (!part && writeq != null &&  b.limit() > RWBUFLEN) {
+				int limit = (b.limit()/RWBUFLEN+1)*2+10;
+				if (writeq.size() > limit)
+					throw new RuntimeException("Output buffer overload, limit="+limit);
 			}
 			sel.write(chn, b);
+		}
+		public void write(ByteBuffer b) {
+			write(b, false);
 		}
 	};
 
@@ -142,11 +148,6 @@ public class SelectorThread2 {
 	private void write(SelectableChannel chn, ByteBuffer buf) {
 		SelectionKey sk = chn.keyFor(selector);
 		QueueChannel qchn = (QueueChannel)sk.attachment();
-		if (qchn.writeq != null) {
-			int limit = (buf.limit()/RWBUFLEN+1)*2+10;
-			if (qchn.writeq.size() > limit)
-				throw new RuntimeException("Output buffer overload, limit="+limit);
-		}
 		//Log.debug("writing to queue " + buf);
 		while (buf.position() < buf.limit()) {
 			ByteBuffer dst =  getbuf();

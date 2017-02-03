@@ -38,6 +38,7 @@ public class TcpFilter implements ChannelHandler {
 				inmsg.flip();
 				inlen = inmsg.getInt();
 				inmsg.clear();
+				if (inlen < 0) throw new RuntimeException("Message out of sync");
 			}
 			if (!readData(inlen, buf)) return ;
 			inmsg.flip();
@@ -63,6 +64,6 @@ public class TcpFilter implements ChannelHandler {
 		lenbuf.flip();
 		//Log.debug("writeTCP(payload=%d)",b.remaining());
 		qchn.write(lenbuf);
-		qchn.write(b);
+		qchn.write(b,true);
 	}
 }

@@ -29,7 +29,7 @@ import text.Ansi;
 public class Log {
 	final private static SimpleDateFormat tmfmt_rel = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
 	final private static SimpleDateFormat tmfmt_tst = new SimpleDateFormat("HH:mm:ss.SSS");
-	final private static String[] LEVEL_ANSI_COLOR = {Ansi.SGR_RED, Ansi.SGR_YELLOW, Ansi.SGR_BLUE, Ansi.SGR_CYAN, "", Ansi.SGR_GREEN, Ansi.SGR_LIGHTMAGENTA };
+	final private static String[] LEVEL_COLOR = {Ansi.SGR_RED, Ansi.SGR_YELLOW, Ansi.SGR_BLUE, Ansi.SGR_CYAN, "", Ansi.SGR_GREEN, Ansi.SGR_LIGHTMAGENTA };
 	final private static String[] LEVEL_NAME = {"E", "W", "D", "T", "I", "N", ""};
 
 	private static SimpleDateFormat tmfmt = tmfmt_tst;
@@ -85,7 +85,7 @@ public class Log {
 		}
 		if (level < 0) level=0;
 
-		final String color = level < LEVEL_ANSI_COLOR.length ? LEVEL_ANSI_COLOR[level] : "";
+		final String color = level < LEVEL_COLOR.length ? LEVEL_COLOR[level] : "";
 		final String name = level < LEVEL_NAME.length ? LEVEL_NAME[level] : String.format("%d", level);
 		ByteArrayOutputStream bas = new ByteArrayOutputStream();
 		PrintStream pr = new PrintStream(bas);
@@ -97,7 +97,7 @@ public class Log {
 		if (e != null) {pr.println();e.printStackTrace(pr);}
 		if (!color.isEmpty()) pr.printf(Ansi.SGR_RESET);
 		pr.println();
-		pr.close();
+		pr.close(); // flush data to underlying stream
 
 		//PrintStream is synchronized
 		try {
