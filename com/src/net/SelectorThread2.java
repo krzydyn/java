@@ -178,12 +178,10 @@ public class SelectorThread2 {
 					qchn.writeq.add(dst);
 			}
 		}
-		if (qchn.connected) {
-			synchronized (writeFlag) {
-				writeFlag.add(sk);
-			}
-			if (running) selector.wakeup();
+		synchronized (writeFlag) {
+			writeFlag.add(sk);
 		}
+		if (running) selector.wakeup();
 	}
 
 	final private ByteBuffer getbuf() {
@@ -215,14 +213,15 @@ public class SelectorThread2 {
 				for (int i = writeFlag.size(); i > 0;) {
 					--i;
 					SelectionKey sk = writeFlag.get(i);
-					if ((sk.interestOps()&SelectionKey.OP_CONNECT)==0)
-						sk.interestOps(SelectionKey.OP_READ|SelectionKey.OP_WRITE);
+					int ops = sk.interestOps();
+					sk.interestOps(ops|SelectionKey.OP_READ|SelectionKey.OP_WRITE);
 				}
 				writeFlag.clear();
 			}
 			int n=selector.select(10000);
 			if (n==0) {
-				if (registerReq) XThread.sleep(10); //this sleep allows to register new channel
+				 // wait, so other thread can register new channel
+				if (registerReq) XThread.sleep(10);
 				continue;
 			}
 
@@ -285,8 +284,10 @@ public class SelectorThread2 {
 		SocketChannel chn = (SocketChannel)sk.channel();
 		if (!chn.finishConnect()) return ;
 		QueueChannel qchn = (QueueChannel)sk.attachment();
-		if (qchn.queueSize() == 0) sk.interestOps(SelectionKey.OP_READ);
-		else sk.interestOps(SelectionKey.OP_READ|SelectionKey.OP_WRITE);
+		int ops = sk.interestOps() & ~SelectionKey.OP_CONNECT;
+		if (qchn.queueSize() == 0) ops|=SelectionKey.OP_READ;
+		else ops|=SelectionKey.OP_READ|SelectionKey.OP_WRITE;
+		sk.interestOps(ops);
 		qchn.connected=true;
 		qchn.addr=chn.getRemoteAddress();
 		qchn.hnd.connected(qchn);
@@ -313,7 +314,8 @@ public class SelectorThread2 {
 				releasebuf(b);
 				qchn.writeq.remove(0);
 				if (qchn.writeq.isEmpty()) {
-					sk.interestOps(SelectionKey.OP_READ);
+					int ops = sk.interestOps()&~SelectionKey.OP_WRITE;
+					sk.interestOps(ops);
 				}
 			}
 			else {
