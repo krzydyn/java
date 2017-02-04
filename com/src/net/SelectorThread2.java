@@ -19,6 +19,7 @@ package net;
 
 import java.io.EOFException;
 import java.io.IOException;
+import java.net.ConnectException;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.net.StandardSocketOptions;
@@ -59,12 +60,15 @@ public class SelectorThread2 {
 		public final ChannelHandler hnd;
 		private List<ByteBuffer> writeq;
 		private Object userData;
+		private SocketAddress addr;
+		private boolean connected=false;
 
 		public void setUserData(Object o) {userData=o;}
 		public Object getUserData() {return userData;}
-		public int queueSize() { return writeq.size(); }
+		public int queueSize() { return writeq==null?0:writeq.size(); }
 
 		public boolean isOpen() {return chn.isOpen();}
+		public boolean isConnected() {return connected;}
 		public void write(ByteBuffer b,boolean part) {
 			if (!chn.isOpen()) throw new RuntimeException("chn is not opened");
 			if (!part && writeq != null &&  b.limit() > RWBUFLEN) {
@@ -141,6 +145,8 @@ public class SelectorThread2 {
 		registerReq=true;
 		if (running) selector.wakeup();
 		SelectionKey sk = chn.register(selector, ops, new QueueChannel(this, chn, d));
+		if ((ops&SelectionKey.OP_CONNECT)!=0)
+			((QueueChannel)sk.attachment()).addr=((SocketChannel)chn).getRemoteAddress();
 		registerReq=false;
 		return sk;
 	}
@@ -172,11 +178,12 @@ public class SelectorThread2 {
 					qchn.writeq.add(dst);
 			}
 		}
-		synchronized (writeFlag) {
-			writeFlag.add(sk);
+		if (qchn.connected) {
+			synchronized (writeFlag) {
+				writeFlag.add(sk);
+			}
+			if (running) selector.wakeup();
 		}
-		//sk.interestOps(SelectionKey.OP_READ|SelectionKey.OP_WRITE);
-		if (running) selector.wakeup();
 	}
 
 	final private ByteBuffer getbuf() {
@@ -207,11 +214,13 @@ public class SelectorThread2 {
 			synchronized (writeFlag) {
 				for (int i = writeFlag.size(); i > 0;) {
 					--i;
-					writeFlag.get(i).interestOps(SelectionKey.OP_READ|SelectionKey.OP_WRITE);
+					SelectionKey sk = writeFlag.get(i);
+					if ((sk.interestOps()&SelectionKey.OP_CONNECT)==0)
+						sk.interestOps(SelectionKey.OP_READ|SelectionKey.OP_WRITE);
 				}
 				writeFlag.clear();
 			}
-			int n=selector.select(1000);
+			int n=selector.select(10000);
 			if (n==0) {
 				if (registerReq) XThread.sleep(10); //this sleep allows to register new channel
 				continue;
@@ -222,7 +231,7 @@ public class SelectorThread2 {
 				i.remove();
 				//Log.debug("processing selected channel %s", sk.channel());
 				try {
-					if (!sk.isValid()) ;
+					if (!sk.isValid()) disconect(sk, null);
 					else if (sk.isAcceptable()) accept(sk);
 					else if (sk.isConnectable()) finishConnect(sk);
 					else {
@@ -243,16 +252,18 @@ public class SelectorThread2 {
 		sk.attach(null);  //unref qchn
 		sk.cancel();      //remove from selector
 		SocketChannel c = (SocketChannel)sk.channel();
-		SocketAddress addr = null;
-		try { addr = c.getRemoteAddress(); } catch (Exception e) {}
+		SocketAddress addr = qchn.addr;
 		if (thr == null) ;
 		else if (thr instanceof EOFException)
 			Log.error("%s: peer closed connection", addr);
+		else if (thr instanceof ConnectException)
+			Log.error("%s: %s", addr, thr.getMessage());
 		else if (thr instanceof IOException)
 			Log.error("%s(%s): %s", thr.getClass().getName(), addr, thr.getMessage());
 		else
 			Log.error(thr, "addr: %s", addr);
 		try {c.close();} catch (IOException e) { Log.error(e);}
+		qchn.connected=false;
 		qchn.hnd.disconnected(qchn);
 		if (qchn.writeq != null) {
 			qchn.writeq.clear();
@@ -261,19 +272,24 @@ public class SelectorThread2 {
 	}
 
 	private void accept(SelectionKey sk) throws IOException {
-		ServerSocketChannel chn = (ServerSocketChannel)sk.channel();
+		ServerSocketChannel schn = (ServerSocketChannel)sk.channel();
 		QueueChannel qchn = (QueueChannel)sk.attachment();
-		SocketChannel client = chn.accept();
-		sk = addChannel(client, SelectionKey.OP_READ, qchn.hnd.createFilter());
+		SocketChannel chn = schn.accept();
+		sk = addChannel(chn, SelectionKey.OP_READ, qchn.hnd.createFilter());
 		qchn = (QueueChannel)sk.attachment();
+		qchn.connected=true;
+		qchn.addr=chn.getRemoteAddress();
 		qchn.hnd.connected(qchn);
 	}
 	private void finishConnect(SelectionKey sk) throws IOException {
 		SocketChannel chn = (SocketChannel)sk.channel();
-		chn.finishConnect();
+		if (!chn.finishConnect()) return ;
 		QueueChannel qchn = (QueueChannel)sk.attachment();
+		if (qchn.queueSize() == 0) sk.interestOps(SelectionKey.OP_READ);
+		else sk.interestOps(SelectionKey.OP_READ|SelectionKey.OP_WRITE);
+		qchn.connected=true;
+		qchn.addr=chn.getRemoteAddress();
 		qchn.hnd.connected(qchn);
-		sk.interestOps(SelectionKey.OP_READ);
 	}
 	private void read(SelectionKey sk) throws IOException {
 		ReadableByteChannel c=(ReadableByteChannel)sk.channel();
