@@ -18,6 +18,7 @@
 package algebra;
 
 import java.util.AbstractList;
+import java.util.List;
 
 public class IntArrayList extends AbstractList<Integer> {
 	private final int[] data;
@@ -39,4 +40,12 @@ public class IntArrayList extends AbstractList<Integer> {
 		return data.length;
 	}
 
+	static List<Integer> asList(final int[] a) {
+		return new AbstractList<Integer>() {
+			@Override
+			public Integer get(int i) { return a[i]; }
+			@Override
+			public int size() { return a.length; }
+		};
+	}
 }
