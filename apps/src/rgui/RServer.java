@@ -112,7 +112,7 @@ public class RServer implements ChannelHandler {
 			sendImage(chn, 0, 0, w, h, q);
 		}
 		else if (cmd == RCommand.CLIENT_REGISTER) {
-			registerMonitor(chn);
+			registerClient(chn);
 		}
 		else if (cmd == RCommand.KEY_PRESS) {
 			int keycode=msg.getInt();
@@ -180,7 +180,9 @@ public class RServer implements ChannelHandler {
 	}
 
 	private void mounseMove(int x,int y) {
-		robot.mouseMove(x, y);
+		synchronized (robot) {
+			robot.mouseMove(x, y);
+		}
 		forceActionTm = System.currentTimeMillis()+FORCE_ACTION_TIME;
 	}
 	private void mounseClick(int x,int y,int buttons) {
@@ -243,7 +245,7 @@ public class RServer implements ChannelHandler {
 			if (c != 0) keyType(c);
 		}
 	}
-	private void registerMonitor(QueueChannel chn) {
+	private void registerClient(QueueChannel chn) {
 		clients.add(chn);
 	}
 	private boolean altPressed=false;
@@ -273,11 +275,15 @@ public class RServer implements ChannelHandler {
 	}
 	private void mousePressed(int buttons) {
 		buttons &= mouseButtonMask;
-		robot.mousePress(buttons);
+		synchronized (robot) {
+			robot.mousePress(buttons);
+		}
 	}
 	private void mouseReleased(int buttons) {
 		buttons &= mouseButtonMask;
-		robot.mouseRelease(buttons);
+		synchronized (robot) {
+			robot.mouseRelease(buttons);
+		}
 		forceActionTm = System.currentTimeMillis()+FORCE_ACTION_TIME;
 	}
 	private void mouseWheel(int rot) {
@@ -342,16 +348,21 @@ public class RServer implements ChannelHandler {
 		selector.bind(null, 3367, this);
 		Rectangle rect = new Rectangle(0,0,(int)screenRect.getMaxX(),(int)screenRect.getMaxY());
 		while (selector.isRunning()) {
-			BufferedImage i = robot.createScreenCapture(rect);
-			BufferedImage p=screenImg;
-			if (p != null) {
+			if (clients.size()>0) {
+				BufferedImage i = robot.createScreenCapture(rect);
+				BufferedImage p=screenImg;
+				if (p != null) {
 
+				}
+				synchronized (this) { screenImg = i; }
 			}
-			synchronized (this) { screenImg = i; }
+
 			if (forceActionTm < System.currentTimeMillis()) {
 				Point m = MouseInfo.getPointerInfo().getLocation();
-				robot.mouseMove(m.x>0?m.x-1:m.x+1, m.y);
-				robot.mouseMove(m.x, m.y);
+				synchronized (robot) {
+					robot.mouseMove(m.x>0?m.x-1:m.x+1, m.y);
+					robot.mouseMove(m.x, m.y);
+				}
 				forceActionTm = System.currentTimeMillis()+FORCE_ACTION_TIME;
 			}
 			XThread.sleep(100);
