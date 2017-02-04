@@ -36,6 +36,7 @@ public class RDesk extends MainPanel {
 	private boolean paintDone=false;
 	QueueChannel qchn;
 	Point prevMouseLoc = new Point();
+	String Host = null;
 
 	ChannelHandler chnHandler = new ChannelHandler() {
 		@Override
@@ -85,7 +86,7 @@ public class RDesk extends MainPanel {
 					continue;
 				}
 				inmsg.flip();
-				Log.debug("received all of %d bytes", inlen);
+				//Log.debug("received all of %d bytes", inlen);
 				processMsg(chn);
 				inmsg.clear();
 				inlen=0;
@@ -96,6 +97,7 @@ public class RDesk extends MainPanel {
 		}
 		@Override
 		public void write(QueueChannel chn, ByteBuffer buf) {
+			if (!chn.isConnected() && chn.queueSize() > 0) return ;
 			ByteBuffer lenbuf = ByteBuffer.allocate(4);
 			lenbuf.putInt(buf.remaining());
 			lenbuf.flip();
@@ -104,14 +106,15 @@ public class RDesk extends MainPanel {
 		}
 	};
 
-	public RDesk() throws Exception{
+	public RDesk(String[] args) throws Exception{
 		super(null);
-		// auto wait can be set only whan using robot from new Thread
+		// auto wait can be set only when using robot from new Thread
 		//robot.setAutoWaitForIdle(true);
 		selector = new SelectorThread2();
 		selector.start();
-		//qchn = (QueueChannel)selector.connect("localhost", 3367, chnHandler).attachment();
-		qchn = (QueueChannel)selector.connect("106.120.52.62", 3367, chnHandler).attachment();
+		if (args.length > 0) Host = args[0];
+		//qchn = (QueueChannel)selector.connect("106.120.52.62", 3367, chnHandler).attachment();
+		qchn = (QueueChannel)selector.connect(Host, 3367, chnHandler).attachment();
 
 		setPreferredSize(new Dimension(1600,800));
 
@@ -179,7 +182,17 @@ public class RDesk extends MainPanel {
 		new Thread("PollScreen") {
 			@Override
 			public void run() {
-				while (selector.isRunning() && qchn.isOpen()) {
+				while (selector.isRunning()) {
+					if (!qchn.isOpen()) qchn=null;
+					if (qchn == null) {
+						try {
+							qchn = (QueueChannel)selector.connect(Host, 3367, chnHandler).attachment();
+						} catch (IOException e) {
+							Log.error(e);
+							break;
+						}
+					}
+
 					if (qchn.queueSize() < 2) sendScreenReq();
 					XThread.sleep(1000);
 				}
@@ -221,9 +234,7 @@ public class RDesk extends MainPanel {
 			catch (IOException e) {Log.error(e);}
 			if (i!=null) {
 				synchronized (imgLock) { img=i; imgX=x; imgY=y;}
-				if (paintDone) {
-					repaint();
-				}
+				if (paintDone) repaint();
 				else Log.error("prev repaint not finished");
 			}
 		}
@@ -239,7 +250,7 @@ public class RDesk extends MainPanel {
 		chnHandler.write(qchn, b);
 	}
 	private void sendMouseMove(int x,int y) {
-		if (!qchn.isOpen()) return ;
+		if (!qchn.isConnected()) return ;
 		if (Math.abs(prevMouseLoc.x-x) + Math.abs(prevMouseLoc.y-y) < 5) return ;
 		prevMouseLoc.setLocation(x, y);
 		ByteBuffer b = ByteBuffer.allocate(14);
@@ -274,7 +285,7 @@ public class RDesk extends MainPanel {
 		b.putShort(RCommand.SCREEN_IMG);
 		b.putShort((short)getWidth());
 		b.putShort((short)getHeight());
-		b.putFloat(0.5f);
+		b.putFloat(0.1f);
 		b.flip();
 		chnHandler.write(qchn, b);
 	}
@@ -322,6 +333,6 @@ public class RDesk extends MainPanel {
 	}
 
 	public static void main(String[] args) {
-		start(RDesk.class);
+		start(RDesk.class, args);
 	}
 }
