@@ -121,8 +121,8 @@ public class GenSecosCrypt {
 				else if (t.algo.indexOf("PKCS7")>=0) {
 					algo = t.algo.substring(0, t.algo.lastIndexOf('/'))+"/PKCS5Padding";
 				}
-				String enc = algo.substring(0, algo.indexOf('/'));
-				Key ks = new javax.crypto.spec.SecretKeySpec(t.key.key,enc);
+				String key_type = algo.substring(0, algo.indexOf('/'));
+				Key ks = new javax.crypto.spec.SecretKeySpec(t.key.key,key_type);
 				javax.crypto.Cipher cipher = javax.crypto.Cipher.getInstance(algo);
 				if (algo.indexOf("ECB")>=0)
 					cipher.init(javax.crypto.Cipher.ENCRYPT_MODE, ks);

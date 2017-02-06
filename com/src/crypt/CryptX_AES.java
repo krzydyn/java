@@ -27,8 +27,6 @@ import javax.crypto.ShortBufferException;
 import sys.Log;
 import text.Text;
 
-// http://codeandme.blogspot.com/2013/07/writing-your-own-jca-extensions-full.html
-
 public class CryptX_AES extends CipherSpi {
 	//javax.crypto.Cipher cipher = javax.crypto.Cipher.getInstance("");
 

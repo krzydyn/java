@@ -24,7 +24,7 @@ import java.security.Key;
 import crypt.AES2;
 import crypt.AES3;
 import crypt.Base64;
-import crypt.CryptXProvider;
+import crypt.CryptX_Provider;
 import crypt.CryptX_AES;
 import crypt.Prime;
 import crypt.RSA;
@@ -79,7 +79,7 @@ public class T_Crypt extends UnitTest {
 	}
 
 	static void listProviders() {
-		CryptXProvider.register();
+		CryptX_Provider.register();
 		/*for (Provider provider: Security.getProviders()) {
 			System.out.println(provider.getName());
 			for (String key: provider.stringPropertyNames())

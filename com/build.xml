@@ -12,4 +12,36 @@
 			classpath="${libdir}/RXTXcomm.jar"
 		/>
 	</target>
+	
+	<target name="myaes">
+		<jar destfile="myaes.jar" basedir="${build}">
+			<fileset dir="${comdir}/${build}">
+				<include name="crypt/CryptX_*"/>
+			</fileset>
+		</jar>
+	</target>
+	
+	<!-- 
+	http://docs.oracle.com/javase/7/docs/technotes/guides/security/crypto/HowToImplAProvider.html
+	-->
+	<target name="gen_DSA_pair">
+		<exec executable="keytool" dir="." failonerror="true">
+			<arg value="-genkeypair"/>
+			<arg value="-alias"/> <arg value="myAlias"/>
+			<arg value="-dname"/> <arg value="cn=krzydyn,ou=Java Software Code Signing,o=Sun Microsystems Inc"/>
+			<arg value="-keystore"/> <arg value="myKeyStore.ks"/>
+			<arg value="-storepass"/> <arg value="test00"/>
+		</exec>
+	</target>
+	
+	<target name="gen_Sign_req">
+		<exec executable="keytool" dir="." failonerror="true">
+			<arg value="-certreq"/>
+			<arg value="-alias"/> <arg value="myAlias"/>
+			<arg value="-file"/> <arg value="mySign.csr"/>
+			<arg value="-keystore"/> <arg value="myKeyStore.ks"/>
+			<arg value="-storepass"/> <arg value="test00"/>
+		</exec>
+	</target>
+
 </project>
