@@ -1,84 +1,17 @@
 package crypt;
 
+import java.security.AlgorithmParameters;
 import java.security.GeneralSecurityException;
 import java.security.NoSuchAlgorithmException;
+import java.security.spec.AlgorithmParameterSpec;
 
 import javax.crypto.KeyGenerator;
-import javax.crypto.SecretKey;
+import javax.crypto.spec.GCMParameterSpec;
+import javax.crypto.spec.IvParameterSpec;
+
 import sys.Log;
-import text.Text;
 
-public class TEF {
-	static class tef_cipher_token {
-		SecretKey key;
-		tef_algorithm_info algo;
-		@Override
-		public String toString() {
-			return transformName();
-		}
-		public String transformName() {
-			return key.getAlgorithm() + "/" + algo.getName();
-		}
-	}
-
-	static enum tef_key_type_e {
-		TEF_DES,
-		TEF_AES,
-		TEF_RSA,
-		TEF_DSA,
-		TEF_ECDSA;
-		private String name;
-		String getName() {
-			if (name==null) name=name().substring(4);
-			return name;
-		}
-		@Override
-		public String toString() {return getName();}
-	}
-
-	static enum tef_chaining_mode_e {
-		TEF_ECB,
-		TEF_CBC,
-		TEF_PCBC,
-		TEF_CFB,
-		TEF_OFB,
-		TEF_CTR,
-		TEF_GCM, //(not supported in Java7)
-		;
-		private String name;
-		String getName() {
-			if (name==null) name=name().substring(4);
-			return name;
-		}
-		@Override
-		public String toString() {return getName();}
-	}
-
-	static enum tef_padding_mode_e {
-		TEF_PADDING_NONE("NoPadding"),
-		TEF_PADDING_PKCS5("PKCS5Padding"),
-		TEF_PADDING_PKCS7("PKCS5Padding"),
-		TEF_PADDING_ISO9797_1("ISO9797.1Padding"),
-		TEF_PADDING_ISO9797_2("ISO9797.2Padding");
-		private String name;
-		tef_padding_mode_e(String n) {name=n;}
-		String getName() {return name;}
-		@Override
-		public String toString() {return getName();}
-	}
-
-	static class tef_algorithm_info {
-		final tef_chaining_mode_e chaining;
-		final tef_padding_mode_e padding;
-		tef_algorithm_info(tef_chaining_mode_e chain, tef_padding_mode_e pad) {
-			this.chaining = chain; this.padding = pad;
-		}
-		String getName() {
-			return chaining + "/" + padding;
-		}
-		@Override
-		public String toString() {return getName();}
-	}
+public class TEF implements TEF_Types {
 
 	tef_cipher_token tef_key_generate(tef_key_type_e key_type, int key_bit_len, tef_algorithm_info algorithm)
 			throws NoSuchAlgorithmException {
@@ -102,30 +35,92 @@ public class TEF {
 			gen.init(key_bit_len);
 		}
 
-
-		SecretKey key = gen.generateKey();
-		byte[] keybytes = key.getEncoded();
-		Log.debug("key[%d]: %s", keybytes.length, Text.hex(keybytes));
-
 		tef_cipher_token token = new tef_cipher_token();
-		token.key = key;
+		token.key = gen.generateKey();
 		token.algo = algorithm;
 		return token;
 	}
 
-	int tef_encrypt(tef_cipher_token keyid,byte[] data, int dataLen, byte[] edata) throws GeneralSecurityException {
+	tef_cipher_token tef_key_import_raw(tef_key_type_e key_type,
+            byte[]             data,
+            int                dataLen,
+            tef_algorithm_info algorithm) {
+
+		int key_bit_len = dataLen*8;
+		String keyAlgo;
+		if ("DES".equals(key_type.getName())) {
+			if (key_bit_len <= 64) keyAlgo = "DES";
+			else {
+				if (key_bit_len == 128) {
+					byte[] ndata = new byte[24];
+					System.arraycopy(data, 0, ndata, 0, 16);
+					System.arraycopy(data, 0, ndata, 16, 8);
+					data = ndata;
+					dataLen=24;
+				}
+				keyAlgo = "DESede";
+			}
+		}
+		else {
+			keyAlgo = key_type.getName();
+		}
+		tef_cipher_token token = new tef_cipher_token();
+		token.key = new javax.crypto.spec.SecretKeySpec(data,0,dataLen,keyAlgo);
+		token.algo = algorithm;
+		return token;
+	}
+
+
+	tef_algorithm_params tef_create_params() {
+		return new tef_algorithm_params();
+	}
+
+	int tef_set_param(tef_algorithm_params  params, tef_algorithm_param_e param,
+			byte[] data, int dataLen) {
+		return 0;
+	}
+
+	int tef_encrypt(tef_cipher_token keyid, tef_algorithm_params params,
+			byte[] data, int dataLen, byte[] edata) throws GeneralSecurityException {
 		javax.crypto.Cipher cipher;
 
 		//.getInstance(SERVICE, alg + '/' + mode, provider);
 		//cipher = new AESCipher(new CryptX_AES(), keyid.transformName());
-		//cipher = javax.crypto.Cipher.getInstance(keyid.transformName());
-		cipher = javax.crypto.Cipher.getInstance(keyid.transformName(), new CryptX_Provider());
-		cipher.init(javax.crypto.Cipher.ENCRYPT_MODE, keyid.key);
+		//cipher = javax.crypto.Cipher.getInstance(keyid.transformName(), new CryptX_Provider());
+		cipher = javax.crypto.Cipher.getInstance(keyid.transformName());
+		if (params == null) {
+			cipher.init(javax.crypto.Cipher.ENCRYPT_MODE, keyid.key);
+		}
+		else {
+			byte[] iv=null;
+			if (params.map.containsKey(tef_algorithm_param_e.TEF_IV)) {
+				iv = (byte[])params.map.get(tef_algorithm_param_e.TEF_IV);
+			}
+			AlgorithmParameterSpec pspec = null;
+			AlgorithmParameters param = AlgorithmParameters.getInstance(keyid.key.getAlgorithm());
+			if (keyid.algo.chaining == tef_chaining_mode_e.TEF_GCM) {
+				int taglen = (Integer)params.map.get(tef_algorithm_param_e.TEF_AUTHTAG_LEN);
+				pspec = new GCMParameterSpec(taglen, iv);
+			}
+			else {
+				pspec = new IvParameterSpec(iv);
+			}
+			param.init(pspec);
+			//cipher.init(javax.crypto.Cipher.ENCRYPT_MODE, keyid.key, pspec);
+			cipher.init(javax.crypto.Cipher.ENCRYPT_MODE, keyid.key, param);
+
+			if (keyid.algo.chaining == tef_chaining_mode_e.TEF_GCM) {
+				if (params.map.containsKey(tef_algorithm_param_e.TEF_AAD)) {
+					cipher.updateAAD((byte[])params.map.get(tef_algorithm_param_e.TEF_AAD));
+				}
+			}
+		}
 
 		return cipher.doFinal(data, 0, dataLen, edata);
 	}
 
-	int tef_decrypt(tef_cipher_token keyid,byte[] edata, int edataLen, byte[] data) throws GeneralSecurityException {
+	int tef_decrypt(tef_cipher_token keyid, tef_algorithm_params params,
+			byte[] edata, int edataLen, byte[] data) throws GeneralSecurityException {
 		javax.crypto.Cipher cipher = javax.crypto.Cipher.getInstance(keyid.transformName());
 		cipher.init(javax.crypto.Cipher.DECRYPT_MODE, keyid.key);
 

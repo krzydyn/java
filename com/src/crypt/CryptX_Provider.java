@@ -6,6 +6,8 @@ import sys.Log;
 
 // http://codeandme.blogspot.com/2013/07/writing-your-own-jca-extensions-full.html
 // https://www.cis.upenn.edu/~bcpierce/courses/629/jdkdocs/guide/security/HowToImplAProvider.html
+// http://meri-stuff.blogspot.com/2012/04/secure-encryption-in-java.html
+// http://netnix.org/2015/04/19/aes-encryption-with-hmac-integrity-in-java/
 
 @SuppressWarnings("serial")
 final public class CryptX_Provider extends Provider {
