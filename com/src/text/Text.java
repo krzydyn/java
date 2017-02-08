@@ -141,6 +141,7 @@ public class Text {
 		return hex(b, s, off, len).toString();
 	}
 	public static String hex(byte[] s) {
+		if (s == null) return null;
 		StringBuilder b=new StringBuilder(s.length);
 		return hex(b, s, 0 , s.length).toString();
 	}
@@ -195,9 +196,9 @@ public class Text {
 		for (int i=0; i<s.length(); ++i) {
 			bt<<=4;
 			char c = Character.toUpperCase(s.charAt(i));
-			if (c >= '0' && c <= '9') bc|=c-'0';
-			else if (c >= 'A' && c <= 'F') bc|=c-'A'+10;
-			else continue;
+			if (c >= '0' && c <= '9') bt|=c-'0';
+			else if (c >= 'A' && c <= 'F') bt|=c-'A'+10;
+			else {continue;}
 			++bc;
 			if (bc==2) {
 				ba.write(bt);
@@ -205,7 +206,6 @@ public class Text {
 			}
 		}
 		if (bc>0) ba.write(bt<<4);
-
 		return ba.toByteArray();
 	}
 

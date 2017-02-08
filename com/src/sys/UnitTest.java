@@ -47,7 +47,7 @@ public class UnitTest {
 		int errors;
 	}
 
-	static TestSummary current;
+	static TestSummary current = new TestSummary();
 
 	static ClassLoader getClassLoader() {
 		//return ClassLoader.getSystemClassLoader();
@@ -249,7 +249,7 @@ public class UnitTest {
 		}
 		for (int i=0; i < n; ++i) {
 			if (t1[i] != t2[i]) {
-				Log.error(2, "check failed: byte[%d] %d!=%d", i, t1[i], t2[i]);
+				Log.error(2, "check failed: byte[%d] #%x!=#%x", i, t1[i]&0xff, t2[i]&0xff);
 				++current.errors;
 				return ;
 			}
