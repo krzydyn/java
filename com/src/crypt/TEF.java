@@ -78,7 +78,7 @@ public class TEF implements TEF_Types {
 		javax.crypto.Cipher cipher;
 
 		String algoName = keyid.transformName()+"/"+algorithm.getName();
-		Log.debug("create cipher %s", algoName);
+		//Log.debug("create cipher %s", algoName);
 		cipher = javax.crypto.Cipher.getInstance(algoName);
 		byte[] iv=null;
 		if (algorithm.map.containsKey(tef_algorithm_param_e.TEF_IV)) {

@@ -26,18 +26,18 @@ package crypt;
  * <li> 3DES (112,168)
  * <li> AES (128,192,256)
  * </ul><br><br>
- * <b>Padding</b>
+ * <b>Padding modes</b>
  * <ul>
- * <li>No padding (message length = k*block_size)
- * <li>Zero padding: DATA,0x00...
- * <li>ANSI X.923: DATA,0x00,0x00,...NUM_OF_PAD_BYTES
- * <li>ISO 10126: DATA,RND,RND,...NUM_OF_PAD_BYTES
- * <li>PKCS5/PKCS7: DATA,NUM_OF_PAD_BYTES,...NUM_OF_PAD_BYTES<br>
- * 		PKCS5:8 bytes block, PKCS7: 16 bytes block
- * <li>ISO/IEC 7816-4: DATA,0x80,0x00...
- * <li>ISO/IEC 9797/M1: DATA,0x00,0x00,... (same as ZeroPading)
- * <li>ISO/IEC 9797/M2: DATA,0x80,0x00,....(same as ISO/IEC 7816-4)
- * <li>ISO/IEC 9797/M3: pad 0, des CBC, des3 on last block
+ * <li><b>No padding</b> (message length = k*block_size)
+ * <li><b>Zero padding</b> DATA,0x00...
+ * <li><b>ANSI X.923</b> DATA,0x00,0x00,...NUM_OF_PAD_BYTES
+ * <li><b>ISO 10126</b> DATA,RND,RND,...NUM_OF_PAD_BYTES
+ * <li><b>PKCS5/PKCS7</b> DATA,NUM_OF_PAD_BYTES,...NUM_OF_PAD_BYTES<br>
+ * 			PKCS5 only block_size 8, PKCS7 for any block_size 1..255
+ * <li><b>ISO/IEC 7816-4</b> DATA,0x80,0x00...
+ * <li><b>ISO/IEC 9797/M1</b> DATA,0x00,0x00,... (same as ZeroPading)
+ * <li><b>ISO/IEC 9797/M2</b> DATA,0x80,0x00,....(same as ISO/IEC 7816-4)
+ * <li><b>ISO/IEC 9797/M3</b> pad 0, des CBC, des3 on last block
  * </ul>
  * <h3>Block Cipher Modes (of chaining blocks)</h3>
  * <b>NOTE:</b> CFB, OFB, CTR does not require padding and return same length as input

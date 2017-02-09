@@ -5,6 +5,8 @@ import java.util.Map;
 
 import javax.crypto.SecretKey;
 
+import text.Text;
+
 public interface TEF_Types {
 	static class tef_cipher_token {
 		SecretKey key;
@@ -76,7 +78,18 @@ public interface TEF_Types {
 			return chaining + "/" + padding;
 		}
 		@Override
-		public String toString() {return getName();}
+		public String toString() {
+			StringBuilder b = new StringBuilder();
+			b.append(getName());
+			for (tef_algorithm_param_e p : tef_algorithm_param_e.values()) {
+				Object v = map.get(p);
+				if (v==null) continue;
+				b.append("\n	"+p.getName()+"=");
+				if (v instanceof byte[]) b.append(Text.hex((byte[])v));
+				else b.append(v.toString());
+			}
+			return b.toString();
+		}
 
 		public tef_algorithm set(tef_algorithm_param_e p, Object v) {
 			map.put(p, v);
@@ -88,10 +101,18 @@ public interface TEF_Types {
 	}
 
 	static enum tef_algorithm_param_e {
-	    TEF_IV,
-	    TEF_AAD,
-	    TEF_AUTHTAG_LEN,
-	    TEF_AUTHTAG,
+		TEF_IV,
+		TEF_AAD,
+		TEF_AUTHTAG_LEN,
+		TEF_AUTHTAG
+		;
+		private String name;
+		String getName() {
+			if (name==null) name=name().substring(4);
+			return name;
+		}
+		@Override
+		public String toString() {return getName();}
 	}
 
 }
