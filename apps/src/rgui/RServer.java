@@ -249,8 +249,10 @@ public class RServer implements ChannelHandler {
 		clients.add(chn);
 	}
 	private boolean altPressed=false;
+	private boolean winPressed=false;
 	private void keyPressed(int keycode) {
 		if(keycode == KeyEvent.VK_ALT) altPressed=true;
+		else if(keycode == KeyEvent.VK_WINDOWS) winPressed=true;
 		if (keycode==KeyEvent.VK_ALT_GRAPH) {
 			robot.keyPress(KeyEvent.VK_ALT);
 			robot.keyPress(KeyEvent.VK_CONTROL);
@@ -259,9 +261,8 @@ public class RServer implements ChannelHandler {
 			robot.keyPress(keycode);
 	}
 	private void keyReleased(int keycode) {
-		if(keycode == KeyEvent.VK_ALT) {
-			if (altPressed) altPressed=false;
-		}
+		if(keycode == KeyEvent.VK_ALT) altPressed=false;
+		else if(keycode == KeyEvent.VK_WINDOWS) winPressed=false;
 		if (keycode==KeyEvent.VK_ALT_GRAPH) {
 			robot.keyRelease(KeyEvent.VK_ALT);
 			robot.keyRelease(KeyEvent.VK_CONTROL);
@@ -271,6 +272,10 @@ public class RServer implements ChannelHandler {
 		if (altPressed) {
 			robot.keyRelease(KeyEvent.VK_ALT);
 			altPressed=false;
+		}
+		if (winPressed) {
+			robot.keyRelease(KeyEvent.VK_WINDOWS);
+			winPressed=false;
 		}
 	}
 	private void mousePressed(int buttons) {
@@ -355,6 +360,7 @@ public class RServer implements ChannelHandler {
 
 				}
 				synchronized (this) { screenImg = i; }
+				i=null; p=null;
 			}
 
 			if (forceActionTm < System.currentTimeMillis()) {
