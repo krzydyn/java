@@ -40,6 +40,8 @@ public interface TEF_Types {
 		TEF_CBC,
 		TEF_PCBC,
 		TEF_CFB,
+		TEF_CFB1,
+		TEF_CFB8,
 		TEF_OFB,
 		TEF_CTR,
 		TEF_GCM, //(not supported in Java7)
@@ -55,6 +57,7 @@ public interface TEF_Types {
 
 	static enum tef_padding_mode_e {
 		TEF_PADDING_NONE("NoPadding"),
+		TEF_PADDING_X931("X931Padding"),
 		TEF_PADDING_PKCS5("PKCS5Padding"),
 		TEF_PADDING_PKCS7("PKCS5Padding"),
 		//TEF_PADDING_ISO9797_1("ISO97971Padding"),
@@ -113,6 +116,16 @@ public interface TEF_Types {
 		}
 		@Override
 		public String toString() {return getName();}
+	}
+
+	static enum tef_digest_e {
+		TEF_MD2,  //weak
+		TEF_MD4,  //weak
+		TEF_MD5,  //weak since 2008
+		TEF_SHA0, //weak
+		TEF_SHA1, //Theoretically weak
+		TEF_SHA2, //strong
+		TEF_SHA3, //very strong
 	}
 
 }

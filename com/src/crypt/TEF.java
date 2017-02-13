@@ -128,4 +128,20 @@ public class TEF implements TEF_Types {
 
 		return cipher.doFinal(data, 0, edataLen, edata);
 	}
+
+	int tef_digest(tef_cipher_token keyid, tef_digest_e digest,
+			byte[] data, int dataLen, byte[] dig) {
+		return 0;
+	}
+
+	//keyid can by symmetric or asymetric
+	int tef_sign_calc(tef_cipher_token keyid, tef_digest_e digest,
+			byte[] data, int dataLen, byte[] sign) {
+		return 0;
+	}
+	//keyid can by symmetric or asymetric
+	int tef_sign_verify(tef_cipher_token keyid, tef_digest_e digest,
+			byte[] data, int dataLen, byte[] sign) {
+		return 0;
+	}
 }
