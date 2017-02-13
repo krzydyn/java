@@ -15,6 +15,7 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 import javax.imageio.IIOImage;
@@ -41,7 +42,6 @@ public class RServer implements ChannelHandler {
 
 	private long forceActionTm=0;
 	private BufferedImage screenImg;
-	private final Rectangle screenRoi = new Rectangle();
 	private Rectangle screenRect;
 	private final List<QueueChannel> clients=new ArrayList<QueueChannel>();
 
@@ -324,10 +324,108 @@ public class RServer implements ChannelHandler {
 				ImageIO.write(img, "jpg", dos);
 			dos.close();
 			byte[] ba=os.toByteArray();
-			Log.info("send img %d bytes",ba.length);
+			//Log.info("send img %d bytes",ba.length);
 			write(chn,ByteBuffer.wrap(ba));
 		} catch (IOException e) {
 			Log.error(e);
+		}
+	}
+
+	private void sendImageAll(int x, int y, int w, int h, float q) {
+		if (clients.size() == 0) return ;
+		RenderedImage img = getScreen(x,y,w,h);
+		ByteArrayOutputStream os = new ByteArrayOutputStream(512*1024);
+		DataOutputStream dos = new DataOutputStream(os);
+		try {
+			dos.writeShort(RCommand.SCREEN_IMG);
+			dos.writeInt(x);
+			dos.writeInt(y);
+
+			if (useQuality) {
+				JPEGImageWriteParam jpegParams = new JPEGImageWriteParam(null);
+				jpegParams.setCompressionMode(ImageWriteParam.MODE_EXPLICIT);
+				jpegParams.setCompressionQuality(q);
+				ImageWriter writer = ImageIO.getImageWritersByFormatName("jpg").next();
+				writer.setOutput(ImageIO.createImageOutputStream(dos));
+				writer.write(null, new IIOImage(img, null, null), jpegParams);
+				writer.dispose();
+			}
+			else
+				ImageIO.write(img, "jpg", dos);
+			dos.close();
+			byte[] ba=os.toByteArray();
+			//Log.info("send img %d bytes",ba.length);
+
+			for (Iterator<QueueChannel> i=clients.iterator(); i.hasNext(); ) {
+				QueueChannel chn = i.next();
+				if (!chn.isOpen()) {
+					i.remove();
+					continue;
+				}
+				try {
+					write(chn,ByteBuffer.wrap(ba));
+				}catch (Throwable e) {
+					i.remove();
+					Log.error(e);
+				}
+			}
+
+		} catch (IOException e) {
+			Log.error(e);
+		}
+	}
+
+	float invGamma(float c) {
+		if ( c <= 0.04045 ) return c/12.92f;
+		return (float)Math.pow(((c+0.055)/(1.055)),2.4);
+	}
+
+	float gamma(float i) {
+		if (i <= 0.0031308) return i*12.92f;
+		return (float) (1.055f*Math.pow(i,1.0/2.4)-0.055f);
+	}
+
+	float lum(int rgb) {
+		float r = invGamma(((rgb>>16)&0xff)/255f);
+		float g = invGamma(((rgb>>8)&0xff)/255f);
+		float b = invGamma((rgb&0xff)/255f);
+		return 0.2126f*r + 0.7152f*g + 0.0722f*b;
+	}
+	float lum2(int rgb) {
+		float r = ((rgb>>16)&0xff)/255f;
+		float g = ((rgb>>8)&0xff)/255f;
+		float b = (rgb&0xff)/255f;
+		//return (float)Math.sqrt(r*r*0.241 + g*g*0.691 + b*b*0.068);
+		return (float)Math.sqrt(r*r*0.299 + g*g*0.587 + b*b*0.114);
+	}
+
+	int qlum(int rgb) {
+		int r = (rgb>>16)&0xff;
+		int g = (rgb>>8)&0xff;
+		int b = rgb&0xff;
+		return (r<<1+r+g<<2+b)>>3;
+	}
+
+	void detectChanges(BufferedImage p,BufferedImage i) {
+		Rectangle roi=new Rectangle();
+		roi.x = 10000;
+		roi.y = 10000;
+		for (int y=0; y < p.getHeight(); y+=2) {
+			for (int x=0; x < p.getWidth(); x+=2) {
+				//float l1=lum(p.getRGB(x, y));
+				//float l2=lum(i.getRGB(x, y));
+				int l1=qlum(p.getRGB(x, y));
+				int l2=qlum(i.getRGB(x, y));
+				if (Math.abs(l1-l2) < 10) continue;
+				if (roi.x > x) roi.x=x;
+				else if (roi.width+roi.x < x) roi.width=x-roi.x;
+				if (roi.y > y) roi.y=y;
+				else if (roi.height+roi.y < y) roi.height=y-roi.y;
+			}
+		}
+		if (roi.width > 2 && roi.height > 2) {
+			//Log.info("roi %s",roi.toString());
+			sendImageAll(roi.x, roi.y, roi.width+1, roi.height+1, 0.2f);
 		}
 	}
 
@@ -352,14 +450,15 @@ public class RServer implements ChannelHandler {
 		selector.start();
 		selector.bind(null, 3367, this);
 		Rectangle rect = new Rectangle(0,0,(int)screenRect.getMaxX(),(int)screenRect.getMaxY());
+		screenImg = robot.createScreenCapture(rect);
 		while (selector.isRunning()) {
 			if (clients.size()>0) {
 				BufferedImage i = robot.createScreenCapture(rect);
 				BufferedImage p=screenImg;
-				if (p != null) {
-
-				}
 				synchronized (this) { screenImg = i; }
+				if (p != null) {
+					detectChanges(p,i);
+				}
 				i=null; p=null;
 			}
 

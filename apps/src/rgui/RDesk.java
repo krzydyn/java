@@ -1,5 +1,6 @@
 package rgui;
 
+import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Image;
@@ -31,6 +32,7 @@ public class RDesk extends MainPanel {
 	ByteBuffer inmsg = ByteBuffer.allocate(1024*1024);
 	int inlen;
 	private final Object imgLock = new Object();
+	private Image imgFull;
 	private Image img;
 	private int imgX,imgY;
 	private boolean paintDone=false;
@@ -170,10 +172,21 @@ public class RDesk extends MainPanel {
 	@Override
 	protected void paintComponent(Graphics g) {
 		paintDone=false;
-		Image i = null;
+		Image i = null, ifu=null;
 		int x, y;
-		synchronized (imgLock) { i=img; x=imgX; y=imgY; }
-		if (i!=null) g.drawImage(i, x, y, null);
+		synchronized (imgLock) {ifu=imgFull; i=img; x=imgX; y=imgY; img=null;}
+		if (ifu != null) {
+			if (i!=null) {
+				Graphics gg = ifu.getGraphics();
+				gg.drawImage(i, x, y, null);
+				gg.dispose();
+			}
+			g.drawImage(ifu, 0, 0, null);
+			if (i!=null) {
+				g.setColor(Color.RED);
+				g.drawRect(x, y, i.getWidth(null), i.getHeight(null));
+			}
+		}
 		paintDone=true;
 	}
 
@@ -193,7 +206,7 @@ public class RDesk extends MainPanel {
 						}
 					}
 
-					if (qchn.queueSize() < 2) sendScreenReq();
+					//if (qchn.queueSize() < 2) sendScreenReq();
 					XThread.sleep(1000);
 				}
 				selector.stop();
@@ -223,6 +236,7 @@ public class RDesk extends MainPanel {
 			int w = inmsg.getInt();
 			int h = inmsg.getInt();
 			Log.info("%s: %d %d %d %d",id,x,y,w,h);
+			sendScreenReq();
 			sendRegister();
 		}
 		else if (cmd == RCommand.SCREEN_IMG) {
@@ -233,7 +247,11 @@ public class RDesk extends MainPanel {
 			try { i = ImageIO.read(is);}
 			catch (IOException e) {Log.error(e);}
 			if (i!=null) {
-				synchronized (imgLock) { img=i; imgX=x; imgY=y;}
+				Log.debug("recv img %d,%d,%d,%d",x,y,i.getWidth(null),i.getHeight(null));
+				synchronized (imgLock) {
+					if (x==0 && y==0 && imgFull==null) {imgFull=i;img=null;}
+					else {img=i; imgX=x; imgY=y;}
+				}
 				if (paintDone) repaint();
 				else Log.error("prev repaint not finished");
 			}
