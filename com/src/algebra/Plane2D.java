@@ -18,6 +18,7 @@
 package algebra;
 
 import java.awt.Dimension;
+import java.awt.Point;
 import java.util.ArrayList;
 
 public class Plane2D {
@@ -81,12 +82,6 @@ public class Plane2D {
 		}
 	}
 
-	static class Point {
-		public Point(int x,int y) {
-			this.x=x; this.y=y;
-		}
-		int x,y;
-	}
 	static void floodFill_simple(Raster t, int x,int y, int dval) {
 		int sval=t.getPixel(x,y);
 		if (sval==dval) return ;
