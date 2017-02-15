@@ -206,7 +206,9 @@ public class RDesk extends MainPanel {
 						}
 					}
 
-					//if (qchn.queueSize() < 2) sendScreenReq();
+					if (imgFull == null) {
+						sendScreenReq();
+					}
 					XThread.sleep(1000);
 				}
 				selector.stop();
@@ -236,7 +238,6 @@ public class RDesk extends MainPanel {
 			int w = inmsg.getInt();
 			int h = inmsg.getInt();
 			Log.info("%s: %d %d %d %d",id,x,y,w,h);
-			sendScreenReq();
 			sendRegister();
 		}
 		else if (cmd == RCommand.SCREEN_IMG) {
@@ -247,13 +248,14 @@ public class RDesk extends MainPanel {
 			try { i = ImageIO.read(is);}
 			catch (IOException e) {Log.error(e);}
 			if (i!=null) {
-				Log.debug("recv img %d,%d,%d,%d",x,y,i.getWidth(null),i.getHeight(null));
+				Log.debug("recv img %d,%d,%d,%d  bytes=%d",x,y,i.getWidth(null),i.getHeight(null),inmsg.remaining());
 				synchronized (imgLock) {
 					if (x==0 && y==0 && imgFull==null) {imgFull=i;img=null;}
 					else {img=i; imgX=x; imgY=y;}
 				}
-				if (paintDone) repaint();
-				else Log.error("prev repaint not finished");
+				repaint();
+				//if (paintDone) repaint();
+				//else Log.error("prev repaint not finished");
 			}
 		}
 		else {
@@ -299,10 +301,12 @@ public class RDesk extends MainPanel {
 		chnHandler.write(qchn, b);
 	}
 	private void sendScreenReq() {
+		int w=getWidth(), h=getHeight();
+		if (w<=0 || h <=0) return ;
 		ByteBuffer b = ByteBuffer.allocate(10);
 		b.putShort(RCommand.SCREEN_IMG);
-		b.putShort((short)getWidth());
-		b.putShort((short)getHeight());
+		b.putShort((short)w);
+		b.putShort((short)h);
 		b.putFloat(0.2f);
 		b.flip();
 		chnHandler.write(qchn, b);

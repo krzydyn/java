@@ -1,5 +1,7 @@
 package rgui;
 
+import java.awt.Dimension;
+import java.awt.EventQueue;
 import java.awt.GraphicsDevice;
 import java.awt.GraphicsEnvironment;
 import java.awt.MouseInfo;
@@ -45,7 +47,7 @@ public class RServer implements ChannelHandler {
 	private Rectangle screenRect;
 	private final List<QueueChannel> clients=new ArrayList<QueueChannel>();
 
-	private RServer() throws Exception {
+	private RServer() throws Exception{
 		robot = new Robot();
 		robot.setAutoDelay(10); // delay before generating even
 
@@ -60,12 +62,13 @@ public class RServer implements ChannelHandler {
 		return new TcpFilter(this);
 	}
 	@Override
-	public void connected(QueueChannel qchn) {
+	public void connected(QueueChannel chn) {
 		Log.debug("connected");
 	}
 	@Override
-	public void disconnected(QueueChannel chnst) {
+	public void disconnected(QueueChannel chn) {
 		Log.debug("disconnected");
+		clients.remove(chn);
 	}
 	@Override
 	public void received(QueueChannel chn, ByteBuffer buf) {
@@ -296,6 +299,7 @@ public class RServer implements ChannelHandler {
 		forceActionTm = System.currentTimeMillis()+FORCE_ACTION_TIME;
 	}
 	private void sendImage(QueueChannel chn, int x, int y, int w, int h, float q) {
+		if (w<=0 || h<=0) return ;
 		if (x >= screenRect.x+screenRect.width) x=screenRect.x+screenRect.width;
 		else if (x < screenRect.x) { w -= x; x = screenRect.x; }
 		if (y >= screenRect.y+screenRect.height) y=screenRect.y+screenRect.height;
@@ -331,9 +335,9 @@ public class RServer implements ChannelHandler {
 		}
 	}
 
-	private void sendImageAll(int x, int y, int w, int h, float q) {
+	private void sendImageAll(BufferedImage img,int x, int y, float q) {
 		if (clients.size() == 0) return ;
-		RenderedImage img = getScreen(x,y,w,h);
+		//RenderedImage img = getScreen(x,y,w,h);
 		ByteArrayOutputStream os = new ByteArrayOutputStream(512*1024);
 		DataOutputStream dos = new DataOutputStream(os);
 		try {
@@ -403,29 +407,62 @@ public class RServer implements ChannelHandler {
 		int r = (rgb>>16)&0xff;
 		int g = (rgb>>8)&0xff;
 		int b = rgb&0xff;
-		return (r<<1+r+g<<2+b)>>3;
+		if (r<0||g<0||b<0|r>255||g>255||b>255) {
+			Log.error("r=%d g=%d b=%d",r,g,b);
+		}
+		return ((r<<1+r+g<<2+b)>>>3)&0xff;
 	}
 
+	Rectangle box_bfs(BufferedImage t, int x, int y) {
+		Rectangle r=new Rectangle(x,y,1,1);
+		List<Point> q=new ArrayList<Point>();
+		t.setRGB(x, y, 0);
+		q.add(new Point(x,y));
+		Dimension d=new Dimension(t.getWidth(), t.getHeight());
+		while (q.size()>0) {
+			Point p=q.remove(0);
+			x=p.x; y=p.y; p=null;
+			r.add(x,y);
+			if (x>0 && (t.getRGB(x-1,y)&0xff)!=0) {t.setRGB(x-1, y, 0);q.add(new Point(x-1, y));}
+			if (x+1<d.width && (t.getRGB(x+1,y)&0xff)!=0) {t.setRGB(x+1, y, 0);q.add(new Point(x+1, y));}
+			if (y>0 && (t.getRGB(x,y-1)&0xff)!=0) {t.setRGB(x, y-1, 0);q.add(new Point(x, y-1));}
+			if (y+1<d.height && (t.getRGB(x,y+1)&0xff)!=0) {t.setRGB(x, y+1, 0);q.add(new Point(x, y+1));}
+		}
+		if (r.x+r.width < t.getWidth()) ++r.width;
+		if (r.y+r.height < t.getHeight()) ++r.height;
+		return r;
+	}
+
+	void addRoi(List<Rectangle> rois, Rectangle r) {
+		for (Rectangle rr : rois) {
+			rr.add(r);
+			r=null; break;
+		}
+		if (r!=null) rois.add(r);
+	}
 	void detectChanges(BufferedImage p,BufferedImage i) {
-		Rectangle roi=new Rectangle();
-		roi.x = 10000;
-		roi.y = 10000;
-		for (int y=0; y < p.getHeight(); y+=2) {
-			for (int x=0; x < p.getWidth(); x+=2) {
-				//float l1=lum(p.getRGB(x, y));
-				//float l2=lum(i.getRGB(x, y));
-				int l1=qlum(p.getRGB(x, y));
-				int l2=qlum(i.getRGB(x, y));
-				if (Math.abs(l1-l2) < 10) continue;
-				if (roi.x > x) roi.x=x;
-				else if (roi.width+roi.x < x) roi.width=x-roi.x;
-				if (roi.y > y) roi.y=y;
-				else if (roi.height+roi.y < y) roi.height=y-roi.y;
+		List<Rectangle> rois=new ArrayList<Rectangle>();
+
+		for (int y=0; y < p.getHeight(); ++y) {
+			for (int x=0; x < p.getWidth(); ++x) {
+				int r=Math.abs(qlum(p.getRGB(x, y)&0xffffff) - qlum(i.getRGB(x, y)&0xffffff));
+				if (r<2) r=0;
+				else if (r>255) r=255;
+				p.setRGB(x, y, r);
 			}
 		}
-		if (roi.width > 2 && roi.height > 2) {
-			//Log.info("roi %s",roi.toString());
-			sendImageAll(roi.x, roi.y, roi.width+1, roi.height+1, 0.2f);
+		for (int y=0; y < p.getHeight(); ++y) {
+			for (int x=0; x < p.getWidth(); ++x) {
+				if ((p.getRGB(x, y)&0xff)<1) continue;
+				Rectangle r=box_bfs(p,x,y);
+				//Log.info("roi = %s",r);
+				addRoi(rois,r);
+			}
+		}
+		//Log.info("rois = %d",rois.size());
+		for (Rectangle r : rois) {
+			if (r.width < 1 || r.height < 1) continue;
+			sendImageAll(i.getSubimage(r.x, r.y, r.width, r.height),r.x, r.y, 0.2f);
 		}
 	}
 
@@ -447,18 +484,17 @@ public class RServer implements ChannelHandler {
 		screenRect.y -= shiftY;
 		Log.info("screen bounds (%d,%d %dx%d)",screenRect.x,screenRect.y,screenRect.width,screenRect.height);
 
-		selector.start();
-		selector.bind(null, 3367, this);
 		Rectangle rect = new Rectangle(0,0,(int)screenRect.getMaxX(),(int)screenRect.getMaxY());
 		screenImg = robot.createScreenCapture(rect);
+
+		selector.start();
+		selector.bind(null, 3367, this);
 		while (selector.isRunning()) {
 			if (clients.size()>0) {
 				BufferedImage i = robot.createScreenCapture(rect);
-				BufferedImage p=screenImg;
+				BufferedImage p = screenImg;
 				synchronized (this) { screenImg = i; }
-				if (p != null) {
-					detectChanges(p,i);
-				}
+				detectChanges(p,i);
 				i=null; p=null;
 			}
 
@@ -475,12 +511,16 @@ public class RServer implements ChannelHandler {
 		Log.info("rserver finished");
 	}
 
-	public static void main(String[] args) {
-		try {
-			new RServer().run();
-		} catch (Throwable e) {
-			Log.error(e);
-		}
+	public static void main(String[] args) throws Exception {
+		EventQueue.invokeAndWait(new Runnable() {
+			@Override
+			public void run() {
+				try {
+					new RServer().run();
+				} catch (Throwable e) {
+					Log.error(e);
+				}
+			}
+		});
 	}
-
 }
