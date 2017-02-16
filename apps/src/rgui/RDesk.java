@@ -5,6 +5,7 @@ import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Image;
 import java.awt.Point;
+import java.awt.Rectangle;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
@@ -14,6 +15,8 @@ import java.awt.event.MouseWheelEvent;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.imageio.ImageIO;
 
@@ -33,13 +36,22 @@ public class RDesk extends MainPanel {
 	int inlen;
 	private final Object imgLock = new Object();
 	private Image imgFull;
-	private Image img;
-	private int imgX,imgY;
-	private boolean paintDone=false;
+	private Image imgGray;
+	private List<ImageBox> imgq = new ArrayList<ImageBox>();
+	private List<Rectangle> activeBox = new ArrayList<Rectangle>();
 	QueueChannel qchn;
 	Point prevMouseLoc = new Point();
 	String Host = null;
 
+	static class ImageBox {
+		Image i;
+		int x,y,w,h;
+		public ImageBox(Image i, int x, int y, int w, int h) {
+			this.i=i;
+			this.x=x; this.y=y;
+			this.w=w; this.h=h;
+		}
+	}
 	ChannelHandler chnHandler = new ChannelHandler() {
 		@Override
 		public ChannelHandler createFilter() {
@@ -110,6 +122,7 @@ public class RDesk extends MainPanel {
 
 	public RDesk(String[] args) throws Exception{
 		super(null);
+
 		// auto wait can be set only when using robot from new Thread
 		//robot.setAutoWaitForIdle(true);
 		selector = new SelectorThread2();
@@ -171,24 +184,34 @@ public class RDesk extends MainPanel {
 
 	@Override
 	protected void paintComponent(Graphics g) {
-		paintDone=false;
-		Image i = null, ifu=null;
-		int x, y;
-		synchronized (imgLock) {ifu=imgFull; i=img; x=imgX; y=imgY; img=null;}
+		Image ifu=null, ig;
+		int l = 0;
+		synchronized (imgLock) {ifu=imgFull; ig=imgGray; l=imgq.size();}
 		if (ifu != null) {
-			if (i!=null) {
-				Graphics gg = ifu.getGraphics();
-				gg.drawImage(i, x, y, null);
+			if (l > 0) {
+				activeBox.clear();
+				Graphics gg = imgFull.getGraphics();
+				for (int i=0; i < l; ++i) {
+					ImageBox ib = imgq.get(i);
+					gg.drawImage(ib.i, ib.x, ib.y, null);
+					activeBox.add(new Rectangle(ib.x, ib.y, ib.w, ib.h));
+				}
 				gg.dispose();
+				synchronized (imgLock) {
+					while (l>0) {imgq.remove(0); --l;}
+				}
 			}
 			g.drawImage(ifu, 0, 0, null);
-			if (i!=null) {
-				g.setColor(Color.RED);
-				g.drawRect(x, y, i.getWidth(null), i.getHeight(null));
+			g.setColor(Color.RED);
+			for (Rectangle r : activeBox) {
+				g.drawRect(r.x, r.y, r.width, r.width);
 			}
 		}
-		paintDone=true;
+		if (ig!=null) {
+			g.drawImage(ig, 0, 0, null);
+		}
 	}
+
 
 	@Override
 	protected void windowOpened() {
@@ -250,10 +273,13 @@ public class RDesk extends MainPanel {
 			if (i!=null) {
 				Log.debug("recv img %d,%d,%d,%d  bytes=%d",x,y,i.getWidth(null),i.getHeight(null),inmsg.remaining());
 				synchronized (imgLock) {
-					if (x==0 && y==0 && imgFull==null) {imgFull=i;img=null;}
-					else {img=i; imgX=x; imgY=y;}
+					if (imgFull==null) {imgFull=i;}
+					else {
+						if (x==0 && y==0 && i.getWidth(null)==200) imgGray=i;
+						else imgq.add(new ImageBox(i,x,y,i.getWidth(null),i.getHeight(null)));
+					}
 				}
-				repaint();
+				repaint(100);
 				//if (paintDone) repaint();
 				//else Log.error("prev repaint not finished");
 			}
