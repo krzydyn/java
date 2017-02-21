@@ -221,11 +221,11 @@ public class Text {
 		for (int i=0; i<str.length(); ++i) {
 			char n=str.charAt(i);
 			if (Character.isLetter(n)) {
+				if (vovels.indexOf(n) >= 0)
+					n = Character.toUpperCase(n);
 				if (n=='z') n='a';
 				else if (n=='Z') n='A';
 				else ++n;
-				if (vovels.indexOf(n) >= 0)
-					n = Character.toUpperCase(n);
 			}
 			b.append(n);
 		}

@@ -19,14 +19,16 @@
 package checker;
 
 import java.io.IOException;
+import java.io.OutputStreamWriter;
 
 import sys.Env;
+import text.tokenize.CppBuilder;
 import text.tokenize.CppParser;
 import time.LapTime;
 
 public class CheckCpp {
 	static String[] files={
-			"~/tee_client_api.c",
+			"~/sec-os/key-manager/src/manager/common/exception.h",
 	};
 	static String pfx="~/security-containers/";
 	public static void main(String[] args) throws Exception {
@@ -46,7 +48,8 @@ public class CheckCpp {
 			CppParser.CppNode n=p.parse(f);
 			tm.update(System.currentTimeMillis(), p.getLineNo());
 			System.out.println(tm.toString());
-			CppParser.printNode(n);
+			//CppParser.printNode(n);
+			CppBuilder.write(n, new OutputStreamWriter(System.out));
 		}catch (IOException e) {
 			System.err.println(e.getMessage());
 		}

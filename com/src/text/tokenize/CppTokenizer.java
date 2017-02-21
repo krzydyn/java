@@ -20,8 +20,6 @@ package text.tokenize;
 
 import java.io.IOException;
 
-import sys.Log;
-
 public class CppTokenizer {
 	static public final int TOKEN_NONE = 0;
 	static public final int TOKEN_WHILESPACE = 1;
@@ -102,15 +100,18 @@ public class CppTokenizer {
 					tokenizer.next(b);
 					if (b.charAt(0)=='*') {
 						cla=TOKEN_COMMENT;
-						cpptok.append(b);
+						cpptok.setLength(0);
 						while (tokenizer.next(b)) {
 							cpptok.append(b);
-							if (b.charAt(0)=='/' && cpptok.toString().endsWith("*/")) break;
+							if (b.charAt(0)=='/' && cpptok.toString().endsWith("*/")) {
+								cpptok.setLength(cpptok.length()-2);
+								break;
+							}
 						}
 					}
 					else if (b.charAt(0)=='/') {
 						cla=TOKEN_COMMENT_LN;
-						cpptok.append(b);
+						cpptok.setLength(0);
 						while (tokenizer.next(b)) {
 							if (b.toString().endsWith("\n")) {
 								unread(b);
