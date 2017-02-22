@@ -476,10 +476,15 @@ public class RServer implements ChannelHandler {
 				Rectangle r=box_bfs(p,x,y);
 				//Log.info("roi = %s",r);
 				addRoi(rois,r);
+				if (r.x+r.width > i.getWidth() || r.y+r.height > i.getHeight()) {
+					Log.error("ROI too large");
+				}
 			}
 		}
 		//Log.info("rois = %d",rois.size());
 		for (Rectangle r : rois) {
+			if (r.x+r.width > i.getWidth()) r.width=i.getWidth()-r.x;
+			if (r.y+r.height > i.getHeight()) r.height=i.getHeight()-r.y;
 			if (r.width < 1 || r.height < 1) continue;
 			sendImageAll(i.getSubimage(r.x, r.y, r.width, r.height),r.x, r.y, 0.2f);
 		}
