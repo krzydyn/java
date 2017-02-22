@@ -41,7 +41,6 @@ public class Graph extends AbstractGraph {
 	}
 
 	private final Map<Integer,List<Edge>> adj = new HashMap<Integer, List<Edge>>();
-	private int[] flag;
 	private long weight = 0;
 	private static final List<Edge> empty = new ArrayList<Edge>();
 
@@ -92,46 +91,41 @@ public class Graph extends AbstractGraph {
 	}
 
 	public void bfs(int from, Processor p) {
-		if (flag == null || flag.length < nodeCnt) {flag = new int[nodeCnt];}
-		else {for (int i=0; i < nodeCnt; ++i) flag[i]=0;}
-
+		boolean[] flag = new boolean[nodeCnt];
 		List<Integer> q = new ArrayList<Integer>();
 		q.add(from);
 		while (!q.isEmpty()) {
 			int u = q.remove(0);
-			flag[u] = 1;
 			p.process(u);
 			for (Edge e : adj(u)) {
-				if (flag[e.dst]==0) {
+				if (!flag[e.dst]) {
 					q.add(e.dst);
-					flag[e.dst] = 2;
+					flag[e.dst] = true;
 				}
 			}
 		}
+		flag=null;
 	}
 
 	public void dfs(int from, Processor p) {
-		if (flag == null || flag.length < nodeCnt) {flag = new int[nodeCnt];}
-		else {for (int i=0; i < nodeCnt; ++i) flag[i]=0;}
-
+		boolean[] flag = new boolean[nodeCnt];
 		List<Integer> q = new ArrayList<Integer>();
 		q.add(from);
 		while (!q.isEmpty()) {
 			int u = q.remove(q.size()-1);
-			flag[u] = 1;
 			p.process(u);
 			for (Edge e : adj(u)) {
-				if (flag[e.dst]==0) {
+				if (!flag[e.dst]) {
 					q.add(e.dst);
-					flag[e.dst] = 2;
+					flag[e.dst] = true;
 				}
 			}
 		}
+		flag=null;
 	}
 
 	public void shortestPathDijkstra(int src, int dst) {
-		if (flag == null || flag.length < nodeCnt) {flag = new int[nodeCnt];}
-		else {for (int i=0; i < nodeCnt; ++i) flag[i]=0;}
+		boolean[] flag = new boolean[nodeCnt];
 		int[] dist = new int[nodeCnt];
 		int[] prev = new int[nodeCnt];
 
@@ -140,32 +134,27 @@ public class Graph extends AbstractGraph {
 			prev[i] = -1;
 		}
 		dist[src] = 0;
-
+		flag[src] = true;
 		List<Integer> q = new ArrayList<Integer>();
 		q.add(src);
 		while (!q.isEmpty()) {
 			int u,im=-1, dm=Integer.MAX_VALUE;
-			//find vertex with min dist (TODO PriorityQueue)
+			//find vertex with min dist (TODO PriorityQueue/Heap)
 			for (int i=0; i < q.size(); ++i) {
 				u=dist[q.get(i)];
-				if (dm > u) {
-					dm = u;
-					im = i;
-				}
+				if (dm > u) { dm = u; im = i; }
 			}
 			u = q.remove(im);
-			if (flag[u]!=0) continue;
-			flag[u] = 1;
 			if (u == dst) break;
 
 			for (Edge e : adj(u)) {
-				if (e.src == u && flag[e.dst]==0) {
-					int v = e.dst;
-					q.add(v);
+				if (e.src == u && !flag[e.dst]) {
+					q.add(e.dst);
+					flag[e.dst] = true;
 					int a = dist[u] + e.w;
-					if (dist[v] > a) {
-						dist[v] = a;
-						prev[v] = u;
+					if (dist[e.dst] > a) {
+						dist[e.dst] = a;
+						prev[e.dst] = u;
 					}
 				}
 			}
@@ -180,6 +169,9 @@ public class Graph extends AbstractGraph {
 		else {
 			Log.prn("dist: %s", Text.join(",", dist));
 		}
+		flag=null;
+		dist=null;
+		prev=null;
 		//return dist,prev
 	}
 
