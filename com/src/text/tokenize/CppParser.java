@@ -57,12 +57,12 @@ public class CppParser {
 		}
 	}
 	static class Comment extends SourceFragment {
-		Comment(String c, boolean oneln){super(c); this.oneln=oneln;}
+		Comment(String c, boolean oneln){super(c.replaceAll("(?m)^ *\\* *", "\n").trim()); this.oneln=oneln;}
 		boolean oneln;
 		@Override
 		void write(PrintWriter wr) {
-			if (oneln) wr.printf("//%s\n", str);
-			else wr.printf("/*%s*/\n", str);
+			if (oneln) wr.printf("// %s\n", str);
+			else wr.printf("/*%s\n */\n", ("\n"+str).replace("\n", "\n * "));
 		}
 	}
 	static class Namespace extends CodeBlock {

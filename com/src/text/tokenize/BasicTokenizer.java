@@ -65,7 +65,7 @@ public class BasicTokenizer {
 		if (maxunread < pushback.length()) maxunread=pushback.length();
 	}
 	protected boolean isSpace(char c) {
-		return Character.isWhitespace(c);
+		return Character.isSpaceChar(c);
 	}
 	protected boolean isAlnum(char c) {
 		return Character.isLetterOrDigit(c)||c=='_';
@@ -74,22 +74,23 @@ public class BasicTokenizer {
 
 	public boolean next(StringBuilder s) throws IOException {
 		int c;
-		boolean prevsp=true;
+		boolean is_space=true;
 		s.setLength(0);
 		while ((c=readc())>=0) {
 			if (isSpace((char)c)) {
-				if (prevsp) {
+				if (is_space) {
+					if (c=='\r') continue;
 					s.append((char)c);
 					if (c=='\n') break;
 				}
 				else { unread(c); break; }
 			}
 			else if (isAlnum((char)c)) {
-				if (prevsp && s.length()>0) { unread(c); break; }
+				if (is_space && s.length()>0) { unread(c); break; }
 				s.append((char)c);
-				prevsp=false;
+				is_space=false;
 			}
-			else {
+			else { //some special char
 				if (s.length()>0) unread(c);
 				else s.append((char)c);
 				break;

@@ -28,7 +28,7 @@ import time.LapTime;
 
 public class CheckCpp {
 	static String[] files={
-			"~/sec-os/key-manager/src/manager/common/exception.h",
+			"~/sec-os/key-manager/src/manager/common/exception.cpp",
 	};
 	static String pfx="~/security-containers/";
 	public static void main(String[] args) throws Exception {
