@@ -78,6 +78,7 @@ public class CppBuilder {
 			if (addnl && wr.lastc!='\n') {
 				wr.write("\n");
 			}
+			if ((f instanceof Comment) && wr.lastc != '\n') wr.write(" ");
 			n.write(wr);
 			if (f.str.endsWith(";")) wr.write("\n");
 		}
