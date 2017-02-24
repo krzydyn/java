@@ -65,6 +65,7 @@
 				<include name="sys/Env*"/>
 				<include name="sys/Log*"/>
 				<include name="sys/XThread*"/>
+				<include name="sys/Color*"/>
 				<include name="net/**"/>
 				<include name="text/Text*"/>
 				<include name="text/Ansi*"/>

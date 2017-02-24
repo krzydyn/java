@@ -184,33 +184,23 @@ public class RDesk extends MainPanel {
 
 	@Override
 	protected void paintComponent(Graphics g) {
-		Image ifu, ig;
-		int l;
-		synchronized (imgLock) {ifu=imgFull; ig=imgGray; l=imgq.size();}
+		Image ifu,ig;
+		synchronized (imgLock) {ifu=imgFull; ig=imgGray;}
 
 		if (ifu != null) {
-			if (l > 0) {
-				rois.clear();
-				Graphics gg = ifu.getGraphics();
-				for (int i=0; i < l; ++i) {
-					ImageBox ib = imgq.get(i);
-					gg.drawImage(ib.i, ib.x, ib.y, null);
-					rois.add(new Rectangle(ib.x, ib.y, ib.w, ib.h));
-				}
-				gg.dispose();
-				synchronized (imgLock) {
-					while (l>0) {imgq.remove(0); --l;}
-				}
-			}
 			g.drawImage(ifu, 0, 0, null);
 		}
 		//if (ig!=null) g.drawImage(ig, 0, 0, null);
 		g.setColor(Color.RED);
-		for (Rectangle r : rois) {
-			if (r.x+r.width > imgFull.getWidth(null) || r.y+r.height > imgFull.getHeight(null))
-				Log.error("new rect %d,%d,%d,%d",r.x,r.y,r.width, r.height);
-			g.drawLine(0, 0, r.x, r.y);
-			g.drawRect(r.x, r.y, r.width, r.height);
+		int mx=getWidth()/2;
+		int my=getHeight()/2;
+		synchronized (imgLock) {
+			for (Rectangle r : rois) {
+				if (r.x+r.width > imgFull.getWidth(null) || r.y+r.height > imgFull.getHeight(null))
+					Log.error("new rect %d,%d,%d,%d",r.x,r.y,r.width, r.height);
+				g.drawRect(r.x, r.y, r.width, r.height);
+				g.drawLine(mx, my, r.x+r.width/2, r.y+r.height/2);
+			}
 		}
 	}
 
@@ -253,6 +243,22 @@ public class RDesk extends MainPanel {
 		return new String(a,Text.UTF8_Charset);
 	}
 
+	void updateRoi() {
+		synchronized (imgLock) {
+			int l=imgq.size();
+			Graphics g = imgFull.getGraphics();
+			for (int i=0; i < l; ++i) {
+				ImageBox ib = imgq.get(i);
+				g.drawImage(ib.i, ib.x, ib.y, null);
+				rois.add(new Rectangle(ib.x, ib.y, ib.w, ib.h));
+			}
+			g.dispose();
+			while (l>0) {imgq.remove(0); --l;}
+			while (rois.size() > 5) {rois.remove(0);}
+		}
+		repaint(100);
+	}
+
 	private void processMsg(QueueChannel chn) {
 		short cmd = inmsg.getShort();
 		//Log.debug("msgtype = %d, payload %d", type, inmsg.remaining());
@@ -273,8 +279,6 @@ public class RDesk extends MainPanel {
 			try { i = ImageIO.read(is);}
 			catch (IOException e) {Log.error(e);}
 			if (i!=null) {
-
-
 				synchronized (imgLock) {
 					if (imgFull==null) {
 						imgFull=i;
@@ -283,14 +287,14 @@ public class RDesk extends MainPanel {
 					else {
 						if (x==0 && y==0 && i.getWidth(null)==200) imgGray=i;
 						else {
-							Log.debug("recv roi %d,%d,%d,%d  bytes=%d",x,y,i.getWidth(null),i.getHeight(null),inmsg.remaining());
+							//Log.debug("recv roi %d,%d,%d,%d  bytes=%d",x,y,i.getWidth(null),i.getHeight(null),inmsg.remaining());
 							imgq.add(new ImageBox(i,x,y));
+							if (imgq.size()>1) Log.debug("roiq len=%d",imgq.size());
 						}
 					}
 				}
-				repaint(100);
-				//if (paintDone) repaint();
-				//else Log.error("prev repaint not finished");
+				//TODO update fullImg in separate thread
+				updateRoi();
 			}
 		}
 		else {
@@ -340,8 +344,8 @@ public class RDesk extends MainPanel {
 		if (w<=0 || h <=0) return ;
 		ByteBuffer b = ByteBuffer.allocate(10);
 		b.putShort(RCommand.SCREEN_IMG);
-		b.putShort((short)w);
-		b.putShort((short)h);
+		b.putShort((short)3000);
+		b.putShort((short)2000);
 		b.putFloat(0.2f);
 		b.flip();
 		chnHandler.write(qchn, b);

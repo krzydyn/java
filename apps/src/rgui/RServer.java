@@ -28,6 +28,7 @@ import javax.imageio.ImageWriteParam;
 import javax.imageio.ImageWriter;
 import javax.imageio.plugins.jpeg.JPEGImageWriteParam;
 
+import sys.Colors;
 import sys.Log;
 import sys.XThread;
 import text.Text;
@@ -381,84 +382,53 @@ public class RServer implements ChannelHandler {
 		}
 	}
 
-	float invGamma(float c) {
-		if ( c <= 0.04045 ) return c/12.92f;
-		return (float)Math.pow(((c+0.055)/(1.055)),2.4);
-	}
-
-	float gamma(float i) {
-		if (i <= 0.0031308) return i*12.92f;
-		return (float) (1.055f*Math.pow(i,1.0/2.4)-0.055f);
-	}
-
-	float lum(int rgb) {
-		float r = invGamma(((rgb>>16)&0xff)/255f);
-		float g = invGamma(((rgb>>8)&0xff)/255f);
-		float b = invGamma((rgb&0xff)/255f);
-		return 0.2126f*r + 0.7152f*g + 0.0722f*b;
-	}
-	float lum2(int rgb) {
-		float r = ((rgb>>16)&0xff)/255f;
-		float g = ((rgb>>8)&0xff)/255f;
-		float b = (rgb&0xff)/255f;
-		//return (float)Math.sqrt(r*r*0.241 + g*g*0.691 + b*b*0.068);
-		return r*0.299f + g*0.587f + b*0.114f;
-	}
-
-
-	int qlum(int rgb) {
-		int r = (rgb>>16)&0xff;
-		int g = (rgb>>8)&0xff;
-		int b = rgb&0xff;
-		if (r<0||g<0||b<0|r>255||g>255||b>255) {
-			Log.error("r=%d g=%d b=%d",r,g,b);
-		}
-		return ((r<<1+r+g<<2+b)>>>3)&0xff;
-	}
-
-	int diff(int rgb1, int rgb2) {
-		int r = rgb1&0xff0000 - rgb2&0xff0000;
-		int g = rgb1&0xff00 - rgb2&0xff00;
-		int b = rgb1&0xff - rgb2&0xff;
-		return (Math.abs(r)+Math.abs(g)+Math.abs(b))/3;
-	}
-
 	Rectangle box_bfs(BufferedImage t, int x, int y) {
 		Rectangle r=new Rectangle(x,y,1,1);
 		List<Point> q=new ArrayList<Point>();
-		int c=t.getRGB(x, y);
-		t.setRGB(x, y, c&0xff00);
+		t.setRGB(x, y, 0);
 		q.add(new Point(x,y));
 		Dimension d=new Dimension(t.getWidth(), t.getHeight());
 		while (q.size()>0) {
 			Point p=q.remove(0);
 			x=p.x; y=p.y; p=null;
-			r.add(x,y);
-			if (x>0 && ((c=t.getRGB(x-1,y))&0xff)!=0) {t.setRGB(x-1, y, c&0xff00);q.add(new Point(x-1, y));}
-			if (x+1<d.width && ((c=t.getRGB(x+1,y))&0xff)!=0) {t.setRGB(x+1, y, c&0xff00);q.add(new Point(x+1, y));}
-			if (y>0 && ((c=t.getRGB(x,y-1))&0xff)!=0) {t.setRGB(x, y-1, c&0xff00);q.add(new Point(x, y-1));}
-			if (y+1<d.height && ((c=t.getRGB(x,y+1))&0xff)!=0) {t.setRGB(x, y+1, c&0xff00);q.add(new Point(x, y+1));}
+			r.add(x,y); r.add(x+1,y+1);
+			if (x>0 && (t.getRGB(x-1,y)&0xff)!=0) {t.setRGB(x-1, y, 0);q.add(new Point(x-1, y));}
+			if (x+1<d.width && (t.getRGB(x+1,y)&0xff)!=0) {t.setRGB(x+1, y, 0);q.add(new Point(x+1, y));}
+			if (y>0 && (t.getRGB(x,y-1)&0xff)!=0) {t.setRGB(x, y-1, 0);q.add(new Point(x, y-1));}
+			if (y+1<d.height && (t.getRGB(x,y+1)&0xff)!=0) {t.setRGB(x, y+1, 0);q.add(new Point(x, y+1));}
 		}
-		if (r.x+r.width < t.getWidth()) ++r.width;
-		if (r.y+r.height < t.getHeight()) ++r.height;
 		return r;
 	}
 
-	void addRoi(List<Rectangle> rois, Rectangle r) {
+	void addRoi(List<Rectangle> rois, Rectangle r, int maxw, int maxh) {
+		if (r.width==0 || r.height==0) return;
+		r.grow(1, 1);
+		if (r.x<0) r.x=0;
+		if (r.y<0) r.y=0;
+		if (r.x+r.width > maxw) r.width=maxw-r.x;
+		if (r.y+r.height > maxh) r.height=maxh-r.y;
+		int g=10;
+		r.grow(g, g);
 		for (Rectangle rr : rois) {
-			rr.add(r);
-			r=null; break;
+			if (rr.intersects(r)) {
+				r.grow(-g, -g);
+				rr.add(r);
+				r=null; break;
+			}
 		}
-		if (r!=null) rois.add(r);
+		if (r!=null) {
+			r.grow(-g, -g);
+			rois.add(r);
+		}
 	}
 	void detectChanges(BufferedImage p,BufferedImage i) {
 		List<Rectangle> rois=new ArrayList<Rectangle>();
 
 		for (int y=0; y < p.getHeight(); ++y) {
 			for (int x=0; x < p.getWidth(); ++x) {
-				int r=Math.abs(qlum(p.getRGB(x, y)&0xffffff) - qlum(i.getRGB(x, y)&0xffffff));
-				//int r=diff(p.getRGB(x, y),i.getRGB(x, y));
-				if (r<5) r=0;
+				//int r=Math.abs(qlum(p.getRGB(x, y)&0xffffff) - qlum(i.getRGB(x, y)&0xffffff));
+				int r=Colors.diff(p.getRGB(x, y),i.getRGB(x, y));
+				if (r<2) r=0;
 				else r=255;
 				p.setRGB(x, y, (r<<16)|(r<<8)|r);
 			}
@@ -474,11 +444,11 @@ public class RServer implements ChannelHandler {
 			for (int x=0; x < p.getWidth(); ++x) {
 				if ((p.getRGB(x, y)&0xff)<1) continue;
 				Rectangle r=box_bfs(p,x,y);
-				//Log.info("roi = %s",r);
-				addRoi(rois,r);
 				if (r.x+r.width > i.getWidth() || r.y+r.height > i.getHeight()) {
 					Log.error("ROI too large");
 				}
+				//Log.info("roi = %s",r);
+				addRoi(rois,r,i.getWidth(),i.getHeight());
 			}
 		}
 		//Log.info("rois = %d",rois.size());
@@ -488,8 +458,8 @@ public class RServer implements ChannelHandler {
 			if (r.width < 1 || r.height < 1) continue;
 			sendImageAll(i.getSubimage(r.x, r.y, r.width, r.height),r.x, r.y, 0.2f);
 		}
-		if (!rois.isEmpty())
-			sendImageAll(bi,0, 0, 0.2f);
+		//if (!rois.isEmpty())
+		//	sendImageAll(bi,0, 0, 0.2f);
 	}
 
 	private void run() throws Exception {
