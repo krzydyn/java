@@ -2,10 +2,8 @@ package rgui;
 
 import java.awt.Dimension;
 import java.awt.EventQueue;
-import java.awt.Graphics2D;
 import java.awt.GraphicsDevice;
 import java.awt.GraphicsEnvironment;
-import java.awt.Image;
 import java.awt.MouseInfo;
 import java.awt.Point;
 import java.awt.Rectangle;
@@ -42,7 +40,8 @@ public class RServer implements ChannelHandler {
 	static final int FORCE_ACTION_TIME = 60*1000;
 	private final SelectorThread2 selector;
 	private final Robot robot;
-	private final boolean useQuality=true;
+	private final String imgFormat="jpg";
+	private final boolean imgAddQuality=true;
 	private final int mouseButtonMask;
 
 	private long forceActionTm=0;
@@ -318,7 +317,10 @@ public class RServer implements ChannelHandler {
 			dos.writeInt(x);
 			dos.writeInt(y);
 
-			if (useQuality) {
+			if (!imgAddQuality) {
+				ImageIO.write(img, imgFormat, dos);
+			}
+			else if ("jpg".equals(imgFormat)) {
 				JPEGImageWriteParam jpegParams = new JPEGImageWriteParam(null);
 				jpegParams.setCompressionMode(ImageWriteParam.MODE_EXPLICIT);
 				jpegParams.setCompressionQuality(q);
@@ -327,8 +329,9 @@ public class RServer implements ChannelHandler {
 				writer.write(null, new IIOImage(img, null, null), jpegParams);
 				writer.dispose();
 			}
-			else
-				ImageIO.write(img, "jpg", dos);
+			else {
+				ImageIO.write(img, imgFormat, dos);
+			}
 			dos.close();
 			byte[] ba=os.toByteArray();
 			//Log.info("send img %d bytes",ba.length);
@@ -348,7 +351,7 @@ public class RServer implements ChannelHandler {
 			dos.writeInt(x);
 			dos.writeInt(y);
 
-			if (useQuality) {
+			if (imgAddQuality) {
 				JPEGImageWriteParam jpegParams = new JPEGImageWriteParam(null);
 				jpegParams.setCompressionMode(ImageWriteParam.MODE_EXPLICIT);
 				jpegParams.setCompressionQuality(q);
@@ -383,7 +386,7 @@ public class RServer implements ChannelHandler {
 	}
 
 	Rectangle box_bfs(BufferedImage t, int x, int y) {
-		Rectangle r=new Rectangle(x,y,1,1);
+		Rectangle r=new Rectangle(x,y,0,0);
 		List<Point> q=new ArrayList<Point>();
 		t.setRGB(x, y, 0);
 		q.add(new Point(x,y));
@@ -397,17 +400,14 @@ public class RServer implements ChannelHandler {
 			if (y>0 && (t.getRGB(x,y-1)&0xff)!=0) {t.setRGB(x, y-1, 0);q.add(new Point(x, y-1));}
 			if (y+1<d.height && (t.getRGB(x,y+1)&0xff)!=0) {t.setRGB(x, y+1, 0);q.add(new Point(x, y+1));}
 		}
+		++r.width;
+		++r.height;
 		return r;
 	}
 
 	void addRoi(List<Rectangle> rois, Rectangle r, int maxw, int maxh) {
 		if (r.width==0 || r.height==0) return;
-		r.grow(1, 1);
-		if (r.x<0) r.x=0;
-		if (r.y<0) r.y=0;
-		if (r.x+r.width > maxw) r.width=maxw-r.x;
-		if (r.y+r.height > maxh) r.height=maxh-r.y;
-		int g=10;
+		int g=100;
 		r.grow(g, g);
 		for (Rectangle rr : rois) {
 			if (rr.intersects(r)) {
@@ -426,24 +426,26 @@ public class RServer implements ChannelHandler {
 
 		for (int y=0; y < p.getHeight(); ++y) {
 			for (int x=0; x < p.getWidth(); ++x) {
-				//int r=Math.abs(qlum(p.getRGB(x, y)&0xffffff) - qlum(i.getRGB(x, y)&0xffffff));
-				int r=Colors.diff(p.getRGB(x, y),i.getRGB(x, y));
-				if (r<2) r=0;
-				else r=255;
+				int r=Math.abs(Colors.quick_luminance(p.getRGB(x, y)) - Colors.quick_luminance(i.getRGB(x, y)));
+				//int r=Colors.errorSum(p.getRGB(x, y),i.getRGB(x, y));
+				if (r<1) r=0;
+				else if (r > 255) r=255;
 				p.setRGB(x, y, (r<<16)|(r<<8)|r);
 			}
 		}
 
-		Image si = p.getScaledInstance(200, 200*p.getHeight()/p.getWidth(), 0);
+		/*Image si = p.getScaledInstance(200, 200*p.getHeight()/p.getWidth(), 0);
 		BufferedImage bi=new BufferedImage(si.getWidth(null), si.getHeight(null), BufferedImage.TYPE_BYTE_GRAY);
 		Graphics2D g = bi.createGraphics();
 		g.drawImage(si, 0, 0, bi.getWidth(), bi.getHeight(), null);
-		g.dispose();
+		g.dispose();*/
 
 		for (int y=0; y < p.getHeight(); ++y) {
 			for (int x=0; x < p.getWidth(); ++x) {
-				if ((p.getRGB(x, y)&0xff)<1) continue;
-				Rectangle r=box_bfs(p,x,y);
+				if ((p.getRGB(x, y)&0xff)==0) continue;
+				Rectangle r;
+				//r=new Rectangle(x,y,1,1);
+				r=box_bfs(p,x,y);
 				if (r.x+r.width > i.getWidth() || r.y+r.height > i.getHeight()) {
 					Log.error("ROI too large");
 				}
@@ -488,8 +490,8 @@ public class RServer implements ChannelHandler {
 		while (selector.isRunning()) {
 			if (clients.size()>0) {
 				BufferedImage i = robot.createScreenCapture(rect);
-				BufferedImage p = screenImg;
-				synchronized (this) { screenImg = i; }
+				BufferedImage p;
+				synchronized (this) { p=screenImg; screenImg=i; }
 				detectChanges(p,i);
 				i=null; p=null;
 			}
@@ -502,7 +504,7 @@ public class RServer implements ChannelHandler {
 				}
 				forceActionTm = System.currentTimeMillis()+FORCE_ACTION_TIME;
 			}
-			XThread.sleep(100);
+			XThread.sleep(10);
 		}
 		Log.info("rserver finished");
 	}

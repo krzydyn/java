@@ -5,7 +5,6 @@ import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Image;
 import java.awt.Point;
-import java.awt.Rectangle;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
@@ -16,6 +15,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 import javax.imageio.ImageIO;
@@ -38,7 +38,7 @@ public class RDesk extends MainPanel {
 	private Image imgFull;
 	private Image imgGray;
 	private List<ImageBox> imgq = new ArrayList<ImageBox>();
-	private List<Rectangle> rois = new ArrayList<Rectangle>();
+	private List<ImageBox> rois = new ArrayList<ImageBox>();
 	QueueChannel qchn;
 	Point prevMouseLoc = new Point();
 	String Host = null;
@@ -46,10 +46,12 @@ public class RDesk extends MainPanel {
 	static class ImageBox {
 		Image i;
 		int x,y,w,h;
+		long tm;
 		public ImageBox(Image i, int x, int y) {
 			this.i=i;
 			this.x=x; this.y=y;
 			this.w=i.getWidth(null); this.h=i.getHeight(null);
+			this.tm=System.currentTimeMillis();
 		}
 	}
 	ChannelHandler chnHandler = new ChannelHandler() {
@@ -60,13 +62,16 @@ public class RDesk extends MainPanel {
 		@Override
 		public void connected(QueueChannel chn) {
 			Log.debug("connected");
-			inmsg.clear();
-			inlen=0;
+			imgFull=null;
+			rois.clear();
+			inmsg.clear(); inlen=0;
 			sendScreenInfoReq();
 		}
 		@Override
 		public void disconnected(QueueChannel chn) {
 			Log.debug("disconnected");
+			rois.clear();
+			repaint();
 		}
 
 		//TODO use com.net.TcpFilter
@@ -89,6 +94,8 @@ public class RDesk extends MainPanel {
 						continue;
 					inmsg.flip();
 					inlen = inmsg.getInt();
+					if (inmsg.capacity() < inlen)
+						inmsg = ByteBuffer.allocate(inlen*2);
 					inmsg.clear();
 					if (inlen==0) {
 						inmsg.put((byte)0);
@@ -184,22 +191,36 @@ public class RDesk extends MainPanel {
 
 	@Override
 	protected void paintComponent(Graphics g) {
-		Image ifu,ig;
-		synchronized (imgLock) {ifu=imgFull; ig=imgGray;}
+		Image ifu;
+		synchronized (imgLock) {ifu=imgFull;}
 
+		int maxx=3000, maxy=2000;
 		if (ifu != null) {
 			g.drawImage(ifu, 0, 0, null);
+			maxx=imgFull.getWidth(null);
+			maxy=imgFull.getHeight(null);
 		}
-		//if (ig!=null) g.drawImage(ig, 0, 0, null);
-		g.setColor(Color.RED);
+
 		int mx=getWidth()/2;
 		int my=getHeight()/2;
 		synchronized (imgLock) {
-			for (Rectangle r : rois) {
-				if (r.x+r.width > imgFull.getWidth(null) || r.y+r.height > imgFull.getHeight(null))
-					Log.error("new rect %d,%d,%d,%d",r.x,r.y,r.width, r.height);
-				g.drawRect(r.x, r.y, r.width, r.height);
-				g.drawLine(mx, my, r.x+r.width/2, r.y+r.height/2);
+			for (Iterator<ImageBox> i=rois.iterator(); i.hasNext(); ) {
+				ImageBox r = i.next();
+				if (r.tm + 1000 < System.currentTimeMillis()) i.remove();
+			}
+			g.setColor(Color.GREEN);
+			g.fillRect(mx-2, my-10, 25,15);
+			g.setColor(Color.BLACK);
+			g.drawString(String.format("%d",rois.size()), mx, my);
+			for (ImageBox r : rois) {
+				if (r.x+r.w > maxx || r.y+r.h > maxy) {
+					g.setColor(Color.RED);
+					Log.error("rect out of range: %s, (%d,%d)",r,maxx,maxy);
+				}
+				else
+					g.setColor(Color.GREEN);
+				g.drawRect(r.x, r.y, r.w, r.h);
+				g.drawLine(mx, my, r.x+r.w/2, r.y+r.h/2);
 			}
 		}
 	}
@@ -250,11 +271,11 @@ public class RDesk extends MainPanel {
 			for (int i=0; i < l; ++i) {
 				ImageBox ib = imgq.get(i);
 				g.drawImage(ib.i, ib.x, ib.y, null);
-				rois.add(new Rectangle(ib.x, ib.y, ib.w, ib.h));
+				ib.i=null;
+				rois.add(ib);
 			}
 			g.dispose();
 			while (l>0) {imgq.remove(0); --l;}
-			while (rois.size() > 5) {rois.remove(0);}
 		}
 		repaint(100);
 	}
@@ -280,7 +301,7 @@ public class RDesk extends MainPanel {
 			catch (IOException e) {Log.error(e);}
 			if (i!=null) {
 				synchronized (imgLock) {
-					if (imgFull==null) {
+					if (imgFull==null && i.getWidth(null)>1000) {
 						imgFull=i;
 						Log.debug("recv fullscr %d,%d,%d,%d  bytes=%d",x,y,i.getWidth(null),i.getHeight(null),inmsg.remaining());
 					}
