@@ -1,4 +1,4 @@
-package so_tests;
+package test_SO;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;

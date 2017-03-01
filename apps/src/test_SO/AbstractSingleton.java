@@ -1,4 +1,4 @@
-package so_tests;
+package test_SO;
 
 public abstract class AbstractSingleton {
 	private volatile static AbstractSingleton _INSTANCE=null;

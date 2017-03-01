@@ -1,4 +1,4 @@
-package so_tests;
+package test_SO;
 import java.util.HashMap;
 import java.util.Map;
 

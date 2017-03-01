@@ -1,4 +1,4 @@
-package so_tests;
+package test_SO;
 
 import java.awt.BorderLayout;
 import java.awt.Color;

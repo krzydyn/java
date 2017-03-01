@@ -1,4 +1,4 @@
-package so_tests;
+package test_SO;
 
 public class TeluguUtf8 {
 	static final String value = "ముక్కలు మొత్తం, ప్లాంట్, పి వో సంఖ్య";
