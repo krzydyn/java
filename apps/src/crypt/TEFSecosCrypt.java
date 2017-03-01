@@ -74,33 +74,20 @@ public class TEFSecosCrypt extends UnitTest implements TEF_Types {
 		tef_key_type_e kt;
 		byte[] key;
 	}
-	static byte[][] keyMaterial = {
-		Text.bin("0123456789ABCDEF"),
-		Text.bin("0123456789ABCDEF FEDCBA9876543210"),
-		Text.bin("0123456789ABCDEF FEDCBA9876543210 1032547698badcfe"),
 
-		Text.bin("2b7e151628aed2a6abf7158809cf4f3c"),
-		Text.bin("8e73b0f7da0e6452c810f32b809079e562f8ead2522c6b7b"),
-		Text.bin("603deb1015ca71be2b73aef0857d7781 1f352c073b6108d72d9810a30914dff4"),
-
-		Text.bin("11754cd72aec309bf52f7687212e8957"),
-		Text.bin("272f16edb81a7abbea887357a58c1917"),
-		Text.bin("77be63708971c4e240d1cb79e8d77feb"),
-		Text.bin("2301a2bba4f569826ca3cee802f53a7c"),
-	};
 	static EncryptKey[] keys = {
-		new EncryptKey(tef_key_type_e.TEF_DES, keyMaterial[0]),
-		new EncryptKey(tef_key_type_e.TEF_DES, keyMaterial[1]),
-		new EncryptKey(tef_key_type_e.TEF_DES, keyMaterial[2]),
+		new EncryptKey(tef_key_type_e.TEF_DES, Text.bin("0123456789ABCDEF")),
+		new EncryptKey(tef_key_type_e.TEF_DES, Text.bin("0123456789ABCDEF FEDCBA9876543210")),
+		new EncryptKey(tef_key_type_e.TEF_DES, Text.bin("0123456789ABCDEF FEDCBA9876543210 1032547698badcfe")),
 
-		new EncryptKey(tef_key_type_e.TEF_AES, keyMaterial[3]),
-		new EncryptKey(tef_key_type_e.TEF_AES, keyMaterial[4]),
-		new EncryptKey(tef_key_type_e.TEF_AES, keyMaterial[5]),
+		new EncryptKey(tef_key_type_e.TEF_AES, Text.bin("2b7e151628aed2a6abf7158809cf4f3c")),
+		new EncryptKey(tef_key_type_e.TEF_AES, Text.bin("8e73b0f7da0e6452c810f32b809079e562f8ead2522c6b7b")),
+		new EncryptKey(tef_key_type_e.TEF_AES, Text.bin("603deb1015ca71be2b73aef0857d7781 1f352c073b6108d72d9810a30914dff4")),
 
-		new EncryptKey(tef_key_type_e.TEF_AES, keyMaterial[6]),
-		new EncryptKey(tef_key_type_e.TEF_AES, keyMaterial[7]),
-		new EncryptKey(tef_key_type_e.TEF_AES, keyMaterial[8]),
-		new EncryptKey(tef_key_type_e.TEF_AES, keyMaterial[9]),
+		new EncryptKey(tef_key_type_e.TEF_AES, Text.bin("11754cd72aec309bf52f7687212e8957")),
+		new EncryptKey(tef_key_type_e.TEF_AES, Text.bin("272f16edb81a7abbea887357a58c1917")),
+		new EncryptKey(tef_key_type_e.TEF_AES, Text.bin("77be63708971c4e240d1cb79e8d77feb")),
+		new EncryptKey(tef_key_type_e.TEF_AES, Text.bin("2301a2bba4f569826ca3cee802f53a7c")),
 	};
 	static TEF.tef_algorithm[] algos = {
 		new TEF.tef_algorithm(tef_chaining_mode_e.TEF_ECB, tef_padding_mode_e.TEF_PADDING_NONE),

@@ -26,7 +26,6 @@ public class TEF implements TEF_Types {
 			if ((key_bit_len&mask5)==0) { //fix key length in bits
 				key_bit_len -= key_bit_len/8;
 			}
-			//else throw new InvalidParameterException("Wrong keysize: "+key_bit_len);
 			gen.init(key_bit_len);
 		}
 		else {
