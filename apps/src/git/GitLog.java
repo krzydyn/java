@@ -90,7 +90,7 @@ public class GitLog {
 		}
 
 		if (svg != null) {
-			Log.notice("Writing SVG to file");
+			Log.notice("Writing SVG to file '%s'", svgfile);
 			try (OutputStream os=new FileOutputStream(svgfile)) {
 				svg.write(os);
 			} catch (IOException e) {
