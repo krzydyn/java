@@ -115,9 +115,10 @@ public class MainPanel extends JPanel{
 		return split;
 	}
 
-	static public void start(final Class<? extends MainPanel> mainclass, String[] args) {
-		try {intern_start(mainclass, args);}
+	static public MainPanel start(final Class<? extends MainPanel> mainclass, String[] args) {
+		try { return intern_start(mainclass, args);}
 		catch (Throwable e) {Log.error(e);}
+		return null;
 	}
 	static public void start(final Class<? extends MainPanel> mainclass) {
 		start(mainclass,null);
@@ -132,7 +133,8 @@ public class MainPanel extends JPanel{
 			return mainclass.getConstructor(String[].class).newInstance(new Object[]{args});
 		}
 	}
-	static private void intern_start(final Class<? extends MainPanel> mainclass, final String[] args) throws Exception {
+	static private MainPanel intern_start(final Class<? extends MainPanel> mainclass, final String[] args) throws Exception {
+		final MainPanel[] mp = {null};
 		EventQueue.invokeAndWait(new Runnable() {
 			@Override
 			public void run() {
@@ -177,10 +179,12 @@ public class MainPanel extends JPanel{
 					}
 					f.setLocation(10,10);
 					f.setVisible(true);
+					mp[0]=main;
 				} catch (Throwable e) {
 					Log.error(e);
 				}
 			}
 		});
+		return mp[0];
 	}
 }
