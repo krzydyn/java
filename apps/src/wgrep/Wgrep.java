@@ -18,7 +18,7 @@
 
 package wgrep;
 
-import io.IOChannel;
+import io.IOText;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -99,7 +99,7 @@ public class Wgrep {
 		else {
 			Log.debug("Connecting %s", url);
 			Response resp=conn.execute();
-			IOChannel io = new IOChannel(null, new FileOutputStream("wgrep.html"));
+			IOText io = new IOText(null, new FileOutputStream("wgrep.html"));
 			io.write(resp.body());
 			io.close();
 			doc = resp.parse();

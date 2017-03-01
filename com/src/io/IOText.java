@@ -30,10 +30,10 @@ import java.nio.CharBuffer;
 import java.nio.channels.spi.AbstractSelectableChannel;
 import text.Text;
 
-public class IOChannel extends AbstractSelectableChannel implements Readable,Appendable,Closeable {
+public class IOText extends AbstractSelectableChannel implements Readable,Appendable,Closeable {
 	final Reader rd;
 	final Writer wr;
-	public IOChannel(InputStream i, OutputStream o) {
+	public IOText(InputStream i, OutputStream o) {
 		super(null);
 		InputStreamReader is = null;
 		OutputStreamWriter os = null;

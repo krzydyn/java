@@ -18,7 +18,7 @@
 
 package sys;
 
-import io.IOChannel;
+import io.IOText;
 
 import java.io.File;
 import java.io.IOException;
@@ -27,7 +27,6 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
 import text.Text;
@@ -56,22 +55,21 @@ public class Env {
 		return p;
 	}
 
-	static public IOChannel startexec(File dir, String ...args) throws IOException {
+	static public IOText startexec(File dir, List<String> args) throws IOException {
 		Process child = new ProcessBuilder(args).directory(dir)
 				.redirectErrorStream(true)
 				.start();
 		OutputStream out = child.getOutputStream();
 		InputStream in = child.getInputStream();
-		return new IOChannel(in, out);
+		return new IOText(in, out);
 	}
 
-	static public String exec(File dir, String ...args) throws IOException {
+	static public String exec(File dir, List<String> args) throws IOException {
 		Log.debug("exec %s", Text.join(" ", args));
 
 		StringBuilder str = new StringBuilder();
 		//Process child = Runtime.getRuntime().exec(cmd_args, null, dir);
-		Process child = new ProcessBuilder(args).directory(dir)
-				.start();
+		Process child = new ProcessBuilder(args).directory(dir).start();
 		//.environment(envp)
 
 		// Get output stream to write from it
@@ -108,14 +106,8 @@ public class Env {
 		return str.toString();
 	}
 
-	final static private String[] stringArray={};
-	static public String exec(File dir, Collection<String> args) throws IOException {
-		return exec(dir,args.toArray(stringArray));
-	}
-
-	static public Process exec(Collection<String> args) throws IOException {
-		Process child = Runtime.getRuntime().exec(args.toArray(stringArray));
-		return child;
+	static public String exec(File dir, String ...args) throws IOException {
+		return exec(dir,new ImmutableArray<String>(args));
 	}
 
 	static boolean checkApp() {
