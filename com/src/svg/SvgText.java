@@ -20,22 +20,31 @@ package svg;
 
 import java.io.PrintStream;
 
-public class SvgText extends SvgObject {
-	private final int x,y;
-	private String txt=null;
-	public SvgText(int x,int y) {
-		this.x=x; this.y=y;
-	}
-	public SvgText setText(String t) {
-		txt=t;
-		if (txt != null)
-			parent.updateSize(x+txt.length()*7, y+5);
-		return this;
-	}
-	@Override
-	public void write(PrintStream os) {
-		if (txt != null)
-			os.printf("<text x=\"%d\" y=\"%d\" %s>%s</text>\n", x, y, props, escapeXmlEntity(txt));
+public class SvgText extends SvgContainer {
+	private int cx,cy;
+	static class SvgRawText extends SvgObject {
+		private String txt=null;
+		SvgRawText(String t) {txt=t;}
+		@Override
+		public void write(PrintStream p) {
+			p.print(SvgObject.escapeXmlEntity(txt));
+		}
 	}
 
+	public SvgText(int x,int y) {
+		super("text");
+		setX(x); setY(y);
+		cx=x;cy=y;
+	}
+	public SvgText addText(String t) {
+		if (t != null && t.length() > 0) {
+			objs.add(new SvgRawText(t));
+			updateSize(cx+t.length()*7, cy+10);
+			cx += t.length()*7;
+		}
+		return this;
+	}
+	public SvgTSpan tspan() {
+		return new SvgTSpan(cx,cy);
+	}
 }

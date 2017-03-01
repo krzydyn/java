@@ -26,15 +26,36 @@ public abstract class SvgObject {
 	protected String props="";
 
 	public static String escapeXmlEntity(String t) {
-		return t.replace("\"", "&quot;")
-				.replace("&", "&amp;")
+		//
+		return t.replace("&", "&amp;")
+				//.replace("\"", "&quot;")
 				.replace("'", "&apos;")
 				.replace("<", "&lt;")
 				.replace(">", "&gt;");
 	}
 
+	public SvgObject setX(int x) {
+		props+= String.format(" x=\"%s\"",x);
+		return this;
+	}
+	public SvgObject setY(int y) {
+		props+= String.format(" y=\"%s\"",y);
+		return this;
+	}
+	public SvgObject setDX(int dx) {
+		props+= String.format(" dx=\"%s\"",dx);
+		return this;
+	}
+	public SvgObject setDY(int dy) {
+		props+= String.format(" dy=\"%s\"",dy);
+		return this;
+	}
 	public SvgObject fill(String c) {
 		props+= String.format(" fill=\"%s\"",c);
+		return this;
+	}
+	public SvgObject style(String c) {
+		props+= String.format(" style=\"%s\"",c);
 		return this;
 	}
 	public SvgObject stroke(String c) {

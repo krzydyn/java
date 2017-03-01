@@ -232,7 +232,7 @@ public class GitGraph {
 				if (cmt.fields!=null && userText) {
 					String t=cmt.fields;
 					//t=String.format("%d %s", nr, cmt.fields);
-					svg.text(X0+cmt.cols*DX, cmt.cp.y+6).setText(t);
+					svg.text(X0+cmt.cols*DX, cmt.cp.y+6).addText(t);
 				}
 			}
 			if (maxw < svg.getWidth()) {

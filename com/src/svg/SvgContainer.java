@@ -30,6 +30,7 @@ public abstract class SvgContainer extends SvgObject {
 	protected SvgContainer(String nm) {
 		name = nm;
 	}
+
 	public int getWidth() { return width; }
 	public int getHeight() { return height; }
 	public void updateSize(int w,int h) {
