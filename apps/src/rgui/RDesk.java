@@ -228,7 +228,7 @@ public class RDesk extends MainPanel {
 
 	@Override
 	protected void windowOpened() {
-		new Thread("PollScreen") {
+		new Thread("PullScreen") {
 			@Override
 			public void run() {
 				while (selector.isRunning()) {
@@ -265,6 +265,10 @@ public class RDesk extends MainPanel {
 	}
 
 	void updateRoi() {
+		if (imgFull == null) {
+			Log.error("updateRoi when ingFull is null");
+			return ;
+		}
 		synchronized (imgLock) {
 			int l=imgq.size();
 			Graphics g = imgFull.getGraphics();
@@ -413,6 +417,8 @@ public class RDesk extends MainPanel {
 		b.flip();
 		chnHandler.write(qchn, b);
 	}
+
+
 
 	public static void main(String[] args) {
 		start(RDesk.class, args);

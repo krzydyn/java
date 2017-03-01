@@ -400,8 +400,6 @@ public class RServer implements ChannelHandler {
 			if (y>0 && (t.getRGB(x,y-1)&0xff)!=0) {t.setRGB(x, y-1, 0);q.add(new Point(x, y-1));}
 			if (y+1<d.height && (t.getRGB(x,y+1)&0xff)!=0) {t.setRGB(x, y+1, 0);q.add(new Point(x, y+1));}
 		}
-		++r.width;
-		++r.height;
 		return r;
 	}
 
