@@ -125,7 +125,9 @@ public class MainPanel extends JPanel{
 	}
 	static private MainPanel create(final Class<? extends MainPanel> mainclass, String[] args) throws Exception {
 		if (args != null) {
-			return mainclass.getConstructor(String[].class).newInstance(new Object[]{args});
+			try {return mainclass.getConstructor(String[].class).newInstance(new Object[]{args});}
+			catch (NoSuchMethodException e) {}
+			return mainclass.newInstance();
 		}
 		else {
 			try {return mainclass.newInstance();}
