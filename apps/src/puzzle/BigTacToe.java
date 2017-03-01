@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import snd.Sound;
+import sys.Log;
 import ui.MainPanel;
 
 /*
@@ -22,7 +23,7 @@ public class BigTacToe extends MainPanel{
 	static final Stroke thinLine=new BasicStroke(0f);
 	static final Stroke normLine=new BasicStroke(2f);
 
-	float scale=1f;
+	float scale=2f;
 	float offsX=0,offsY=0;
 	static class PlayerMove {
 		int x,y;
@@ -36,7 +37,7 @@ public class BigTacToe extends MainPanel{
 		@Override
 		protected void finalize() throws Throwable {
 			super.finalize();
-			System.out.println("finalize PlayMove");
+			Log.debug("finalize PlayMove");
 		}
 	}
 	char startSym = 'X';
@@ -55,8 +56,8 @@ public class BigTacToe extends MainPanel{
 			@Override
 			public void mouseClicked(MouseEvent e) {
 				PlayerMove pm = new PlayerMove();
-				pm.x = (int)(disp2realX(e.getPoint().x)/NETSIZE);
-				pm.y = (int)(disp2realY(e.getPoint().y)/NETSIZE);
+				pm.x = (int)(real2dispX(e.getPoint().x)/NETSIZE);
+				pm.y = (int)(real2dispY(e.getPoint().y)/NETSIZE);
 				if (moves.indexOf(pm)<0) {
 					moves.add(pm);
 					repaint(100);
