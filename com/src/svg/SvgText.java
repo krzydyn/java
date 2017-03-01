@@ -29,7 +29,7 @@ public class SvgText extends SvgObject {
 	public SvgText setText(String t) {
 		txt=t;
 		if (txt != null)
-			parent.updateSize(x+txt.length()*16, y+5);
+			parent.updateSize(x+txt.length()*7, y+5);
 		return this;
 	}
 	@Override

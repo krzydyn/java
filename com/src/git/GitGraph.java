@@ -213,6 +213,8 @@ public class GitGraph {
 		Svg svg = new Svg();
 		svg.strokeWidth(2);
 		nr = 0;
+		int maxw=0;
+		Commit maxcmt=null;
 		for (Commit cmt : commits) {
 			++nr;
 			if (cmt.points.size() > 0) {
@@ -233,7 +235,12 @@ public class GitGraph {
 					svg.text(X0+cmt.cols*DX, cmt.cp.y+6).setText(t);
 				}
 			}
+			if (maxw < svg.getWidth()) {
+				maxw = svg.getWidth();
+				maxcmt = cmt;
+			}
 		}
+		Log.debug("max width=%d, y=%d for obj %s", maxw, maxcmt.cp.y, maxcmt);
 		for (Commit cmt : commits) {
 			if (cmt.cp != null) {
 				if (cmt.flag==1) svg.circle(cmt.cp.x, cmt.cp.y, 6).fill("red");
@@ -263,6 +270,10 @@ public class GitGraph {
 		List<Point> points=new ArrayList<Point>();
 		int cols;
 		String color;
+		@Override
+		public String toString() {
+			return hash+":" + (parentHash==null? "null": parentHash[0]);
+		}
 	}
 	static class Column {
 		Column(String color,Commit c) {
