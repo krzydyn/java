@@ -20,6 +20,7 @@ package text;
 
 import java.io.ByteArrayOutputStream;
 import java.nio.charset.Charset;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -251,7 +252,61 @@ public class Text {
 		}
 		return i;
 	}
-	//Longest Common Substring
+
+
+	public static String lcsub_simple(String s1, String s2) {
+		int z=0;
+		List<String> ret = new ArrayList<String>();
+		for (int i=0; i < s1.length(); ++i) {
+			for (int j=0; j < s2.length(); ++j) {
+				int k;
+				for (k=0; k+i < s1.length() && k+j < s2.length(); ++k) {
+					if (s1.charAt(k+i) != s2.charAt(k+j)) break;
+				}
+				if (k > z) {
+					ret.clear();
+					z=k;
+					ret.add(s1.substring(i, i+z));
+				}
+				else if (k == z) {
+					ret.add(s1.substring(i, i+z));
+				}
+			}
+		}
+		return ret.get(0);
+	}
+
+	//Dynamic programming (suffix array would be more efficient)
+	public static String lcsub(String s1, String s2) {
+		int[] prev = new int[s2.length()];
+		int[] curr = new int[s2.length()];
+		int z=0;
+		List<String> ret = new ArrayList<String>();
+		for (int i=0; i < s1.length(); ++i) {
+			for (int j=0; j < s2.length(); ++j) {
+				if (s1.charAt(i) != s2.charAt(j)) curr[j]=0;
+				else {
+					if (i==0 || j==0) curr[j] = 1;
+					else curr[j] = prev[j-1]+1;
+
+					if (curr[j] > z) {
+						ret.clear();
+						z=curr[j];
+						ret.add(s1.substring(i-z+1, i+1));
+					}
+					else if (curr[j] == z) {
+						ret.add(s1.substring(i-z+1, i+1));
+					}
+				}
+			}
+			int[] t = curr;
+			curr = prev;
+			prev = t;
+		}
+
+		return ret.get(0);
+	}
+
 	public static String diff(String s1, String s2) {
 		if (s1==null) return s2;
 		if (s2==null) return s1;

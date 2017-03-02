@@ -31,6 +31,7 @@ public class T_Text extends UnitTest {
 	}
 	static void diff() {
 		Log.info(Text.diff("ala ma kota", "ala da kota"));
-		Log.info(Text.diff("ala ma kota", "ala kota"));
+		Log.info(Text.lcsub_simple("ala ma kota", "ala kota"));
+		Log.info(Text.lcsub("ala ma kota", "ala kota"));
 	}
 }
