@@ -18,6 +18,7 @@
 
 package unittest;
 
+import sys.Log;
 import sys.UnitTest;
 import text.Text;
 
@@ -27,5 +28,9 @@ public class T_Text extends UnitTest {
 		check("not anagram", !Text.isAnagram("abbc", "cbaa"));
 		check("not anagram", !Text.isAnagram("abcd", "cbaa"));
 		check("not anagram", !Text.isAnagram("abbd", "cbaa"));
+	}
+	static void diff() {
+		Log.info(Text.diff("ala ma kota", "ala da kota"));
+		Log.info(Text.diff("ala ma kota", "ala kota"));
 	}
 }

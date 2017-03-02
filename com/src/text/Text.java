@@ -25,6 +25,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import sys.Log;
+
 public class Text {
 	final public static Charset UTF8_Charset = Charset.forName("UTF-8");
 	final public static String HEX_DIGITS = "0123456789ABCDEF";
@@ -241,4 +243,58 @@ public class Text {
 		}
 		return str.substring(li,li+lm);
 	}
+
+	public static int findDiffIndex(String s1, String s2) {
+		int i;
+		for (i=0; i < s1.length() && i < s2.length(); ++i) {
+			if (s1.charAt(i)!=s2.charAt(i)) return i;
+		}
+		return i;
+	}
+	//Longest Common Substring
+	public static String diff(String s1, String s2) {
+		if (s1==null) return s2;
+		if (s2==null) return s1;
+		int i=findDiffIndex(s1, s2);
+		if (i==s1.length() && i==s2.length()) return "";
+
+		StringBuilder b=new StringBuilder();
+		for (;;) {
+			int i0 = i-50;
+			if (i0 < 0) i0=0;
+			if (i == s1.length()) {
+				if (i < s2.length()) b.append(">>>>"+s2.substring(i));
+				break;
+			}
+			if (i == s2.length()) {
+				if (i < s1.length()) b.append("<<<<"+s1.substring(i));
+				break;
+			}
+
+			int p=i, p1=i,p2=i;
+			Log.debug("diffs at %d   %c != %c", p, s1.charAt(p1), s2.charAt(p2));
+			boolean chg;
+			do {
+				chg=false;
+				char c1=s1.charAt(p1);
+				char c2=s2.charAt(p2);
+				i = s2.indexOf(c1,p2);
+				if ((i==-1 || i-p2>5) && p2+1 < s2.length()) {chg=true; ++p2;}
+				i = s1.indexOf(c2,p1);
+				if ((i==-1 || i-p1>5) && p1+1 < s1.length()) {chg=true; ++p1;}
+			} while (chg);
+			b.append("<<<<"+s1.substring(p,p1));
+			b.append(">>>>"+s2.substring(p,p2));
+			s1=s1.substring(p1+1);
+			s2=s2.substring(p2+1);
+			i=findDiffIndex(s1, s2);
+		}
+		return b.toString();
+	}
 }
+/*
+ >>>>60281
+_NET_WM_ICON_GEOMETRY(CARDINAL) = 1925, 416, 38, 38
+ <<<<55409
+_NET_WM_ICON_GEOMETRY(CARDINAL) = 1925, 416, 38, 38
+*/

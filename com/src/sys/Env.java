@@ -32,6 +32,13 @@ import java.util.List;
 import text.Text;
 
 public class Env {
+	static public final String country() { return System.getProperty("user.country"); }
+	static public final String language() { return System.getProperty("user.language"); }
+	static public final String launcher() { return System.getProperty("sun.java.launcher"); }
+	static public final String osName() { return System.getProperty("os.name"); }
+	static public final String osArch() { return System.getProperty("os.arch"); }
+	static public final String osVersion() { return System.getProperty("os.version"); }
+
 	static public final String expandEnv(String p) {
 		if (p.startsWith("~/") || p.equals("~")) {
 			p=System.getProperty("user.home")+p.substring(1);
@@ -65,14 +72,11 @@ public class Env {
 	}
 
 	static public String exec(File dir, List<String> args) throws IOException {
-		Log.debug("exec %s", Text.join(" ", args));
-
-		StringBuilder str = new StringBuilder();
-		//Process child = Runtime.getRuntime().exec(cmd_args, null, dir);
-		Process child = new ProcessBuilder(args).directory(dir).start();
+		ProcessBuilder pb = new ProcessBuilder(args);
+		if (dir!=null) pb.directory(dir);
 		//.environment(envp)
+		Process child = pb.start();
 
-		// Get output stream to write from it
 		OutputStream out = child.getOutputStream();
 		InputStream in = child.getInputStream();
 		InputStream err = child.getErrorStream();
@@ -81,12 +85,14 @@ public class Env {
 		char[] buf = new char[1024];
 		int r;
 
+		StringBuilder str = new StringBuilder();
 		while ((r=isr.read(buf)) >= 0) {
 			str.append(buf, 0, r);
 		}
 
 		try {
 			int ec = child.waitFor();
+			Log.debug("exec %s exitcode=%d", Text.join(" ", args), ec);
 			if (ec != 0) {
 				str.setLength(0);
 				isr = new InputStreamReader(err, Text.UTF8_Charset);
@@ -96,6 +102,7 @@ public class Env {
 				throw new IOException("Exit("+ec+") "+str.toString());
 			}
 		} catch (InterruptedException e) {
+			Log.debug("exec %s interrupted", Text.join(" ", args));
 			return null;
 		} finally {
 			out.close();
@@ -110,7 +117,12 @@ public class Env {
 		return exec(dir,new ImmutableArray<String>(args));
 	}
 
-	static boolean checkApp() {
+	static public String exec(String ...args) throws IOException {
+		return exec(null,new ImmutableArray<String>(args));
+	}
+
+
+	static boolean isAppJar() {
 		try {
 			URL u=Env.class.getProtectionDomain().getCodeSource().getLocation();
 			if (u.getFile().endsWith(".jar")) {

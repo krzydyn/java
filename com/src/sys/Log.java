@@ -35,7 +35,7 @@ public class Log {
 	private static SimpleDateFormat tmfmt = tmfmt_tst;
 	private static PrintStream prs = System.err;
 	static {
-		if (Env.checkApp())
+		if (Env.isAppJar())
 			tmfmt = tmfmt_rel;
 		else
 			tmfmt = tmfmt_tst;
