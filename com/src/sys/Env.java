@@ -114,11 +114,11 @@ public class Env {
 	}
 
 	static public String exec(File dir, String ...args) throws IOException {
-		return exec(dir,new ImmutableArray<String>(args));
+		return exec(dir,new ArrayObj<String>(args));
 	}
 
 	static public String exec(String ...args) throws IOException {
-		return exec(null,new ImmutableArray<String>(args));
+		return exec(null,new ArrayObj<String>(args));
 	}
 
 

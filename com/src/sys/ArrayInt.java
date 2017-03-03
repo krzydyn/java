@@ -15,16 +15,18 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License
  */
-package algebra;
+package sys;
 
 import java.util.AbstractList;
 import java.util.List;
 
-public class IntArrayList extends AbstractList<Integer> {
+public class ArrayInt extends AbstractList<Integer> {
 	private final int[] data;
-	IntArrayList(int... data) {
+	public ArrayInt(int... data) {
 		this.data=data;
+		super.toArray();
 	}
+
 	@Override
 	public Integer get(int index) {
 		return data[index];

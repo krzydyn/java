@@ -20,6 +20,7 @@ package algebra;
 import java.util.ArrayList;
 import java.util.List;
 
+import sys.ArrayInt;
 import sys.Log;
 
 public class HeapTree<T extends Comparable<T>> {
@@ -33,7 +34,7 @@ public class HeapTree<T extends Comparable<T>> {
 	}
 	@SuppressWarnings("unchecked")
 	private HeapTree(int[] a) {
-		heap = (List<T>) new IntArrayList(a);
+		heap = (List<T>) new ArrayInt(a);
 	}
 	public HeapTree() {
 		this(0);

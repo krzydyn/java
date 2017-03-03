@@ -3,10 +3,9 @@ package sys;
 import java.util.AbstractList;
 import java.util.Collection;
 
-public class ImmutableArray<E> extends AbstractList<E> {
-
+public class ArrayObj<E> extends AbstractList<E> {
 	private final Object[] elems;
-	public ImmutableArray(E[] e) {this.elems = e; }
+	public ArrayObj(E[] e) {this.elems = e; }
 
 	@Override
 	public int size() {
@@ -16,26 +15,6 @@ public class ImmutableArray<E> extends AbstractList<E> {
 	@Override
 	public Object[] toArray() {
 		return elems;
-	}
-
-	@Override
-	public boolean add(E e) {
-		return false;
-	}
-
-	@Override
-	public boolean remove(Object o) {
-		return false;
-	}
-
-	@Override
-	public boolean addAll(Collection<? extends E> c) {
-		return false;
-	}
-
-	@Override
-	public boolean addAll(int index, Collection<? extends E> c) {
-		return false;
 	}
 
 	@Override
@@ -49,11 +28,22 @@ public class ImmutableArray<E> extends AbstractList<E> {
 	}
 
 	@Override
-	public void clear() {}
+	public void clear() {
+		for (int i=0; i < elems.length; ++i)
+			elems[i]=null;
+	}
 
 	@SuppressWarnings("unchecked")
 	@Override
 	public E get(int index) {
 		return (E)elems[index];
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public E set(int index, E element) {
+		E r = (E)elems[index];
+		elems[index] = element;
+		return r;
 	}
 }
