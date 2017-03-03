@@ -44,4 +44,8 @@
 		</exec>
 	</target>
 
+	<target name="clean">
+		<delete dir="${build}"/>
+	</target>
+
 </project>

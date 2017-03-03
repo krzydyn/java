@@ -62,13 +62,11 @@
 		/>
 		<jar destfile="rserver.jar" basedir="${build}">
 			<fileset dir="${comdir}/${build}">
-				<include name="sys/Env*"/>
-				<include name="sys/Log*"/>
-				<include name="sys/XThread*"/>
-				<include name="sys/Color*"/>
+				<include name="sys/*"/>
 				<include name="net/**"/>
 				<include name="text/Text*"/>
 				<include name="text/Ansi*"/>
+				<exclude name="sys/UnitTest*"/>
 			</fileset>
 			<fileset dir=".">
 				<include name="rgui/RServer*"/>
@@ -78,6 +76,15 @@
 			<attribute name="Main-Class" value="rgui.RServer"/>
 			</manifest>
 		</jar>
+	</target>
+	<target name="rserver-rebuild">
+		<ant antfile="build.xml" target="clean" />
+		<ant antfile="build.xml" target="rserver" />
+	</target>
+
+	<target name="clean">
+		<ant dir="${comdir}" antfile="build.xml" target="clean" />
+		<delete dir="${build}"/>
 	</target>
 
 </project>

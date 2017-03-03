@@ -253,16 +253,18 @@ public class Text {
 		return i;
 	}
 
-
-	public static String lcsub_simple(String s1, String s2) {
+	//Simple alg O(n^2*m)
+	public static List<String> lcsub_simple(String s1, String s2) {
+		int n=s1.length(), m=s2.length();
 		int z=0;
 		List<String> ret = new ArrayList<String>();
-		for (int i=0; i < s1.length(); ++i) {
-			for (int j=0; j < s2.length(); ++j) {
+		for (int i=0; i < n; ++i) {
+			for (int j=0; j < m; ++j) {
 				int k;
-				for (k=0; k+i < s1.length() && k+j < s2.length(); ++k) {
+				for (k=0; k+i < n && k+j < m; ++k) {
 					if (s1.charAt(k+i) != s2.charAt(k+j)) break;
 				}
+				if (k==0) continue;
 				if (k > z) {
 					ret.clear();
 					z=k;
@@ -273,22 +275,23 @@ public class Text {
 				}
 			}
 		}
-		return ret.get(0);
+		return ret;
 	}
 
-	//Dynamic programming (suffix array would be more efficient)
-	public static String lcsub(String s1, String s2) {
-		int[] prev = new int[s2.length()];
-		int[] curr = new int[s2.length()];
+	//Dynamic programming O(n*m) (suffix array would be more efficient)
+	public static List<String> lcsub(String s1, String s2) {
+		int n=s1.length(), m=s2.length();
+		int[] prev = new int[m];
+		int[] curr = new int[m];
 		int z=0;
 		List<String> ret = new ArrayList<String>();
-		for (int i=0; i < s1.length(); ++i) {
-			for (int j=0; j < s2.length(); ++j) {
+		for (int i=0; i < n; ++i) {
+			for (int j=0; j < m; ++j) {
 				if (s1.charAt(i) != s2.charAt(j)) curr[j]=0;
 				else {
 					if (i==0 || j==0) curr[j] = 1;
 					else curr[j] = prev[j-1]+1;
-
+					if (curr[j]==0) continue;
 					if (curr[j] > z) {
 						ret.clear();
 						z=curr[j];
@@ -304,7 +307,7 @@ public class Text {
 			prev = t;
 		}
 
-		return ret.get(0);
+		return ret;
 	}
 
 	public static String diff(String s1, String s2) {
