@@ -18,7 +18,7 @@
 package algebra;
 
 public class Maths {
-	public static float pow(final float a, final float b) {
+	public static float power_approx(final float a, final float b) {
 		final int x = Float.floatToIntBits(a) >> 32;
 		final int y = (int)(b * (x - 1072632447) + 1072632447);
 		return Float.intBitsToFloat(y << 32);
@@ -37,7 +37,13 @@ public class Maths {
 		}
 		return r;
 	}
-
+	static public int minimum(int... a) {
+		int mi = a[0];
+		for (int i=1; i < a.length; ++i) {
+			if (mi > a[i]) mi=a[i];
+		}
+		return mi;
+	}
 	static public int blackjackPoints(CharSequence s) {
 		int sum = 0;
 		int aces = 0;
