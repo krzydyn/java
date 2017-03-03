@@ -13,6 +13,34 @@ public class ActivityMon {
 		void run() throws Exception;
 	}
 	static class LinuxMon implements ActivityMonitor {
+/*
+LOG=$HOME/Documents/activity.log
+PAID=""
+while true; do
+    sleep 2
+    WID=`xprop -root _NET_ACTIVE_WINDOW | cut -d ' ' -f 5`
+    AID=`xprop -id $WID WM_CLASS WM_NAME `
+    if [ -z "$PAID" ]; then
+        PAID=$AID
+    fi
+    if [ "$PAID" != "$AID" ]; then
+        echo "$PAID" > /tmp/paid.txt
+        echo "$AID" > /tmp/aid.txt
+        PAID=$AID
+    else
+        continue;
+    fi
+
+    echo -n `date '+%Y%m%d%H%M%S'`": " >> $LOG
+    if grep "not found" /tmp/aid.txt &> /dev/null ; then
+        echo "Locked($WID)" >> $LOG
+    else
+        APP=`grep 'WM_CLASS' /tmp/aid.txt|sed 's/[^=]* = //'`
+        TAB=`grep 'WM_NAME' /tmp/aid.txt|sed 's/[^=]* = //'`
+        echo "Unlocked($WID)|$APP|$TAB" >> $LOG
+    fi
+done
+*/
 		String prev;
 		@Override
 		public void run() throws Exception {
