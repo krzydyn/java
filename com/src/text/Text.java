@@ -26,6 +26,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import algebra.Maths;
 import sys.Log;
 
 public class Text {
@@ -281,6 +282,10 @@ public class Text {
 	//Dynamic programming O(n*m) (suffix array would be more efficient)
 	public static List<String> lcsub(String s1, String s2) {
 		int n=s1.length(), m=s2.length();
+		if (m > n) {
+			String t=s1; s1=s2; s2=t;
+			n=s1.length(); m=s2.length();
+		}
 		int[] prev = new int[m];
 		int[] curr = new int[m];
 		int z=0;
@@ -348,6 +353,36 @@ public class Text {
 			i=findDiffIndex(s1, s2);
 		}
 		return b.toString();
+	}
+
+
+	public static int levenshteinDistance(String s1, String s2) {
+		int l1=s1.length(), l2=s2.length();
+		if (l2 > l1) {
+			String t=s1; s1=s2; s2=t;
+			l1=s1.length(); l2=s2.length();
+		}
+		if (l2 == 0) return l1;
+
+		int[] prev = new int[l2+1];
+		int[] curr = new int[l2+1];
+		for (int i=0; i <= l2; ++i) prev[i]=i;
+
+		for (int i=0; i < l1; ++i) {
+			curr[0]=i+1;
+			for (int j=0; j < l2; ++j) {
+				int c = s1.charAt(i)==s2.charAt(j) ? 0 : 1;
+				curr[j+1] = Maths.minimum(
+						curr[j]+1,     // cost delete
+						prev[j+1]+1,   // cost insert
+						prev[j] + c    // cost replace
+				);
+			}
+			int[] t = curr;
+			curr = prev;
+			prev = t;
+		}
+		return prev[l2];
 	}
 }
 /*

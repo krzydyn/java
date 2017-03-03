@@ -33,9 +33,12 @@ public class T_Text extends UnitTest {
 		Log.info(Text.diff("ala ma kota", "ala da kota"));
 		Log.info(Text.join(",", Text.lcsub_simple("ala ma kota", "ala kota")));
 		Log.info(Text.join(",", Text.lcsub("ala ma kota", "ala kota")));
-		Log.info(Text.join(",", Text.lcsub_simple("WEWOUCUIDGCGTRMEZEPXZFEJWISRSBBSYXAYDFEJJDLEBVHHKS",
-				"FDAGCXGKCTKWNECHMRXZWMLRYUCOCZHJRRJBOAJOQJZZVUYXIC")));
-		Log.info(Text.join(",", Text.lcsub("WEWOUCUIDGCGTRMEZEPXZFEJWISRSBBSYXAYDFEJJDLEBVHHKS",
-				"FDAGCXGKCTKWNECHMRXZWMLRYUCOCZHJRRJBOAJOQJZZVUYXIC")));
+		Log.info(Text.join(",", Text.lcsub_simple("ABCDEG","BCDGK")));
+		Log.info(Text.join(",", Text.lcsub("ABCDEG","BCDGK")));
+	}
+	static void lev() {
+		check("levenst",Text.levenshteinDistance("",""),0);
+		check("levenst",Text.levenshteinDistance("","a"),1);
+		check("levenst",Text.levenshteinDistance("frog","fog"),1);
 	}
 }
