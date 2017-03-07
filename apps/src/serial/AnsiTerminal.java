@@ -103,6 +103,7 @@ public class AnsiTerminal extends JPanel implements FocusListener,KeyListener {
 	private Point cpos = new Point(0, 0);
 	private int rCurPos=0;
 	private boolean escSeq = false;
+	private boolean sendingTilde = false;
 
 	//to get focus component must satisfy: 1.visible, 2.enabled, 3. focusable
 	public AnsiTerminal(String t) {
@@ -122,7 +123,6 @@ public class AnsiTerminal extends JPanel implements FocusListener,KeyListener {
 		editor.addFocusListener(this);
 		editor.addKeyListener(this);
 		Document doc = editor.getDocument();
-		Log.error("doc is %s",doc.getClass());
 		if (doc instanceof PlainDocument)
 			doc.putProperty(PlainDocument.tabSizeAttribute, 8);
 		else if (doc instanceof StyledDocument) {
@@ -135,7 +135,14 @@ public class AnsiTerminal extends JPanel implements FocusListener,KeyListener {
 					new TabStop(4*ts,TabStop.ALIGN_LEFT,TabStop.LEAD_EQUALS),
 					new TabStop(5*ts,TabStop.ALIGN_LEFT,TabStop.LEAD_EQUALS),
 			});
-			AttributeSet paraSet = sc.addAttribute(SimpleAttributeSet.EMPTY, StyleConstants.TabSet, tabs);
+			//AttributeSet paraSet = sc.addAttribute(SimpleAttributeSet.EMPTY, StyleConstants.TabSet, tabs);
+			AttributeSet paraSet = sc.addAttribute(SimpleAttributeSet.EMPTY, StyleConstants.TabSet, new TabSet(null) {
+				@Override
+				public TabStop getTabAfter(float location) {
+					int p =((int)Math.floor(location/56) + 1)*56;
+					return new TabStop(p);
+				}
+			});
 			((DefaultStyledDocument)doc).setParagraphAttributes(0,Integer.MAX_VALUE,paraSet, false);
 			//((JTextPane)editor).setParagraphAttributes(paraSet, false);
 		}
@@ -157,7 +164,10 @@ public class AnsiTerminal extends JPanel implements FocusListener,KeyListener {
 		b.setFocusable(false);
 		b.addActionListener(new ActionListener() {
 			@Override
-			public void actionPerformed(ActionEvent e) {sendLoop("~", 10000, 150);}
+			public void actionPerformed(ActionEvent e) {
+				if (sendingTilde) sendingTilde=false;
+				else sendLoop("~", 10000, 150);
+			}
 		});
 		p.add(b);
 		b=new JButton("C");
@@ -221,11 +231,18 @@ public class AnsiTerminal extends JPanel implements FocusListener,KeyListener {
 		new Thread() {
 			@Override
 			public void run() {
-				Log.debug("send %s", t);
-				long stop = System.currentTimeMillis()+tm;
-				while (stop > System.currentTimeMillis()) {
-					inputBuffer.append(t);
-					XThread.sleep(step);
+				sendingTilde=true;
+				try {
+					Log.debug("send %s", t);
+					long stop = System.currentTimeMillis()+tm;
+					while (sendingTilde && stop > System.currentTimeMillis()) {
+						inputBuffer.append(t);
+						XThread.sleep(step);
+					}
+				}
+				catch (Throwable e) {Log.error(e);}
+				finally {
+					sendingTilde=false;
 				}
 			}
 		}.start();

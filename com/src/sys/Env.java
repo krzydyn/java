@@ -63,9 +63,11 @@ public class Env {
 	}
 
 	static public IOText startexec(File dir, List<String> args) throws IOException {
-		Process child = new ProcessBuilder(args).directory(dir)
-				.redirectErrorStream(true)
-				.start();
+		ProcessBuilder pb = new ProcessBuilder(args);
+		pb.redirectErrorStream(true);
+		if (dir!=null) pb.directory(dir);
+		//.environment(envp)
+		Process child = pb.start();
 		OutputStream out = child.getOutputStream();
 		InputStream in = child.getInputStream();
 		return new IOText(in, out);

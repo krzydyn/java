@@ -19,6 +19,7 @@
 package io;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -100,7 +101,8 @@ public class Serial {
 
 	public int read(byte[] b, int off, int len) throws IOException {
 		try {
-			return commPort.getInputStream().read(b, off, len);
+			InputStream sin = commPort.getInputStream();
+			return sin.read(b, off, len);
 		}catch (IOException e) {
 			throw e;
 		}catch (Throwable e) {

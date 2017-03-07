@@ -21,6 +21,7 @@ package serial;
 import io.Serial;
 
 import java.awt.BorderLayout;
+import java.awt.Dimension;
 import java.awt.GridLayout;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -43,17 +44,36 @@ public class SerialMain extends MainPanel {
 	public SerialMain() {this(null);}
 	public SerialMain(String[] args) {
 		setName("MultiConsole");
+		setPreferredSize(new Dimension(800,600));
 
 		if (args != null) {
-			for (String n : args)
-				ports.add(new Serial(n));
+			List<String> portn = Serial.listPorts();
+			for (String n : args) {
+				if (n.length() == 0) continue;
+				if (n.startsWith("-")) {
+					continue;
+				}
+
+				if (n.startsWith("/")) ;
+				else if (n.startsWith("tty")) n = "/dev/"+n;
+				else n = "/dev/tty"+n;
+				Log.debug("dev = '%s'",n);
+				if (n.endsWith("*")) {
+					n = n.substring(0, n.length()-1);
+					for (String pn : portn) {
+						if (pn.startsWith(n))
+							ports.add(new Serial(pn));
+					}
+				}
+				else {
+					ports.add(new Serial(n));
+				}
+			}
 		}
 		if (ports.isEmpty()) {
 			for (String f : Serial.listPorts()) {
 				ports.add(new Serial(f));
 			}
-			//ports.add(new Serial("/dev/ttyUSB1"));
-			//ports.add(new Serial("/dev/ttyUSB2"));
 		}
 		JPanel p = null;
 		if (ports.size()==1) {

@@ -166,8 +166,8 @@ public class MainPanel extends JPanel{
 					Dimension d=main.getPreferredSize();
 					if (d.width==0 || d.height==0) {
 						d.width=800; d.height=600;
-						f.setPreferredSize(d);
 					}
+					f.setPreferredSize(d);
 					f.pack();
 					d=main.getMinimumSize();
 					if (d.width!=0 && d.height!=0) {
