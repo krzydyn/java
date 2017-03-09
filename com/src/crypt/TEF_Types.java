@@ -87,9 +87,10 @@ public interface TEF_Types {
 			for (tef_algorithm_param_e p : tef_algorithm_param_e.values()) {
 				Object v = map.get(p);
 				if (v==null) continue;
-				b.append("\n	"+p.getName()+"=");
+				b.append(" "+p.getName()+"=");
 				if (v instanceof byte[]) b.append(Text.hex((byte[])v));
 				else b.append(v.toString());
+				b.append(";");
 			}
 			return b.toString();
 		}

@@ -69,7 +69,7 @@ package crypt;
  * 		P[i] = C[i] XOR decrypt(K,CTR[i])
  *
  * <li>GCM (Galois Counter Mode) https://en.wikipedia.org/wiki/Galois/Counter_Mode<br>
- * 		CTR[i] = CTR[i-1]+1, CTR[0]=0<br>
+ * 		CTR[i] = CTR[i-1]+1, CTR[0]= IV if len(IV)=12, otherwise CTR[0]=GHASH(H,{},IV)<br>
  * 		C[i] = P[i] XOR encrypt(K,CTR[i])<br>
  * 		P[i] = C[i] XOR encrypt(K,CTR[i])<br>
  * 		H[i] = C[i] XOR H[i-1], H[0]=AuthData1  (AAD)<br>

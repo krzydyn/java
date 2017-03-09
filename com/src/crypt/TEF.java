@@ -84,6 +84,7 @@ public class TEF implements TEF_Types {
 			iv = (byte[])algorithm.map.get(tef_algorithm_param_e.TEF_IV);
 		}
 		else if (algorithm.chaining != tef_chaining_mode_e.TEF_ECB) {
+			Log.warn("setting IV=ZERO");
 			iv = ZERO_IV;
 		}
 		AlgorithmParameterSpec pspec = null;
@@ -92,11 +93,7 @@ public class TEF implements TEF_Types {
 			pspec = new GCMParameterSpec(taglen, iv);
 		}
 		else if (iv != null){
-			if ("DES".equals(keyid.key.getAlgorithm()))
-				pspec = new IvParameterSpec(iv,0,8);
-			else {
-				pspec = new IvParameterSpec(iv);
-			}
+			pspec = new IvParameterSpec(iv, 0, cipher.getBlockSize());
 		}
 		if (pspec!=null) {
 			//AlgorithmParameters param = null;
