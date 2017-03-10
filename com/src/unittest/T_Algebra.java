@@ -27,6 +27,7 @@ import algebra.Combinations;
 import algebra.Expression;
 import algebra.HeapTree;
 import algebra.Maths;
+import algebra.MatrixI;
 import algebra.Permutate;
 import algebra.Sorting;
 import sys.Log;
@@ -35,6 +36,18 @@ import text.Text;
 
 public class T_Algebra extends UnitTest {
 	static final int sortN = 100000;
+	static void marix() {
+		MatrixI m1 = new MatrixI(3, 2, new int[]{1,0,2, -1,3,1});
+		MatrixI m2 = new MatrixI(2, 3, new int[]{3,1, 2,1, 1,0});
+		System.out.print(m1.toString());
+		System.out.println("---------------------");
+		System.out.print(m2.toString());
+		System.out.println("---------------------");
+		MatrixI r = m1.mul(m2);
+		System.out.println(r.toString());
+		r = m2.mul(m1);
+		System.out.println(r.toString());
+	}
 	static void permutation() {
 		List<Integer> l = new ArrayList<Integer>();
 		l.add(2);

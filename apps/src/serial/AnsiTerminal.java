@@ -476,7 +476,7 @@ public class AnsiTerminal extends JPanel implements FocusListener,KeyListener {
 		else done=false;
 
 		if (!done) Log.warn("%s: seq %s is not handled", getName(), Text.vis(seq));
-		else Log.notice("%s: seq %s [OK]", getName(), Text.vis(seq));
+		//else Log.notice("%s: seq %s [OK]", getName(), Text.vis(seq));
 	}
 
 	public void append(char c) {

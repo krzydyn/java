@@ -6,7 +6,7 @@ import java.security.NoSuchAlgorithmException;
 import javax.crypto.spec.IvParameterSpec;
 
 public class GenSecosCrypt {
-	static class Text {
+	static class TextPrn {
 		public static StringBuilder hex(StringBuilder b, byte[] s, int off, int len) {
 			b.ensureCapacity(b.length()+2*len);
 			for (int i=0; i<len; ++i) {
@@ -165,8 +165,8 @@ public class GenSecosCrypt {
 					l+=cipher.doFinal(pad, 0, pl, out, l);
 				}
 
-				Log.prn("bs=%d, %s", cipher.getBlockSize(), Text.hex(out,0,l));
-				Log.prn(" = %d, \"%s\"\n", l, Text.hexstr(out,l-8,8));
+				Log.prn("bs=%d, %s", cipher.getBlockSize(), TextPrn.hex(out,0,l));
+				Log.prn(" = %d, \"%s\"\n", l, TextPrn.hexstr(out,l-8,8));
 
 				/*if (t.algo.equals("AES/ECB/ISO9797_1Padding")) {
 					if (t.algo.indexOf("ECB")>=0)

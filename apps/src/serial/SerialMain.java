@@ -196,6 +196,7 @@ public class SerialMain extends MainPanel {
 	}
 
 	public static void main(String[] args) {
+		Log.setReleaseMode();
 		start(SerialMain.class, args);
 	}
 }
