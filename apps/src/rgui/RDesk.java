@@ -139,6 +139,7 @@ public class RDesk extends MainPanel {
 		qchn = (QueueChannel)selector.connect(Host, 3367, chnHandler).attachment();
 
 		setPreferredSize(new Dimension(1600,800));
+		setFocusTraversalKeysEnabled(false);
 
 		addKeyListener(new KeyAdapter() {
 			@Override
@@ -148,6 +149,7 @@ public class RDesk extends MainPanel {
 			}
 			@Override
 			public void keyPressed(KeyEvent e) {
+				//Log.info("keyPressed: %d",e.getKeyCode());
 				sendKeyPressed(e.getKeyCode());
 			}
 			@Override

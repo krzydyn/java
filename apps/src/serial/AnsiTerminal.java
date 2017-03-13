@@ -21,7 +21,6 @@ package serial;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Font;
-import java.awt.KeyboardFocusManager;
 import java.awt.Point;
 import java.awt.Toolkit;
 import java.awt.datatransfer.Clipboard;
@@ -35,9 +34,6 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.util.HashSet;
-import java.util.Set;
-
 import javax.swing.Action;
 import javax.swing.ActionMap;
 import javax.swing.BorderFactory;
@@ -47,7 +43,6 @@ import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextPane;
-import javax.swing.KeyStroke;
 import javax.swing.border.Border;
 import javax.swing.text.AttributeSet;
 import javax.swing.text.BadLocationException;
@@ -126,20 +121,22 @@ public class AnsiTerminal extends JPanel implements FocusListener,KeyListener {
 		if (doc instanceof PlainDocument)
 			doc.putProperty(PlainDocument.tabSizeAttribute, 8);
 		else if (doc instanceof StyledDocument) {
-			int ts=56; // one char is 7pixel width
 			StyleContext sc = StyleContext.getDefaultStyleContext();
+			/*int ts=56; // one char is 7pixel width
 			TabSet tabs = new TabSet(new TabStop[] {
 					new TabStop(1*ts,TabStop.ALIGN_LEFT,TabStop.LEAD_EQUALS),
 					new TabStop(2*ts,TabStop.ALIGN_LEFT,TabStop.LEAD_EQUALS),
 					new TabStop(3*ts,TabStop.ALIGN_LEFT,TabStop.LEAD_EQUALS),
 					new TabStop(4*ts,TabStop.ALIGN_LEFT,TabStop.LEAD_EQUALS),
 					new TabStop(5*ts,TabStop.ALIGN_LEFT,TabStop.LEAD_EQUALS),
-			});
+			});*/
 			//AttributeSet paraSet = sc.addAttribute(SimpleAttributeSet.EMPTY, StyleConstants.TabSet, tabs);
 			AttributeSet paraSet = sc.addAttribute(SimpleAttributeSet.EMPTY, StyleConstants.TabSet, new TabSet(null) {
+				private static final long serialVersionUID = 1L;
+				private static final int TAB_PIXELS=56;
 				@Override
 				public TabStop getTabAfter(float location) {
-					int p =((int)Math.floor(location/56) + 1)*56;
+					int p =((int)Math.floor(location/TAB_PIXELS) + 1)*TAB_PIXELS;
 					return new TabStop(p);
 				}
 			});
@@ -147,10 +144,11 @@ public class AnsiTerminal extends JPanel implements FocusListener,KeyListener {
 			//((JTextPane)editor).setParagraphAttributes(paraSet, false);
 		}
 
-		//don't traversal
-		Set<KeyStroke> emptyset = new HashSet<KeyStroke>();
-		editor.setFocusTraversalKeys(KeyboardFocusManager.FORWARD_TRAVERSAL_KEYS,emptyset);
-		editor.setFocusTraversalKeys(KeyboardFocusManager.BACKWARD_TRAVERSAL_KEYS,emptyset);
+		//disable traversal key bindings
+		//Set<KeyStroke> emptyset = new HashSet<KeyStroke>();
+		//editor.setFocusTraversalKeys(KeyboardFocusManager.FORWARD_TRAVERSAL_KEYS,emptyset);
+		//editor.setFocusTraversalKeys(KeyboardFocusManager.BACKWARD_TRAVERSAL_KEYS,emptyset);
+		editor.setFocusTraversalKeysEnabled(false);
 
 		disableActions("caret-down", "caret-up", "caret-backward", "caret-forward");
 
@@ -166,7 +164,7 @@ public class AnsiTerminal extends JPanel implements FocusListener,KeyListener {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				if (sendingTilde) sendingTilde=false;
-				else sendLoop("~", 10000, 150);
+				else sendLoop("~", 150);
 			}
 		});
 		p.add(b);
@@ -227,15 +225,14 @@ public class AnsiTerminal extends JPanel implements FocusListener,KeyListener {
 		}
 	}
 
-	private void sendLoop(final String t, final long tm, final long step) {
+	private void sendLoop(final String t, final long step) {
 		new Thread() {
 			@Override
 			public void run() {
 				sendingTilde=true;
 				try {
 					Log.debug("send %s", t);
-					long stop = System.currentTimeMillis()+tm;
-					while (sendingTilde && stop > System.currentTimeMillis()) {
+					while (sendingTilde) {
 						inputBuffer.append(t);
 						XThread.sleep(step);
 					}
