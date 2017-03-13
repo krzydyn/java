@@ -23,7 +23,7 @@ import sys.UnitTest;
 public class RunTests {
 
 	public static void main(String[] args) {
-		if (args.length == 0) {
+		if (args.length == 0 || args[0].startsWith("-")) {
 			UnitTest.testAll("unittest.");
 		}
 		else {

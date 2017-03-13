@@ -120,7 +120,7 @@ public class UnitTest {
 					continue;
 				}
 				if ("main".equals(m.getName()) || m.getName().contains("$")) continue;
-				if (m.getName().startsWith("no_")) continue;
+				if (m.getName().startsWith("no_") || m.getName().startsWith("_")) continue;
 				if (!(unit + "." + m.getName()).startsWith(prefix)) continue;
 
 				try {
@@ -173,11 +173,12 @@ public class UnitTest {
 
 	static public void test(String prefix, Iterable<String> units) {
 		for (String u : units) test(prefix,u);
-		Log.info("* *********** ");
-		Log.info("* Tests: %d", summary.size());
+		Log.notice("* ===================================== *");
+		Log.notice("           Tests summary: %d", summary.size());
+		Log.notice("* ===================================== *");
 		for (TestSummary s : summary) {
 			if (s.errors!=0) Log.error(-1, "%s.%s:  %d / %d    %.3f",s.testunit,s.testcase,s.checks-s.errors,s.checks,s.elapsed/1000.0);
-			else Log.info("%s.%s:  %d / %d    %.3f",s.testunit,s.testcase,s.checks-s.errors,s.checks,s.elapsed/1000.0);
+			else Log.notice("%s.%s:  %d / %d    %.3f",s.testunit,s.testcase,s.checks-s.errors,s.checks,s.elapsed/1000.0);
 		}
 	}
 	static public void test(String prefix, String[] units) {

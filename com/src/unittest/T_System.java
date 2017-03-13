@@ -28,17 +28,7 @@ import text.Ansi;
 public class T_System extends UnitTest {
 
 	public static void sound() throws Exception {
-		Sound.Note notes[] = {
-				Sound.Note.C4,Sound.Note.C4h,Sound.Note.D4,Sound.Note.D4h,Sound.Note.E4,
-				Sound.Note.F4,Sound.Note.F4h,Sound.Note.G4,Sound.Note.G4h,};
-		long t,tm=700;
-
-		for (int i=0; i < notes.length; ++i) {
-			t=System.currentTimeMillis();
-			Sound.play(notes[i], tm);
-			t=System.currentTimeMillis()-t;
-			check(String.format("time=%d < %dms",t,tm),t>tm);
-		}
+		Sound.dong();
 	}
 
 	public static void listPackages() throws Exception {

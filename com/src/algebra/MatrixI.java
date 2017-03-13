@@ -17,6 +17,8 @@
  */
 package algebra;
 
+import java.awt.Dimension;
+
 public class MatrixI {
 	private final int w,h;
 	private final int[] v;
@@ -29,6 +31,11 @@ public class MatrixI {
 		this.w=w; this.h=h;
 		this.v = new int[w*h];
 		for (int i=0; i < v.length; ++i) this.v[i]=v[i];
+	}
+	public MatrixI(String t) {
+		Dimension dim=new Dimension();
+		v=loadFrom(t, dim);
+		w=dim.width; h=dim.height;
 	}
 	public int get(int x,int y) {return v[y*w+x];}
 	public int set(int x,int y,int v) {return this.v[y*w+x]=v;}
@@ -43,6 +50,33 @@ public class MatrixI {
 			b.append(" |\n");
 		}
 		return b.toString();
+	}
+
+	static private int[] loadFrom(String s, Dimension dim) {
+		String[] rows=s.split("\\|");
+		dim.height=rows.length;
+		dim.width=0;
+		int[] v=null;
+		for (int y=0; y < rows.length; ++y) {
+			String cols[] = rows[y].split(" ");
+			if (dim.width==0) {
+				dim.width=cols.length;
+				v=new int[dim.width*dim.width];
+			}
+			for (int x=0; x < cols.length; ++x) {
+				v[y*dim.width+x] = Integer.parseInt(cols[x]);
+			}
+		}
+		return v;
+	}
+
+	public boolean equals(MatrixI o) {
+		if (w != o.w || h != o.h) return false;
+		int n=w*h;
+		for(int i = 0 ; i < n ; ++i) {
+			if (v[i]!=o.v[i]) return false;
+		}
+		return true;
 	}
 
 	public MatrixI zero() {
@@ -79,9 +113,9 @@ public class MatrixI {
 			mul(this);
 			n>>>=1;
 		}
-
 		return this;
 	}
+
 
 	public MatrixI mul(MatrixI m, int mod) {
 		int n=w*h;

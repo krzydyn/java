@@ -20,8 +20,6 @@ package algebra;
 import java.awt.Point;
 import java.awt.geom.Point2D;
 
-import sys.Log;
-
 public class Lines {
 	public static double EPS = 10e-10;
 	public enum IntersectionType {
@@ -84,7 +82,7 @@ public class Lines {
 
 		double ua = ((double)a)/d;
 		double ub = ((double)b)/d;
-		Log.debug("ua = %.3f,  ub = %.3f", ua, ub);
+		//Log.debug("ua = %.3f,  ub = %.3f", ua, ub);
 
 		if (r!=null) {
 			r.setLocation(p1.x + ua*(p2.x - p1.x),p1.y + ua*(p2.y - p1.y));

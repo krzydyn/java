@@ -17,23 +17,39 @@
  */
 package algebra;
 
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
+import sys.ArrayInt;
+
 public class Sorting {
-	public static int opCnt=0;
+	public static int opCnt=0; //number of comparison operations
+	public static int rdCnt=0; //number of data read operations
+	public static int wrCnt=0; //number of data write operations
+
+	private static final void swap(int[] a, int i, int j) {
+		int t=a[i]; a[i]=a[j]; a[j]=t;
+		rdCnt+=2;
+		wrCnt+=2;
+	}
+	private static final void swap(List<?> a, int i, int j) {
+        @SuppressWarnings("unchecked")
+		final List<Object> l = (List<Object>)a;
+		Object t=a.get(i); l.set(i, l.get(j)); l.set(j, t);
+		rdCnt+=2;
+		wrCnt+=2;
+	}
 	private static void quickSort(int[] a, int l,int r) {
 		int e = a[(l+r)/2]; //pivot element
+		++rdCnt;
 		int i=l,j=r;
 		do {
-			while (a[i] < e) ++i;
-			while (e < a[j]) --j;
+			while (a[i] < e) {++i;++opCnt;++rdCnt;}
+			++opCnt;++rdCnt;
+			while (e < a[j]) {--j;++opCnt;++rdCnt;}
+			++opCnt;++rdCnt;
 			if (i <= j) {
-				if (i!=j) {
-					int x=a[i]; a[i]=a[j]; a[j]=x;
-					++opCnt; ++opCnt;
-				}
+				if (i!=j) swap(a,i,j);
 				++i; --j;
 			}
 		} while (i<=j);
@@ -42,44 +58,42 @@ public class Sorting {
 	}
 
 	public static void quickSort(int[] a) {
-		opCnt=0;
+		opCnt=0;rdCnt=0;wrCnt=0;
 		quickSort(a,0,a.length-1);
 	}
 
 	public static void selectionSort(int[] a) {
-		opCnt=0;
+		opCnt=0;rdCnt=0;wrCnt=0;
 		for (int i=0; i<a.length; ++i) {
-			int e=a[i];
+			int e=a[i]; ++rdCnt;
 			int iv=i;
 			for (int j=i+1; j<a.length; ++j) {
-				int x=a[j];
+				int x=a[j]; ++rdCnt;
+				++opCnt;
 				if (x < e) { e=x; iv=j; }
 			}
-			if (iv!=i) {
-				e=a[i]; a[i]=a[iv]; a[iv]=e;
-				++opCnt; ++opCnt;
-			}
+			if (iv!=i) swap(a,i,iv);
 		}
 	}
 
 	public static void insertionSort(int[] a) {
-		opCnt=0;
+		opCnt=0;rdCnt=0;wrCnt=0;
 		for (int n=1; n < a.length; ++n) {
-			int i,v = a[n];
+			int i,v = a[n]; ++rdCnt;
 			for (i=n; i > 0; --i) {
+				++opCnt;
 				if (v >= a[i-1]) break;
 				a[i] = a[i-1];
-				++opCnt;
+				++wrCnt;++rdCnt;
 			}
 			if (i != n) {
-				a[i]=v;
-				++opCnt;
+				a[i]=v;++wrCnt;
 			}
 		}
 	}
 
 	static public void comboSort(int[] a) {
-		opCnt=0;
+		opCnt=0;rdCnt=0;wrCnt=0;
 		int gap = a.length;
 		boolean swapped=false;
 		while (gap > 1 || swapped) {
@@ -89,19 +103,17 @@ public class Sorting {
 
 			swapped = false;
 			for (int i = 0; i + gap < a.length; ++i) {
+				++opCnt;
 				if (a[i] > a[i + gap]) {
-					int t = a[i];
-					a[i] = a[i+gap];
-					a[i+gap] = t;
+					swap(a,i,i+gap);
 					swapped = true;
-					++opCnt; ++opCnt;
 				}
 			}
 		}
 	}
 
 	static public <T extends Object> void comboSort(List<T> a, Comparator<T> cmp) {
-		opCnt=0;
+		opCnt=0;rdCnt=0;wrCnt=0;
 		int gap = a.size();
 		boolean swapped=false;
 		while (gap > 1 || swapped) {
@@ -111,10 +123,10 @@ public class Sorting {
 
 			swapped = false;
 			for (int i = 0; i + gap < a.size(); ++i) {
+				++opCnt;
 				if (cmp.compare(a.get(i), a.get(i + gap)) > 0) {
-					Collections.swap(a, i, i + gap);
+					swap(a, i, i + gap);
 					swapped = true;
-					++opCnt; ++opCnt;
 				}
 			}
 		}
@@ -122,16 +134,18 @@ public class Sorting {
 
 	static private void insertionSort(int[] a, int gap) {
 		for (int i = gap; i < a.length; ++i) {
-			int temp = a[i];
+			int temp = a[i]; ++rdCnt;
 			int j = i;
 			while (j >= gap && temp < a[j-gap]) {
+				++opCnt; ++wrCnt; ++rdCnt;
 				a[j] = a[j-gap];
 				j -= gap;
-				++opCnt;
+
 			}
+			++opCnt; ++rdCnt;
 			if (i!=j) {
 				a[j] = temp;
-				++opCnt;
+				++wrCnt;
 			}
 		}
 	}
@@ -139,7 +153,7 @@ public class Sorting {
 	// time complexity unknown (depends on gap sequence)
 	public static void shellSort(int[] a) {
 		final int gaps[] = {1, 4, 10, 23, 57, 132, 301, 701};
-		opCnt=0;
+		opCnt=0;rdCnt=0;wrCnt=0;
 		int gap = a.length;
 		int gapi=-1;
 		while (gap > 1) {
@@ -160,7 +174,12 @@ public class Sorting {
 		}
 	}
 
+	static public void heapSort(int[] a) {
+		opCnt=0;rdCnt=0;wrCnt=0;
+		HeapTree.sort(new ArrayInt(a));
+	}
 	static public <T extends Comparable<T>> void heapSort(List<T> a) {
+		opCnt=0;rdCnt=0;wrCnt=0;
 		HeapTree.sort(a);
 	}
 }

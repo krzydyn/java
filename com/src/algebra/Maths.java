@@ -38,11 +38,18 @@ public class Maths {
 		return r;
 	}
 	static public int minimum(int... a) {
-		int mi = a[0];
+		int m = a[0];
 		for (int i=1; i < a.length; ++i) {
-			if (mi > a[i]) mi=a[i];
+			if (m > a[i]) m=a[i];
 		}
-		return mi;
+		return m;
+	}
+	static public int maximum(int... a) {
+		int m = a[0];
+		for (int i=1; i < a.length; ++i) {
+			if (m < a[i]) m=a[i];
+		}
+		return m;
 	}
 	static public int blackjackPoints(CharSequence s) {
 		int sum = 0;

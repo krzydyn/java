@@ -21,7 +21,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import sys.ArrayInt;
-import sys.Log;
 
 public class HeapTree<T extends Comparable<T>> {
 	private final List<T> heap;
@@ -30,11 +29,7 @@ public class HeapTree<T extends Comparable<T>> {
 
 	private HeapTree(List<T> a) {
 		heap=a;
-		//buildHeap();
-	}
-	@SuppressWarnings("unchecked")
-	private HeapTree(int[] a) {
-		heap = (List<T>) new ArrayInt(a);
+		if (!lazyBuild) buildHeap();
 	}
 	public HeapTree() {
 		this(0);
@@ -42,17 +37,18 @@ public class HeapTree<T extends Comparable<T>> {
 	public HeapTree(int capa) {
 		if (capa<=0) heap = new ArrayList<T>();
 		else heap = new ArrayList<T>(capa);
-		if (!lazyBuild) builded=true;
+		builded=true;
 	}
 
 	private void swap(int i, int j) {
 		T t = heap.get(i);
 		heap.set(i, heap.get(j));
 		heap.set(j, t);
-		Sorting.opCnt+=2;
+		Sorting.rdCnt+=2;
+		Sorting.wrCnt+=2;
 	}
-	private int parent(int i) {return (i-1)/2;}
-	private int left(int i) {return 2*i+1;}
+	private final int parent(int i) {return (i-1)/2;}
+	private final int left(int i) {return 2*i+1;}
 	//private int right(int i) {return 2*i+2;}
 
 	private void buildHeap() {
@@ -64,7 +60,10 @@ public class HeapTree<T extends Comparable<T>> {
 
 	private void moveUp(int v) {
 		int p;
+		Sorting.rdCnt+=2;
+		++Sorting.opCnt;
 		while (v>0 && heap.get(p=parent(v)).compareTo(heap.get(v)) < 0) {
+			++Sorting.opCnt;
 			swap(p,v);
 			v=p;
 		}
@@ -72,8 +71,12 @@ public class HeapTree<T extends Comparable<T>> {
 	private void moveDown(int p, int s) {
 		int v;
 		while ((v = left(p)) < s) {
-			if (v+1 < s && heap.get(v).compareTo(heap.get(v+1)) < 0)
-				++v;
+			if (v+1 < s) { // choose bigger child if there are two
+				++Sorting.opCnt; Sorting.rdCnt+=2;
+				if (heap.get(v).compareTo(heap.get(v+1)) < 0) ++v;
+			}
+
+			++Sorting.opCnt;
 			if (heap.get(p).compareTo(heap.get(v)) < 0) {
 				swap(p, v);
 				p = v;
@@ -115,30 +118,32 @@ public class HeapTree<T extends Comparable<T>> {
 		return heap.get(0);
 	}
 	public List<T> sort() {
-		Sorting.opCnt=0;
 		buildHeap();
-		for (int i=heap.size()-1; i>0; ) {
+		for (int i=heap.size()-1; i>0; --i) {
 			swap(0, i);     // put max on the end
-			--i;            // shrink heap
-			moveDown(0, i); //fix heap tree
+			moveDown(0, i); //fix heap tree from 0 to i-1
 		}
 		return heap;
 	}
-	public void print() {
-		buildHeap();
-		StringBuilder s=new StringBuilder(heap.size());
+	private String toString(int s) {
+		StringBuilder st=new StringBuilder(heap.size());
 		int nl=1,c=1,sum=1;
-		for (Object i : heap) {
-			s.append(i.toString());
-			s.append(" ");
+		for (int i=0; i < s; ++i) {
+			st.append(heap.get(i).toString());
+			st.append(" ");
 			if (sum==c) {
-				s.append("\n");
+				st.append("\n");
 				nl*=2;
 				sum+=nl;
 			}
 			++c;
 		}
-		Log.prn("tree:\n%s", s.toString());
+		return st.toString();
+	}
+	@Override
+	public String toString() {
+		buildHeap();
+		return toString(heap.size());
 	}
 
 	static public <T extends Comparable<T>> void sort(List<T> a) {
@@ -146,7 +151,7 @@ public class HeapTree<T extends Comparable<T>> {
 		h.sort();
 	}
 	static public void sort(int[] a) {
-		HeapTree<Integer> h = new HeapTree<Integer>(a);
+		HeapTree<Integer> h = new HeapTree<Integer>(new ArrayInt(a));
 		h.sort();
 	}
 }
