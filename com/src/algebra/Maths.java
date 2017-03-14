@@ -28,12 +28,20 @@ public class Maths {
 		final long tmp2 = (long)(b * (tmp - 4606921280493453312L)) + 4606921280493453312L;
 		return Double.longBitsToDouble(tmp2);
 	}
-	static public long power(int x, int n) {
+	static public long power(int a, int b) {
+		if (b < 0) {
+            if (a==1) return 1L;
+            return 0L;
+        }
+        if (b==0) return 1L;
+        if (b==1) return a;
+
 		long r=1;
-		while (n!=0) {
-			if ((n&1)!=0) r*=x;
-			x*=x;
-			n>>=1;
+		long aa=a;
+		while (b!=0) {
+			if ((b&1)!=0) r*=aa;
+			aa*=aa;
+			b>>>=1;
 		}
 		return r;
 	}
