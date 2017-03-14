@@ -122,15 +122,6 @@ public class AnsiTerminal extends JPanel implements FocusListener,KeyListener {
 			doc.putProperty(PlainDocument.tabSizeAttribute, 8);
 		else if (doc instanceof StyledDocument) {
 			StyleContext sc = StyleContext.getDefaultStyleContext();
-			/*int ts=56; // one char is 7pixel width
-			TabSet tabs = new TabSet(new TabStop[] {
-					new TabStop(1*ts,TabStop.ALIGN_LEFT,TabStop.LEAD_EQUALS),
-					new TabStop(2*ts,TabStop.ALIGN_LEFT,TabStop.LEAD_EQUALS),
-					new TabStop(3*ts,TabStop.ALIGN_LEFT,TabStop.LEAD_EQUALS),
-					new TabStop(4*ts,TabStop.ALIGN_LEFT,TabStop.LEAD_EQUALS),
-					new TabStop(5*ts,TabStop.ALIGN_LEFT,TabStop.LEAD_EQUALS),
-			});*/
-			//AttributeSet paraSet = sc.addAttribute(SimpleAttributeSet.EMPTY, StyleConstants.TabSet, tabs);
 			AttributeSet paraSet = sc.addAttribute(SimpleAttributeSet.EMPTY, StyleConstants.TabSet, new TabSet(null) {
 				private static final long serialVersionUID = 1L;
 				private static final int TAB_PIXELS=56;
@@ -141,7 +132,6 @@ public class AnsiTerminal extends JPanel implements FocusListener,KeyListener {
 				}
 			});
 			((DefaultStyledDocument)doc).setParagraphAttributes(0,Integer.MAX_VALUE,paraSet, false);
-			//((JTextPane)editor).setParagraphAttributes(paraSet, false);
 		}
 
 		//disable traversal key bindings
@@ -149,7 +139,6 @@ public class AnsiTerminal extends JPanel implements FocusListener,KeyListener {
 		//editor.setFocusTraversalKeys(KeyboardFocusManager.FORWARD_TRAVERSAL_KEYS,emptyset);
 		//editor.setFocusTraversalKeys(KeyboardFocusManager.BACKWARD_TRAVERSAL_KEYS,emptyset);
 		editor.setFocusTraversalKeysEnabled(false);
-
 		disableActions("caret-down", "caret-up", "caret-backward", "caret-forward");
 
 		JPanel p = new JPanel(null);
