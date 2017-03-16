@@ -79,6 +79,41 @@ public class T_Algebra extends UnitTest {
 		Log.debug("num = %d", n);
 	}
 
+	static void nCr() {
+		for (int n=0; n < 10; ++n) {
+			System.out.printf("%d:", n);
+			for (int k=0; k <= n; ++k) {
+				long r=Combinations.newton(n, k);
+				System.out.printf(" %d", r);
+			}
+			System.out.println();
+		}
+	}
+
+	static void gcd() {
+		long t0;
+		long[] a = new long[10000];
+		t0 = System.currentTimeMillis();
+		for (int i=0; i < 10000; ++i) {
+			a[i]=Maths.gcd(10007+i, 119+i*i);
+		}
+		t0 = System.currentTimeMillis();
+		for (int i=0; i < 10000; ++i) {
+			check("gd2",a[i],Maths.gcd2(10007+i, 119+i*i));
+		}
+		Log.info("gcd2 : %d", System.currentTimeMillis()-t0);
+		t0 = System.currentTimeMillis();
+		for (int i=0; i < 10000; ++i) {
+			a[i]=Maths.gcd(10007+i, 119+i*i);
+		}
+		Log.info("gcd : %d", System.currentTimeMillis()-t0);
+		/*t0 = System.currentTimeMillis();
+		for (int i=0; i < 10000; ++i) {
+			check("gcd3",a[i],Maths.gcd3(10007+i, 119+i*i));
+		}
+		Log.info("gcd3 : %d", System.currentTimeMillis()-t0);*/
+	}
+
 	static void blackjack() {
 		String[] test = {"", "AA", "XA", "9AA", "8AA", "8AAA"};
 		int [] res    = {0,   12,   21,    21,    20,     21};
@@ -108,25 +143,30 @@ public class T_Algebra extends UnitTest {
 		check("r2 . r1", r2.intersects(r1) == true);
 	}
 	static void heap1() {
-		Log.info("loader");
+		Log.info("heap warmup");
+		Random rnd=new Random(100);
+		HeapTree<Integer> tree=new HeapTree<>(sortN);
+		for (int i=0; i < 20; ++i)
+			tree.add(rnd.nextInt(10*sortN));
+		tree.sort();
 	}
-	static void heap2() {
+	static void heap3() {
 		Random rnd=new Random(100);
 		HeapTree<Integer> tree=new HeapTree<>(sortN);
 		for (int i=0; i < sortN; ++i)
 			tree.add(rnd.nextInt(10*sortN));
 
-		Log.info("sorting...");
-		tree.sort();
+		List<Integer> l=tree.sort();
+		check("size",l.size(),sortN);
 	}
-	static void heapsort() {
+	static void heap2() {
 		Random rnd=new Random(100);
 		List<Integer> list = new ArrayList<>(sortN);
 		for (int i=0; i < sortN; ++i)
 			list.add(rnd.nextInt(10*sortN));
 
-		Log.info("sorting...");
 		HeapTree.sort(list);
+		check("size",list.size(),sortN);
 	}
 	private static void _printStat(String l) {
 		Log.prn("%s: ops %d mem %d/%d",l,Sorting.opCnt,Sorting.rdCnt,Sorting.wrCnt);

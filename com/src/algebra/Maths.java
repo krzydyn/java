@@ -7,7 +7,7 @@
  *  you may not use this file except in compliance with the License.
  *  You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *	  http://www.apache.org/licenses/LICENSE-2.0
  *
  *  Unless required by applicable law or agreed to in writing, software
  *  distributed under the License is distributed on an "AS IS" BASIS,
@@ -30,11 +30,11 @@ public class Maths {
 	}
 	static public long power(int a, int b) {
 		if (b < 0) {
-            if (a==1) return 1L;
-            return 0L;
-        }
-        if (b==0) return 1L;
-        if (b==1) return a;
+			if (a==1) return 1L;
+			return 0L;
+		}
+		if (b==0) return 1L;
+		if (b==1) return a;
 
 		long r=1;
 		long aa=a;
@@ -44,6 +44,56 @@ public class Maths {
 			b>>>=1;
 		}
 		return r;
+	}
+	static public long gcd(long a, long b) {
+		if (a==0L) return b;
+		while (b != 0) {
+			if (a > b) a = a - b;
+			else b = b - a;
+		}
+		return a;
+	}
+	static public long gcd2(long a, long b) {
+		if (a==0L) return b;
+		long c;
+		while (b != 0) {
+			c = a%b;
+			a = b;
+			b = c;
+		}
+		return a;
+	}
+	static public int modInv(int a,int b) {
+		a %= b;
+		long aa=a;
+		for (int x = 1; x < b; ++x) {
+			if ((aa*x)%b == 1) {
+				return x;
+			}
+		}
+		return 0;
+	}
+	static public int modInv2(int a,int b) {
+		int r=1,x=0,b0=b;
+		a %= b;
+		while (a>1) {
+			int q = a/b;
+			a = a % b;
+			int t=a; a=b; b=t;
+			r = r - q*x;
+			t=r; r=x; x=t;
+		}
+		if (r<0) r+=b0;
+		return r;
+	}
+	static public int modPow(int a,int b, int m) {
+		long r=1,aa=a;
+		while (b!=0) {
+			if ((b&1)!=0) r=(r*aa)%m;
+			aa=(aa*aa)%m;
+			b>>>=1;
+		}
+		return (int)r;
 	}
 	static public int minimum(int... a) {
 		int m = a[0];

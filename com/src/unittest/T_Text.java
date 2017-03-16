@@ -23,6 +23,7 @@ import sys.UnitTest;
 import text.Text;
 
 public class T_Text extends UnitTest {
+
 	static void anagrams() {
 		check("anagram", Text.isAnagram("abc", "cba"));
 		check("not anagram", !Text.isAnagram("abbc", "cbaa"));

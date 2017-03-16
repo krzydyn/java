@@ -57,4 +57,26 @@ public class Combinations {
 				ll.set(i, set.get(pos[i]));
 		}
 	}
+
+	public static long newton(int n,int k) {
+		if (k==0 || n==k) return 1;
+		if (k > n-k) k = n-k;
+		long x=n;
+		for (int i=1; i < k;) {
+			x*=n-i;
+			if (x<0) return -1;
+			++i;
+			x/=i;
+		}
+		/*
+		for (int i=1,d=2; i < k; ++i) {
+			x*=n-i;
+			if (x<0) return -1;
+			while (d <= k && x%d == 0) {
+				x/=d;
+				++d;
+			}
+		}*/
+		return x;
+	}
 }

@@ -74,19 +74,32 @@ done
 		}
 	}
 	static class MacosMon implements ActivityMonitor {
-		final static String script="tell application \"System Events\"\n" +
+		final static String script_appname="tell application \"System Events\"\n" +
                 "name of application processes whose frontmost is true\n" +
                 "end\n";
+		/*
+		 * need system config to allow access to assistive devices
+		 */
+		final static String script_title="global appProc,winTitle\n"
+			+"tell application \"System Events\"\n"
+		        + "set appProc to first application process whose frontmost is true\n"
+		    + "end\n"
+		    +"tell appProc\n"
+		    +"if count of windows > 0 then\n"
+		    	+"name of front window\n"
+		    +"end if\n"
+		    +"end tell\n";
+
 		final static String script2="global frontApp, frontAppName, windowTitle\n"
 			+ "set windowTitle to \"\"\n"
 			+ "tell application \"System Events\"\n"
 				+ "set frontApp to first application process whose frontmost is true\n"
 				+ "set frontAppName name of frontApp\n"
-				//+ "tell process frontApp\n"
+				+ "tell process frontApp\n"
                 	+ "tell (first window whose value of attribute \"AXMain\" is true)\n"
                 	+ "set windowTitle to value of attribute \"AXTitle\"\n"
                 	+ "end tell\n"
-                //+ "end tell\n"
+                + "end tell\n"
             + "end\n"
             + "return {frontAppName, windowTitle}\n";
 		final static String script3 = "global appProc,appName\n"
@@ -94,12 +107,34 @@ done
 		        + "set appProc to first application process whose frontmost is true\n"
 		        + "set appName to name of appProc\n"
 		    + "end\n"
-		    + "return {appName,appProc}\n";
+		    +"tell appProc\n"
+		    +"if count of windows > 0 then\n"
+		    	+"set window_name to name of front window\n"
+		    +"end if\n"
+		    +"end tell\n"
+		    +"return {appName,window_name}\n";
+		final static String script4 = "tell application \"System Events\"\n"
+			+ "set window_name to name of first window of (first application process whose frontmost is true)\n"
+			+"end tell\n";
 		@Override
 		public void run() throws Exception {
 			ScriptEngine se = new ScriptEngineManager().getEngineByName("AppleScript");
-			String result=Text.join("\n",se.eval(script3));
-	        System.out.println(result);
+			System.out.println("script1");
+			try {
+				String result=Text.join("\n",se.eval(script_appname));
+		        System.out.println(result);
+			}
+			catch (Exception e) {
+				Log.error(e.getMessage());
+			}
+			System.out.println("script2");
+			try {
+				String result=Text.join("\n",se.eval(script_title));
+		        System.out.println(result);
+			}
+			catch (Exception e) {
+				Log.error(e.getMessage());
+			}
 		}
 	}
 
@@ -121,7 +156,12 @@ done
 		}
 		try {
 			while (true) {
-				monitor.run();
+				try {
+					monitor.run();
+				}
+				catch (Exception e) {
+					Log.error(e);
+				}
 				XThread.sleep(5000);
 			}
 		}

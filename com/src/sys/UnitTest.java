@@ -221,7 +221,14 @@ public class UnitTest {
 	protected static void check(String msg, int e, int r) {
 		++current.checks;
 		if (e != r) {
-			Log.error(1, "check failed: %s=%d != %d", msg, r, e);
+			Log.error(1, "check failed: %s %d != %d", msg, r, e);
+			++current.errors;
+		}
+	}
+	protected static void check(String msg, long e, long r) {
+		++current.checks;
+		if (e != r) {
+			Log.error(1, "check failed: %s %d != %d", msg, r, e);
 			++current.errors;
 		}
 	}
