@@ -106,7 +106,7 @@ public class Sound {
 			waveform = new byte[(int)(soundtime * SAMPLE_RATE)];
 			for (int i = 0; i < waveform.length; i++) {
 				double angle = 2.0 * Math.PI * i / (periodtime*SAMPLE_RATE);
-				waveform[i] = (byte)(Math.sin(angle) * 127f);
+				waveform[i] = (byte)(Math.sin(angle) * 127f/2f);
 			}
 		}
 		return waveform;
@@ -146,7 +146,7 @@ public class Sound {
 
 	static public void dong() {
 		try {
-			play(Note.F4, 100);
+			play(Note.C5, 50);
 		} catch (Exception e) {Log.error(e);}
 	}
 

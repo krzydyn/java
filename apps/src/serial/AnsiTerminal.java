@@ -21,6 +21,7 @@ package serial;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Font;
+import java.awt.FontMetrics;
 import java.awt.Point;
 import java.awt.Toolkit;
 import java.awt.datatransfer.Clipboard;
@@ -34,6 +35,7 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.image.BufferedImage;
 import javax.swing.Action;
 import javax.swing.ActionMap;
 import javax.swing.BorderFactory;
@@ -78,7 +80,8 @@ import ui.MainPanel;
 public class AnsiTerminal extends JPanel implements FocusListener,KeyListener {
 	private static final long serialVersionUID = 0;
 
-	final static Font font = new Font(Font.MONOSPACED,Font.PLAIN, 12);
+	final static Font font = new Font(Font.MONOSPACED,Font.PLAIN, 15);
+	private static int charWidth;
 	final static Border focusedBorder = BorderFactory.createLineBorder(Color.GRAY, 3);
 	final static Border unfocusedBorder = BorderFactory.createEmptyBorder(3, 3, 3, 3);
 
@@ -108,7 +111,8 @@ public class AnsiTerminal extends JPanel implements FocusListener,KeyListener {
 		setBorder(unfocusedBorder);
 
 		title.setText(t);
-
+		FontMetrics mtr = new BufferedImage(10, 10, BufferedImage.TYPE_INT_ARGB).getGraphics().getFontMetrics(font);
+		charWidth = mtr.charWidth('a'); mtr=null;
 		editor.setFont(font);
 		editor.setEditable(false);
 		editor.setFocusable(true); // this allow selection of text
@@ -121,13 +125,13 @@ public class AnsiTerminal extends JPanel implements FocusListener,KeyListener {
 		if (doc instanceof PlainDocument)
 			doc.putProperty(PlainDocument.tabSizeAttribute, 8);
 		else if (doc instanceof StyledDocument) {
+			final int TAB_PIXELS=charWidth*8;
 			StyleContext sc = StyleContext.getDefaultStyleContext();
 			AttributeSet paraSet = sc.addAttribute(SimpleAttributeSet.EMPTY, StyleConstants.TabSet, new TabSet(null) {
 				private static final long serialVersionUID = 1L;
-				private static final int TAB_PIXELS=56;
 				@Override
 				public TabStop getTabAfter(float location) {
-					int p =((int)Math.floor(location/TAB_PIXELS) + 1)*TAB_PIXELS;
+					int p =((int)Math.floor(location/TAB_PIXELS + 1))*TAB_PIXELS;
 					return new TabStop(p);
 				}
 			});
@@ -294,6 +298,7 @@ public class AnsiTerminal extends JPanel implements FocusListener,KeyListener {
 			Log.debug("Key DEL");
 			inputBuffer.append(Ansi.CSI+"3~");
 		}
+		e.consume();
 	}
 	@Override
 	public void keyReleased(KeyEvent e) {}

@@ -20,6 +20,12 @@ package sys;
 
 import io.IOText;
 
+import java.awt.Toolkit;
+import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.ClipboardOwner;
+import java.awt.datatransfer.DataFlavor;
+import java.awt.datatransfer.StringSelection;
+import java.awt.datatransfer.Transferable;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -123,6 +129,21 @@ public class Env {
 		return exec(null,new ArrayObj<String>(args));
 	}
 
+	static private ClipboardOwner manClipboard = new ClipboardOwner() {
+		@Override
+		public void lostOwnership(Clipboard clipboard, Transferable contents) {}
+	};
+
+	static public void setClipboardText(String data) throws Exception {
+
+		Toolkit.getDefaultToolkit().getSystemClipboard().setContents(new StringSelection(data), manClipboard);
+	}
+	static public String getClipboardText() {
+		try {
+			return (String) Toolkit.getDefaultToolkit().getSystemClipboard().getData(DataFlavor.stringFlavor);
+		} catch (Exception e) {}
+		return null;
+	}
 
 	static boolean isAppJar() {
 		try {
