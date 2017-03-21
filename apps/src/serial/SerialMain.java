@@ -178,9 +178,12 @@ public class SerialMain extends MainPanel {
 				AnsiTerminal trm = editors.get(s);
 				try {
 					int r;
-					while ((r = s.read(buffer, 0, buffer.length)) > 0) {
+					do {
+						r = s.read(buffer, 0, buffer.length);
 						trm.write(buffer, 0, r);
 					}
+					while (r > 0);
+					trm.flushOutput();
 				}catch(Throwable e) {
 					Log.error(e);
 					s.close();
@@ -196,7 +199,7 @@ public class SerialMain extends MainPanel {
 	}
 
 	public static void main(String[] args) {
-		Log.setReleaseMode();
+		//Log.setReleaseMode();
 		start(SerialMain.class, args);
 	}
 }

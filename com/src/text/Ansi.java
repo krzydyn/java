@@ -94,6 +94,21 @@ public class Ansi {
 	public final static String DCS_C1 = "\u0090"; //only on 8bit terminal
 	public final static String DCS = DCS_C0;
 
+	// Start of Protected Area
+	public final static String SPA_C0 = Code.ESC+"V";
+	public final static String SPA_C1 = "\u0096"; //only on 8bit terminal
+	public final static String SPA = SPA_C0;
+
+	// End of Protected Area
+	public final static String EPA_C0 = Code.ESC+"W";
+	public final static String EPA_C1 = "\u0097"; //only on 8bit terminal
+	public final static String EPA = EPA_C0;
+
+	// Start of String
+	public final static String SOS_C0 = Code.ESC+"X";
+	public final static String SOS_C1 = "\u0098"; //only on 8bit terminal
+	public final static String SOS = SOS_C0;
+
 	// Character Sequence Indicator
 	public final static String CSI_C0 = Code.ESC+"[";
 	public final static String CSI_C1 = "\u009b"; //only on 8bit terminal
@@ -133,11 +148,16 @@ public class Ansi {
 	public final static String SCR_MODE19 = CSI + "=19h";// 320x200 256colors
 	public final static String SCR_RESET19 = CSI + "=19l";
 
-	public final static String SGR_RESET = CSI + "m";
+	public final static String SGR_RESET = CSI + "m"; //
 	public final static String SGR_BOLD = CSI + "1m"; //increased intensity
 	public final static String SGR_FAINT = CSI + "2m";//decreased intensity
 	public final static String SGR_ITALIC = CSI + "3m";
-	public final static String SGR_BOLDITALIC = CSI + "1;3m";
+	public final static String SGR_UNDERLINE = CSI + "4m";
+	public final static String SGR_BLINK = CSI + "5m";
+	public final static String SGR_INVARSE = CSI + "7m";
+	public final static String SGR_HIDDEN = CSI + "8m";
+	public final static String SGR_CROSSOUT = CSI + "9m";
+	public final static String SGR_UNDERLINE2 = CSI + "21m";
 	public final static String SGR_NORMAL = CSI + "22m";// Normal color and intensity
 	public final static String SGR_N_ITALIC = CSI + "23m";// Not italic
 	public final static String SGR_N_UNDELINE = CSI + "24m";// Not underlined
@@ -170,7 +190,7 @@ public class Ansi {
 	public final static String PDA_REQ = CSI + "c"; // Request primary device attributes
 	public final static String PDA_SND = CSI + ">"; // Send primary device attributes
 
-	public final static String SSR = CSI + "r"; // Set Scrolling Region CSI+t;b+r
+	public final static String SSR = CSI+"%d;%d"+"r"; // Set Scrolling Region CSI+t;b+r
 
 	public final static String SCP = CSI + "s"; // Save cursor position
 	public final static String RCP = CSI + "u"; // Restore cursor position
