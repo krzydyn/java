@@ -17,7 +17,11 @@
  */
 package algebra;
 
+import java.util.Comparator;
+import java.util.List;
+
 public class Maths {
+
 	public static float power_approx(final float a, final float b) {
 		final int x = Float.floatToIntBits(a) >> 32;
 		final int y = (int)(b * (x - 1072632447) + 1072632447);
@@ -79,9 +83,9 @@ public class Maths {
 		while (a>1) {
 			int q = a/b;
 			a = a % b;
-			int t=a; a=b; b=t;
+			int t=a; a=b; b=t;//swap(a,b)
 			r = r - q*x;
-			t=r; r=x; x=t;
+			t=r; r=x; x=t; //swap(r,x)
 		}
 		if (r<0) r+=b0;
 		return r;
@@ -95,17 +99,53 @@ public class Maths {
 		}
 		return (int)r;
 	}
-	static public int minimum(int... a) {
-		int m = a[0];
-		for (int i=1; i < a.length; ++i) {
-			if (m > a[i]) m=a[i];
+	static public <T extends Comparable<T>> T min(List<T> list) {
+		T m = list.get(0);
+		for (int i=1; i < list.size(); ++i) {
+			if (m.compareTo(list.get(i)) > 0) m=list.get(i);
 		}
 		return m;
 	}
-	static public int maximum(int... a) {
+	static public <T extends Comparable<T>> T max(List<T> list) {
+		T m = list.get(0);
+		for (int i=1; i < list.size(); ++i) {
+			if (m.compareTo(list.get(i)) < 0) m=list.get(i);
+		}
+		return m;
+	}
+	static public <T> T min(List<T> list, Comparator<T> cmp) {
+		T m = list.get(0);
+		for (int i=1; i < list.size(); ++i) {
+			if (cmp.compare(m,list.get(i)) > 0) m=list.get(i);
+		}
+		return m;
+	}
+	static public <T> T max(List<T> list, Comparator<T> cmp) {
+		T m = list.get(0);
+		for (int i=1; i < list.size(); ++i) {
+			if (cmp.compare(m,list.get(i)) < 0) m=list.get(i);
+		}
+		return m;
+	}
+	@SuppressWarnings("unchecked")
+	static public <T extends Comparable<T>> T max(T... a) {
+		T m = a[0];
+		for (int i=1; i < a.length; ++i) {
+			if (m.compareTo(a[i]) < 0) m=a[i];
+		}
+		return m;
+	}
+	static public int max(int... a) {
 		int m = a[0];
 		for (int i=1; i < a.length; ++i) {
 			if (m < a[i]) m=a[i];
+		}
+		return m;
+	}
+	static public int min(int... a) {
+		int m = a[0];
+		for (int i=1; i < a.length; ++i) {
+			if (m > a[i]) m=a[i];
 		}
 		return m;
 	}

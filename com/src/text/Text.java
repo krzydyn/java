@@ -372,7 +372,7 @@ public class Text {
 			curr[0]=i+1;
 			for (int j=0; j < l2; ++j) {
 				int c = s1.charAt(i)==s2.charAt(j) ? 0 : 1;
-				curr[j+1] = Maths.minimum(
+				curr[j+1] = Maths.min(
 						curr[j]+1,     // cost delete
 						prev[j+1]+1,   // cost insert
 						prev[j] + c    // cost replace
