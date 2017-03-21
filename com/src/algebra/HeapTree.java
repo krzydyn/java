@@ -20,14 +20,12 @@ package algebra;
 import java.util.ArrayList;
 import java.util.List;
 
-import sys.ArrayInt;
-
 public class HeapTree<T extends Comparable<T>> {
 	private final List<T> heap;
 	private final boolean lazyBuild=true;
 	private boolean builded=false;
 
-	private HeapTree(List<T> a) {
+	public HeapTree(final List<T> a) {
 		heap=a;
 		if (!lazyBuild) buildHeap();
 	}
@@ -144,14 +142,5 @@ public class HeapTree<T extends Comparable<T>> {
 	public String toString() {
 		buildHeap();
 		return toString(heap.size());
-	}
-
-	static public <T extends Comparable<T>> void sort(List<T> a) {
-		HeapTree<T> h = new HeapTree<T>(a);
-		h.sort();
-	}
-	static public void sort(int[] a) {
-		HeapTree<Integer> h = new HeapTree<Integer>(new ArrayInt(a));
-		h.sort();
 	}
 }

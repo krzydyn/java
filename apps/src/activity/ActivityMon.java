@@ -11,11 +11,19 @@ import sys.Log;
 import sys.XThread;
 import text.Text;
 
+/*
+ * http://stackoverflow.com/questions/5206633/find-out-what-application-window-is-in-focus-in-java
+ * http://stackoverflow.com/questions/6391439/getting-active-window-information-in-java
+ */
 public class ActivityMon {
 	static interface ActivityMonitor {
 		void run() throws Exception;
+		void help();
 	}
 	static class LinuxMon implements ActivityMonitor {
+		@Override
+		public void help() {
+		}
 /*
 LOG=$HOME/Documents/activity.log
 PAID=""
@@ -44,6 +52,7 @@ while true; do
     fi
 done
 */
+
 		String prev;
 		@Override
 		public void run() throws Exception {
@@ -63,6 +72,10 @@ done
 		}
 	}
 	static class WindowsMon implements ActivityMonitor {
+		@Override
+		public void help() {
+
+		}
 		/*
 		public interface XLib extends StdCallLibrary {
 		    XLib INSTANCE = (XLib) Native.loadLibrary("XLib", Psapi.class);
@@ -74,6 +87,12 @@ done
 		}
 	}
 	static class MacosMon implements ActivityMonitor {
+		@Override
+		public void help() {
+			System.out.println("To read window title the privilidge need to be unblocked in\n"
+					+ "Mac system settings");
+		}
+
 		final static String script_appname="tell application \"System Events\"\n" +
                 "name of application processes whose frontmost is true\n" +
                 "end\n";
@@ -138,6 +157,13 @@ done
 		}
 	}
 
+	private static int parseWinId(String s) {
+		Pattern p = Pattern.compile("0x([0-9a-f]+)");
+		Matcher m = p.matcher(s);
+		return m.find() ? Integer.parseInt(m.group(1),16) : -1;
+	}
+
+
 	static ActivityMonitor monitor = null;
 	public static void main(String[] args) {
 		String osname = Env.osName();
@@ -168,11 +194,5 @@ done
 		catch (Throwable e) {
 			Log.error(e);
 		}
-	}
-
-	private static int parseWinId(String s) {
-		Pattern p = Pattern.compile("0x([0-9a-f]+)");
-		Matcher m = p.matcher(s);
-		return m.find() ? Integer.parseInt(m.group(1),16) : -1;
 	}
 }

@@ -232,7 +232,6 @@ public class UnitTest {
 			++current.errors;
 		}
 	}
-
 	protected static void check(String t1, String t2) {
 		++current.checks;
 		if (!t1.equals(t2)) {

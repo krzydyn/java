@@ -32,6 +32,12 @@ public class MatrixI {
 		this.v = new int[w*h];
 		for (int i=0; i < v.length; ++i) this.v[i]=v[i];
 	}
+	public MatrixI(int w, int... a) {
+		this.w=w;
+		this.h=a.length;
+		this.v = new int[this.w*this.h];
+		System.arraycopy(a, 0, this.v, 0, a.length);
+	}
 	public MatrixI(String t) {
 		Dimension dim=new Dimension();
 		v=loadFrom(t, dim);
@@ -53,7 +59,7 @@ public class MatrixI {
 	}
 
 	static private int[] loadFrom(String s, Dimension dim) {
-		String[] rows=s.split("\\|");
+		String[] rows=s.split("\\||\n");
 		dim.height=rows.length;
 		dim.width=0;
 		int[] v=null;
@@ -115,7 +121,6 @@ public class MatrixI {
 		}
 		return this;
 	}
-
 
 	public MatrixI mul(MatrixI m, int mod) {
 		int n=w*h;

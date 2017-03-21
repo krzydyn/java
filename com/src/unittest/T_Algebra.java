@@ -36,13 +36,13 @@ import sys.UnitTest;
 public class T_Algebra extends UnitTest {
 	static final int sortN = 100000;
 	static void marix() {
-		MatrixI m1 = new MatrixI(3, 2, new int[]{1,0,2, -1,3,1});
-		MatrixI m2 = new MatrixI(2, 3, new int[]{3,1, 2,1, 1,0});
+		MatrixI m1 = new MatrixI(3, 1,0,2, -1,3,1);
+		MatrixI m2 = new MatrixI(2, 3,1, 2,1, 1,0);
 		MatrixI r = m1.mul(m2);
 		//System.out.println(r.toString());
-		check("m1.mul(m2)", r.equals(new MatrixI("5 1|4 2")));
+		check("m1.mul(m2)", r.equals(new MatrixI(4, 5,1, 4,2)));
 		r = m2.mul(m1);
-		check("m2.mul(m1)", r.equals(new MatrixI("2 3 7|1 3 5|1 0 2")));
+		check("m2.mul(m1)", r.equals(new MatrixI(3, 2,3,7, 1,3,5, 1,0,2)));
 		//System.out.println(r.toString());
 	}
 	static void permutation() {
@@ -165,7 +165,7 @@ public class T_Algebra extends UnitTest {
 		for (int i=0; i < sortN; ++i)
 			list.add(rnd.nextInt(10*sortN));
 
-		HeapTree.sort(list);
+		Sorting.heapSort(list);
 		check("size",list.size(),sortN);
 	}
 	private static void _printStat(String l) {

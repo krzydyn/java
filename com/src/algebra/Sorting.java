@@ -174,12 +174,14 @@ public class Sorting {
 		}
 	}
 
-	static public void heapSort(int[] a) {
+	static public void heapSort(int... a) {
 		opCnt=0;rdCnt=0;wrCnt=0;
-		HeapTree.sort(new ArrayInt(a));
+		HeapTree<Integer> h = new HeapTree<Integer>(new ArrayInt(a));
+		h.sort();
 	}
 	static public <T extends Comparable<T>> void heapSort(List<T> a) {
 		opCnt=0;rdCnt=0;wrCnt=0;
-		HeapTree.sort(a);
+		HeapTree<T> h = new HeapTree<T>(a);
+		h.sort();
 	}
 }
