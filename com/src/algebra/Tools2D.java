@@ -95,8 +95,26 @@ public class Tools2D {
 		}
 	}
 
-	private static void convolve(Raster2D x, MatrixI k, int x0, int y0) {
+	private static int convolve(Raster2D r, MatrixI k, int x0, int y0) {
+		Dimension dim = r.getSize();
+		int a=0;
+		x0 -= k.getWidth()/2;
+		y0 -= k.getHeight()/2;
+		for (int y=0; y < k.getHeight(); ++y) {
+			for (int x=0; x < k.getWidth(); ++x) {
+				int p=0, rx=x0+x,ry=y0+y;
 
+				//extend method (other: wrap, crop)
+				if (rx < 0) rx=0;
+				else if (rx >= dim.width) rx=dim.width-1;
+				if (ry < 0) ry=0;
+				else if (ry >= dim.height) ry=dim.height-1;
+
+				p=r.getPixel(rx, ry);
+				a += p*k.get(x, y);
+			}
+		}
+		return a;
 	}
 
 	// y[n] = x[n] * h[n]
@@ -104,8 +122,8 @@ public class Tools2D {
 		Dimension dim = r.getSize();
 		for (int y=0; y < dim.height; ++y ) {
 			for (int x=0; x < dim.width; ++x) {
-
-
+				int a=convolve(r, k, x, y);
+				r.setPixel(x, y, a);
 			}
 		}
 	}

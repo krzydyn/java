@@ -43,6 +43,8 @@ public class MatrixI {
 		v=loadFrom(t, dim);
 		w=dim.width; h=dim.height;
 	}
+	public int getWidth() {return w;}
+	public int getHeight() {return h;}
 	public int get(int x,int y) {return v[y*w+x];}
 	public int set(int x,int y,int v) {return this.v[y*w+x]=v;}
 
