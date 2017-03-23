@@ -21,13 +21,7 @@ import java.awt.Dimension;
 import java.awt.Point;
 import java.util.ArrayList;
 
-public class Plane2D {
-	public static interface Raster {
-		public int getPixel(int x,int y);
-		public void drawHline(int x1, int x2,int y, int v);
-		public Dimension getSize();
-	}
-
+public class Tools2D {
 	private static class Segment {
 		public Segment(int y, int x0, int x1) {
 			this.y=y; this.x0=x0; this.x1=x1;
@@ -35,7 +29,7 @@ public class Plane2D {
 		int x0, x1, y;
 	}
 
-	private static Segment makeSegment(Raster t,int x,int y,int sval, int xmax) {
+	private static Segment makeSegment(Raster2D t,int x,int y,int sval, int xmax) {
 		Dimension d = t.getSize();
 		int x0,x1;
 		if (t.getPixel(x,y)!=sval) {
@@ -49,7 +43,7 @@ public class Plane2D {
 		return new Segment(y, x0, x1);
 	}
 
-	public static void floodFill(Raster t, int x,int y, int dval) {
+	public static void floodFill(Raster2D t, int x,int y, int dval) {
 		int sval=t.getPixel(x,y);
 		if (sval==dval) return ;
 
@@ -82,7 +76,7 @@ public class Plane2D {
 		}
 	}
 
-	static void floodFill_simple(Raster t, int x,int y, int dval) {
+	public static void floodFill_simple(Raster2D t, int x,int y, int dval) {
 		int sval=t.getPixel(x,y);
 		if (sval==dval) return ;
 
@@ -98,6 +92,21 @@ public class Plane2D {
 			if (x+1<d.width && t.getPixel(x+1,y)==1) q.add(new Point(x+1, y));
 			if (y>0 && t.getPixel(x,y-1)==1) q.add(new Point(x, y-1));
 			if (y+1<d.height && t.getPixel(x,y+1)==1) q.add(new Point(x, y+1));
+		}
+	}
+
+	private static void convolve(Raster2D x, MatrixI k, int x0, int y0) {
+
+	}
+
+	// y[n] = x[n] * h[n]
+	public static void convolve(Raster2D r, MatrixI k) {
+		Dimension dim = r.getSize();
+		for (int y=0; y < dim.height; ++y ) {
+			for (int x=0; x < dim.width; ++x) {
+
+
+			}
 		}
 	}
 }
