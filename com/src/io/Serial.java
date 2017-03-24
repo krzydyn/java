@@ -26,6 +26,7 @@ import java.util.List;
 
 import gnu.io.CommPort;
 import gnu.io.CommPortIdentifier;
+import gnu.io.RXTXVersion;
 import gnu.io.SerialPort;
 
 //TODO add support for rxtx events
@@ -111,6 +112,10 @@ public class Serial {
 	}
 	public void write(byte[] b, int off, int len) throws IOException {
 		commPort.getOutputStream().write(b, off, len);
+	}
+
+	public static String getVersion() {
+		return "JAVA: "+RXTXVersion.getVersion()+"; JNI: "+RXTXVersion.nativeGetVersion();
 	}
 
 
