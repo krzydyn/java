@@ -28,7 +28,7 @@ import time.LapTime;
 
 public class CheckCpp {
 	static String[] files={
-			"~/sec-os/key-manager/src/manager/common/exception.cpp",
+			"~/sec-os/key-manager/src/manager/crypto/tz-backend/internals.cpp",
 	};
 	static String pfx="~/security-containers/";
 	public static void main(String[] args) throws Exception {
@@ -48,7 +48,6 @@ public class CheckCpp {
 			CppParser.CppNode n=p.parse(f);
 			tm.update(System.currentTimeMillis(), p.getLineNo());
 			System.out.println(tm.toString());
-			//CppParser.printNode(n);
 			CppBuilder.write(n, new OutputStreamWriter(System.out));
 		}catch (IOException e) {
 			System.err.println(e.getMessage());

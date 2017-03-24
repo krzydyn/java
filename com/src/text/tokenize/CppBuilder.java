@@ -46,6 +46,11 @@ public class CppBuilder {
 		public void write(char[] buf, int off, int len) {
 			for (int i=0; i < len; ++i) write(buf[off+i]);
 		}
+		public void writeif(int c) {
+			if (lastc==-1) return ;
+			if (lastc ==' ' || lastc == '\n') return ;
+			write(c);
+		}
 	}
 
 	private FWriter wr;
@@ -68,19 +73,23 @@ public class CppBuilder {
 				CppNode nn=n.nodes.get(i);
 				writeNode(nn);
 			}
-			if (wr.lastc != '\n') wr.write("\n");
+			wr.writeif('\n');
 			if (!(n instanceof Namespace)) wr.indent(-1);
 			wr.write("}");
 		}
 		else {
 			SourceFragment f = (SourceFragment)n;
-			boolean addnl = !f.str.endsWith(";") && !(f instanceof Comment);
-			if (addnl && wr.lastc!='\n') {
-				wr.write("\n");
+			if ((f instanceof Comment)) wr.writeif(' ');
+			else {
+				if (!(f.str.endsWith(";") || f.str.endsWith(",")))
+					wr.writeif('\n');
 			}
-			if ((f instanceof Comment) && wr.lastc != '\n') wr.write(" ");
 			n.write(wr);
-			if (f.str.endsWith(";")) wr.write("\n");
+			if ((f instanceof Comment)) ;
+			else {
+				if (f.str.endsWith(";") || f.str.endsWith(","))
+					wr.writeif('\n');
+			}
 		}
 	}
 
