@@ -36,7 +36,6 @@ import java.util.Iterator;
 import java.util.List;
 
 import sys.Log;
-import sys.XThread;
 
 public class SelectorThread2 {
 	private final Selector selector;
@@ -45,6 +44,7 @@ public class SelectorThread2 {
 	private boolean running = false;
 	private boolean stopReq = false;
 	private boolean registerReq = false;
+	private final Object registerLock = new Object();
 
 	private final List<SelectionKey> writeFlag=new ArrayList<SelectionKey>();
 
@@ -142,12 +142,24 @@ public class SelectorThread2 {
 	//low level
 	public SelectionKey addChannel(SelectableChannel chn, int ops, ChannelHandler d) throws IOException {
 		if (chn.isBlocking()) chn.configureBlocking(false);//must be non blocking !!!
-		registerReq=true;
-		if (running) selector.wakeup();
+		Log.debug("addChannel ...");
+		if (running) {
+			registerReq=true;
+			Log.debug("wakeup selector");
+			selector.wakeup();
+			Thread.yield();
+		}
 		SelectionKey sk = chn.register(selector, ops, new QueueChannel(this, chn, d));
 		if ((ops&SelectionKey.OP_CONNECT)!=0)
 			((QueueChannel)sk.attachment()).addr=((SocketChannel)chn).getRemoteAddress();
-		registerReq=false;
+
+		if (registerReq) {
+			Log.debug("notifying selector, chn registered");
+			synchronized (registerLock) {
+				registerReq=false;
+				registerLock.notify();
+			}
+		}
 		return sk;
 	}
 
@@ -209,6 +221,13 @@ public class SelectorThread2 {
 	private void loop() throws Exception {
 		Log.debug("loop started");
 		while (!stopReq) {
+			if (registerReq) {
+				Log.debug("selector wait for chn registered");
+				 // wait, so other thread can register new channel
+				synchronized (registerLock) {
+					registerLock.wait();
+				}
+			}
 			synchronized (writeFlag) {
 				for (int i = writeFlag.size(); i > 0;) {
 					--i;
@@ -220,8 +239,6 @@ public class SelectorThread2 {
 			}
 			int n=selector.select(10000);
 			if (n==0) {
-				 // wait, so other thread can register new channel
-				if (registerReq) XThread.sleep(10);
 				continue;
 			}
 
@@ -274,6 +291,7 @@ public class SelectorThread2 {
 		ServerSocketChannel schn = (ServerSocketChannel)sk.channel();
 		QueueChannel qchn = (QueueChannel)sk.attachment();
 		SocketChannel chn = schn.accept();
+		Log.debug("new connection accepted");
 		sk = addChannel(chn, SelectionKey.OP_READ, qchn.hnd.createFilter());
 		qchn = (QueueChannel)sk.attachment();
 		qchn.connected=true;

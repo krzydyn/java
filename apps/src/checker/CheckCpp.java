@@ -46,7 +46,7 @@ public class CheckCpp {
 		LapTime tm=new LapTime("ln");
 		try {
 			CppParser.CppNode n=p.parse(f);
-			tm.update(System.currentTimeMillis(), p.getLineNo());
+			tm.updateAbs(p.getLineNo());
 			System.out.println(tm.toString());
 			CppBuilder.write(n, new OutputStreamWriter(System.out));
 		}catch (IOException e) {

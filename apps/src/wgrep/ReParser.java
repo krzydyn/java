@@ -16,6 +16,7 @@ public class ReParser {
 		Pattern p = Pattern.compile(reGalazka);
 		BufferedReader rd = new BufferedReader(new FileReader(Env.expandEnv(f)));
 		String ln;
+
 		while ((ln=rd.readLine()) != null) {
 			ln = ln.trim();
 			if (ln.isEmpty()) continue;

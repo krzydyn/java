@@ -234,8 +234,7 @@ public class RDesk extends MainPanel {
 			@Override
 			public void run() {
 				while (selector.isRunning()) {
-					if (!qchn.isOpen()) qchn=null;
-					if (qchn == null) {
+					if (qchn.isOpen()) {
 						try {
 							qchn = (QueueChannel)selector.connect(Host, 3367, chnHandler).attachment();
 						} catch (IOException e) {

@@ -169,4 +169,16 @@ public class Env {
 		}
 		return dirs;
 	}
+
+	static String memstat() {
+		//System.gc(); // <=> Runtime.getRuntime().gc();
+		Runtime.getRuntime().gc();
+		StringBuilder b = new StringBuilder();
+		b.append("free: "+Runtime.getRuntime().freeMemory());
+		b.append(", ");
+		b.append("max: "+Runtime.getRuntime().maxMemory());
+		b.append(", ");
+		b.append("total: "+Runtime.getRuntime().totalMemory());
+		return b.toString();
+	}
 }

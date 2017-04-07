@@ -106,8 +106,7 @@ public class Wgrep {
 			len=resp.body().length();
 		}
 
-		long t=System.currentTimeMillis();
-		lap.update(t, len);
+		long t=lap.update(len);
 		if (tmPrn < t) {
 			System.out.printf("recv: %s, dirs=%d\n", lap, visitedDirs.size());
 			tmPrn += 5000;
