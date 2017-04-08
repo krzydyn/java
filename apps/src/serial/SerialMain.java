@@ -37,8 +37,8 @@ import ui.MainPanel;
 @SuppressWarnings("serial")
 public class SerialMain extends MainPanel {
 
-	private List<Serial> ports = new ArrayList<Serial>();
-	private Map<Serial,AnsiTerminal> editors = new HashMap<Serial,AnsiTerminal>();
+	private final List<Serial> ports = new ArrayList<Serial>();
+	private final Map<Serial,AnsiTerminal> editors = new HashMap<Serial,AnsiTerminal>();
 	private boolean running = false;
 
 	public SerialMain() {this(null);}
@@ -193,9 +193,12 @@ public class SerialMain extends MainPanel {
 			}
 		}
 
+		Log.debug("closing ports");
+		System.exit(0); //closing ports on Mac crashes
 		for (Serial s : ports) {
 			s.close();
 		}
+		Log.debug("readLoop fin\n");
 	}
 
 	public static void main(String[] args) {

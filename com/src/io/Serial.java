@@ -18,14 +18,18 @@
 
 package io;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import sys.Env;
+import sys.Log;
 import gnu.io.CommPort;
 import gnu.io.CommPortIdentifier;
+import gnu.io.RXTXPort;
 import gnu.io.RXTXVersion;
 import gnu.io.SerialPort;
 
@@ -42,7 +46,7 @@ public class Serial {
 		final static public int FLOW_RTSCTS = SerialPort.FLOWCONTROL_RTSCTS_IN|SerialPort.FLOWCONTROL_RTSCTS_OUT;
 		final static public int FLOW_XONXOFF = SerialPort.FLOWCONTROL_XONXOFF_IN|SerialPort.FLOWCONTROL_XONXOFF_OUT;
 	}
-	private String portName;
+	private final String portName;
 	private CommPort commPort;
 
 	static public List<String> listPorts() {
@@ -74,13 +78,28 @@ public class Serial {
 	        }
 	        //setup default reading timeout (in 1/10 sec)
 	        commPort.enableReceiveTimeout(20);
+		} catch (gnu.io.NoSuchPortException e) {
+			FileNotFoundException ee = new FileNotFoundException(portName);
+			Env.setCause(ee, e);
+			throw ee;
 		} catch (Throwable e) {
 			throw new IOException("open " + portName, e);
 		}
 	}
 
 	public void close() {
-		if (commPort != null) commPort.close();
+		Log.debug("close port %s", portName);
+		if (commPort != null) {
+			SerialPort serialPort = (SerialPort) commPort;
+			Log.debug("close port: dtr false");
+			serialPort.setDTR(false);
+			Log.debug("close port: rts false");
+			serialPort.setRTS(false);
+			Log.debug("close port: rm list");
+			((RXTXPort)serialPort).removeEventListener();
+			Log.debug("close port: close");
+			commPort.close();
+		}
 		commPort=null;
 	}
 

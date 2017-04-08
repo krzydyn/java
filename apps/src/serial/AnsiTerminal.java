@@ -93,12 +93,12 @@ public class AnsiTerminal extends JPanel implements FocusListener,KeyListener {
 	private static final int MAX_COL=120;
 	private static final int MAX_ROW=60;
 
-	private JTextComponent editor = new JTextPane();
-	private JLabel title = new JLabel();
-	private SimpleAttributeSet attrib = new SimpleAttributeSet();
-	private StringBuilder inputBuffer = new StringBuilder();
-	private StringBuilder outputBuffer = new StringBuilder();
-	private Point cpos = new Point(0, 0);
+	private final JTextComponent editor = new JTextPane();
+	private final JLabel title = new JLabel();
+	private final SimpleAttributeSet attrib = new SimpleAttributeSet();
+	private final StringBuilder inputBuffer = new StringBuilder();
+	private final StringBuilder outputBuffer = new StringBuilder();
+	private final Point cpos = new Point(0, 0);
 	private int absCurPos=0;
 	private boolean escSeq = false;
 	private boolean sendingTilde = false;
@@ -267,7 +267,6 @@ public class AnsiTerminal extends JPanel implements FocusListener,KeyListener {
 		if (e.getModifiers() != 0) return ;
 
 		int code = e.getKeyCode();
-
 		if (code == KeyEvent.VK_UP) { //up-arrow
 			Log.debug("Key UP");
 			inputBuffer.append(Ansi.CSI+"A");
