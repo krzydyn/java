@@ -181,4 +181,12 @@ public class Env {
 		b.append("total: "+Runtime.getRuntime().totalMemory());
 		return b.toString();
 	}
+
+	static public void setCause(Throwable e,Throwable c) {
+		try {
+			java.lang.reflect.Field cause = Throwable.class.getDeclaredField("cause");
+			cause.setAccessible(true);
+			cause.set(e, c);
+		} catch (Throwable te) {}
+	}
 }
