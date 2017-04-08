@@ -37,8 +37,8 @@ public class RDesk extends MainPanel {
 	private final Object imgLock = new Object();
 	private Image imgFull;
 	private Image imgGray;
-	private List<ImageBox> imgq = new ArrayList<ImageBox>();
-	private List<ImageBox> rois = new ArrayList<ImageBox>();
+	private final List<ImageBox> imgq = new ArrayList<ImageBox>();
+	private final List<ImageBox> rois = new ArrayList<ImageBox>();
 	QueueChannel qchn;
 	Point prevMouseLoc = new Point();
 	String Host = null;
@@ -62,13 +62,16 @@ public class RDesk extends MainPanel {
 		@Override
 		public void connected(QueueChannel chn) {
 			Log.debug("connected");
-			imgFull=null;
+			qchn = chn;
+			imgFull = null;
 			rois.clear();
 			inmsg.clear(); inlen=0;
 			sendScreenInfoReq();
+			sendScreenReq();
 		}
 		@Override
 		public void disconnected(QueueChannel chn) {
+			qchn = null;
 			Log.debug("disconnected");
 			rois.clear();
 			repaint();
@@ -118,7 +121,6 @@ public class RDesk extends MainPanel {
 		}
 		@Override
 		public void write(QueueChannel chn, ByteBuffer buf) {
-			if (!chn.isConnected() && chn.queueSize() > 0) return ;
 			ByteBuffer lenbuf = ByteBuffer.allocate(4);
 			lenbuf.putInt(buf.remaining());
 			lenbuf.flip();
@@ -135,8 +137,6 @@ public class RDesk extends MainPanel {
 		selector = new SelectorThread2();
 		selector.start();
 		if (args.length > 0) Host = args[0];
-		//qchn = (QueueChannel)selector.connect("106.120.52.62", 3367, chnHandler).attachment();
-		qchn = (QueueChannel)selector.connect(Host, 3367, chnHandler).attachment();
 
 		setPreferredSize(new Dimension(1600,800));
 		setFocusTraversalKeysEnabled(false);
@@ -199,8 +199,8 @@ public class RDesk extends MainPanel {
 		int maxx=3000, maxy=2000;
 		if (ifu != null) {
 			g.drawImage(ifu, 0, 0, null);
-			maxx=imgFull.getWidth(null);
-			maxy=imgFull.getHeight(null);
+			maxx=ifu.getWidth(null);
+			maxy=ifu.getHeight(null);
 		}
 
 		int mx=getWidth()/2;
@@ -217,7 +217,7 @@ public class RDesk extends MainPanel {
 			for (ImageBox r : rois) {
 				if (r.x+r.w > maxx || r.y+r.h > maxy) {
 					g.setColor(Color.RED);
-					Log.error("rect out of range: %s, (%d,%d)",r,maxx,maxy);
+					//Log.error("rect out of range: %s, (%d,%d)",r,maxx,maxy);
 				}
 				else
 					g.setColor(Color.GREEN);
@@ -230,22 +230,19 @@ public class RDesk extends MainPanel {
 
 	@Override
 	protected void windowOpened() {
-		new Thread("PullScreen") {
+		new Thread("ConnectKeeper") {
 			@Override
 			public void run() {
 				while (selector.isRunning()) {
-					if (qchn.isOpen()) {
+					if (qchn==null) {
 						try {
-							qchn = (QueueChannel)selector.connect(Host, 3367, chnHandler).attachment();
+							selector.connect(Host, 3367, chnHandler);
 						} catch (IOException e) {
 							Log.error(e);
 							break;
 						}
 					}
 
-					if (imgFull == null) {
-						sendScreenReq();
-					}
 					XThread.sleep(1000);
 				}
 				selector.stop();
@@ -260,6 +257,9 @@ public class RDesk extends MainPanel {
 
 	private String getUTF(ByteBuffer b) {
 		int l=b.getShort();
+		if (l < 0) {
+			throw new NegativeArraySizeException("s="+l);
+		}
 		byte[] a = new byte[l];
 		b.get(a);
 		return new String(a,Text.UTF8_Charset);
@@ -287,7 +287,7 @@ public class RDesk extends MainPanel {
 
 	private void processMsg(QueueChannel chn) {
 		short cmd = inmsg.getShort();
-		//Log.debug("msgtype = %d, payload %d", type, inmsg.remaining());
+		Log.debug("cmd = %d, payload %d", cmd, inmsg.remaining());
 		if (cmd == RCommand.SCREEN_INFO) {
 			String id = getUTF(inmsg);
 			int x = inmsg.getInt();
@@ -295,7 +295,6 @@ public class RDesk extends MainPanel {
 			int w = inmsg.getInt();
 			int h = inmsg.getInt();
 			Log.info("%s: %d %d %d %d",id,x,y,w,h);
-			sendRegister();
 		}
 		else if (cmd == RCommand.SCREEN_IMG) {
 			int x = inmsg.getInt();
@@ -306,9 +305,10 @@ public class RDesk extends MainPanel {
 			catch (IOException e) {Log.error(e);}
 			if (i!=null) {
 				synchronized (imgLock) {
-					if (imgFull==null && i.getWidth(null)>1000) {
-						imgFull=i;
+					if (imgFull==null) {
+						imgFull = i;
 						Log.debug("recv fullscr %d,%d,%d,%d  bytes=%d",x,y,i.getWidth(null),i.getHeight(null),inmsg.remaining());
+						sendRegister();
 					}
 					else {
 						if (x==0 && y==0 && i.getWidth(null)==200) imgGray=i;
@@ -335,7 +335,7 @@ public class RDesk extends MainPanel {
 		chnHandler.write(qchn, b);
 	}
 	private void sendMouseMove(int x,int y) {
-		if (!qchn.isConnected()) return ;
+		if (qchn==null) return ;
 		if (Math.abs(prevMouseLoc.x-x) + Math.abs(prevMouseLoc.y-y) < 5) return ;
 		prevMouseLoc.setLocation(x, y);
 		ByteBuffer b = ByteBuffer.allocate(14);
@@ -411,15 +411,13 @@ public class RDesk extends MainPanel {
 		chnHandler.write(qchn, b);
 	}
 	private void sendWheelMove(int rot) {
-		if (!qchn.isOpen()) return ;
+		if (qchn==null) return ;
 		ByteBuffer b = ByteBuffer.allocate(14);
 		b.putShort(RCommand.MOUSE_WHEEL);
 		b.putInt(rot);
 		b.flip();
 		chnHandler.write(qchn, b);
 	}
-
-
 
 	public static void main(String[] args) {
 		start(RDesk.class, args);

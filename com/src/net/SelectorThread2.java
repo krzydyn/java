@@ -70,7 +70,6 @@ public class SelectorThread2 {
 		public boolean isOpen() {return chn.isOpen();}
 		public boolean isConnected() {return connected;}
 		public void write(ByteBuffer b,boolean part) {
-			if (!chn.isOpen()) throw new RuntimeException("chn is not opened");
 			if (!part && writeq != null &&  b.limit() > RWBUFLEN) {
 				int limit = (b.limit()/RWBUFLEN+1)*2+10;
 				if (writeq.size() > limit)
@@ -326,6 +325,7 @@ public class SelectorThread2 {
 		QueueChannel qchn = (QueueChannel)sk.attachment();
 		ByteBuffer b;
 		synchronized (qchn) {
+			if (qchn.writeq.size()==0) return ;
 			b = qchn.writeq.get(0);
 			int r = c.write(b);
 			if (b.remaining() == 0) {

@@ -1,7 +1,6 @@
 package rgui;
 
 import java.awt.Dimension;
-import java.awt.EventQueue;
 import java.awt.GraphicsDevice;
 import java.awt.GraphicsEnvironment;
 import java.awt.MouseInfo;
@@ -251,7 +250,8 @@ public class RServer implements ChannelHandler {
 		}
 	}
 	private void registerClient(QueueChannel chn) {
-		clients.add(chn);
+		if (!clients.contains(chn))
+			clients.add(chn);
 	}
 	private boolean altPressed=false;
 	private boolean winPressed=false;
@@ -502,21 +502,16 @@ public class RServer implements ChannelHandler {
 				}
 				forceActionTm = System.currentTimeMillis()+FORCE_ACTION_TIME;
 			}
-			XThread.sleep(10);
+			XThread.sleep(1000/20);
 		}
 		Log.info("rserver finished");
 	}
 
 	public static void main(String[] args) throws Exception {
-		EventQueue.invokeAndWait(new Runnable() {
-			@Override
-			public void run() {
-				try {
-					new RServer().run();
-				} catch (Throwable e) {
-					Log.error(e);
-				}
-			}
-		});
+		try {
+			new RServer().run();
+		} catch (Throwable e) {
+			Log.error(e);
+		}
 	}
 }
