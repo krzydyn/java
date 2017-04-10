@@ -31,6 +31,7 @@ import java.util.Map;
 import javax.swing.JPanel;
 import javax.swing.JSplitPane;
 
+import sys.Env;
 import sys.Log;
 import ui.MainPanel;
 
@@ -43,7 +44,7 @@ public class SerialMain extends MainPanel {
 
 	public SerialMain() {this(null);}
 	public SerialMain(String[] args) {
-		setName("MultiConsole");
+		setName("MultiConsole/"+Env.osName());
 		setPreferredSize(new Dimension(800,600));
 
 		if (args != null) {
@@ -193,8 +194,8 @@ public class SerialMain extends MainPanel {
 			}
 		}
 
+		if (Env.isMacos()) System.exit(0); //closing ports on Mac crashes
 		Log.debug("closing ports");
-		System.exit(0); //closing ports on Mac crashes
 		for (Serial s : ports) {
 			s.close();
 		}

@@ -56,7 +56,7 @@ public class Colors {
 		int r = (rgb>>16)&0xff;
 		int g = (rgb>>8)&0xff;
 		int b = rgb&0xff;
-		return (r<<1+r+g<<2+b)>>>3;
+		return ((r<<1)+(g<<2)+b)>>>3;
 	}
 
 	/**

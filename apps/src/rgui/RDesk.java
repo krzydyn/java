@@ -14,6 +14,7 @@ import java.awt.event.MouseWheelEvent;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.channels.SelectionKey;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -62,7 +63,6 @@ public class RDesk extends MainPanel {
 		@Override
 		public void connected(QueueChannel chn) {
 			Log.debug("connected");
-			qchn = chn;
 			imgFull = null;
 			rois.clear();
 			inmsg.clear(); inlen=0;
@@ -236,7 +236,8 @@ public class RDesk extends MainPanel {
 				while (selector.isRunning()) {
 					if (qchn==null) {
 						try {
-							selector.connect(Host, 3367, chnHandler);
+							SelectionKey sk = selector.connect(Host, 3367, chnHandler);
+							qchn=(QueueChannel)sk.attachment();
 						} catch (IOException e) {
 							Log.error(e);
 							break;
@@ -287,7 +288,7 @@ public class RDesk extends MainPanel {
 
 	private void processMsg(QueueChannel chn) {
 		short cmd = inmsg.getShort();
-		Log.debug("cmd = %d, payload %d", cmd, inmsg.remaining());
+		//Log.debug("cmd = %d, payload %d", cmd, inmsg.remaining());
 		if (cmd == RCommand.SCREEN_INFO) {
 			String id = getUTF(inmsg);
 			int x = inmsg.getInt();

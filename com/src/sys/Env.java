@@ -45,6 +45,10 @@ public class Env {
 	static public final String osArch() { return System.getProperty("os.arch"); }
 	static public final String osVersion() { return System.getProperty("os.version"); }
 
+	static public final boolean isMacos() {
+		return osName().contains("Mac");
+	}
+
 	static public final String expandEnv(String p) {
 		if (p.startsWith("~/") || p.equals("~")) {
 			p=System.getProperty("user.home")+p.substring(1);

@@ -126,6 +126,7 @@ public class SelectorThread2 {
 		Log.debug("binding to %s:%d",addr==null?"*":addr,port);
 		ServerSocketChannel chn=selector.provider().openServerSocketChannel();
 		chn.setOption(StandardSocketOptions.SO_REUSEADDR, true);
+		wakeupForRegister();
 		if (addr == null || addr.isEmpty()) chn.bind(new InetSocketAddress(port), 3);
 		else chn.bind(new InetSocketAddress(addr, port), 3);
 		return addChannel(chn, SelectionKey.OP_ACCEPT, d);
@@ -134,20 +135,23 @@ public class SelectorThread2 {
 		SocketChannel chn=selector.provider().openSocketChannel();
 		chn.configureBlocking(false);
 		Log.debug("connecting ... %s:%d", addr, port);
+		wakeupForRegister();
 		chn.connect(new InetSocketAddress(addr, port));
 		return addChannel(chn, SelectionKey.OP_CONNECT|SelectionKey.OP_READ, d);
 	}
 
 	//low level
-	public SelectionKey addChannel(SelectableChannel chn, int ops, ChannelHandler d) throws IOException {
-		if (chn.isBlocking()) chn.configureBlocking(false);//must be non blocking !!!
-		Log.debug("addChannel ...");
+	private void wakeupForRegister() {
 		if (running) {
 			registerReq=true;
 			Log.debug("wakeup selector");
 			selector.wakeup();
 			Thread.yield();
 		}
+	}
+	private SelectionKey addChannel(SelectableChannel chn, int ops, ChannelHandler d) throws IOException {
+		if (chn.isBlocking()) chn.configureBlocking(false);//must be non blocking !!!
+		Log.debug("addChannel ...");
 		SelectionKey sk = chn.register(selector, ops, new QueueChannel(this, chn, d));
 		if ((ops&SelectionKey.OP_CONNECT)!=0)
 			((QueueChannel)sk.attachment()).addr=((SocketChannel)chn).getRemoteAddress();
@@ -224,7 +228,7 @@ public class SelectorThread2 {
 				Log.debug("selector wait for chn registered");
 				 // wait, so other thread can register new channel
 				synchronized (registerLock) {
-					registerLock.wait();
+					if (registerReq) registerLock.wait();
 				}
 			}
 			synchronized (writeFlag) {
@@ -342,3 +346,13 @@ public class SelectorThread2 {
 		}
 	}
 }
+//problems
+//2017-04-07 16:06:45.911 [E] Selector (SelectorThread2.java:103):
+//java.nio.channels.CancelledKeyException
+//     at sun.nio.ch.SelectionKeyImpl.ensureValid(Unknown Source)
+//     at sun.nio.ch.SelectionKeyImpl.interestOps(Unknown Source)
+//     at net.SelectorThread2.loop(SelectorThread2.java:216)
+//     at net.SelectorThread2.access$200(SelectorThread2.java:41)
+//     at net.SelectorThread2$1.run(SelectorThread2.java:101)
+//
+//2017-04-07 16:06:46.228 [I] AWT-EventQueue-0: rserver finished

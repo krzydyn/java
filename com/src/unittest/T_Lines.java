@@ -24,11 +24,18 @@ import java.awt.geom.Point2D;
 import algebra.Lines;
 import algebra.Lines.IntersectionType;
 import algebra.Maths;
+import sys.Colors;
 import sys.Log;
 import sys.UnitTest;
 
 public class T_Lines extends UnitTest {
 
+	static void colors() {
+		int a = Colors.quick_luminance(0);
+		int b = Colors.quick_luminance(0xffffff);
+		check("black",0,a);
+		check("while",223,b);
+	}
 	static void power() {
 		Log.debug("pow=%d",Maths.power(3, 10));
 		check("wrong power", Maths.power(3, 10)==59049);
