@@ -24,8 +24,9 @@ import java.awt.EventQueue;
 import java.awt.LayoutManager;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
-import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.awt.event.WindowFocusListener;
+import java.awt.event.WindowListener;
 
 import javax.swing.JComponent;
 import javax.swing.JFrame;
@@ -39,6 +40,7 @@ import javax.swing.text.BadLocationException;
 import javax.swing.text.Document;
 import javax.swing.text.JTextComponent;
 
+import sys.Env;
 import sys.Log;
 
 /*
@@ -60,7 +62,7 @@ System.setProperty("com.apple.mrj.application.growbox.intrudes","false");
  */
 
 @SuppressWarnings("serial")
-public class MainPanel extends JPanel{
+public class MainPanel extends JPanel implements WindowListener {
 
 	public MainPanel(LayoutManager l) {
 		super(l);
@@ -72,9 +74,23 @@ public class MainPanel extends JPanel{
 		setRequestFocusEnabled(true);
 	}
 
-	protected void windowClosed(){}
-	protected void windowOpened() {}
-	protected void windowResized() {}
+	@Override
+	public void windowOpened(WindowEvent e) {}
+	@Override
+	public void windowClosing(WindowEvent e) {}
+	@Override
+	public void windowClosed(WindowEvent e) {}
+	@Override
+	public void windowIconified(WindowEvent e) {}
+	@Override
+	public void windowDeiconified(WindowEvent e) {}
+	@Override
+	public void windowActivated(WindowEvent e) {}
+	@Override
+	public void windowDeactivated(WindowEvent e) {}
+	public void windowResized(ComponentEvent e) {}
+	public void windowLostFocus(WindowEvent e) {}
+	public void windowGainedFocus(WindowEvent e) {}
 
 	static public void append(JTextPane t, String s) {
 		try {
@@ -116,7 +132,7 @@ public class MainPanel extends JPanel{
 	}
 
 	static public MainPanel start(final Class<? extends MainPanel> mainclass, String[] args) {
-		try { return intern_start(mainclass, args);}
+		try { return internal_start(mainclass, args);}
 		catch (Throwable e) {Log.error(e);}
 		return null;
 	}
@@ -135,7 +151,7 @@ public class MainPanel extends JPanel{
 			return mainclass.getConstructor(String[].class).newInstance(new Object[]{args});
 		}
 	}
-	static private MainPanel intern_start(final Class<? extends MainPanel> mainclass, final String[] args) throws Exception {
+	static private MainPanel internal_start(final Class<? extends MainPanel> mainclass, final String[] args) throws Exception {
 		final MainPanel[] mp = {null};
 		EventQueue.invokeAndWait(new Runnable() {
 			@Override
@@ -144,21 +160,21 @@ public class MainPanel extends JPanel{
 					final MainPanel main = create(mainclass, args);
 					final JFrame f = new JFrame();
 					f.setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
-					f.addWindowListener(new WindowAdapter() {
-						@Override
-						public void windowClosed(WindowEvent e) {
-							main.windowClosed();
-						}
-						@Override
-						public void windowOpened(WindowEvent e) {
-							main.requestFocusInWindow();
-							main.windowOpened();
-						}
-					});
+					f.addWindowListener(main);
 					f.addComponentListener(new ComponentAdapter() {
 						@Override
 						public void componentResized(ComponentEvent e) {
-							main.windowResized();
+							main.windowResized(e);
+						}
+					});
+					f.addWindowFocusListener(new WindowFocusListener() {
+						@Override
+						public void windowGainedFocus(WindowEvent e) {
+							main.windowGainedFocus(e);
+						}
+						@Override
+						public void windowLostFocus(WindowEvent e) {
+							main.windowLostFocus(e);
 						}
 					});
 					f.setTitle(main.getName());
@@ -173,8 +189,8 @@ public class MainPanel extends JPanel{
 					if (d.width!=0 && d.height!=0) {
 						Dimension d1=f.getSize();
 						Dimension d2=main.getSize();
-						Log.debug("frame size %d x %d", d.width, d.height);
-						Log.debug("main size %d x %d", d.width, d.height);
+						Log.debug("frame size %d x %d", d1.width, d1.height);
+						Log.debug("main size %d x %d", d2.width, d2.height);
 						d.width += d1.width-d2.width;
 						d.height += d1.height-d2.height;
 						f.setMinimumSize(d);
@@ -182,6 +198,7 @@ public class MainPanel extends JPanel{
 					f.setLocation(10,10);
 					f.setVisible(true);
 					mp[0]=main;
+					Log.info("%s", Env.memstat());
 				} catch (Throwable e) {
 					Log.error(e);
 				}

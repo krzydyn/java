@@ -174,7 +174,7 @@ public class Env {
 		return dirs;
 	}
 
-	static String memstat() {
+	static public String memstat() {
 		//System.gc(); // <=> Runtime.getRuntime().gc();
 		Runtime.getRuntime().gc();
 		StringBuilder b = new StringBuilder();

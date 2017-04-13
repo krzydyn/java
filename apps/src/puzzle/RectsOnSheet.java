@@ -3,6 +3,7 @@ package puzzle;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Graphics;
+import java.awt.event.WindowEvent;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -61,7 +62,7 @@ public class RectsOnSheet extends MainPanel {
 		}, "SolverLoop").start();
 	}
 	@Override
-	public void windowClosed() {
+	public void windowClosed(WindowEvent e) {
 		running=false;
 	}
 

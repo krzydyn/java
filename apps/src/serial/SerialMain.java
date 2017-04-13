@@ -23,6 +23,7 @@ import io.Serial;
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.GridLayout;
+import java.awt.event.WindowEvent;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -126,7 +127,7 @@ public class SerialMain extends MainPanel {
 	}
 
 	@Override
-	public void windowClosed() {
+	public void windowClosed(WindowEvent e) {
 		running = false;
 	}
 

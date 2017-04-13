@@ -11,6 +11,7 @@ import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseWheelEvent;
+import java.awt.event.WindowEvent;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -227,31 +228,17 @@ public class RDesk extends MainPanel {
 		}
 	}
 
-
 	@Override
-	protected void windowOpened() {
+	public void windowOpened(WindowEvent e) {
 		new Thread("ConnectKeeper") {
 			@Override
 			public void run() {
-				while (selector.isRunning()) {
-					if (qchn==null) {
-						try {
-							SelectionKey sk = selector.connect(Host, 3367, chnHandler);
-							qchn=(QueueChannel)sk.attachment();
-						} catch (IOException e) {
-							Log.error(e);
-							break;
-						}
-					}
-
-					XThread.sleep(1000);
-				}
-				selector.stop();
+				keep_connected();
 			}
 		}.start();
 	}
 	@Override
-	protected void windowClosed() {
+	public void windowClosed(WindowEvent e) {
 		Log.debug("stop selector");
 		selector.stop();
 	}
@@ -418,6 +405,23 @@ public class RDesk extends MainPanel {
 		b.putInt(rot);
 		b.flip();
 		chnHandler.write(qchn, b);
+	}
+
+	private void keep_connected() {
+		while (selector.isRunning()) {
+			if (qchn==null) {
+				try {
+					SelectionKey sk = selector.connect(Host, 3367, chnHandler);
+					qchn=(QueueChannel)sk.attachment();
+				} catch (IOException e) {
+					Log.error(e);
+					break;
+				}
+			}
+
+			XThread.sleep(1000);
+		}
+		selector.stop();
 	}
 
 	public static void main(String[] args) {

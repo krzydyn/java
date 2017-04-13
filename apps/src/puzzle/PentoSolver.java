@@ -5,6 +5,7 @@ import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Point;
+import java.awt.event.WindowEvent;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -98,7 +99,7 @@ public class PentoSolver extends MainPanel implements ChangeListener {
 	}
 
 	@Override
-	public void windowOpened() {
+	public void windowOpened(WindowEvent e) {
 		Dimension scr = getSize();
 		Log.debug("getSize %d x %d",scr.width,scr.height);
 		new Thread("Solver") {
@@ -114,13 +115,8 @@ public class PentoSolver extends MainPanel implements ChangeListener {
 	}
 
 	@Override
-	public void windowClosed() {
+	public void windowClosed(WindowEvent e) {
 		pentomino.stop();
-	}
-	@Override
-	public void windowResized() {
-		//Dimension scr = getSize();
-		//Log.debug("resized getSize %d x %d",scr.width,scr.height);
 	}
 
 	public static void main(String[] args) {

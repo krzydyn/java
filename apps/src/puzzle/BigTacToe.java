@@ -6,6 +6,7 @@ import java.awt.Graphics2D;
 import java.awt.Stroke;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.event.WindowEvent;
 import java.awt.geom.AffineTransform;
 import java.util.ArrayList;
 import java.util.List;
@@ -103,7 +104,7 @@ public class BigTacToe extends MainPanel{
 		g2.setTransform(tr);
 	}
 	@Override
-	public void windowClosed() {
+	public void windowClosed(WindowEvent e) {
 		moves.clear();
 		System.gc();
 	}
