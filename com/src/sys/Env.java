@@ -135,16 +135,27 @@ public class Env {
 
 	static private ClipboardOwner manClipboard = new ClipboardOwner() {
 		@Override
-		public void lostOwnership(Clipboard clipboard, Transferable contents) {}
+		public void lostOwnership(Clipboard clipboard, Transferable contents) {
+			Log.info("lost content ownership");
+		}
 	};
 
 	static public void setClipboardText(String data) throws Exception {
-
-		Toolkit.getDefaultToolkit().getSystemClipboard().setContents(new StringSelection(data), manClipboard);
+		setClipboardText(null, data);
+	}
+	static public void setClipboardText(Clipboard c, String data) throws Exception {
+		if (c==null) c = Toolkit.getDefaultToolkit().getSystemClipboard();
+		c.setContents(new StringSelection(data), manClipboard);
 	}
 	static public String getClipboardText() {
+		return getClipboardText(null);
+	}
+	static public String getClipboardText(Clipboard c) {
+		if (c==null) c = Toolkit.getDefaultToolkit().getSystemClipboard();
 		try {
-			return (String) Toolkit.getDefaultToolkit().getSystemClipboard().getData(DataFlavor.stringFlavor);
+			Transferable t = c.getContents(null);
+			if (t.isDataFlavorSupported(DataFlavor.stringFlavor))
+				return (String)t.getTransferData(DataFlavor.stringFlavor);
 		} catch (Exception e) {}
 		return null;
 	}
