@@ -25,6 +25,7 @@ import javax.imageio.ImageIO;
 import net.ChannelHandler;
 import net.SelectorThread2;
 import net.SelectorThread2.QueueChannel;
+import sys.Env;
 import sys.Log;
 import sys.XThread;
 import text.Text;
@@ -192,6 +193,16 @@ public class RDesk extends MainPanel {
 		addMouseWheelListener(mouseHnadler);
 	}
 
+
+	@Override
+	public void windowGainedFocus(WindowEvent e) {
+		sendSetClipboard(Env.getClipboardText());
+	}
+	@Override
+	public void windowLostFocus(WindowEvent e) {
+		sendGetClipboard();
+	}
+
 	@Override
 	protected void paintComponent(Graphics g) {
 		Image ifu;
@@ -243,7 +254,7 @@ public class RDesk extends MainPanel {
 		selector.stop();
 	}
 
-	private String getUTF(ByteBuffer b) {
+	private String readUTF(ByteBuffer b) {
 		int l=b.getShort();
 		if (l < 0) {
 			throw new NegativeArraySizeException("s="+l);
@@ -251,6 +262,12 @@ public class RDesk extends MainPanel {
 		byte[] a = new byte[l];
 		b.get(a);
 		return new String(a,Text.UTF8_Charset);
+	}
+	private void writeUTF(ByteBuffer b, String s) {
+		byte[] a = s.getBytes(Text.UTF8_Charset);
+		int l=a.length;
+		b.putShort((short)l);
+		b.put(a);
 	}
 
 	void updateRoi() {
@@ -277,7 +294,7 @@ public class RDesk extends MainPanel {
 		short cmd = inmsg.getShort();
 		//Log.debug("cmd = %d, payload %d", cmd, inmsg.remaining());
 		if (cmd == RCommand.SCREEN_INFO) {
-			String id = getUTF(inmsg);
+			String id = readUTF(inmsg);
 			int x = inmsg.getInt();
 			int y = inmsg.getInt();
 			int w = inmsg.getInt();
@@ -309,6 +326,14 @@ public class RDesk extends MainPanel {
 				}
 				//TODO update fullImg in separate thread
 				updateRoi();
+			}
+		}
+		else if (cmd == RCommand.CLIPBOARD_SET) {
+			String s = readUTF(inmsg);
+			try {
+				Env.setClipboardText(s);
+			} catch (Exception e) {
+				Log.error(e);
 			}
 		}
 		else {
@@ -371,6 +396,7 @@ public class RDesk extends MainPanel {
 		chnHandler.write(qchn, b);
 	}
 	private void sendKeyPressed(int keycode) {
+		//Log.debug("keypress %d(%x)",keycode,keycode);
 		ByteBuffer b = ByteBuffer.allocate(2+4);
 		b.putShort(RCommand.KEY_PRESS);
 		b.putInt(keycode);
@@ -403,6 +429,20 @@ public class RDesk extends MainPanel {
 		ByteBuffer b = ByteBuffer.allocate(14);
 		b.putShort(RCommand.MOUSE_WHEEL);
 		b.putInt(rot);
+		b.flip();
+		chnHandler.write(qchn, b);
+	}
+	private void sendSetClipboard(String t) {
+		ByteBuffer b = ByteBuffer.allocate(4+t.length()*4);
+		b.putShort(RCommand.CLIPBOARD_SET);
+		writeUTF(b, t);
+		b.flip();
+		chnHandler.write(qchn, b);
+	}
+
+	private void sendGetClipboard() {
+		ByteBuffer b = ByteBuffer.allocate(2);
+		b.putShort(RCommand.CLIPBOARD_GET);
 		b.flip();
 		chnHandler.write(qchn, b);
 	}

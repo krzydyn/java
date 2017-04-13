@@ -197,6 +197,7 @@ public class MainPanel extends JPanel implements WindowListener {
 					}
 					f.setLocation(10,10);
 					f.setVisible(true);
+					main.requestFocus();
 					mp[0]=main;
 					Log.info("%s", Env.memstat());
 				} catch (Throwable e) {

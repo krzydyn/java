@@ -13,6 +13,6 @@ public final class RCommand {
 	public static final short MOUSE_RELEASE = 9;
 	public static final short MOUSE_WHEEL = 10;
 	public static final short TEXT_MESSAGE = 11;
-	public static final short CLIPBOAD_GET = 12;
-	public static final short CLIPBOAD_SET = 13;
+	public static final short CLIPBOARD_GET = 12;
+	public static final short CLIPBOARD_SET = 13;
 }

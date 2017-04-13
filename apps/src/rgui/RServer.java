@@ -26,6 +26,7 @@ import javax.imageio.ImageWriter;
 import javax.imageio.plugins.jpeg.JPEGImageWriteParam;
 
 import sys.Colors;
+import sys.Env;
 import sys.Log;
 import sys.XThread;
 import text.Text;
@@ -142,6 +143,12 @@ public class RServer implements ChannelHandler {
 			int rot=msg.getInt();
 			xcode=rot;
 			mouseWheel(rot);
+		}
+		else if (cmd == RCommand.CLIPBOARD_GET) {
+			getClipboard(chn);
+		}
+		else if (cmd == RCommand.CLIPBOARD_SET) {
+			setClipboard(msg);
 		}
 		else {
 			Log.error("unknown cmd:%d, payload %d", cmd, msg.remaining());
@@ -300,6 +307,38 @@ public class RServer implements ChannelHandler {
 		robot.mouseWheel(rot);
 		forceActionTm = System.currentTimeMillis()+FORCE_ACTION_TIME;
 	}
+	private String getUTF(ByteBuffer b) {
+		int l=b.getShort();
+		if (l < 0) {
+			throw new NegativeArraySizeException("s="+l);
+		}
+		byte[] a = new byte[l];
+		b.get(a);
+		return new String(a,Text.UTF8_Charset);
+	}
+	private void setClipboard(ByteBuffer msg) {
+		String s = getUTF(msg);
+		try {
+			Env.setClipboardText(s);
+		} catch (Exception e) {
+			Log.error(e);
+		}
+	}
+	private void getClipboard(QueueChannel chn) {
+		String s = Env.getClipboardText();
+		ByteArrayOutputStream os = new ByteArrayOutputStream(s.length()*2+2);
+		DataOutputStream dos = new DataOutputStream(os);
+		try {
+			dos.writeShort(RCommand.CLIPBOARD_SET);
+			dos.writeUTF(s);
+			dos.close();
+			write(chn,ByteBuffer.wrap(os.toByteArray()));
+		} catch (IOException e) {
+			Log.error(e);
+		}
+
+	}
+
 	private void sendImage(QueueChannel chn, int x, int y, int w, int h, float q) {
 		if (w<=0 || h<=0) return ;
 		if (x >= screenRect.x+screenRect.width) x=screenRect.x+screenRect.width;
