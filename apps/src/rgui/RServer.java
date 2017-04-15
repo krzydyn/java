@@ -262,9 +262,11 @@ public class RServer implements ChannelHandler {
 	}
 	private boolean altPressed=false;
 	private boolean winPressed=false;
+	private boolean metaPressed=false;
 	private void keyPressed(int keycode) {
 		if(keycode == KeyEvent.VK_ALT) altPressed=true;
 		else if(keycode == KeyEvent.VK_WINDOWS) winPressed=true;
+		else if(keycode == KeyEvent.VK_META) metaPressed=true;
 		if (keycode==KeyEvent.VK_ALT_GRAPH) {
 			robot.keyPress(KeyEvent.VK_ALT);
 			robot.keyPress(KeyEvent.VK_CONTROL);
@@ -275,6 +277,7 @@ public class RServer implements ChannelHandler {
 	private void keyReleased(int keycode) {
 		if(keycode == KeyEvent.VK_ALT) altPressed=false;
 		else if(keycode == KeyEvent.VK_WINDOWS) winPressed=false;
+		else if(keycode == KeyEvent.VK_META) metaPressed=false;
 		if (keycode==KeyEvent.VK_ALT_GRAPH) {
 			robot.keyRelease(KeyEvent.VK_ALT);
 			robot.keyRelease(KeyEvent.VK_CONTROL);
@@ -288,6 +291,10 @@ public class RServer implements ChannelHandler {
 		if (winPressed) {
 			robot.keyRelease(KeyEvent.VK_WINDOWS);
 			winPressed=false;
+		}
+		if (metaPressed) {
+			robot.keyRelease(KeyEvent.VK_META);
+			metaPressed=false;
 		}
 	}
 	private void mousePressed(int buttons) {

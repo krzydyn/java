@@ -123,6 +123,7 @@ public class RDesk extends MainPanel {
 		}
 		@Override
 		public void write(QueueChannel chn, ByteBuffer buf) {
+			if (chn==null) return ;
 			ByteBuffer lenbuf = ByteBuffer.allocate(4);
 			lenbuf.putInt(buf.remaining());
 			lenbuf.flip();
@@ -151,7 +152,7 @@ public class RDesk extends MainPanel {
 			}
 			@Override
 			public void keyPressed(KeyEvent e) {
-				//Log.info("keyPressed: %d",e.getKeyCode());
+				//Log.info("keyPressed: %d(0x%x)",e.getKeyCode(),e.getKeyCode());
 				sendKeyPressed(e.getKeyCode());
 			}
 			@Override
