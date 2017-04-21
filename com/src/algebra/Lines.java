@@ -21,7 +21,7 @@ import java.awt.Point;
 import java.awt.geom.Point2D;
 
 public class Lines {
-	public static double EPS = 10e-10;
+	final public static double EPS = 1e-10;
 	public enum IntersectionType {
 		OVERLAID, // sengmets are laying on one line and have common part (implies PARALLEL)
 		COLINEAR, // segments are laying on one line but have no common parts (implies PARALLEL)
@@ -59,7 +59,7 @@ public class Lines {
 					p1.getY() + ua*(p2.getY() - p1.getY()));
 		}
 
-		if (ua < -EPS || ua > 1.0+EPS) return IntersectionType.CROSS_OUT;
+		if (ua <= -EPS || ua >= 1.0+EPS) return IntersectionType.CROSS_OUT;
 		if (Math.abs(ua) < EPS || Math.abs(ua-1.0) < EPS) return IntersectionType.TOUCH;
 
 		return IntersectionType.CROSS_IN;
@@ -74,21 +74,21 @@ public class Lines {
 
 		if (d == 0) {
 			if (a == 0 && b == 0) {
-				a = p2.x-p1.x;
+				//IntersectionType.OVERLAID
 				return IntersectionType.COLINEAR;
 			}
 			return IntersectionType.PARALLEL;
 		}
 
 		double ua = ((double)a)/d;
-		double ub = ((double)b)/d;
-		//Log.debug("ua = %.3f,  ub = %.3f", ua, ub);
+		//double ub = ((double)b)/d;
+		//Log.debug("ua = %g,  ub = %g", ua, ub);
 
 		if (r!=null) {
 			r.setLocation(p1.x + ua*(p2.x - p1.x),p1.y + ua*(p2.y - p1.y));
 		}
 
-		if (ua < -EPS || ua > 1.0+EPS) return IntersectionType.CROSS_OUT;
+		if (ua <= -EPS || ua >= 1.0+EPS) return IntersectionType.CROSS_OUT;
 		if (Math.abs(ua) < EPS || Math.abs(ua-1.0) < EPS) return IntersectionType.TOUCH;
 
 		return IntersectionType.CROSS_IN;

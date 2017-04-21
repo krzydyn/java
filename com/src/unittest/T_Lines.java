@@ -60,13 +60,13 @@ public class T_Lines extends UnitTest {
 		while (p[3].y>-4) {
 			t = Lines.intersection(p[0], p[1], p[2], p[3], r);
 			//Log.debug("{%s %s} {%s %s} : %s at %s", p[0], p[1], p[2], p[3], t.name(), r);
-			check("Wrong type " + t.name(), t == expectedType[e]); ++e;
+			check("Wrong type " + t.name() + "!=" + expectedType[e].name(), t == expectedType[e]); ++e;
 			++p[3].x;
 			p[3].y-=2;
 		}
 		while (p[3].x<4) {
 			t = Lines.intersection(p[0], p[1], p[2], p[3], r);
-			check("Wrong type " + t.name(), t == expectedType[e]); ++e;
+			check("Wrong type " + t.name() + "!=" + expectedType[e].name(), t == expectedType[e]); ++e;
 			//Log.debug("{%s %s} {%s %s} : %s at %s", p[0], p[1], p[2], p[3], t.name(), r);
 			++p[3].x;
 			++p[3].y;
