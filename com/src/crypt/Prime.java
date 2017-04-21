@@ -54,12 +54,15 @@ public class Prime {
 		}
 	}
 
+	static public final BigInteger TWO = BigInteger.valueOf(2);
+
 	static public boolean isPrime(BigInteger p) {
-		if (!p.testBit(0)) return false;
-		for (int i=1; i < PRIMES.length; ++i) {
+		if (p.compareTo(BigInteger.ONE) < 0) return false;
+		if (p.compareTo(TWO) == 0) return true;
+		for (int i=0; i < PRIMES.length; ++i) {
 			if (p.remainder(BigInteger.valueOf(PRIMES[i])).equals(BigInteger.ZERO)) return false;
 		}
-		return p.isProbablePrime(100);
+		return p.isProbablePrime(1);
 	}
 
 	//Fermat's little theorem: a^p == a mod p for any p-prime and a-integer [a^(p-1) == 1 mod p]
