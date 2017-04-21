@@ -40,7 +40,7 @@ public class T_Algebra extends UnitTest {
 		MatrixI m2 = new MatrixI(2, 3,1, 2,1, 1,0);
 		MatrixI r = m1.mul(m2);
 		//System.out.println(r.toString());
-		check("m1.mul(m2)", r.equals(new MatrixI(4, 5,1, 4,2)));
+		check("m1.mul(m2)", r.equals(new MatrixI(2, 5,1, 4,2)));
 		r = m2.mul(m1);
 		check("m2.mul(m1)", r.equals(new MatrixI(3, 2,3,7, 1,3,5, 1,0,2)));
 		//System.out.println(r.toString());
@@ -171,7 +171,7 @@ public class T_Algebra extends UnitTest {
 	private static void _printStat(String l) {
 		Log.prn("%s: ops %d mem %d/%d",l,Sorting.opCnt,Sorting.rdCnt,Sorting.wrCnt);
 	}
-	static void quicksort() {
+	static void quickersort() {
 		int[] unsorted = {9,9,7,7,5,5,3,3,2,2,1,1};
 		int[] sorted = {1,1,2,2,3,3,5,5,7,7,9,9};
 		int[] a = new int[unsorted.length];

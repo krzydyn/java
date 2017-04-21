@@ -34,7 +34,7 @@ public class MatrixI {
 	}
 	public MatrixI(int w, int... a) {
 		this.w=w;
-		this.h=a.length;
+		this.h=(a.length+w-1)/w;
 		this.v = new int[this.w*this.h];
 		System.arraycopy(a, 0, this.v, 0, a.length);
 	}
@@ -101,7 +101,7 @@ public class MatrixI {
 	}
 
 	public MatrixI mul(MatrixI m) {
-		if (w != m.h) throw new RuntimeException("can't mult matrix");
+		if (w != m.h) throw new RuntimeException("can't mult matrix this.w="+w+"!=m.h="+m.h);
 		MatrixI r = new MatrixI(m.w, h);
 		for(int i = 0 ; i < r.h ; ++i)
 			for(int k = 0 ; k < m.h ; ++k) {
