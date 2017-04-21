@@ -17,7 +17,7 @@
 			includes="git/**"
 			classpath="${comdir}/${build}"
 		/>
-		<jar destfile="gitsvg.jar" basedir="build">
+		<jar destfile="${build}/gitsvg.jar" basedir="build">
 			<fileset dir="${comdir}/${build}">
 				<include name="sys/Env*"/>
 				<include name="sys/Log*"/>
@@ -36,7 +36,7 @@
 	<target name="deploy" depends="gitsvg">
 		<echo>Deploing files to CI server</echo>
 		<exec executable="scp" dir="." failonerror="true">
-			<arg value="gitsvg.jar"/>
+			<arg value="${build}/gitsvg.jar"/>
 			<arg value="secosci@106.120.53.105:/var/www/secosci/jar/"/>
 		</exec>
 	</target>
@@ -60,7 +60,7 @@
 			includes="rgui/RServer*"
 			classpath="${comdir}/${build}"
 		/>
-		<jar destfile="rserver.jar" basedir="${build}">
+		<jar destfile="${build}/rserver.jar" basedir="${build}">
 			<fileset dir="${comdir}/${build}">
 				<include name="sys/*"/>
 				<include name="net/**"/>
