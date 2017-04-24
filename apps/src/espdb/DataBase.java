@@ -9,6 +9,8 @@ import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
 
+import sys.Env;
+
 public class DataBase {
 	Connection connection = null;
 
@@ -37,6 +39,11 @@ public class DataBase {
 			updCnt = -1;
 		}
 
+		@Override
+		protected void finalize() throws Throwable {
+			close();
+			super.finalize();
+		}
 	}
 
 	public DataBase(String dbname) throws SQLException {
@@ -99,11 +106,7 @@ public class DataBase {
 		r.close();
 	}
 
-	public static void main(String[] args) throws Exception {
-		Class.forName("org.sqlite.JDBC");
-
-		DataBase db = new DataBase("jdbc:sqlite:res/espdb.db");
-
+	static void createTables(DataBase db) throws SQLException {
 		Result r;
 
 		r = db.query("CREATE TABLE IF NOT EXISTS word ("
@@ -111,19 +114,39 @@ public class DataBase {
 				+ ",word VARCHAR"
 				+ ",UNIQUE(word)"
 				+ ")");
-		print(r,System.out);
 		r.close();
-
-		r = db.query("insert into word (word)values (?)", "los;");
-		print(r,System.out);
+		r = db.query("CREATE TABLE IF NOT EXISTS sentence ("
+				+ " id INTEGER PRIMARY KEY AUTOINCREMENT"
+				+ ",sentence TEXT"
+				+ ",UNIQUE(sentence)"
+				+ ")");
 		r.close();
-
-		r = db.query("select * from word");
-		print(r,System.out);
+		r = db.query("CREATE TABLE IF NOT EXISTS wordsentence ("
+				+ " id_word INTEGER"
+				+ ",id_sentence INTEGER"
+				+ ",UNIQUE(id_word,id_sentence)"
+				+ ")");
 		r.close();
-
-		r = db.query("drop table word");
 	}
 
+	public static void main(String[] args) throws Exception {
+		Class.forName("org.sqlite.JDBC");
 
+		Env.remove("res/espdb.db");
+
+		DataBase db = new DataBase("jdbc:sqlite:res/espdb.db");
+		createTables(db);
+
+		Result r;
+
+		r = db.query("INSERT INTO word (word)VALUES (?)", "los;");
+		print(r,System.out);
+		r.close();
+
+		r = db.query("SELECT * FROM word");
+		print(r,System.out);
+		r.close();
+
+		r = db.query("DROP TABLE word");
+	}
 }

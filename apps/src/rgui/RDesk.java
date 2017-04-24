@@ -434,6 +434,7 @@ public class RDesk extends MainPanel {
 		chnHandler.write(qchn, b);
 	}
 	private void sendSetClipboard(String t) {
+		if (t==null) return ;
 		ByteBuffer b = ByteBuffer.allocate(4+t.length()*4);
 		b.putShort(RCommand.CLIPBOARD_SET);
 		writeUTF(b, t);

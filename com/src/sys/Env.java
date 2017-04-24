@@ -204,4 +204,8 @@ public class Env {
 			cause.set(e, c);
 		} catch (Throwable te) {}
 	}
+	public static void remove(String fn) {
+		new File(fn).delete();
+
+	}
 }
