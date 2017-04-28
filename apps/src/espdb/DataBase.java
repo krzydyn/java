@@ -106,6 +106,7 @@ public class DataBase {
 		r.close();
 	}
 
+	//https://en.wikipedia.org/wiki/Grammatical_conjugation
 	static void createTables(DataBase db) throws SQLException {
 		Result r;
 
@@ -115,6 +116,29 @@ public class DataBase {
 				+ ",UNIQUE(word)"
 				+ ")");
 		r.close();
+
+		r = db.query("CREATE TABLE IF NOT EXISTS tense ("
+				+ " id INTEGER PRIMARY KEY AUTOINCREMENT"
+				+ ",name VARCHAR"
+				+ ",UNIQUE(name)"
+				+ ")");
+		r.close();
+		r = db.query("CREATE TABLE IF NOT EXISTS person ("
+				+ " id INTEGER PRIMARY KEY AUTOINCREMENT"
+				+ ",name VARCHAR"
+				+ ",gender ENUM('masculino','femenino')"
+				+ ",UNIQUE(name)"
+				+ ")");
+		r.close();
+		r = db.query("CREATE TABLE IF NOT EXISTS conjugation ("
+				+ " id_word_infinitive INTEGER" //bezokolicznik
+				+ ",id_tense INTEGER"  //present,past,future...
+				+ ",id_person INTEGER"
+				+ ",id_word"
+				+ ")");
+		r.close();
+
+
 		r = db.query("CREATE TABLE IF NOT EXISTS sentence ("
 				+ " id INTEGER PRIMARY KEY AUTOINCREMENT"
 				+ ",sentence TEXT"
@@ -127,6 +151,7 @@ public class DataBase {
 				+ ",UNIQUE(id_word,id_sentence)"
 				+ ")");
 		r.close();
+
 	}
 
 	public static void main(String[] args) throws Exception {

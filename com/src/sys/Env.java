@@ -32,6 +32,8 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.URL;
+import java.nio.file.FileSystems;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -206,6 +208,10 @@ public class Env {
 	}
 	public static void remove(String fn) {
 		new File(fn).delete();
+	}
 
+	public static Iterable<Path> getRoots() {
+		java.nio.file.FileSystem fs = FileSystems.getDefault();
+		return fs.getRootDirectories();
 	}
 }
