@@ -28,7 +28,8 @@ import java.io.Reader;
 import java.io.Writer;
 import java.nio.CharBuffer;
 import java.nio.channels.spi.AbstractSelectableChannel;
-import text.Text;
+
+import sys.Env;
 
 public class IOText extends AbstractSelectableChannel implements Readable,Appendable,Closeable {
 	final Reader rd;
@@ -37,8 +38,8 @@ public class IOText extends AbstractSelectableChannel implements Readable,Append
 		super(null);
 		InputStreamReader is = null;
 		OutputStreamWriter os = null;
-		if (i!=null) is = new InputStreamReader(i, Text.UTF8_Charset);
-		if (o!=null) os = new OutputStreamWriter(o, Text.UTF8_Charset);
+		if (i!=null) is = new InputStreamReader(i, Env.UTF8_Charset);
+		if (o!=null) os = new OutputStreamWriter(o, Env.UTF8_Charset);
 		this.rd=is;
 		this.wr=os;
 

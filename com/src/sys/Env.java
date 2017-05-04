@@ -26,12 +26,17 @@ import java.awt.datatransfer.ClipboardOwner;
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.StringSelection;
 import java.awt.datatransfer.Transferable;
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.URL;
+import java.net.URLConnection;
+import java.nio.charset.Charset;
 import java.nio.file.FileSystems;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -40,6 +45,8 @@ import java.util.List;
 import text.Text;
 
 public class Env {
+	final public static Charset UTF8_Charset = Charset.forName("UTF-8");
+
 	static public final String country() { return System.getProperty("user.country"); }
 	static public final String language() { return System.getProperty("user.language"); }
 	static public final String launcher() { return System.getProperty("sun.java.launcher"); }
@@ -95,7 +102,7 @@ public class Env {
 		InputStream in = child.getInputStream();
 		InputStream err = child.getErrorStream();
 
-		InputStreamReader isr = new InputStreamReader(in, Text.UTF8_Charset);
+		InputStreamReader isr = new InputStreamReader(in, UTF8_Charset);
 		char[] buf = new char[1024];
 		int r;
 
@@ -109,7 +116,7 @@ public class Env {
 			Log.debug("exec %s exitcode=%d", Text.join(" ", args), ec);
 			if (ec != 0) {
 				str.setLength(0);
-				isr = new InputStreamReader(err, Text.UTF8_Charset);
+				isr = new InputStreamReader(err, UTF8_Charset);
 				while ((r=isr.read(buf)) >= 0) {
 					str.append(buf, 0, r);
 				}
@@ -162,16 +169,19 @@ public class Env {
 		return null;
 	}
 
-	static boolean isAppJar() {
-		try {
-			URL u=Env.class.getProtectionDomain().getCodeSource().getLocation();
-			if (u.getFile().endsWith(".jar")) {
-				return true;
-			}
-		} catch (Throwable e) {
-			Log.error(e);
-		}
-		return false;
+	static String getFileContent(String fn) throws IOException {
+		File file = new File(fn);
+		byte b[] = new byte[(int)file.length()];
+		FileInputStream fis = new FileInputStream(file);
+		fis.read(b);
+		fis.close();
+		return new String(b, Env.UTF8_Charset);
+	}
+	static void setFileContent(String fn, String c) throws IOException {
+		File file = new File(fn);
+		FileOutputStream fos = new FileOutputStream(file);
+		fos.write(c.getBytes(Env.UTF8_Charset));
+		fos.close();
 	}
 
 	static public List<File> getDirs(File parent, int level){
@@ -185,6 +195,30 @@ public class Env {
 			}
 		}
 		return dirs;
+	}
+
+	public String getRemoteContents(String url) throws IOException {
+		URL urlObject = new URL(url);
+		URLConnection conn = urlObject.openConnection();
+		BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream(), Env.UTF8_Charset));
+		String inputLine, output = "";
+		while ((inputLine = in.readLine()) != null) {
+			 output += inputLine;
+		}
+		in.close();
+		return output;
+	}
+
+	static boolean isAppJar() {
+		try {
+			URL u=Env.class.getProtectionDomain().getCodeSource().getLocation();
+			if (u.getFile().endsWith(".jar")) {
+				return true;
+			}
+		} catch (Throwable e) {
+			Log.error(e);
+		}
+		return false;
 	}
 
 	static public String memstat() {

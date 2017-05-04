@@ -29,8 +29,8 @@ import java.util.Map;
 
 import svg.Svg;
 import svg.SvgPath;
+import sys.Env;
 import sys.Log;
-import text.Text;
 
 public class GitGraph {
 	static final String[] ArrayOfString0 = new String[0];
@@ -348,7 +348,7 @@ public class GitGraph {
 			if (c.cp==null) break;
 			if (c.fields != null) {
 				os.write(String.format("%d|%s\n",X0+c.cols*DX,c.fields).
-						getBytes(Text.UTF8_Charset));
+						getBytes(Env.UTF8_Charset));
 			}
 			//ps.println(c.fields);
 		}

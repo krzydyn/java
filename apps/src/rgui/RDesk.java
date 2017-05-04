@@ -28,7 +28,6 @@ import net.SelectorThread2.QueueChannel;
 import sys.Env;
 import sys.Log;
 import sys.XThread;
-import text.Text;
 import ui.MainPanel;
 
 @SuppressWarnings("serial")
@@ -262,10 +261,10 @@ public class RDesk extends MainPanel {
 		}
 		byte[] a = new byte[l];
 		b.get(a);
-		return new String(a,Text.UTF8_Charset);
+		return new String(a,Env.UTF8_Charset);
 	}
 	private void writeUTF(ByteBuffer b, String s) {
-		byte[] a = s.getBytes(Text.UTF8_Charset);
+		byte[] a = s.getBytes(Env.UTF8_Charset);
 		int l=a.length;
 		b.putShort((short)l);
 		b.put(a);
@@ -372,7 +371,7 @@ public class RDesk extends MainPanel {
 		sendKeyType(new String(new char[]{c}));
 	}
 	private void sendKeyType(String s) {
-		byte[] a = s.getBytes(Text.UTF8_Charset);
+		byte[] a = s.getBytes(Env.UTF8_Charset);
 		ByteBuffer b = ByteBuffer.allocate(2+a.length);
 		b.putShort(RCommand.TEXT_TYPE);//key type
 		b.put(a, 0, a.length);

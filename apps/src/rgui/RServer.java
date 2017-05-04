@@ -29,7 +29,6 @@ import sys.Colors;
 import sys.Env;
 import sys.Log;
 import sys.XThread;
-import text.Text;
 import net.ChannelHandler;
 import net.SelectorThread2;
 import net.SelectorThread2.QueueChannel;
@@ -106,7 +105,7 @@ public class RServer implements ChannelHandler {
 			mounseClick(x, y, buttons);
 		}
 		else if (cmd == RCommand.TEXT_TYPE) {
-			String s = new String(msg.array(),msg.position(),msg.remaining(),Text.UTF8_Charset);
+			String s = new String(msg.array(),msg.position(),msg.remaining(),Env.UTF8_Charset);
 			xcode = s.charAt(0);
 			keyType(s);
 		}
@@ -321,7 +320,7 @@ public class RServer implements ChannelHandler {
 		}
 		byte[] a = new byte[l];
 		b.get(a);
-		return new String(a,Text.UTF8_Charset);
+		return new String(a,Env.UTF8_Charset);
 	}
 	private void setClipboard(ByteBuffer msg) {
 		String s = getUTF(msg);
@@ -333,6 +332,7 @@ public class RServer implements ChannelHandler {
 	}
 	private void getClipboard(QueueChannel chn) {
 		String s = Env.getClipboardText();
+		if (s == null) return ;
 		ByteArrayOutputStream os = new ByteArrayOutputStream(s.length()*2+2);
 		DataOutputStream dos = new DataOutputStream(os);
 		try {

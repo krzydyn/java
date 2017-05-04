@@ -19,7 +19,6 @@
 package text;
 
 import java.io.ByteArrayOutputStream;
-import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -30,7 +29,6 @@ import algebra.Maths;
 import sys.Log;
 
 public class Text {
-	final public static Charset UTF8_Charset = Charset.forName("UTF-8");
 	final public static String HEX_DIGITS = "0123456789ABCDEF";
 
 	public static boolean isAnagram(String s1, String s2) {

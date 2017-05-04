@@ -60,7 +60,7 @@
 			includes="rgui/RServer*"
 			classpath="${comdir}/${build}"
 		/>
-		<jar destfile="${build}/rserver.jar" basedir="${build}">
+		<jar destfile="bin/rserver.jar" basedir="${build}">
 			<fileset dir="${comdir}/${build}">
 				<include name="sys/*"/>
 				<include name="net/**"/>

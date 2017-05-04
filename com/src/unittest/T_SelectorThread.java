@@ -20,9 +20,9 @@ package unittest;
 
 import java.nio.ByteBuffer;
 
+import sys.Env;
 import sys.Log;
 import sys.UnitTest;
-import text.Text;
 import net.ChannelHandler;
 import net.SelectorThread2;
 import net.SelectorThread2.QueueChannel;
@@ -66,7 +66,7 @@ public class T_SelectorThread extends UnitTest {
 			}
 			@Override
 			public void received(QueueChannel chn, ByteBuffer buf) {
-				String rep = new String(buf.array(), buf.position(), buf.limit(), Text.UTF8_Charset);
+				String rep = new String(buf.array(), buf.position(), buf.limit(), Env.UTF8_Charset);
 				Log.debug("data[%d]:  %s",rep.length(), rep.length()>20?rep.substring(0, 20)+"...":rep);
 			}
 			@Override
