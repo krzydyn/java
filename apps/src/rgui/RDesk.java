@@ -3,8 +3,11 @@ package rgui;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
+import java.awt.GraphicsDevice;
+import java.awt.GraphicsEnvironment;
 import java.awt.Image;
 import java.awt.Point;
+import java.awt.Rectangle;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
@@ -300,6 +303,20 @@ public class RDesk extends MainPanel {
 			int w = inmsg.getInt();
 			int h = inmsg.getInt();
 			Log.info("%s: %d %d %d %d",id,x,y,w,h);
+
+			Rectangle scr = null;
+			for (GraphicsDevice gd : GraphicsEnvironment.getLocalGraphicsEnvironment().getScreenDevices()) {
+				scr = gd.getDefaultConfiguration().getBounds();
+				break;
+			}
+			if (scr != null) {
+				if (scr.width > w) scr.width=w;
+				if (scr.height > h) scr.height=h;
+				Dimension size = new Dimension(scr.width, scr.height);
+				topFrame().setSize(scr.width,scr.height);
+				setPreferredSize(size);
+				//topFrame().pack();
+			}
 		}
 		else if (cmd == RCommand.SCREEN_IMG) {
 			int x = inmsg.getInt();
