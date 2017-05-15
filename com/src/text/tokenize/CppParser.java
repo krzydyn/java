@@ -214,7 +214,7 @@ public class CppParser {
 				return readBlock(node);
 			}
 			else if (tok.cla==CppTokenizer.TOKEN_NAME) {
-				if (node.name!=null) throw new Token.TokenException(tok);
+				if (node.name!=null) throw new Token.TokenException(tok, node.name);
 				node.name=tok.rep;
 			}
 			else if (tok.cla==CppTokenizer.TOKEN_SPECIAL) {

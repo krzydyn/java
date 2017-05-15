@@ -25,6 +25,7 @@ import java.io.StringReader;
 public class BasicTokenizer {
 	private final Reader rd;
 	private final StringBuilder pushback=new StringBuilder();
+	private String delim = null;
 
 	private int line;
 	private int maxunread;
@@ -35,6 +36,12 @@ public class BasicTokenizer {
 		maxunread=0;
 	}
 	public BasicTokenizer(String s) {this(new StringReader(s));}
+
+	public void setDelimiter(String d) {delim=d;}
+	public boolean isDelimiter(char c) {
+		if (delim!=null) return delim.indexOf(c) >= 0;
+		return !isAlnum(c);
+	}
 
 	private void unread(int c) {
 		if (c==-1) return ;
@@ -77,23 +84,24 @@ public class BasicTokenizer {
 		boolean is_space=true;
 		s.setLength(0);
 		while ((c=readc())>=0) {
-			if (isSpace((char)c)) {
-				if (is_space) {
-					if (c=='\r') continue;
+			if (isDelimiter((char)c)) {
+				//Log.debug("delimiter %02X%s",c, c>=0x20?String.format(" '%c'",(char)c):"");
+				if (!is_space) { unread(c); break; }
+				if (isSpace((char)c)) {
 					s.append((char)c);
 					if (c=='\n') break;
 				}
-				else { unread(c); break; }
+				else {
+					if (s.length()>0) unread(c);
+					else s.append((char)c);
+					break;
+				}
 			}
-			else if (isAlnum((char)c)) {
+			else {
 				if (is_space && s.length()>0) { unread(c); break; }
+				//Log.debug("char %02X(%c)",c,c);
 				s.append((char)c);
 				is_space=false;
-			}
-			else { //some special char
-				if (s.length()>0) unread(c);
-				else s.append((char)c);
-				break;
 			}
 		}
 		return s.length() > 0;

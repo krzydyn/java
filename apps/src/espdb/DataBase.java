@@ -1,5 +1,6 @@
 package espdb;
 
+import java.io.IOException;
 import java.io.PrintStream;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -10,6 +11,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 
 import sys.Env;
+import text.tokenize.BasicTokenizer;
 
 public class DataBase {
 	Connection connection = null;
@@ -18,6 +20,7 @@ public class DataBase {
 		private boolean hasResult;
 		private Statement statement;
 		private int updCnt=-1;
+		private Result next;
 
 		public boolean hasMore() {
 			return hasResult || updCnt >= 0;
@@ -27,6 +30,10 @@ public class DataBase {
 			hasResult = statement.getMoreResults();
 			updCnt = statement.getUpdateCount();
 			return hasMore();
+		}
+
+		public ResultSet getResultSet() throws SQLException {
+			return statement.getResultSet();
 		}
 
 		public void close() {
@@ -68,6 +75,20 @@ public class DataBase {
 		}
 		r.hasResult = pstmt.execute();
 		return r;
+	}
+
+	public Result script(String script) throws SQLException,IOException {
+		BasicTokenizer tok = new BasicTokenizer(script);
+		tok.setDelimiter(";");
+		StringBuilder b = new StringBuilder();
+		Result top=null;
+		Result pr=null;
+		while (tok.next(b)) {
+			Result r = query(script);
+			if (top==null) pr=top=r;
+			else {pr.next=r; pr=r;}
+		}
+		return top;
 	}
 
 	static private void printHead(ResultSet rs, PrintStream out) throws SQLException {
