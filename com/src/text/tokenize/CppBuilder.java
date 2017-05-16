@@ -67,7 +67,8 @@ public class CppBuilder {
 		}
 		else if (n instanceof CodeBlock) {
 			n.write(wr);
-			wr.write(" {\n");
+			wr.writeif(' ');
+			wr.write("{\n");
 			if (!(n instanceof Namespace)) wr.indent(1);
 			for (int i=0; i < n.nodes.size(); ++i) {
 				CppNode nn=n.nodes.get(i);
@@ -80,9 +81,11 @@ public class CppBuilder {
 		else {
 			SourceFragment f = (SourceFragment)n;
 			if ((f instanceof Comment)) wr.writeif(' ');
-			else {
-				if (!(f.str.endsWith(";") || f.str.endsWith(",")))
+			else if (wr.lastc=='}') {
+				if (f.str.length()>1) {
 					wr.writeif('\n');
+					if (wr.indent==0) wr.write('\n');
+				}
 			}
 			n.write(wr);
 			if ((f instanceof Comment)) ;

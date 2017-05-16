@@ -59,7 +59,7 @@ public class CppParser {
 	}
 	static class Comment extends SourceFragment {
 		Comment(String c, boolean oneln){
-			super(c.replaceAll("(?m)^ *\\* *", "").trim());
+			super(c.replaceAll("(?m)^ *\\* {0,1}", "").trim());
 			this.oneln=oneln;
 		}
 		boolean oneln;
