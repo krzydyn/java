@@ -214,15 +214,13 @@ public class CppParser {
 				return readBlock(node);
 			}
 			else if (tok.cla==CppTokenizer.TOKEN_NAME) {
-				if (node.name!=null) throw new Token.TokenException(tok, node.name);
-				node.name=tok.rep;
+				if (node.name==null) node.name=tok.rep;
+				else node.name+=tok.rep;
 			}
 			else if (tok.cla==CppTokenizer.TOKEN_SPECIAL) {
-				if (node.name==null || !tok.rep.equals("=")) {
-					//throw new Token.TokenException(tok);
-					return readFragment(new SourceFragment("ERROR namespace "+node.name+tok.rep));
-				}
-				node.nodes.add(new SourceFragment(tok.rep));
+				if (node.name==null) throw new Token.TokenException(tok, "namespace name expected");
+				if (tok.rep.equals("=")) node.nodes.add(new SourceFragment(tok.rep));
+				else node.name+=tok.rep;
 			}
 			else throw new Token.TokenException(tok);
 		}

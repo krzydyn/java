@@ -28,7 +28,8 @@ import time.LapTime;
 
 public class CheckCpp {
 	static String[] files={
-			"~/sec-os/key-manager/src/manager/crypto/tz-backend/internals.cpp",
+			//"~/sec-os/key-manager/src/manager/crypto/tz-backend/internals.cpp",
+			"~/csapi/tct/api/tct-suite-vs/Tizen.Security.TEEC.Tests/testcase/TSContext.cs"
 	};
 	static String pfx="~/security-containers/";
 	public static void main(String[] args) throws Exception {
