@@ -1,0 +1,1 @@
+CREATE TABLE word (id INTEGER PRIMARY KEY,word VARCHAR,descr TEXT,UNIQUE(word));
