@@ -18,11 +18,13 @@
 package unittest;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 
 import puzzles.GameBoard.Rect;
 import puzzles.GameBoard.Sheet;
+import algebra.BinTree;
 import algebra.Combinations;
 import algebra.Expression;
 import algebra.HeapTree;
@@ -168,6 +170,33 @@ public class T_Algebra extends UnitTest {
 		Sorting.heapSort(list);
 		check("size",list.size(),sortN);
 	}
+	static void bintree() {
+		Integer resp[][] = {
+				{},
+				{1},
+				{2,1},
+				{2,1,3},
+				{3,2,4,1},
+				{4,2,5,1,3},
+				{4,2,6,1,3,5},
+				{4,2,6,1,3,5,7},
+		};
+		BinTree<Integer> tree = new BinTree<Integer>();
+		for (int i=1; i < 8; ++i) {
+			tree.add(i);
+			check("not equal ",Arrays.equals(resp[i], tree.asArray()));
+			System.out.println(tree.toString());
+		}
+		for (int i=tree.min(0); i>=0; i=tree.next(i)) {
+			System.out.printf("i=%d\n", i);
+		}
+		System.out.println();
+		while (tree.size() > 0) {
+			tree.remove(tree.size()/2);
+			System.out.println(tree.toString());
+		}
+	}
+
 	private static void _printStat(String l) {
 		Log.prn("%s: ops %d mem %d/%d",l,Sorting.opCnt,Sorting.rdCnt,Sorting.wrCnt);
 	}
