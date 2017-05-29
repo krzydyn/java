@@ -27,7 +27,6 @@ import java.util.Map;
 
 import sys.Log;
 import text.Text;
-import algebra.Sorting;
 
 /**
  * Operate on N nodes numbered (0...N-1)

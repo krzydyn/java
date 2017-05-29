@@ -1,6 +1,7 @@
 package sys;
 
 public class Colors {
+	// www.easyrgb.com/math.html
 	public static int errorSum(int rgb1, int rgb2) {
 		int r = ((rgb1>>16)&0xff) - ((rgb2>>16)&0xff);
 		int g = ((rgb1>>8)&0xff) - ((rgb2>>8)&0xff);
@@ -22,6 +23,22 @@ public class Colors {
 	public static float gamma(float i) {
 		if (i <= 0.0031308) return i*12.92f;
 		return (float) (1.055f*Math.pow(i,1.0/2.4)-0.055f);
+	}
+
+	public static float invCmy(float c) {
+		return 1f - c;
+	}
+	public static float cmy(float i) {
+		return 1f - i;
+	}
+
+	public static int hsv2rgb(float h, float s, float v) {
+		if (s <= 0.0) {
+			int r = (int)(v*255);
+			return (r<<16) + (r<<8) + r;
+		}
+		//TODO
+		return 0;
 	}
 
 	public static float luminance(int rgb) {

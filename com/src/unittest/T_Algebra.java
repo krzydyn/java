@@ -17,21 +17,22 @@
  */
 package unittest;
 
+import graphs.BinTree;
+import graphs.HeapTree;
+import graphs.SortedArray;
+import graphs.Sorting;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
 import puzzles.GameBoard.Rect;
 import puzzles.GameBoard.Sheet;
-import algebra.BinTree;
 import algebra.Combinations;
 import algebra.Expression;
-import algebra.HeapTree;
 import algebra.Maths;
 import algebra.MatrixI;
 import algebra.Permutate;
-import algebra.SortedArray;
-import algebra.Sorting;
 import sys.Log;
 import sys.UnitTest;
 

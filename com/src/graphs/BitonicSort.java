@@ -1,4 +1,4 @@
-package algebra;
+package graphs;
 
 public class BitonicSort {
 	private static void kernel(int[] a, final int p, final int q) {
