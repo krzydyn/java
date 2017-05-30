@@ -56,6 +56,9 @@ public class DataBase {
 	public DataBase(String dbname) throws SQLException {
 		connection = DriverManager.getConnection(dbname);
 	}
+	public DataBase(String dbname, String user, String passwd) throws SQLException {
+		connection = DriverManager.getConnection(dbname, user, passwd);
+	}
 
 	public Result query(String q) throws SQLException {
 		Result r = new Result();

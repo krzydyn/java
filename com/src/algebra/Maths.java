@@ -49,7 +49,7 @@ public class Maths {
 		}
 		return r;
 	}
-	static public long gcd(long a, long b) {
+	static public long gcd_simple(long a, long b) {
 		if (a==0L) return b;
 		while (b != 0) {
 			if (a > b) a = a - b;
@@ -57,11 +57,11 @@ public class Maths {
 		}
 		return a;
 	}
-	static public long gcd2(long a, long b) {
+	static public long gcd(long a, long b) {
 		if (a==0L) return b;
 		long c;
 		while (b != 0) {
-			c = a%b;
+			c = a % b;
 			a = b;
 			b = c;
 		}

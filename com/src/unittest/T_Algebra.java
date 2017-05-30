@@ -98,16 +98,16 @@ public class T_Algebra extends UnitTest {
 		long[] a = new long[10000];
 		t0 = System.currentTimeMillis();
 		for (int i=0; i < 10000; ++i) {
-			a[i]=Maths.gcd(10007+i, 119+i*i);
+			a[i]=Maths.gcd_simple(10007+i, 119+i*i);
 		}
 		t0 = System.currentTimeMillis();
 		for (int i=0; i < 10000; ++i) {
-			check("gd2",a[i],Maths.gcd2(10007+i, 119+i*i));
+			check("gd2",a[i],Maths.gcd(10007+i, 119+i*i));
 		}
 		Log.info("gcd2 : %d", System.currentTimeMillis()-t0);
 		t0 = System.currentTimeMillis();
 		for (int i=0; i < 10000; ++i) {
-			a[i]=Maths.gcd(10007+i, 119+i*i);
+			a[i]=Maths.gcd_simple(10007+i, 119+i*i);
 		}
 		Log.info("gcd : %d", System.currentTimeMillis()-t0);
 		/*t0 = System.currentTimeMillis();
@@ -181,10 +181,13 @@ public class T_Algebra extends UnitTest {
 	}
 	static void bintree() {
 		BinTree<Integer> tree = new BinTree<Integer>();
-		for (int i=1; i < 8; ++i) {
-			tree.add(i);
+		Random rnd=new Random(2);
+		for (int i=0; i < 10; ) {
+			int x = rnd.nextInt(50);
+			if (!tree.add(x)) continue;
+			System.out.printf("add(%d): %s\n",x,tree.toString());
+			++i;
 		}
-		System.out.println(tree.toString());
 
 		System.out.println();
 		while (tree.size() > 0) {

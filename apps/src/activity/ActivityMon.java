@@ -1,5 +1,7 @@
 package activity;
 
+import java.util.Calendar;
+import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -74,7 +76,6 @@ done
 	static class WindowsMon implements ActivityMonitor {
 		@Override
 		public void help() {
-
 		}
 		/*
 		public interface XLib extends StdCallLibrary {
@@ -181,6 +182,10 @@ done
 			return ;
 		}
 		try {
+			Calendar cal = Calendar.getInstance();
+			cal.set(2015, 10, 10);
+			//cal.
+			System.out.println("dow:"+cal.getDisplayName(Calendar.DAY_OF_WEEK,Calendar.LONG,Locale.US));
 			while (true) {
 				try {
 					monitor.run();

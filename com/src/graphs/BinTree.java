@@ -1,7 +1,5 @@
 package graphs;
 
-import sys.Log;
-
 public class BinTree<T extends Comparable<T>> {
 	static class Node {
 		Node(Object o,Node p) {e=o;this.p=p;}
@@ -16,34 +14,35 @@ public class BinTree<T extends Comparable<T>> {
 	public int size() { return nElems; }
 
 	public boolean add(T e) {
-		Node v = search(e, true);
+		Node v = searchNode(root, e, true);
 		return v != null;
 	}
 	public boolean remove(T e) {
-		Node v = search(e, false);
-		return remove(v);
+		Node v = searchNode(root, e, false);
+		return removeNode(v);
 	}
 
 	public boolean removeRoot() {
-		return remove(root);
+		return removeNode(root);
 	}
 
 	@SuppressWarnings("unchecked")
 	public T min() {
-		Node v = min(root);
+		Node v = minNode(root);
 		if (v == null) return null;
 		return (T)v.e;
 	}
 	@SuppressWarnings("unchecked")
 	public T max() {
-		Node v = max(root);
+		Node v = maxNode(root);
 		if (v == null) return null;
 		return (T)v.e;
 	}
 
 	@SuppressWarnings("unchecked")
-	private Node search(T e,boolean add) {
-		Node v = root, p = null;
+	private Node searchNode(Node v, T e,boolean add) {
+		if (root != null && v == null) return null;
+		Node p = null;
 		int r = 0;
 		while (v != null) {
 			p = v;
@@ -63,53 +62,54 @@ public class BinTree<T extends Comparable<T>> {
 		}
 		return v;
 	}
-	private boolean remove(Node v) {
+	private boolean removeNode(Node v) {
 		if (v == null) return false;
-		Node p,l,r;
-		p = v.p; l = v.l; r = v.r;
 
-		Log.debug("removing node %s", v.e);
-		if (l == null || r == null) { // zero or one child
-			if (p == null) {
-				if (l!=null) {p=l; l=p.l; p.p=null;}
-				else if (r!=null) {p=r;r=p.r; p.p=null;}
-				else p=null;
-			}
+		if (v.l == null && v.r == null) {
+			// no child
+			if (v.p == null) root = null;
+			else if (v.p.l == v) v.p.l = null;
+			else v.p.r = null;
 		}
-		else { // two children
-			Log.debug("Two children");
+		else if (v.l == null) {
+			// one child (right)
+			v.r.p = v.p;
+			if (v.p == null) root = v.r;
+			else if (v.p.l == v) v.p.l = v.r;
+			else v.p.r = v.r;
 		}
-
-		if (p == null) root = null;
+		else if (v.r == null) {
+			// one child (left)
+			v.l.p = v.p;
+			if (v.p == null) root = v.l;
+			else if (v.p.l == v) v.p.l = v.l;
+			else v.p.r = v.l;
+		}
 		else {
-			p.l=l; p.r=r;
-			if (p.p == null) root = p;
+			// both children
+			//find max in left or min in right subtree
+			// put it in place of v
+			Node x = nextNode(v);
+			//remove x from there
+			removeNode(x);
+			//put it in place of v
+			if (v.p == null) root = x;
+			x.p = v.p;
+			x.l = v.l;
+			x.r = v.l;
+			++nElems;
 		}
 
-		/*
-		if (v.l == null || v.r == null) y = v;
-		else y = next(v);
-
-		if (y.l != null) x = y.l;
-		else x = y.r;
-
-		if (x != null) x.p = y.p;
-
-		if (y.p == null) root = y;
-		else {
-			if (y == y.p.l) y.p.l = x;
-			else y.p.r = x;
-		}
-		*/
+		v.p = v.l = v.r = null;
 		--nElems;
 		return true;
 	}
 
-	private Node next(Node v) {
+	private Node nextNode(Node v) {
 		Node p=v;
 		for (;;) {
 			v = p.r;
-			if (v != null) return min(v);
+			if (v != null) return minNode(v);
 			v=p;
 			while (v.p!=null) {
 				p = v.p;
@@ -121,21 +121,15 @@ public class BinTree<T extends Comparable<T>> {
 		return null;
 	}
 
-	private Node min(Node v) {
-		Node p=null;
-		while (v != null) {
-			p = v;
-			v = v.l;
-		}
-		return p;
+	private Node minNode(Node v) {
+		if (v == null) return null;
+		while (v.l != null) v = v.l;
+		return v;
 	}
-	public Node max(Node v) {
-		Node p=null;
-		while (v != null) {
-			p = v;
-			v = v.r;
-		}
-		return p;
+	private Node maxNode(Node v) {
+		if (v == null) return null;
+		while (v.r != null) v = v.r;
+		return v;
 	}
 
 	private void rotLeft(Node n) {
@@ -146,7 +140,7 @@ public class BinTree<T extends Comparable<T>> {
 	@Override
 	public String toString() {
 		StringBuilder st=new StringBuilder((nElems+1)*2);
-		for (Node v=root; v != null; v = next(v)) {
+		for (Node v=minNode(root); v != null; v = nextNode(v)) {
 			st.append(v.e.toString());
 			st.append(" ");
 		}
