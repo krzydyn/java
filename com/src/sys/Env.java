@@ -169,15 +169,15 @@ public class Env {
 		return null;
 	}
 
-	static String getFileContent(String fn) throws IOException {
-		File file = new File(fn);
+	public static String getFileContent(String fn) throws IOException {
+		File file = new File(expandEnv(fn));
 		byte b[] = new byte[(int)file.length()];
 		FileInputStream fis = new FileInputStream(file);
 		fis.read(b);
 		fis.close();
 		return new String(b, Env.UTF8_Charset);
 	}
-	static void setFileContent(String fn, String c) throws IOException {
+	public static void setFileContent(String fn, String c) throws IOException {
 		File file = new File(fn);
 		FileOutputStream fos = new FileOutputStream(file);
 		fos.write(c.getBytes(Env.UTF8_Charset));

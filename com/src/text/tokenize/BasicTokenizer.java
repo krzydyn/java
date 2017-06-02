@@ -71,8 +71,8 @@ public class BasicTokenizer {
 		}
 		if (maxunread < pushback.length()) maxunread=pushback.length();
 	}
-	protected boolean isSpace(char c) {
-		return Character.isSpaceChar(c);
+	protected boolean isSpace(int c) {
+		return Character.isWhitespace(c);
 	}
 	protected boolean isAlnum(char c) {
 		return Character.isLetterOrDigit(c)||c=='_';
@@ -81,13 +81,19 @@ public class BasicTokenizer {
 
 	public boolean next(StringBuilder s) throws IOException {
 		int c;
-		boolean is_space=true;
+		boolean is_delim=true;
 		s.setLength(0);
 		while ((c=readc())>=0) {
 			if (isDelimiter((char)c)) {
 				//Log.debug("delimiter %02X%s",c, c>=0x20?String.format(" '%c'",(char)c):"");
-				if (!is_space) { unread(c); break; }
-				if (isSpace((char)c)) {
+				if (!is_delim) {
+					unread(c);
+					int l=s.length();
+					while (l > 0 && isSpace(s.charAt(l-1))) --l;
+					s.setLength(l);
+					break;
+				}
+				if (isSpace(c)) {
 					s.append((char)c);
 					if (c=='\n') break;
 				}
@@ -98,10 +104,11 @@ public class BasicTokenizer {
 				}
 			}
 			else {
-				if (is_space && s.length()>0) { unread(c); break; }
-				//Log.debug("char %02X(%c)",c,c);
+				if (is_delim && s.length()>0) { unread(c); break; }
+				if (isSpace(c) && s.length()==0) continue;
+				//Log.debug("char %02X(%c) l=%d %b",c,c,s.length(),isSpace(c));
 				s.append((char)c);
-				is_space=false;
+				is_delim=false;
 			}
 		}
 		return s.length() > 0;

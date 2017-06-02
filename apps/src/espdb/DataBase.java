@@ -11,16 +11,18 @@ import java.sql.SQLException;
 import java.sql.Statement;
 
 import sys.Env;
+import sys.Log;
 import text.tokenize.BasicTokenizer;
 
 public class DataBase {
 	Connection connection = null;
+	public String lastq=null;
 
 	public static class Result {
 		private boolean hasResult;
 		private Statement statement;
 		private int updCnt=-1;
-		private Result next;
+		public Result next;
 
 		public boolean hasMore() {
 			return hasResult || updCnt >= 0;
@@ -61,6 +63,7 @@ public class DataBase {
 	}
 
 	public Result query(String q) throws SQLException {
+		lastq=q;
 		Result r = new Result();
 		r.statement = connection.createStatement();
 		r.hasResult = r.statement.execute(q);
@@ -69,6 +72,7 @@ public class DataBase {
 	}
 
 	public Result query(String q, Object... args) throws SQLException {
+		lastq=q+"("+args+")";
 		Result r = new Result();
 		PreparedStatement pstmt = connection.prepareStatement(q);
 		r.statement = pstmt;
@@ -84,12 +88,18 @@ public class DataBase {
 		BasicTokenizer tok = new BasicTokenizer(script);
 		tok.setDelimiter(";");
 		StringBuilder b = new StringBuilder();
-		Result top=null;
-		Result pr=null;
-		while (tok.next(b)) {
-			Result r = query(script);
-			if (top==null) pr=top=r;
-			else {pr.next=r; pr=r;}
+		Result top=null, pr=null;
+		try {
+			while (tok.next(b)) {
+				if (tok.isDelimiter(b.charAt(0))) continue;
+				Log.debug("script: '%s'", b.toString());
+				Result r = query(b.toString());
+				if (top==null) pr=top=r;
+				else {pr.next=r; pr=r;}
+			}
+		}catch(SQLException e) {
+			if (lastq != null) Log.error(lastq);
+			throw e;
 		}
 		return top;
 	}
@@ -125,68 +135,24 @@ public class DataBase {
 			else {
 				out.println("updated rows " + r.updCnt);
 			}
+			out.println("--------------------");
 			r.moreResults();
 		}
 		r.close();
 	}
 
 	//https://en.wikipedia.org/wiki/Grammatical_conjugation
-	static void createTables(DataBase db) throws SQLException {
-		Result r;
-
-		r = db.query("CREATE TABLE IF NOT EXISTS word ("
-				+ " id INTEGER PRIMARY KEY AUTOINCREMENT"
-				+ ",word VARCHAR"
-				+ ",UNIQUE(word)"
-				+ ")");
-		r.close();
-
-		r = db.query("CREATE TABLE IF NOT EXISTS tense ("
-				+ " id INTEGER PRIMARY KEY AUTOINCREMENT"
-				+ ",name VARCHAR"
-				+ ",UNIQUE(name)"
-				+ ")");
-		r.close();
-		r = db.query("CREATE TABLE IF NOT EXISTS person ("
-				+ " id INTEGER PRIMARY KEY AUTOINCREMENT"
-				+ ",name VARCHAR"
-				+ ",gender ENUM('masculino','femenino')"
-				+ ",UNIQUE(name)"
-				+ ")");
-		r.close();
-		r = db.query("CREATE TABLE IF NOT EXISTS conjugation ("
-				+ " id_word_infinitive INTEGER" //bezokolicznik
-				+ ",id_tense INTEGER"  //present,past,future...
-				+ ",id_person INTEGER"
-				+ ",id_word"
-				+ ")");
-		r.close();
-
-
-		r = db.query("CREATE TABLE IF NOT EXISTS sentence ("
-				+ " id INTEGER PRIMARY KEY AUTOINCREMENT"
-				+ ",sentence TEXT"
-				+ ",UNIQUE(sentence)"
-				+ ")");
-		r.close();
-		r = db.query("CREATE TABLE IF NOT EXISTS wordsentence ("
-				+ " id_word INTEGER"
-				+ ",id_sentence INTEGER"
-				+ ",UNIQUE(id_word,id_sentence)"
-				+ ")");
-		r.close();
-
-	}
 
 	public static void main(String[] args) throws Exception {
+		String[] scipts = {"conjugation.sql","person.sql","tense.sql","word.sql"};
 		Class.forName("org.sqlite.JDBC");
 
 		Env.remove("res/espdb.db");
-
 		DataBase db = new DataBase("jdbc:sqlite:res/espdb.db");
-		createTables(db);
-
 		Result r;
+		for (String s : scipts) {
+			r = db.script(Env.getFileContent("~/www/espdb/sql/" + s));
+		}
 
 		r = db.query("INSERT INTO word (word)VALUES (?)", "los;");
 		print(r,System.out);
