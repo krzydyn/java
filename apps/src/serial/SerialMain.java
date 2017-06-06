@@ -200,12 +200,11 @@ public class SerialMain extends MainPanel {
 		for (Serial s : ports) {
 			s.close();
 		}
-		Log.debug("readLoop fin\n");
 	}
 
 	public static void main(String[] args) {
 		Log.notice("Serial version %s", Serial.getVersion());
-		//Log.setReleaseMode();
+		Log.setReleaseMode();
 		start(SerialMain.class, args);
 	}
 }

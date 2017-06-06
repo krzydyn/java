@@ -87,16 +87,12 @@ public class Serial {
 	}
 
 	public void close() {
-		Log.debug("close port %s", portName);
 		if (commPort != null) {
+			Log.debug("close port %s", portName);
 			SerialPort serialPort = (SerialPort) commPort;
-			Log.debug("close port: dtr false");
 			serialPort.setDTR(false);
-			Log.debug("close port: rts false");
 			serialPort.setRTS(false);
-			Log.debug("close port: rm list");
 			((RXTXPort)serialPort).removeEventListener();
-			Log.debug("close port: close");
 			commPort.close();
 		}
 		commPort=null;
