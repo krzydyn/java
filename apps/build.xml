@@ -65,7 +65,6 @@
 				<include name="sys/*"/>
 				<include name="net/**"/>
 				<include name="text/Text*"/>
-				<include name="text/Ansi*"/>
 				<exclude name="sys/UnitTest*"/>
 			</fileset>
 			<fileset dir=".">
@@ -80,6 +79,34 @@
 	<target name="rserver-rebuild">
 		<ant antfile="build.xml" target="clean" />
 		<ant antfile="build.xml" target="rserver" />
+	</target>
+
+	<target name="mserial" depends="common">
+		<echo>Building Remote Server app</echo>
+		<mkdir dir="${build}"/>
+
+		<javac srcdir="src" destdir="${build}" debug="true" listfiles="true"
+			encoding="UTF-8" source="${JAVA_VERSION}" target="${JAVA_VERSION}"
+			includeantruntime="false"
+			includes="serial/*"
+			classpath="${comdir}/${build}"
+		/>
+		<jar destfile="bin/mserial.jar" basedir="${build}">
+			<fileset dir="${comdir}/${build}">
+				<include name="sys/*"/>
+				<include name="net/**"/>
+				<include name="text/Text*"/>
+				<include name="text/Ansi*"/>
+				<exclude name="sys/UnitTest*"/>
+			</fileset>
+			<fileset dir=".">
+				<include name="rgui/RServer*"/>
+			</fileset>	
+
+			<manifest>
+			<attribute name="Main-Class" value="rgui.RServer"/>
+			</manifest>
+		</jar>
 	</target>
 
 	<target name="clean">

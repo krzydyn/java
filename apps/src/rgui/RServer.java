@@ -451,7 +451,7 @@ public class RServer implements ChannelHandler {
 
 	void addRoi(List<Rectangle> rois, Rectangle r, int maxw, int maxh) {
 		if (r.width==0 || r.height==0) return;
-		int g=100;
+		int g=25;
 		r.grow(g, g);
 		for (Rectangle rr : rois) {
 			if (rr.intersects(r)) {
@@ -554,6 +554,7 @@ public class RServer implements ChannelHandler {
 	}
 
 	public static void main(String[] args) throws Exception {
+		Log.setTestMode();
 		try {
 			new RServer().run();
 		} catch (Throwable e) {
