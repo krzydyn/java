@@ -7,7 +7,7 @@
  *  you may not use this file except in compliance with the License.
  *  You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *	  http://www.apache.org/licenses/LICENSE-2.0
  *
  *  Unless required by applicable law or agreed to in writing, software
  *  distributed under the License is distributed on an "AS IS" BASIS,
@@ -24,30 +24,23 @@ public class ArrayInt extends AbstractList<Integer> {
 	private final int[] data;
 	public ArrayInt(int... data) {
 		this.data=data;
-		super.toArray();
 	}
-
 	@Override
 	public Integer get(int index) {
 		return data[index];
 	}
 	@Override
-    public Integer set(int index, Integer element) {
-        int r = data[index];
-        data[index] = element;
-        return r;
-    }
+	public Integer set(int index, Integer element) {
+		int r = data[index];
+		data[index] = element;
+		return r;
+	}
 	@Override
 	public int size() {
 		return data.length;
 	}
 
 	static List<Integer> asList(final int[] a) {
-		return new AbstractList<Integer>() {
-			@Override
-			public Integer get(int i) { return a[i]; }
-			@Override
-			public int size() { return a.length; }
-		};
+		return new ArrayInt(a);
 	}
 }
