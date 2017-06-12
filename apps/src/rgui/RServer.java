@@ -153,10 +153,9 @@ public class RServer implements ChannelHandler {
 			Log.error("unknown cmd:%d, payload %d", cmd, msg.remaining());
 
 		}
-		}catch (IllegalArgumentException e) {
-			Log.error(e, "xcode = %d",xcode);
+		}catch (Exception e) {
+			Log.error(e, "cmd=%d, xcode = %d",cmd,xcode);
 		}
-
 	}
 
 	private void getScreenInfo(QueueChannel chn) {
@@ -488,10 +487,11 @@ public class RServer implements ChannelHandler {
 			for (int x=0; x < p.getWidth(); ++x) {
 				if ((p.getRGB(x, y)&0xff)==0) continue;
 				Rectangle r;
-				//r=new Rectangle(x,y,1,1);
-				r=box_bfs(p,x,y);
+				r=new Rectangle(x,y,1,1);
+				//r=box_bfs(p,x,y);
 				if (r.x+r.width > i.getWidth() || r.y+r.height > i.getHeight()) {
 					Log.error("ROI too large");
+					continue;
 				}
 				//Log.info("roi = %s",r);
 				addRoi(rois,r,i.getWidth(),i.getHeight());
@@ -548,7 +548,7 @@ public class RServer implements ChannelHandler {
 				}
 				forceActionTm = System.currentTimeMillis()+FORCE_ACTION_TIME;
 			}
-			XThread.sleep(1000/20);
+			XThread.sleep(1000/50);
 		}
 		Log.info("rserver finished");
 	}

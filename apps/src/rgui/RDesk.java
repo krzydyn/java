@@ -225,10 +225,6 @@ public class RDesk extends MainPanel {
 				ImageBox r = i.next();
 				if (r.tm + 1000 < System.currentTimeMillis()) i.remove();
 			}
-			g.setColor(Color.GREEN);
-			g.fillRect(mx-2, my-10, 25,15);
-			g.setColor(Color.BLACK);
-			g.drawString(String.format("%d",rois.size()), mx, my);
 			for (ImageBox r : rois) {
 				if (r.x+r.w > maxx || r.y+r.h > maxy) {
 					g.setColor(Color.RED);
@@ -239,6 +235,10 @@ public class RDesk extends MainPanel {
 				g.drawRect(r.x, r.y, r.w, r.h);
 				g.drawLine(mx, my, r.x+r.w/2, r.y+r.h/2);
 			}
+			g.setColor(Color.GREEN);
+			g.fillRect(mx-2, my-10, 25,15);
+			g.setColor(Color.BLACK);
+			g.drawString(String.format("%d",rois.size()), mx, my);
 		}
 	}
 
