@@ -46,4 +46,10 @@ public class ArrayObj<E> extends AbstractList<E> {
 		elems[index] = element;
 		return r;
 	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public <T> T[] toArray(T[] a) {
+		return (T[])elems;
+	}
 }

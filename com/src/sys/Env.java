@@ -18,8 +18,6 @@
 
 package sys;
 
-import io.IOText;
-
 import java.awt.Toolkit;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.ClipboardOwner;
@@ -81,21 +79,10 @@ public class Env {
 		return p;
 	}
 
-	static public IOText startexec(File dir, List<String> args) throws IOException {
-		ProcessBuilder pb = new ProcessBuilder(args);
-		pb.redirectErrorStream(true);
-		if (dir!=null) pb.directory(dir);
-		//.environment(envp)
-		Process child = pb.start();
-		OutputStream out = child.getOutputStream();
-		InputStream in = child.getInputStream();
-		return new IOText(in, out);
-	}
-
 	static public String exec(File dir, List<String> args) throws IOException {
 		ProcessBuilder pb = new ProcessBuilder(args);
 		if (dir!=null) pb.directory(dir);
-		//.environment(envp)
+		//pb.environment(envp)
 		Process child = pb.start();
 
 		OutputStream out = child.getOutputStream();
@@ -247,5 +234,12 @@ public class Env {
 	public static Iterable<Path> getRoots() {
 		java.nio.file.FileSystem fs = FileSystems.getDefault();
 		return fs.getRootDirectories();
+	}
+
+	static public void sleep(long millis) {
+		try {Thread.sleep(millis);}
+		catch (InterruptedException e) { //InterruptedException clears interrupted flag of Thread
+			Thread.currentThread().interrupt(); // set the flag again
+		}
 	}
 }
