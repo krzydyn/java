@@ -1,4 +1,4 @@
-package gftp;
+package io;
 
 import java.io.File;
 import java.io.IOException;
@@ -14,6 +14,7 @@ import text.Text;
 public class ScriptShell {
 	private final File dir;
 	private final List<String> args;
+	private Thread worker;
 	private OutputStreamWriter childwriter;
 	private final Object readready = new Object();
 	private String lastrd;
@@ -29,7 +30,7 @@ public class ScriptShell {
 
 	public void start() {
 		if (lastrd==null) lastrd="";
-		new Thread(new Runnable() {
+		worker = new Thread(new Runnable() {
 			@Override
 			public void run() {
 				try {
@@ -40,10 +41,12 @@ public class ScriptShell {
 				}
 				finally {
 					args.clear();
+					worker = null;
 					Log.debug("script done");
 				}
 			}
-		}, args.get(0)).start();
+		}, args.get(0));
+		worker.start();
 	}
 
 	public void stop() {
@@ -53,6 +56,7 @@ public class ScriptShell {
 				childwriter.close();
 			}
 		} catch (Exception e) {}
+		worker.interrupt();
 	}
 
 	public void writeln(String s) throws IOException {
@@ -84,7 +88,7 @@ public class ScriptShell {
 	private void run() throws Exception {
 		//java using ptys?
 		ProcessBuilder pb = new ProcessBuilder(args);
-		//pb.environment().put("TERM", "vt100");
+		pb.environment().put("TERM", "vt100");
 		pb.redirectErrorStream(true); //redirect stderr to stdout
 		//pb.redirectInput(Redirect.PIPE); pipe is default
 		if (dir!=null) pb.directory(dir);
