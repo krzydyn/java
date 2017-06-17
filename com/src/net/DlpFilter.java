@@ -3,7 +3,7 @@ package net;
 import java.nio.ByteBuffer;
 
 import text.Ansi;
-import net.SelectorThread2.QueueChannel;
+import net.SelectorThread.QueueChannel;
 /**
  * Data Link Protocol
  * aka Binary Synchronous Communication (BSC or Bisync)

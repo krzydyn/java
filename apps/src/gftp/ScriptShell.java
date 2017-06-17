@@ -15,7 +15,7 @@ public class ScriptShell {
 	private final File dir;
 	private final List<String> args;
 	private OutputStreamWriter childwriter;
-	private Object readready = new Object();
+	private final Object readready = new Object();
 	private String lastrd;
 
 	public ScriptShell(File dir, List<String> args) {
@@ -82,7 +82,9 @@ public class ScriptShell {
 	}
 
 	private void run() throws Exception {
+		//java using ptys?
 		ProcessBuilder pb = new ProcessBuilder(args);
+		//pb.environment().put("TERM", "vt100");
 		pb.redirectErrorStream(true); //redirect stderr to stdout
 		//pb.redirectInput(Redirect.PIPE); pipe is default
 		if (dir!=null) pb.directory(dir);

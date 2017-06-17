@@ -37,7 +37,7 @@ import java.util.List;
 
 import sys.Log;
 
-public class SelectorThread2 {
+public class SelectorThread {
 	private final Selector selector;
 	private static final int RWBUFLEN=8*1024; //by default it is 8kB
 	private final List<ByteBuffer> bpool=new ArrayList<ByteBuffer>();
@@ -49,13 +49,13 @@ public class SelectorThread2 {
 	private final List<SelectionKey> writeFlag=new ArrayList<SelectionKey>();
 
 	final static public class QueueChannel {
-		private QueueChannel(SelectorThread2 s, SelectableChannel c, ChannelHandler h) {
+		private QueueChannel(SelectorThread s, SelectableChannel c, ChannelHandler h) {
 			sel=s;
 			chn=c;
 			hnd=h;
 		}
 
-		private final SelectorThread2 sel;
+		private final SelectorThread sel;
 		private final SelectableChannel chn;
 		public final ChannelHandler hnd;
 		private List<ByteBuffer> writeq;
@@ -84,7 +84,7 @@ public class SelectorThread2 {
 
 	//private final Map<Channel,ChannelState> chns=new HashMap<Channel, ChannelState>();
 
-	public SelectorThread2() throws IOException {
+	public SelectorThread() throws IOException {
 		selector = Selector.open();
 	}
 

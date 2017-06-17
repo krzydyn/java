@@ -2,7 +2,7 @@ package net;
 
 import java.nio.ByteBuffer;
 
-import net.SelectorThread2.QueueChannel;
+import net.SelectorThread.QueueChannel;
 
 public interface ChannelHandler {
 	ChannelHandler createFilter();

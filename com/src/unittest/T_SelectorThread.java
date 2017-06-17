@@ -24,8 +24,8 @@ import sys.Env;
 import sys.Log;
 import sys.UnitTest;
 import net.ChannelHandler;
-import net.SelectorThread2;
-import net.SelectorThread2.QueueChannel;
+import net.SelectorThread;
+import net.SelectorThread.QueueChannel;
 
 public class T_SelectorThread extends UnitTest {
 	//static String HOST = "stackoverflow.com";
@@ -33,7 +33,7 @@ public class T_SelectorThread extends UnitTest {
 	//static String HOST = "104.16.33.249";
 
 	static void startStop() throws Exception {
-		SelectorThread2 t=new SelectorThread2();
+		SelectorThread t=new SelectorThread();
 		t.start();
 		Thread.sleep(1000);
 		t.stop();
@@ -48,7 +48,7 @@ public class T_SelectorThread extends UnitTest {
 		data.put(CRLF); data.put(CRLF);
 		//while (data.remaining() > CRLF.length) data.put(CRLF);
 		data.flip();
-		SelectorThread2 t=new SelectorThread2();
+		SelectorThread t=new SelectorThread();
 		t.start();
 		t.connect(HOST, 80, new ChannelHandler(){
 			@Override

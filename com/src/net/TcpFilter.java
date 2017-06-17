@@ -2,7 +2,7 @@ package net;
 
 import java.nio.ByteBuffer;
 
-import net.SelectorThread2.QueueChannel;
+import net.SelectorThread.QueueChannel;
 
 public class TcpFilter implements ChannelHandler {
 	static final int MAX_MSG_BUF = 16*1024;

@@ -30,14 +30,14 @@ import sys.Env;
 import sys.Log;
 import sys.XThread;
 import net.ChannelHandler;
-import net.SelectorThread2;
-import net.SelectorThread2.QueueChannel;
+import net.SelectorThread;
+import net.SelectorThread.QueueChannel;
 import net.TcpFilter;
 
 public class RServer implements ChannelHandler {
 	static final int MAXSCREEN_BUF = 16*1024;
 	static final int FORCE_ACTION_TIME = 60*1000;
-	private final SelectorThread2 selector;
+	private final SelectorThread selector;
 	private final Robot robot;
 	private final String imgFormat="jpg";
 	private final boolean imgAddQuality=true;
@@ -55,7 +55,7 @@ public class RServer implements ChannelHandler {
 		mouseButtonMask = InputEvent.BUTTON1_MASK|InputEvent.BUTTON2_MASK|InputEvent.BUTTON3_MASK |
 					InputEvent.BUTTON1_DOWN_MASK|InputEvent.BUTTON2_DOWN_MASK|InputEvent.BUTTON3_DOWN_MASK;
 
-		selector = new SelectorThread2();
+		selector = new SelectorThread();
 	}
 
 	@Override

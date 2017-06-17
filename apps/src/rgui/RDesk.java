@@ -26,8 +26,8 @@ import java.util.List;
 import javax.imageio.ImageIO;
 
 import net.ChannelHandler;
-import net.SelectorThread2;
-import net.SelectorThread2.QueueChannel;
+import net.SelectorThread;
+import net.SelectorThread.QueueChannel;
 import sys.Env;
 import sys.Log;
 import sys.XThread;
@@ -35,7 +35,7 @@ import ui.MainPanel;
 
 @SuppressWarnings("serial")
 public class RDesk extends MainPanel {
-	final SelectorThread2 selector;
+	final SelectorThread selector;
 
 	ByteBuffer inmsg = ByteBuffer.allocate(1024*1024);
 	int inlen;
@@ -139,7 +139,7 @@ public class RDesk extends MainPanel {
 
 		// auto wait can be set only when using robot from new Thread
 		//robot.setAutoWaitForIdle(true);
-		selector = new SelectorThread2();
+		selector = new SelectorThread();
 		selector.start();
 		if (args.length > 0) Host = args[0];
 

@@ -67,14 +67,17 @@ public class TestDB {
 	 */
 
 	static void jsoupScrapp(String url) throws Exception {
-		Connection conn = Jsoup.connect("https://glosbe.com").timeout(5000);
+		Connection conn = Jsoup.connect(url).timeout(5000);
 		conn.userAgent("Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2228.0 Safari/537.36");
 		//conn.header("", "");
 		Response resp=conn.execute();
 		Document doc = resp.parse();
 		//int len = resp.body().length();
-		Elements elems = doc.getAllElements();
-		//System.out.println(elems.text());
+		Elements elems = doc.getElementsByClass("phr");
+		for (int i=0; i < elems.size(); ++i) {
+			System.out.println(elems.get(i).text());
+		}
+		elems = doc.getElementsByClass("defmetas");
 		for (int i=0; i < elems.size(); ++i) {
 			System.out.println(elems.get(i).text());
 		}
@@ -100,7 +103,7 @@ public class TestDB {
 		print(r,System.out);
 		r.close();
 
-
+		jsoupScrapp("https://glosbe.com/es/pl/ir");
 	}
 
 }

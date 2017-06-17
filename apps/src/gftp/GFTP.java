@@ -31,19 +31,19 @@ public class GFTP {
 
 	private static void synchronizeDirs(String srcDir, String dstDir) throws IOException {
 		//ScriptShell shell = new ScriptShell(null, ftp, "-pv", "www.kysoft.pl");
-		ScriptShell shell = new ScriptShell(null, ftp);
+		ScriptShell shell = new ScriptShell(null, bash);
 		//ScriptShell shell = new ScriptShell(null, "/bin/ps");
 		shell.start();
-		shell.writeln("pwd");
+		shell.writeln("env");
 		String r;
 		int state=1;
 		int idlecnt=0;
 		while ((r=shell.readln()) != null) {
 			if (r.equals("")) {
 				Log.debug("nothing read");
-				shell.writeln("help");
+				shell.writeln("exit");
 				++idlecnt;
-				if (idlecnt==3) break;
+				if (idlecnt==2) break;
 				continue;
 			}
 			idlecnt=0;
