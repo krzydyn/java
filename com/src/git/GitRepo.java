@@ -23,21 +23,54 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import sys.ArrayObj;
 import sys.Env;
 
 public class GitRepo {
-	private static String git = "/usr/bin/git";
-	private File path;
+	private final static String git = "/usr/bin/git";
+	private final File path;
 
 	public GitRepo(String p) {
 		path = new File(Env.expandEnv(p));
 	}
 
-	public String log(Collection<String> args) throws Exception {
+	public String cmd(Collection<String> args) throws Exception {
+		List<String> a = new ArrayList<String>();
+		a.add(git);
+		a.addAll(args);
+		return Env.exec(path, a);
+	}
+
+	public String log(List<String> args) throws Exception {
 		List<String> a = new ArrayList<String>();
 		a.add(git);
 		a.add("log");
 		a.addAll(args);
 		return Env.exec(path, a);
+	}
+	public String log(String ...args) throws Exception {
+		return log(new ArrayObj<String>(args));
+	}
+
+	public String lstree(List<String> args) throws Exception {
+		List<String> a = new ArrayList<String>();
+		a.add(git);
+		a.add("ls-tree");
+		a.addAll(args);
+		return Env.exec(path, a);
+	}
+	public String lstree(String ...args) throws Exception {
+		return lstree(new ArrayObj<String>(args));
+	}
+
+	public String diff(List<String> args) throws Exception {
+		List<String> a = new ArrayList<String>();
+		a.add(git);
+		a.add("diff");
+		a.addAll(args);
+		return Env.exec(path, a);
+	}
+	public String diff(String ...args) throws Exception {
+		return diff(new ArrayObj<String>(args));
 	}
 }

@@ -12,9 +12,9 @@ import text.Text;
 import text.tokenize.BasicTokenizer;
 
 public class DataBase {
+	private final Object[] emptyArray = {};
 	private Connection connection = null;
 	private String lastq=null;
-	private Object[] emptyArray = {};
 
 	public static class Result {
 		private Statement statement;
@@ -62,6 +62,8 @@ public class DataBase {
 	public DataBase(String dbname, String user, String passwd) throws SQLException {
 		connection = DriverManager.getConnection(dbname, user, passwd);
 	}
+
+	public String getlastQuery() { return lastq; }
 
 	public Result query(String q) throws SQLException {
 		if (q.isEmpty()) return null;

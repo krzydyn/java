@@ -100,8 +100,8 @@ public class Env {
 
 		try {
 			int ec = child.waitFor();
-			Log.debug("exec %s exitcode=%d", Text.join(" ", args), ec);
 			if (ec != 0) {
+				Log.error("exec(%s); exitcode=%d", Text.join(" ", args), ec);
 				str.setLength(0);
 				isr = new InputStreamReader(err, UTF8_Charset);
 				while ((r=isr.read(buf)) >= 0) {

@@ -70,7 +70,7 @@ public class TestDB {
 		Connection conn = Jsoup.connect(url).timeout(5000);
 		conn.userAgent("Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2228.0 Safari/537.36");
 		//conn.header("", "");
-		Response resp=conn.execute();
+		Response resp = conn.execute();
 		Document doc = resp.parse();
 		//int len = resp.body().length();
 		Elements elems = doc.getElementsByClass("phr");
