@@ -1,8 +1,8 @@
-package net;
+package netio;
 
 import java.nio.ByteBuffer;
 
-import net.SelectorThread.QueueChannel;
+import netio.SelectorThread.QueueChannel;
 
 public interface ChannelHandler {
 	ChannelHandler createFilter();

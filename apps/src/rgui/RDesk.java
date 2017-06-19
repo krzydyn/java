@@ -25,9 +25,9 @@ import java.util.List;
 
 import javax.imageio.ImageIO;
 
-import net.ChannelHandler;
-import net.SelectorThread;
-import net.SelectorThread.QueueChannel;
+import netio.ChannelHandler;
+import netio.SelectorThread;
+import netio.SelectorThread.QueueChannel;
 import sys.Env;
 import sys.Log;
 import sys.XThread;

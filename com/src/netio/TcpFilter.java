@@ -1,8 +1,8 @@
-package net;
+package netio;
 
 import java.nio.ByteBuffer;
 
-import net.SelectorThread.QueueChannel;
+import netio.SelectorThread.QueueChannel;
 
 public class TcpFilter implements ChannelHandler {
 	static final int MAX_MSG_BUF = 16*1024;

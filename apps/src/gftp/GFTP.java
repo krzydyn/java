@@ -13,8 +13,8 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import sun.net.ftp.FtpClient;
-import sun.net.ftp.FtpDirEntry;
+import net.ftp.FtpClient;
+import net.ftp.FtpDirEntry;
 import sys.Env;
 import sys.Log;
 import text.Text;
@@ -45,11 +45,17 @@ public class GFTP {
 
 		filesSent=0;
 		try {
+			ftp.setConnectTimeout(3000);
+			ftp.setReadTimeout(2000);
+			Log.info("conncting ...");
 			ftp.connect(new InetSocketAddress(host, 21));
+			Log.info("user auth ...");
 			ftp.login(user, passwd.toCharArray());
+			ftp.enablePassiveMode(true);
+			Log.info("set binary ...");
 			ftp.setBinaryType();
-			//readStream(ftp.list("/"),System.out);
 
+			Log.info("synchronize ...");
 			synchronizeDirs(new File(Env.expandEnv(srcDir)), new File(dstDir));
 			//gitSyncDirs(new File(Env.expandEnv(srcDir)), new File(dstDir), "917145612cc54509a3dd52d20e0de3ca476365e1");
 		}
@@ -64,6 +70,7 @@ public class GFTP {
 
 	public static void gitSyncDirs(File src, File dst, String hash) throws Exception {
 		if (!src.exists()) return ;
+		Log.debug("gitsync dir %s", src);
 		GitRepo git = new GitRepo(src.getPath());
 		List<File> localFiles = new ArrayList<>();
 		if (src.isFile()) {
@@ -99,15 +106,19 @@ public class GFTP {
 	public static void synchronizeDirs(File src, File dst) throws Exception {
 		InputStream tmi = new ByteArrayInputStream("\n".getBytes(Env.UTF8_Charset));
 		String tmfile = dst.getPath()+"/"+".time";
+		Log.info("send file ...");
 		sendFile(tmi, ftp.putFileStream(tmfile));
 		long tmloc=System.currentTimeMillis();
+		Log.info("get modtime ...");
 		long tm = ftp.getLastModified(tmfile).getTime();
 		Log.debug("dtm = %d", tmloc-tm);
 		ftp.deleteFile(tmfile);
+		Log.info("sync recursive ...");
 		synDirs(src, dst);
 	}
 	private static void synDirs(File src, File dst) throws Exception {
 		if (!src.exists()) return ;
+		Log.debug("gitsync dir %s", src);
 		GitRepo git = new GitRepo(src.getPath());
 		List<File> localFiles = new ArrayList<>();
 		if (src.isFile()) {

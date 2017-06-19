@@ -31,6 +31,10 @@ public class Log {
 	final private static SimpleDateFormat tmfmt_tst = new SimpleDateFormat("HH:mm:ss.SSS");
 	final private static String[] LEVEL_COLOR = {Ansi.SGR_RED, Ansi.SGR_YELLOW, Ansi.SGR_BLUE, Ansi.SGR_CYAN, "", Ansi.SGR_GREEN, Ansi.SGR_LIGHTMAGENTA };
 	final private static String[] LEVEL_NAME = {"E", "W", "D", "T", "I", "N", ""};
+	public static enum Level {
+		FINEST
+
+	}
 
 	private static SimpleDateFormat tmfmt = tmfmt_tst;
 	private static PrintStream prs = System.err;
@@ -120,4 +124,11 @@ public class Log {
 	final public static void trace(Object ...args) {log(3, 0, args);}
 	final public static void info(Object ...args) {log(4, -1, args);}
 	final public static void notice(Object ...args) {log(5, -1, args);}
+
+	public boolean isLoggable(Level finest) {
+		return false;
+	}
+
+	public void finest(Object ...args) {
+	}
 }

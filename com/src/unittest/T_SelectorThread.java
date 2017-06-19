@@ -23,9 +23,9 @@ import java.nio.ByteBuffer;
 import sys.Env;
 import sys.Log;
 import sys.UnitTest;
-import net.ChannelHandler;
-import net.SelectorThread;
-import net.SelectorThread.QueueChannel;
+import netio.ChannelHandler;
+import netio.SelectorThread;
+import netio.SelectorThread.QueueChannel;
 
 public class T_SelectorThread extends UnitTest {
 	//static String HOST = "stackoverflow.com";

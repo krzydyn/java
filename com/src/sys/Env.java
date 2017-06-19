@@ -18,6 +18,7 @@
 
 package sys;
 
+import java.awt.GraphicsEnvironment;
 import java.awt.Toolkit;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.ClipboardOwner;
@@ -54,6 +55,10 @@ public class Env {
 
 	static public final boolean isMacos() {
 		return osName().contains("Mac");
+	}
+
+	static public final boolean isHeadless() {
+		return GraphicsEnvironment.isHeadless();
 	}
 
 	static public final String expandEnv(String p) {

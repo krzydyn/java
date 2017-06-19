@@ -29,10 +29,10 @@ import sys.Colors;
 import sys.Env;
 import sys.Log;
 import sys.XThread;
-import net.ChannelHandler;
-import net.SelectorThread;
-import net.SelectorThread.QueueChannel;
-import net.TcpFilter;
+import netio.ChannelHandler;
+import netio.SelectorThread;
+import netio.TcpFilter;
+import netio.SelectorThread.QueueChannel;
 
 public class RServer implements ChannelHandler {
 	static final int MAXSCREEN_BUF = 16*1024;

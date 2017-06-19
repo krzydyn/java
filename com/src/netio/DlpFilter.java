@@ -1,9 +1,9 @@
-package net;
+package netio;
 
 import java.nio.ByteBuffer;
 
 import text.Ansi;
-import net.SelectorThread.QueueChannel;
+import netio.SelectorThread.QueueChannel;
 /**
  * Data Link Protocol
  * aka Binary Synchronous Communication (BSC or Bisync)
