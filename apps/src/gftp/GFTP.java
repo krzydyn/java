@@ -39,8 +39,10 @@ public class GFTP {
 			dstDir=args[1];
 		}
 		else {
-			srcDir = "~/www/cms/ckeditor";
-			dstDir = "/www/cms/ckeditor";
+			//srcDir = "~/www/cms/lib";
+			//dstDir = "/www/cms/lib";
+			srcDir = "~/www/espdb";
+			dstDir = "/www/espdb";
 		}
 
 		filesSent=0;
@@ -150,6 +152,7 @@ public class GFTP {
 			}
 			else {
 				File f = localFiles.get(i);
+				String d = dst.getPath()+"/"+f.getName();
 				localFiles.remove(i);
 				if (f.isDirectory()) {
 					dirsToGo.add(f);
@@ -157,14 +160,14 @@ public class GFTP {
 				}
 				if (f.length() != fde.getSize()) {
 					filesToAdd.add(f);
-					Log.debug("ADD (%d != %d) %s", f.length(), fde.getSize(), dst.getPath()+"/"+f.getName());
+					Log.debug("ADD (%d != %d) %s", f.length(), fde.getSize(), d);
 				}
 				else if (f.lastModified() > fde.getLastModified().getTime()) {
 					filesToAdd.add(f);
-					Log.debug("ADD (dtm %d) %s", f.lastModified() - fde.getLastModified().getTime(),dst.getPath()+"/"+f.getName());
+					Log.debug("ADD (dtm %d) %s", f.lastModified() - fde.getLastModified().getTime(), d);
 				}
 				else {
-					Log.info("SAME (%d == %d) %s", f.length(), fde.getSize(), dst.getPath()+"/"+f.getName());
+					Log.info("SAME (%d == %d) %s", f.length(), fde.getSize(), d);
 				}
 			}
 		}
@@ -172,17 +175,24 @@ public class GFTP {
 			++filesSent;
 			String d = dst.getPath()+"/"+f.getName();
 			Log.info("send file '%s' -> '%s'", f.getPath(), d);
-			//sendFile(new FileInputStream(f), ftp.putFileStream(d));
+			sendFile(new FileInputStream(f), ftp.putFileStream(d));
 		}
 		for (File f : dirsToGo) {
 			if (f.isFile()) {continue;}
-			synDirs(f, new File(dst+"/"+f.getName()));
+			synDirs(f, new File(dst.getPath()+"/"+f.getName()));
 		}
 		for (File f : localFiles) {
-			if (!f.isFile()) {continue;}
-			Log.debug("NEW  %s", dst.getPath()+"/"+f.getName());
+			String d = dst.getPath()+"/"+f.getName();
+			if (f.isDirectory()) {
+				Log.info("NEW DIR %s", d);
+				ftp.makeDirectory(d);
+				synDirs(f, new File(d));
+				continue;
+			}
+			if (!f.isFile()) continue;
 			++filesSent;
-			//sendFile(new FileInputStream(f), ftp.putFileStream(d));
+			Log.info("NEW FILE %s", d);
+			sendFile(new FileInputStream(f), ftp.putFileStream(d));
 		}
 	}
 
