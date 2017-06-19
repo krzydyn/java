@@ -85,8 +85,8 @@ public class TestDB {
 	public static void main(String[] args) throws Exception {
 		Class.forName("org.sqlite.JDBC");
 
-		Env.remove("res/espdb.db");
-		DataBase db = new DataBase("jdbc:sqlite:res/espdb.db");
+		Env.remove("db/espdb.db");
+		DataBase db = new DataBase("jdbc:sqlite:db/espdb.db");
 		db.query("");
 
 		Result r;
