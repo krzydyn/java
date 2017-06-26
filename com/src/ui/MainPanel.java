@@ -28,6 +28,7 @@ import java.awt.event.WindowEvent;
 import java.awt.event.WindowFocusListener;
 import java.awt.event.WindowListener;
 
+import javax.swing.InputMap;
 import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
@@ -35,6 +36,7 @@ import javax.swing.JScrollBar;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 import javax.swing.JTextPane;
+import javax.swing.KeyStroke;
 import javax.swing.ScrollPaneConstants;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.Document;
@@ -114,13 +116,22 @@ public class MainPanel extends JPanel implements WindowListener {
 		else sp = new JScrollPane(c);
 		sp.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED);
 		sp.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
-		JScrollBar sb;
+		sp.setWheelScrollingEnabled(true);
 
+		//disable arrow keys on JScrollPane
+		InputMap im = sp.getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
+		im.put(KeyStroke.getKeyStroke("UP"), "none");
+		im.put(KeyStroke.getKeyStroke("DOWN"), "none");
+		im.put(KeyStroke.getKeyStroke("LEFT"), "none");
+		im.put(KeyStroke.getKeyStroke("RIGHT"), "none");
+
+		JScrollBar sb;
 		sb=sp.getVerticalScrollBar();
 		sb.setUnitIncrement(32); // default is 1
 		sb.setFocusable(false);
 
 		sb=sp.getHorizontalScrollBar();
+		sb.setUnitIncrement(16); // default is 1
 		sb.setFocusable(false);
 		return sp;
 	}

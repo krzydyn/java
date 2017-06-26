@@ -39,10 +39,8 @@ public class GFTP {
 			dstDir=args[1];
 		}
 		else {
-			//srcDir = "~/www/cms/lib";
-			//dstDir = "/www/cms/lib";
-			srcDir = "~/www/espdb";
-			dstDir = "/www/espdb";
+			//srcDir = "~/www/cms/lib";dstDir = "/www/cms/lib";
+			srcDir = "~/www/espdb";dstDir = "/www/espdb";
 		}
 
 		filesSent=0;

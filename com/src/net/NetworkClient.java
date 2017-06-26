@@ -15,6 +15,7 @@ import java.security.PrivilegedAction;
  *
  * @author      Jonathan Payne
  */
+@SuppressWarnings({ "unchecked", "rawtypes" })
 public class NetworkClient {
     protected Proxy     proxy = Proxy.NO_PROXY;
     /** Socket for communicating with server. */

@@ -1,8 +1,7 @@
 package rgui;
 
-import java.awt.Color;
+import java.awt.BorderLayout;
 import java.awt.Dimension;
-import java.awt.Graphics;
 import java.awt.GraphicsDevice;
 import java.awt.GraphicsEnvironment;
 import java.awt.Image;
@@ -20,7 +19,6 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 import javax.imageio.ImageIO;
@@ -28,6 +26,7 @@ import javax.imageio.ImageIO;
 import netio.ChannelHandler;
 import netio.SelectorThread;
 import netio.SelectorThread.QueueChannel;
+import rgui.ImagePanel.ImageBox;
 import sys.Env;
 import sys.Log;
 import sys.XThread;
@@ -39,26 +38,12 @@ public class RDesk extends MainPanel {
 
 	ByteBuffer inmsg = ByteBuffer.allocate(1024*1024);
 	int inlen;
-	private final Object imgLock = new Object();
-	private Image imgFull;
-	private Image imgGray;
+	private final ImagePanel imgPanel = new ImagePanel();
 	private final List<ImageBox> imgq = new ArrayList<ImageBox>();
-	private final List<ImageBox> rois = new ArrayList<ImageBox>();
 	QueueChannel qchn;
 	Point prevMouseLoc = new Point();
 	String Host = null;
 
-	static class ImageBox {
-		Image i;
-		int x,y,w,h;
-		long tm;
-		public ImageBox(Image i, int x, int y) {
-			this.i=i;
-			this.x=x; this.y=y;
-			this.w=i.getWidth(null); this.h=i.getHeight(null);
-			this.tm=System.currentTimeMillis();
-		}
-	}
 	ChannelHandler chnHandler = new ChannelHandler() {
 		@Override
 		public ChannelHandler createFilter() {
@@ -67,18 +52,16 @@ public class RDesk extends MainPanel {
 		@Override
 		public void connected(QueueChannel chn) {
 			Log.debug("connected");
-			imgFull = null;
-			rois.clear();
+			imgPanel.setImage(null);
 			inmsg.clear(); inlen=0;
 			sendScreenInfoReq();
 			sendScreenReq();
+			sendRegister();
 		}
 		@Override
 		public void disconnected(QueueChannel chn) {
 			qchn = null;
 			Log.debug("disconnected");
-			rois.clear();
-			repaint();
 		}
 
 		//TODO use com.net.TcpFilter
@@ -135,7 +118,7 @@ public class RDesk extends MainPanel {
 	};
 
 	public RDesk(String[] args) throws Exception{
-		super(null);
+		super(new BorderLayout());
 
 		// auto wait can be set only when using robot from new Thread
 		//robot.setAutoWaitForIdle(true);
@@ -143,8 +126,9 @@ public class RDesk extends MainPanel {
 		selector.start();
 		if (args.length > 0) Host = args[0];
 
-		setPreferredSize(new Dimension(1600,800));
 		setFocusTraversalKeysEnabled(false);
+		setPreferredSize(new Dimension(1000,800));
+		add(createScrolledPanel(imgPanel), BorderLayout.CENTER);
 
 		addKeyListener(new KeyAdapter() {
 			@Override
@@ -191,9 +175,9 @@ public class RDesk extends MainPanel {
 				sendWheelMove(e.getWheelRotation());
 			}
 		};
-		addMouseListener(mouseHnadler);
-		addMouseMotionListener(mouseHnadler);
-		addMouseWheelListener(mouseHnadler);
+		imgPanel.addMouseListener(mouseHnadler);
+		imgPanel.addMouseMotionListener(mouseHnadler);
+		imgPanel.addMouseWheelListener(mouseHnadler);
 	}
 
 
@@ -204,42 +188,6 @@ public class RDesk extends MainPanel {
 	@Override
 	public void windowLostFocus(WindowEvent e) {
 		sendGetClipboard();
-	}
-
-	@Override
-	protected void paintComponent(Graphics g) {
-		Image ifu;
-		synchronized (imgLock) {ifu=imgFull;}
-
-		int maxx=3000, maxy=2000;
-		if (ifu != null) {
-			g.drawImage(ifu, 0, 0, null);
-			maxx=ifu.getWidth(null);
-			maxy=ifu.getHeight(null);
-		}
-
-		int mx=getWidth()/2;
-		int my=getHeight()/2;
-		synchronized (imgLock) {
-			for (Iterator<ImageBox> i=rois.iterator(); i.hasNext(); ) {
-				ImageBox r = i.next();
-				if (r.tm + 1000 < System.currentTimeMillis()) i.remove();
-			}
-			for (ImageBox r : rois) {
-				if (r.x+r.w > maxx || r.y+r.h > maxy) {
-					g.setColor(Color.RED);
-					//Log.error("rect out of range: %s, (%d,%d)",r,maxx,maxy);
-				}
-				else
-					g.setColor(Color.GREEN);
-				g.drawRect(r.x, r.y, r.w, r.h);
-				g.drawLine(mx, my, r.x+r.w/2, r.y+r.h/2);
-			}
-			g.setColor(Color.GREEN);
-			g.fillRect(mx-2, my-10, 25,15);
-			g.setColor(Color.BLACK);
-			g.drawString(String.format("%d",rois.size()), mx, my);
-		}
 	}
 
 	@Override
@@ -271,26 +219,6 @@ public class RDesk extends MainPanel {
 		int l=a.length;
 		b.putShort((short)l);
 		b.put(a);
-	}
-
-	void updateRoi() {
-		if (imgFull == null) {
-			Log.error("updateRoi when ingFull is null");
-			return ;
-		}
-		synchronized (imgLock) {
-			int l=imgq.size();
-			Graphics g = imgFull.getGraphics();
-			for (int i=0; i < l; ++i) {
-				ImageBox ib = imgq.get(i);
-				g.drawImage(ib.i, ib.x, ib.y, null);
-				ib.i=null;
-				rois.add(ib);
-			}
-			g.dispose();
-			while (l>0) {imgq.remove(0); --l;}
-		}
-		repaint(100);
 	}
 
 	private void processMsg(QueueChannel chn) {
@@ -326,23 +254,16 @@ public class RDesk extends MainPanel {
 			try { i = ImageIO.read(is);}
 			catch (IOException e) {Log.error(e);}
 			if (i!=null) {
-				synchronized (imgLock) {
-					if (imgFull==null) {
-						imgFull = i;
-						Log.debug("recv fullscr %d,%d,%d,%d  bytes=%d",x,y,i.getWidth(null),i.getHeight(null),inmsg.remaining());
-						sendRegister();
-					}
-					else {
-						if (x==0 && y==0 && i.getWidth(null)==200) imgGray=i;
-						else {
-							//Log.debug("recv roi %d,%d,%d,%d  bytes=%d",x,y,i.getWidth(null),i.getHeight(null),inmsg.remaining());
-							imgq.add(new ImageBox(i,x,y));
-							if (imgq.size()>1) Log.debug("roiq len=%d",imgq.size());
-						}
-					}
+				if (imgPanel.getImage()==null) {
+					imgPanel.setImage(i);
+					Log.debug("recv fullscr %d,%d,%d,%d  bytes=%d",x,y,i.getWidth(null),i.getHeight(null),inmsg.remaining());
+				}
+				else {
+					imgq.add(new ImageBox(i,x,y));
+					if (imgq.size()>1) Log.debug("roiq len=%d",imgq.size());
 				}
 				//TODO update fullImg in separate thread
-				updateRoi();
+				imgPanel.update(imgq);
 			}
 		}
 		else if (cmd == RCommand.CLIPBOARD_SET) {

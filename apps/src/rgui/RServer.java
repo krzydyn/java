@@ -3,7 +3,6 @@ package rgui;
 import java.awt.Dimension;
 import java.awt.GraphicsDevice;
 import java.awt.GraphicsEnvironment;
-import java.awt.MouseInfo;
 import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.Robot;
@@ -154,7 +153,7 @@ public class RServer implements ChannelHandler {
 
 		}
 		}catch (Exception e) {
-			Log.error(e, "cmd=%d, xcode = %d",cmd,xcode);
+			Log.error(e, "cmd=%d, xcode = 0x%X (%d)",cmd,xcode,xcode);
 		}
 	}
 
@@ -262,17 +261,22 @@ public class RServer implements ChannelHandler {
 	private boolean winPressed=false;
 	private boolean metaPressed=false;
 	private void keyPressed(int keycode) {
+		//on Win10 VK_META cause Exception
+		if(keycode == KeyEvent.VK_META) keycode = KeyEvent.VK_WINDOWS;
+
 		if(keycode == KeyEvent.VK_ALT) altPressed=true;
 		else if(keycode == KeyEvent.VK_WINDOWS) winPressed=true;
 		else if(keycode == KeyEvent.VK_META) metaPressed=true;
+
 		if (keycode==KeyEvent.VK_ALT_GRAPH) {
 			robot.keyPress(KeyEvent.VK_ALT);
 			robot.keyPress(KeyEvent.VK_CONTROL);
 		}
-		else
-			robot.keyPress(keycode);
+		else robot.keyPress(keycode);
 	}
 	private void keyReleased(int keycode) {
+		if(keycode == KeyEvent.VK_META) keycode = KeyEvent.VK_WINDOWS;
+
 		if(keycode == KeyEvent.VK_ALT) altPressed=false;
 		else if(keycode == KeyEvent.VK_WINDOWS) winPressed=false;
 		else if(keycode == KeyEvent.VK_META) metaPressed=false;
@@ -541,11 +545,11 @@ public class RServer implements ChannelHandler {
 			}
 
 			if (forceActionTm < System.currentTimeMillis()) {
-				Point m = MouseInfo.getPointerInfo().getLocation();
+				/*Point m = MouseInfo.getPointerInfo().getLocation();
 				synchronized (robot) {
 					robot.mouseMove(m.x>0?m.x-1:m.x+1, m.y);
 					robot.mouseMove(m.x, m.y);
-				}
+				}*/
 				forceActionTm = System.currentTimeMillis()+FORCE_ACTION_TIME;
 			}
 			XThread.sleep(1000/50);

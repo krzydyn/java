@@ -63,7 +63,7 @@
 		<jar destfile="bin/rserver.jar" basedir="${build}">
 			<fileset dir="${comdir}/${build}">
 				<include name="sys/*"/>
-				<include name="net/**"/>
+				<include name="netio/**"/>
 				<include name="text/Text*"/>
 				<exclude name="sys/UnitTest*"/>
 			</fileset>
