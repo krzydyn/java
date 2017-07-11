@@ -64,7 +64,7 @@ System.setProperty("com.apple.mrj.application.growbox.intrudes","false");
  */
 
 @SuppressWarnings("serial")
-public class MainPanel extends JPanel implements WindowListener {
+public class MainPanel extends JPanel implements WindowListener,WindowFocusListener {
 
 	private JFrame mainFame;
 
@@ -95,7 +95,9 @@ public class MainPanel extends JPanel implements WindowListener {
 	@Override
 	public void windowDeactivated(WindowEvent e) {}
 	public void windowResized(ComponentEvent e) {}
+	@Override
 	public void windowLostFocus(WindowEvent e) {}
+	@Override
 	public void windowGainedFocus(WindowEvent e) {}
 
 	static public void append(JTextPane t, String s) {
@@ -179,20 +181,11 @@ public class MainPanel extends JPanel implements WindowListener {
 					f.setTitle(main.getName());
 					f.setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
 					f.addWindowListener(main);
+					f.addWindowFocusListener(main);
 					f.addComponentListener(new ComponentAdapter() {
 						@Override
 						public void componentResized(ComponentEvent e) {
 							main.windowResized(e);
-						}
-					});
-					f.addWindowFocusListener(new WindowFocusListener() {
-						@Override
-						public void windowGainedFocus(WindowEvent e) {
-							main.windowGainedFocus(e);
-						}
-						@Override
-						public void windowLostFocus(WindowEvent e) {
-							main.windowLostFocus(e);
 						}
 					});
 					Dimension d=main.getPreferredSize();

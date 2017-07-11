@@ -13,17 +13,31 @@ public class PlaySound {
 		Clip clip = null;
 
 		try {
+			//File f = new File("res/SampleAudio_0.5mb.mp3");
 			File f = new File("../resources/vivaldi-spring.mp3");
-			Log.prn("url: %s", f.toURI().toURL().toString());
 			clip = Sound.play(f.toURI().toURL());
 		} catch (Exception e) {
 			e.printStackTrace();
-			return ;
 		}
 
 		if (clip!=null) {
 			clip.drain();
 			clip.stop();
+			clip=null;
+		}
+
+		try {
+			File f = new File("res/alarm.wav");
+			Log.prn("url: %s", f.toURI().toURL().toString());
+			clip = Sound.play(f.toURI().toURL());
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		if (clip!=null) {
+			clip.drain();
+			clip.stop();
+			clip=null;
 		}
 
 	}
