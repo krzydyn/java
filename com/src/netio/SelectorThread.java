@@ -17,6 +17,7 @@
  */
 package netio;
 
+import java.io.Closeable;
 import java.io.EOFException;
 import java.io.IOException;
 import java.net.ConnectException;
@@ -69,6 +70,15 @@ public class SelectorThread {
 
 		public boolean isOpen() {return chn.isOpen();}
 		public boolean isConnected() {return connected;}
+		public void close() {
+			//sel.close(chn);
+			if (chn instanceof Closeable) {
+				try {
+					((Closeable)chn).close();
+				} catch (IOException e) {}
+				sel.wakeup(false);
+			}
+		}
 		public void write(ByteBuffer b,boolean part) {
 			if (!part && writeq != null &&  b.limit() > RWBUFLEN) {
 				int limit = (b.limit()/RWBUFLEN+1)*2+10;
@@ -97,12 +107,15 @@ public class SelectorThread {
 			@Override
 			public void run() {
 				running=true;
+				Log.notice("selector loop started");
 				try { loop(); }
 				catch (Throwable e) {
 					Log.error(e);
 				}
 				finally {
 					running=false;
+					if (stopReq) Log.notice("selector loop finished, sockets = %d",selector.keys().size());
+					else Log.warn("selector loop finished, sockets = %d",selector.keys().size());
 					closeAll();
 				}
 			}
@@ -122,12 +135,16 @@ public class SelectorThread {
 		}
 	}
 
+	private void close(SelectableChannel chn) {
+		disconect(chn.keyFor(selector),null);
+	}
+
 	public SelectionKey bind(String addr, int port, ChannelHandler d) throws IOException {
 		Log.debug("binding to %s:%d",addr==null?"*":addr,port);
 		if (d == null) throw new NullPointerException("ChannelHandler is null");
 		ServerSocketChannel chn=selector.provider().openServerSocketChannel();
 		chn.setOption(StandardSocketOptions.SO_REUSEADDR, true);
-		wakeupForRegister();
+		wakeup(true);
 		if (addr == null || addr.isEmpty()) chn.bind(new InetSocketAddress(port), 3);
 		else chn.bind(new InetSocketAddress(addr, port), 3);
 		return addChannel(chn, SelectionKey.OP_ACCEPT, d);
@@ -137,15 +154,15 @@ public class SelectorThread {
 		if (d == null) throw new NullPointerException("ChannelHandler is null");
 		SocketChannel chn=selector.provider().openSocketChannel();
 		chn.configureBlocking(false);
-		wakeupForRegister();
+		wakeup(true);
 		chn.connect(new InetSocketAddress(addr, port));
 		return addChannel(chn, SelectionKey.OP_CONNECT|SelectionKey.OP_READ, d);
 	}
 
 	//low level
-	private void wakeupForRegister() {
+	private void wakeup(boolean reg) {
 		if (running) {
-			registerReq=true;
+			registerReq=reg;
 			Log.debug("wakeup selector");
 			selector.wakeup();
 			Thread.yield();
@@ -224,7 +241,6 @@ public class SelectorThread {
 	}
 
 	private void loop() throws Exception {
-		Log.notice("selector loop started");
 		while (!stopReq) {
 			if (registerReq) {
 				Log.debug("selector wait for chn registered");
@@ -265,7 +281,6 @@ public class SelectorThread {
 				}
 			}
 		}
-		Log.warn("selector loop finished");
 	}
 
 	private void disconect(SelectionKey sk, Throwable thr) {

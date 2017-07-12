@@ -3,6 +3,7 @@ package rgui;
 import java.awt.Dimension;
 import java.awt.GraphicsDevice;
 import java.awt.GraphicsEnvironment;
+import java.awt.MouseInfo;
 import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.Robot;
@@ -34,8 +35,9 @@ import netio.TcpFilter;
 import netio.SelectorThread.QueueChannel;
 
 public class RServer implements ChannelHandler {
-	static final int MAXSCREEN_BUF = 16*1024;
-	static final int FORCE_ACTION_TIME = 60*1000;
+	private static final int MAXSCREEN_BUF = 16*1024;
+	private static final int FORCE_ACTION_TIME = 60*1000;
+	private static boolean preventScreenOff;
 	private final SelectorThread selector;
 	private final Robot robot;
 	private final String imgFormat="jpg";
@@ -544,12 +546,12 @@ public class RServer implements ChannelHandler {
 				i=null; p=null;
 			}
 
-			if (forceActionTm < System.currentTimeMillis()) {
-				/*Point m = MouseInfo.getPointerInfo().getLocation();
+			if (preventScreenOff && forceActionTm < System.currentTimeMillis()) {
+				Point m = MouseInfo.getPointerInfo().getLocation();
 				synchronized (robot) {
 					robot.mouseMove(m.x>0?m.x-1:m.x+1, m.y);
 					robot.mouseMove(m.x, m.y);
-				}*/
+				}
 				forceActionTm = System.currentTimeMillis()+FORCE_ACTION_TIME;
 			}
 			XThread.sleep(1000/50);
@@ -559,6 +561,11 @@ public class RServer implements ChannelHandler {
 
 	public static void main(String[] args) throws Exception {
 		Log.setTestMode();
+		for (int i=0; i <args.length; ++i) {
+			if (args[i].equals("poff")) {
+				preventScreenOff=true;
+			}
+		}
 		try {
 			new RServer().run();
 		} catch (Throwable e) {

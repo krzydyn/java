@@ -205,6 +205,7 @@ public class RDesk extends MainPanel {
 	@Override
 	public void windowClosed(WindowEvent e) {
 		Log.debug("stop selector");
+		if (qchn!=null) qchn.close();
 		selector.stop();
 	}
 
@@ -390,7 +391,9 @@ public class RDesk extends MainPanel {
 	}
 
 	private void keep_connected() {
+		int cnt=0;
 		while (selector.isRunning()) {
+			++cnt;
 			if (qchn==null) {
 				try {
 					SelectionKey sk = selector.connect(Host, 3367, chnHandler);
@@ -403,6 +406,10 @@ public class RDesk extends MainPanel {
 			if (errCnt >= 3) break;
 			if (errCnt > 0) XThread.sleep(5000);
 			else XThread.sleep(1000);
+			if (cnt>10) {
+				if (qchn!=null) qchn.close();
+				cnt=0;
+			}
 		}
 		selector.stop();
 	}
