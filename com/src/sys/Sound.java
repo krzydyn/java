@@ -16,7 +16,7 @@
  *  limitations under the License
  */
 
-package snd;
+package sys;
 
 import java.io.OutputStream;
 import java.net.URL;
@@ -29,8 +29,6 @@ import javax.sound.sampled.Line;
 import javax.sound.sampled.LineUnavailableException;
 import javax.sound.sampled.SourceDataLine;
 import javax.sound.sampled.TargetDataLine;
-
-import sys.Log;
 
 public class Sound {
 	//public static final int SAMPLE_RATE = 16 * 1024; // ~16KHz
@@ -161,6 +159,18 @@ public class Sound {
 		clip.open(stream);
 		clip.start();
 		return clip;
+	}
+
+	static private Clip playing=null;
+	static public void play(String url) {
+		try{
+			if (playing!=null) {
+				playing.drain();
+				playing.stop();
+				playing=null;
+			}
+			playing = play(new URL(url));
+		}catch(Exception e){}
 	}
 
 	static public void capture(OutputStream os, int secs) throws Exception {

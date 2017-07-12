@@ -35,11 +35,6 @@ public class ImagePanel extends JPanel {
 		public void run() {
 			setSize(imgSize);
 			setPreferredSize(imgSize);
-			//repaint();
-			//getParent().invalidate();
-			//getTopLevelAncestor().doLayout();
-			//getParent().revalidate();
-			//getParent().repaint();
 		}
 	};
 	public ImagePanel() {

@@ -4,8 +4,8 @@ import java.io.File;
 
 import javax.sound.sampled.Clip;
 
-import snd.Sound;
 import sys.Log;
+import sys.Sound;
 
 public class PlaySound {
 

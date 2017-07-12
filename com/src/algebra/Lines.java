@@ -18,6 +18,7 @@
 package algebra;
 
 import java.awt.Point;
+import java.awt.geom.Line2D;
 import java.awt.geom.Point2D;
 
 public class Lines {
@@ -37,7 +38,7 @@ public class Lines {
 	 *
 	 * @return IntersectionType
 	 */
-	public static IntersectionType intersetion(Point2D p1, Point2D p2, Point2D p3, Point2D p4, Point2D r) {
+	public static IntersectionType intersection(Point2D p1, Point2D p2, Point2D p3, Point2D p4, Point2D r) {
 		if (r!=null) r.setLocation(0,0);
 
 		double d = (p4.getY()-p3.getY())*(p2.getX()-p1.getX()) - (p4.getX()-p3.getX())*(p2.getY()-p1.getY());
@@ -63,6 +64,17 @@ public class Lines {
 		if (Math.abs(ua) < EPS || Math.abs(ua-1.0) < EPS) return IntersectionType.TOUCH;
 
 		return IntersectionType.CROSS_IN;
+	}
+
+	public static IntersectionType intersection(Line2D l1,Line2D l2, Point2D r){
+		return intersection(l1.getP1(),l1.getP2(),l2.getP1(),l2.getP2(), r);
+	}
+
+	public static Point2D intersection(Line2D l1,Line2D l2, boolean infinite){
+		Point2D r = new Point2D.Double();
+		IntersectionType t=intersection(l1.getP1(),l1.getP2(),l2.getP1(),l2.getP2(), r);
+		if (t == IntersectionType.COLINEAR || t == IntersectionType.PARALLEL) return null;
+		return r;
 	}
 
 	public static IntersectionType intersection(Point p1, Point p2, Point p3, Point p4, Point2D r) {

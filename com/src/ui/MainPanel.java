@@ -148,16 +148,13 @@ public class MainPanel extends JPanel implements WindowListener,WindowFocusListe
 		return split;
 	}
 
-	static public MainPanel start(final Class<? extends MainPanel> mainclass, String[] args) {
+	static public MainPanel start(final Class<? extends MainPanel> mainclass, String... args) {
 		try { return internal_start(mainclass, args);}
 		catch (Throwable e) {Log.error(e);}
 		return null;
 	}
-	static public void start(final Class<? extends MainPanel> mainclass) {
-		start(mainclass,null);
-	}
 	static private MainPanel create(final Class<? extends MainPanel> mainclass, String[] args) throws Exception {
-		if (args != null) {
+		if (args != null && args.length>0) {
 			try {return mainclass.getConstructor(String[].class).newInstance(new Object[]{args});}
 			catch (NoSuchMethodException e) {}
 			return mainclass.newInstance();
@@ -174,8 +171,9 @@ public class MainPanel extends JPanel implements WindowListener,WindowFocusListe
 			@Override
 			public void run() {
 				try {
-					final MainPanel main = create(mainclass, args);
 					JFrame f = new JFrame();
+					final MainPanel main = create(mainclass, args);
+					mp[0]=main;
 					main.mainFame = f;
 					f.setContentPane(main);
 					f.setTitle(main.getName());
@@ -207,7 +205,6 @@ public class MainPanel extends JPanel implements WindowListener,WindowFocusListe
 					f.setLocation(10,10);
 					f.setVisible(true);
 					main.requestFocus();
-					mp[0]=main;
 					Log.info("%s", Env.memstat());
 				} catch (Throwable e) {
 					Log.error(e);

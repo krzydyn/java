@@ -34,7 +34,7 @@ import ui.MainPanel;
 
 @SuppressWarnings("serial")
 public class RDesk extends MainPanel {
-	final SelectorThread selector;
+	final private SelectorThread selector;
 
 	ByteBuffer inmsg = ByteBuffer.allocate(1024*1024);
 	int inlen;
@@ -61,10 +61,10 @@ public class RDesk extends MainPanel {
 			sendRegister();
 		}
 		@Override
-		public void disconnected(QueueChannel chn, Throwable thr) {
-			Log.debug("disconnected");
+		public void disconnected(QueueChannel chn, Throwable e) {
+			Log.debug("disconnected %s", e==null?"":e.toString());
 			qchn = null;
-			if (thr != null) ++errCnt;
+			if (e != null) ++errCnt;
 		}
 
 		//TODO use com.net.TcpFilter
@@ -195,15 +195,11 @@ public class RDesk extends MainPanel {
 
 	@Override
 	public void windowOpened(WindowEvent e) {
-		new Thread("ConnectKeeper") {
-			@Override
-			public void run() {
-				keep_connected();
-			}
-		}.start();
+		super.windowOpened(e);
 	}
 	@Override
 	public void windowClosed(WindowEvent e) {
+		super.windowClosed(e);
 		Log.debug("stop selector");
 		if (qchn!=null) qchn.close();
 		selector.stop();
@@ -390,18 +386,13 @@ public class RDesk extends MainPanel {
 		chnHandler.write(qchn, b);
 	}
 
-	private void keep_connected() {
+	private void keep_connected() throws Exception {
 		int cnt=0;
 		while (selector.isRunning()) {
 			++cnt;
 			if (qchn==null) {
-				try {
-					SelectionKey sk = selector.connect(Host, 3367, chnHandler);
-					qchn = (QueueChannel)sk.attachment();
-				} catch (IOException e) {
-					Log.error(e);
-					break;
-				}
+				SelectionKey sk = selector.connect(Host, 3367, chnHandler);
+				qchn = (QueueChannel)sk.attachment();
 			}
 			if (errCnt >= 3) break;
 			if (errCnt > 0) XThread.sleep(5000);
@@ -415,6 +406,12 @@ public class RDesk extends MainPanel {
 	}
 
 	public static void main(String[] args) {
-		start(RDesk.class, args);
+		RDesk desk = (RDesk)start(RDesk.class, args);
+		try {
+			desk.keep_connected();
+		}
+		catch (Throwable e) {
+			Log.error(e);
+		}
 	}
 }

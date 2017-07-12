@@ -11,8 +11,8 @@ import java.awt.geom.AffineTransform;
 import java.util.ArrayList;
 import java.util.List;
 
-import snd.Sound;
 import sys.Log;
+import sys.Sound;
 import ui.MainPanel;
 
 /*

@@ -39,6 +39,7 @@ public class GFTP {
 			dstDir=args[1];
 		}
 		else {
+			//srcDir = "~/www/templates";dstDir = "/www/templates";
 			//srcDir = "~/www/cms/lib";dstDir = "/www/cms/lib";
 			srcDir = "~/www/espdb";dstDir = "/www/espdb";
 		}
@@ -114,9 +115,9 @@ public class GFTP {
 		Log.debug("dtm = %d", tmloc-tm);
 		ftp.deleteFile(tmfile);
 		Log.info("sync recursive ...");
-		synDirs(src, dst);
+		syncDirs(src, dst);
 	}
-	private static void synDirs(File src, File dst) throws Exception {
+	private static void syncDirs(File src, File dst) throws Exception {
 		if (!src.exists()) return ;
 		Log.debug("gitsync dir %s", src);
 		GitRepo git = new GitRepo(src.getPath());
@@ -177,14 +178,14 @@ public class GFTP {
 		}
 		for (File f : dirsToGo) {
 			if (f.isFile()) {continue;}
-			synDirs(f, new File(dst.getPath()+"/"+f.getName()));
+			syncDirs(f, new File(dst.getPath()+"/"+f.getName()));
 		}
 		for (File f : localFiles) {
 			String d = dst.getPath()+"/"+f.getName();
 			if (f.isDirectory()) {
 				Log.info("NEW DIR %s", d);
 				ftp.makeDirectory(d);
-				synDirs(f, new File(d));
+				syncDirs(f, new File(d));
 				continue;
 			}
 			if (!f.isFile()) continue;
@@ -201,7 +202,7 @@ public class GFTP {
 		return -1;
 	}
 
-	private static void sendFile(InputStream i, OutputStream o) throws IOException {
+	static void sendFile(InputStream i, OutputStream o) throws IOException {
 		byte[] buf=new byte[256];
 		int r;
 		while ((r=i.read(buf))>=0) {
@@ -210,7 +211,7 @@ public class GFTP {
 		i.close();
 		o.close();
 	}
-	private static void readStream(InputStream i, OutputStream o) throws IOException {
+	static void readStream(InputStream i, OutputStream o) throws IOException {
 		byte[] buf=new byte[256];
 		int r;
 		while ((r=i.read(buf))>=0) {

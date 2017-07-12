@@ -24,7 +24,7 @@ public class DlpFilter implements ChannelHandler {
 	}
 
 	@Override
-	public void disconnected(QueueChannel qchn, Throwable thr) {
+	public void disconnected(QueueChannel qchn, Throwable e) {
 	}
 
 	@Override
@@ -40,9 +40,13 @@ public class DlpFilter implements ChannelHandler {
 		qchn.write(buf);
 		wbuf.clear();
 		wbuf.put((byte)Ansi.Code.ETX); // or ETB if block
-		byte bcc=0; //block check character (LRC for USACSII, CRC for TC or EBDIC)
-		wbuf.put(bcc);
+		wbuf.put((byte)calcBCC(buf));
 		wbuf.flip();
 		qchn.write(wbuf);
+	}
+
+	//block check character (LRC for USACSII, CRC for TC or EBDIC)
+	private int calcBCC(ByteBuffer buf) {
+		return 0;
 	}
 }

@@ -61,7 +61,7 @@ public class T_SelectorThread extends UnitTest {
 				chn.write(data);
 			}
 			@Override
-			public void disconnected(QueueChannel chnst, Throwable thr) {
+			public void disconnected(QueueChannel chnst, Throwable e) {
 				Log.debug("disconnected!");
 			}
 			@Override
