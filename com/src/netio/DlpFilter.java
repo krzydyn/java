@@ -24,7 +24,7 @@ public class DlpFilter implements ChannelHandler {
 	}
 
 	@Override
-	public void disconnected(QueueChannel qchn) {
+	public void disconnected(QueueChannel qchn, Throwable thr) {
 	}
 
 	@Override

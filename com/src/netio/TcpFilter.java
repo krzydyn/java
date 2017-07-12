@@ -24,8 +24,8 @@ public class TcpFilter implements ChannelHandler {
 	}
 
 	@Override
-	public void disconnected(QueueChannel qchn) {
-		link.disconnected(qchn);
+	public void disconnected(QueueChannel qchn, Throwable thr) {
+		link.disconnected(qchn, thr);
 		inmsg.clear();
 	}
 

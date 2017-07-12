@@ -124,6 +124,7 @@ public class SelectorThread {
 
 	public SelectionKey bind(String addr, int port, ChannelHandler d) throws IOException {
 		Log.debug("binding to %s:%d",addr==null?"*":addr,port);
+		if (d == null) throw new NullPointerException("ChannelHandler is null");
 		ServerSocketChannel chn=selector.provider().openServerSocketChannel();
 		chn.setOption(StandardSocketOptions.SO_REUSEADDR, true);
 		wakeupForRegister();
@@ -132,9 +133,10 @@ public class SelectorThread {
 		return addChannel(chn, SelectionKey.OP_ACCEPT, d);
 	}
 	public SelectionKey connect(String addr, int port, ChannelHandler d) throws IOException {
+		Log.debug("connecting ... %s:%d", addr, port);
+		if (d == null) throw new NullPointerException("ChannelHandler is null");
 		SocketChannel chn=selector.provider().openSocketChannel();
 		chn.configureBlocking(false);
-		Log.debug("connecting ... %s:%d", addr, port);
 		wakeupForRegister();
 		chn.connect(new InetSocketAddress(addr, port));
 		return addChannel(chn, SelectionKey.OP_CONNECT|SelectionKey.OP_READ, d);
@@ -222,7 +224,7 @@ public class SelectorThread {
 	}
 
 	private void loop() throws Exception {
-		Log.debug("loop started");
+		Log.notice("selector loop started");
 		while (!stopReq) {
 			if (registerReq) {
 				Log.debug("selector wait for chn registered");
@@ -263,7 +265,7 @@ public class SelectorThread {
 				}
 			}
 		}
-		Log.debug("loop finished");
+		Log.warn("selector loop finished");
 	}
 
 	private void disconect(SelectionKey sk, Throwable thr) {
@@ -283,7 +285,7 @@ public class SelectorThread {
 			Log.error(thr, "addr: %s", addr);
 		try {c.close();} catch (IOException e) { Log.error(e);}
 		qchn.connected=false;
-		qchn.hnd.disconnected(qchn);
+		qchn.hnd.disconnected(qchn, thr);
 		if (qchn.writeq != null) {
 			qchn.writeq.clear();
 			qchn.writeq=null;

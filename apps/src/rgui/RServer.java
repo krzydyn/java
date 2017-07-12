@@ -66,7 +66,7 @@ public class RServer implements ChannelHandler {
 		Log.debug("connected");
 	}
 	@Override
-	public void disconnected(QueueChannel chn) {
+	public void disconnected(QueueChannel chn, Throwable thr) {
 		Log.debug("disconnected");
 		clients.remove(chn);
 	}

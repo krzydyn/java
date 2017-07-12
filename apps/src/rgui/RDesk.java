@@ -43,6 +43,7 @@ public class RDesk extends MainPanel {
 	QueueChannel qchn;
 	Point prevMouseLoc = new Point();
 	String Host = null;
+	int errCnt = 0;
 
 	ChannelHandler chnHandler = new ChannelHandler() {
 		@Override
@@ -52,6 +53,7 @@ public class RDesk extends MainPanel {
 		@Override
 		public void connected(QueueChannel chn) {
 			Log.debug("connected");
+			errCnt = 0;
 			imgPanel.setImage(null);
 			inmsg.clear(); inlen=0;
 			sendScreenInfoReq();
@@ -59,9 +61,10 @@ public class RDesk extends MainPanel {
 			sendRegister();
 		}
 		@Override
-		public void disconnected(QueueChannel chn) {
-			qchn = null;
+		public void disconnected(QueueChannel chn, Throwable thr) {
 			Log.debug("disconnected");
+			qchn = null;
+			if (thr != null) ++errCnt;
 		}
 
 		//TODO use com.net.TcpFilter
@@ -108,7 +111,7 @@ public class RDesk extends MainPanel {
 		}
 		@Override
 		public void write(QueueChannel chn, ByteBuffer buf) {
-			if (chn==null) return ;
+			if (chn==null || !chn.isConnected()) return ;
 			ByteBuffer lenbuf = ByteBuffer.allocate(4);
 			lenbuf.putInt(buf.remaining());
 			lenbuf.flip();
@@ -241,7 +244,7 @@ public class RDesk extends MainPanel {
 				if (scr.width > w) scr.width=w;
 				if (scr.height > h) scr.height=h;
 				Dimension size = new Dimension(scr.width, scr.height);
-				topFrame().setSize(scr.width,scr.height);
+				topFrame().setSize(scr.width+20,scr.height+5);
 				setPreferredSize(size);
 				//topFrame().pack();
 			}
@@ -391,14 +394,15 @@ public class RDesk extends MainPanel {
 			if (qchn==null) {
 				try {
 					SelectionKey sk = selector.connect(Host, 3367, chnHandler);
-					qchn=(QueueChannel)sk.attachment();
+					qchn = (QueueChannel)sk.attachment();
 				} catch (IOException e) {
 					Log.error(e);
 					break;
 				}
 			}
-
-			XThread.sleep(1000);
+			if (errCnt >= 3) break;
+			if (errCnt > 0) XThread.sleep(5000);
+			else XThread.sleep(1000);
 		}
 		selector.stop();
 	}
