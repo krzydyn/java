@@ -387,9 +387,7 @@ public class RDesk extends MainPanel {
 	}
 
 	private void keep_connected() throws Exception {
-		int cnt=0;
 		while (selector.isRunning()) {
-			++cnt;
 			if (qchn==null) {
 				SelectionKey sk = selector.connect(Host, 3367, chnHandler);
 				qchn = (QueueChannel)sk.attachment();
@@ -397,10 +395,6 @@ public class RDesk extends MainPanel {
 			if (errCnt >= 3) break;
 			if (errCnt > 0) XThread.sleep(5000);
 			else XThread.sleep(1000);
-			if (cnt>10) {
-				if (qchn!=null) qchn.close();
-				cnt=0;
-			}
 		}
 		selector.stop();
 	}

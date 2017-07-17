@@ -71,12 +71,17 @@ public class SelectorThread {
 		public boolean isOpen() {return chn.isOpen();}
 		public boolean isConnected() {return connected;}
 		public void close() {
-			//sel.close(chn);
-			if (chn instanceof Closeable) {
-				try {
-					((Closeable)chn).close();
-				} catch (IOException e) {}
-				sel.wakeup(false);
+			Log.warn("closing QueueChannel");
+			SelectionKey sk = chn.keyFor(sel.selector);
+			if (sk != null) sel.disconnect(sk, null);
+			else {
+				if (chn instanceof Closeable) {
+					try {
+						((Closeable)chn).close();
+						connected=false;
+						hnd.disconnected(this, null);
+					} catch (IOException e) {}
+				}
 			}
 		}
 		public void write(ByteBuffer b,boolean part) {
@@ -131,12 +136,12 @@ public class SelectorThread {
 			SelectionKey sk = i.next();
 			Object o = sk.attachment();
 			if (o instanceof SocketChannel)
-				disconect(sk, null);
+				disconnect(sk, null);
 		}
 	}
 
 	private void close(SelectableChannel chn) {
-		disconect(chn.keyFor(selector),null);
+		disconnect(chn.keyFor(selector),null);
 	}
 
 	public SelectionKey bind(String addr, int port, ChannelHandler d) throws IOException {
@@ -163,7 +168,7 @@ public class SelectorThread {
 	private void wakeup(boolean reg) {
 		if (running) {
 			registerReq=reg;
-			Log.debug("wakeup selector");
+			Log.debug(1,"wakeup selector");
 			selector.wakeup();
 			Thread.yield();
 		}
@@ -187,6 +192,11 @@ public class SelectorThread {
 
 	private void write(SelectableChannel chn, ByteBuffer buf) {
 		SelectionKey sk = chn.keyFor(selector);
+		if (sk == null) {
+			Log.error("no key for channel");
+			try {chn.close();} catch (IOException e) {}
+			return ;
+		}
 		QueueChannel qchn = (QueueChannel)sk.attachment();
 		//Log.debug("writing to queue " + buf);
 		while (buf.position() < buf.limit()) {
@@ -268,7 +278,7 @@ public class SelectorThread {
 				i.remove();
 				//Log.debug("processing selected channel %s", sk.channel());
 				try {
-					if (!sk.isValid()) disconect(sk, null);
+					if (!sk.isValid()) disconnect(sk, null);
 					else if (sk.isAcceptable()) accept(sk);
 					else if (sk.isConnectable()) finishConnect(sk);
 					else {
@@ -277,13 +287,13 @@ public class SelectorThread {
 					}
 				}
 				catch (Throwable e) {
-					disconect(sk, e);
+					disconnect(sk, e);
 				}
 			}
 		}
 	}
 
-	private void disconect(SelectionKey sk, Throwable thr) {
+	private void disconnect(SelectionKey sk, Throwable thr) {
 		QueueChannel qchn = (QueueChannel)sk.attachment();
 		sk.attach(null);  //unref qchn
 		sk.cancel();      //remove from selector
