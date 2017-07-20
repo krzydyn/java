@@ -91,6 +91,7 @@ public class RServer implements ChannelHandler {
 
 		try {
 		if (cmd == RCommand.SCREEN_INFO) {
+			Log.debug("processing SCREEN_INFO");
 			getScreenInfo(chn);
 		}
 		else if (cmd == RCommand.MOUSE_MOVE) {
@@ -117,6 +118,7 @@ public class RServer implements ChannelHandler {
 			sendImage(chn, 0, 0, w, h, q);
 		}
 		else if (cmd == RCommand.CLIENT_REGISTER) {
+			Log.debug("processing CLIENT_REGISTER");
 			registerClient(chn);
 		}
 		else if (cmd == RCommand.KEY_PRESS) {
@@ -154,7 +156,8 @@ public class RServer implements ChannelHandler {
 			Log.error("unknown cmd:%d, payload %d", cmd, msg.remaining());
 
 		}
-		}catch (Exception e) {
+		}
+		catch (Exception e) {
 			Log.error(e, "cmd=%d, xcode = 0x%X (%d)",cmd,xcode,xcode);
 		}
 	}
@@ -394,7 +397,8 @@ public class RServer implements ChannelHandler {
 
 	private void sendImageAll(BufferedImage img,int x, int y, float q) {
 		if (clients.size() == 0) return ;
-		//RenderedImage img = getScreen(x,y,w,h);
+		//Log.debug("sendImage to %d",clients.size());
+
 		ByteArrayOutputStream os = new ByteArrayOutputStream(512*1024);
 		DataOutputStream dos = new DataOutputStream(os);
 		try {
@@ -436,38 +440,52 @@ public class RServer implements ChannelHandler {
 		}
 	}
 
-	Rectangle box_bfs(BufferedImage t, int x, int y) {
-		Rectangle r=new Rectangle(x,y,0,0);
+	List<Point> pntcache = new ArrayList<Point>();
+	private Point newPoint(int x, int y) {
+		if (pntcache.size() == 0) return new Point(x, y);
+		Point p = pntcache.remove(pntcache.size()-1);
+		p.setLocation(x, y);
+		return p;
+	}
+	Rectangle box_bfs(BufferedImage t, int x, int y, Rectangle r) {
+		r.setBounds(x,y,0,0);
 		List<Point> q=new ArrayList<Point>();
 		t.setRGB(x, y, 0);
-		q.add(new Point(x,y));
+		q.add(newPoint(x,y));
 		Dimension d=new Dimension(t.getWidth(), t.getHeight());
 		while (q.size()>0) {
 			Point p=q.remove(0);
-			x=p.x; y=p.y; p=null;
+			x=p.x; y=p.y;
+			pntcache.add(p);
 			r.add(x,y); r.add(x+1,y+1);
-			if (x>0 && (t.getRGB(x-1,y)&0xff)!=0) {t.setRGB(x-1, y, 0);q.add(new Point(x-1, y));}
-			if (x+1<d.width && (t.getRGB(x+1,y)&0xff)!=0) {t.setRGB(x+1, y, 0);q.add(new Point(x+1, y));}
-			if (y>0 && (t.getRGB(x,y-1)&0xff)!=0) {t.setRGB(x, y-1, 0);q.add(new Point(x, y-1));}
-			if (y+1<d.height && (t.getRGB(x,y+1)&0xff)!=0) {t.setRGB(x, y+1, 0);q.add(new Point(x, y+1));}
+			if (x>0 && (t.getRGB(x-1,y)&0xff)!=0) {t.setRGB(x-1, y, 0);q.add(newPoint(x-1, y));}
+			if (x+1<d.width && (t.getRGB(x+1,y)&0xff)!=0) {t.setRGB(x+1, y, 0);q.add(newPoint(x+1, y));}
+			if (y>0 && (t.getRGB(x,y-1)&0xff)!=0) {t.setRGB(x, y-1, 0);q.add(newPoint(x, y-1));}
+			if (y+1<d.height && (t.getRGB(x,y+1)&0xff)!=0) {t.setRGB(x, y+1, 0);q.add(newPoint(x, y+1));}
 		}
 		return r;
 	}
 
 	void addRoi(List<Rectangle> rois, Rectangle r, int maxw, int maxh) {
 		if (r.width==0 || r.height==0) return;
-		int g=25;
+		if (r.x+r.width > maxw || r.y+r.height > maxh) {
+			Log.error("ROI too large");
+			return ;
+		}
+
+		int g=40;
 		r.grow(g, g);
+		boolean added=false;
 		for (Rectangle rr : rois) {
 			if (rr.intersects(r)) {
 				r.grow(-g, -g);
 				rr.add(r);
-				r=null; break;
+				added=true;
 			}
 		}
-		if (r!=null) {
+		if (!added) {
 			r.grow(-g, -g);
-			rois.add(r);
+			rois.add(new Rectangle(r));
 		}
 	}
 	void detectChanges(BufferedImage p,BufferedImage i) {
@@ -489,29 +507,21 @@ public class RServer implements ChannelHandler {
 		g.drawImage(si, 0, 0, bi.getWidth(), bi.getHeight(), null);
 		g.dispose();*/
 
+		Rectangle radd=new Rectangle(0,0,1,1);
 		for (int y=0; y < p.getHeight(); ++y) {
 			for (int x=0; x < p.getWidth(); ++x) {
 				if ((p.getRGB(x, y)&0xff)==0) continue;
-				Rectangle r;
-				r=new Rectangle(x,y,1,1);
-				//r=box_bfs(p,x,y);
-				if (r.x+r.width > i.getWidth() || r.y+r.height > i.getHeight()) {
-					Log.error("ROI too large");
-					continue;
-				}
-				//Log.info("roi = %s",r);
-				addRoi(rois,r,i.getWidth(),i.getHeight());
+				box_bfs(p,x,y,radd);
+				addRoi(rois,radd,i.getWidth(),i.getHeight());
 			}
 		}
-		//Log.info("rois = %d",rois.size());
 		for (Rectangle r : rois) {
 			if (r.x+r.width > i.getWidth()) r.width=i.getWidth()-r.x;
 			if (r.y+r.height > i.getHeight()) r.height=i.getHeight()-r.y;
 			if (r.width < 1 || r.height < 1) continue;
 			sendImageAll(i.getSubimage(r.x, r.y, r.width, r.height),r.x, r.y, 0.2f);
 		}
-		//if (!rois.isEmpty())
-		//	sendImageAll(bi,0, 0, 0.2f);
+		rois.clear();
 	}
 
 	private void run() throws Exception {
@@ -556,7 +566,6 @@ public class RServer implements ChannelHandler {
 			}
 			XThread.sleep(1000/50);
 		}
-		Log.info("rserver finished");
 	}
 
 	public static void main(String[] args) throws Exception {
@@ -569,6 +578,7 @@ public class RServer implements ChannelHandler {
 		try {
 			new RServer().run();
 		} catch (Throwable e) {
+			Log.info("rserver finished");
 			Log.error(e);
 		}
 	}

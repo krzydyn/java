@@ -33,7 +33,6 @@ public class Log {
 	final private static String[] LEVEL_NAME = {"E", "W", "D", "T", "I", "N", ""};
 	public static enum Level {
 		FINEST
-
 	}
 
 	private static SimpleDateFormat tmfmt = tmfmt_tst;

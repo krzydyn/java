@@ -95,6 +95,7 @@ public class RDesk extends MainPanel {
 						continue;
 					}
 					if (inlen < 0) throw new RuntimeException("Message outof sync");
+					if (inlen > 1024*1024) throw new RuntimeException("Message too long "+inlen);
 				}
 				if (readTCP(inlen, buf) < inlen) {
 					continue;
@@ -223,7 +224,7 @@ public class RDesk extends MainPanel {
 
 	private void processMsg(QueueChannel chn) {
 		short cmd = inmsg.getShort();
-		//Log.debug("cmd = %d, payload %d", cmd, inmsg.remaining());
+		//Log.debug("recv cmd = %d, payload %d", cmd, inmsg.remaining());
 		if (cmd == RCommand.SCREEN_INFO) {
 			String id = readUTF(inmsg);
 			int x = inmsg.getInt();
@@ -283,6 +284,7 @@ public class RDesk extends MainPanel {
 		ByteBuffer b = ByteBuffer.allocate(4);
 		b.putShort(RCommand.SCREEN_INFO);
 		b.flip();
+		Log.debug("send SCREEN_INFO");
 		chnHandler.write(qchn, b);
 	}
 	private void sendMouseMove(int x,int y) {
@@ -294,6 +296,7 @@ public class RDesk extends MainPanel {
 		b.putInt(x);
 		b.putInt(y);
 		b.flip();
+		//Log.debug("send MOUSE_MOVE");
 		chnHandler.write(qchn, b);
 	}
 	private void sendMouseClick(int x,int y,int button) {
@@ -325,12 +328,14 @@ public class RDesk extends MainPanel {
 		b.putShort((short)2000);
 		b.putFloat(0.2f);
 		b.flip();
+		Log.debug("send SCREEN_IMG");
 		chnHandler.write(qchn, b);
 	}
 	private void sendRegister() {
 		ByteBuffer b = ByteBuffer.allocate(2);
 		b.putShort(RCommand.CLIENT_REGISTER);
 		b.flip();
+		Log.debug("send CLIENT_REGISTER");
 		chnHandler.write(qchn, b);
 	}
 	private void sendKeyPressed(int keycode) {
@@ -383,6 +388,7 @@ public class RDesk extends MainPanel {
 		ByteBuffer b = ByteBuffer.allocate(2);
 		b.putShort(RCommand.CLIPBOARD_GET);
 		b.flip();
+		Log.debug("send CLIPBOARD_GET");
 		chnHandler.write(qchn, b);
 	}
 
@@ -401,6 +407,7 @@ public class RDesk extends MainPanel {
 
 	public static void main(String[] args) {
 		RDesk desk = (RDesk)start(RDesk.class, args);
+		//Log.setTestMode();
 		try {
 			desk.keep_connected();
 		}
