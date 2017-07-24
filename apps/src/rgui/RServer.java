@@ -35,7 +35,6 @@ import netio.TcpFilter;
 import netio.SelectorThread.QueueChannel;
 
 public class RServer implements ChannelHandler {
-	private static final int MAXSCREEN_BUF = 16*1024;
 	private static final int FORCE_ACTION_TIME = 60*1000;
 	private static boolean preventScreenOff;
 	private final SelectorThread selector;

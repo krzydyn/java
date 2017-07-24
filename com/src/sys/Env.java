@@ -26,6 +26,7 @@ import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.StringSelection;
 import java.awt.datatransfer.Transferable;
 import java.io.BufferedReader;
+import java.io.Closeable;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -246,5 +247,9 @@ public class Env {
 		catch (InterruptedException e) { //InterruptedException clears interrupted flag of Thread
 			Thread.currentThread().interrupt(); // set the flag again
 		}
+	}
+
+	static public void close(Closeable s) {
+		try {if (s != null) s.close();}catch(IOException e){}
 	}
 }

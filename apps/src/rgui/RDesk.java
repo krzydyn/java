@@ -7,6 +7,7 @@ import java.awt.GraphicsEnvironment;
 import java.awt.Image;
 import java.awt.Point;
 import java.awt.Rectangle;
+import java.awt.event.ActionEvent;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
@@ -14,14 +15,22 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseWheelEvent;
 import java.awt.event.WindowEvent;
+import java.awt.image.RenderedImage;
 import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.util.ArrayList;
 import java.util.List;
 
 import javax.imageio.ImageIO;
+import javax.swing.AbstractAction;
+import javax.swing.Action;
+import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
 
 import netio.ChannelHandler;
 import netio.SelectorThread;
@@ -44,6 +53,28 @@ public class RDesk extends MainPanel {
 	Point prevMouseLoc = new Point();
 	String Host = null;
 	int errCnt = 0;
+
+	Action screen_save = new AbstractAction("ScreenSave") {
+		@Override
+		public void actionPerformed(ActionEvent ev) {
+			OutputStream os=null;
+			try {
+				File f = new File("screen.jpg");
+				for (int i=1; f.exists(); ++i) {
+					f = new File(String.format("screen-%03d.jpg", i));
+				}
+				os = new FileOutputStream(f);
+				RenderedImage i = (RenderedImage)imgPanel.getImage();
+				ImageIO.write(i, "jpg", os);
+			}
+			catch (Exception e) {
+				Log.error(e);
+			}
+			finally {
+				Env.close(os);
+			}
+		}
+	};
 
 	ChannelHandler chnHandler = new ChannelHandler() {
 		@Override
@@ -184,6 +215,12 @@ public class RDesk extends MainPanel {
 		imgPanel.addMouseWheelListener(mouseHnadler);
 	}
 
+	@Override
+	protected JMenuBar createMenuBar() {
+		JMenuBar mb = new JMenuBar();
+		mb.add(new JMenuItem(screen_save));
+		return mb;
+	}
 
 	@Override
 	public void windowGainedFocus(WindowEvent e) {

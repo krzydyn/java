@@ -31,6 +31,7 @@ import java.awt.event.WindowListener;
 import javax.swing.InputMap;
 import javax.swing.JComponent;
 import javax.swing.JFrame;
+import javax.swing.JMenuBar;
 import javax.swing.JPanel;
 import javax.swing.JScrollBar;
 import javax.swing.JScrollPane;
@@ -81,6 +82,12 @@ public class MainPanel extends JPanel implements WindowListener,WindowFocusListe
 	public JFrame topFrame() { return mainFame; }
 
 	@Override
+	public String getName() {
+		String n = super.getName();
+		if (n==null) n = getClass().getSimpleName();
+		return n;
+	}
+	@Override
 	public void windowOpened(WindowEvent e) {}
 	@Override
 	public void windowClosing(WindowEvent e) {}
@@ -99,6 +106,8 @@ public class MainPanel extends JPanel implements WindowListener,WindowFocusListe
 	public void windowLostFocus(WindowEvent e) {}
 	@Override
 	public void windowGainedFocus(WindowEvent e) {}
+
+	protected JMenuBar createMenuBar() {return null;}
 
 	static public void append(JTextPane t, String s) {
 		try {
@@ -167,6 +176,9 @@ public class MainPanel extends JPanel implements WindowListener,WindowFocusListe
 	}
 	static private MainPanel internal_start(final Class<? extends MainPanel> mainclass, final String[] args) throws Exception {
 		final MainPanel[] mp = {null};
+		if (Env.isMacos()) {
+			System.setProperty("com.apple.macos.useScreenMenuBar", "true");
+		}
 		EventQueue.invokeAndWait(new Runnable() {
 			@Override
 			public void run() {
@@ -186,6 +198,7 @@ public class MainPanel extends JPanel implements WindowListener,WindowFocusListe
 							main.windowResized(e);
 						}
 					});
+					f.setJMenuBar(main.createMenuBar());
 					Dimension d=main.getPreferredSize();
 					if (d.width==0 || d.height==0) {
 						d.width=800; d.height=600;
