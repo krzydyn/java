@@ -55,7 +55,7 @@ public class RDesk extends MainPanel {
 	String Host = null;
 	int errCnt = 0;
 
-	Action screen_save = new AbstractAction("ScreenSave") {
+	Action screen_shot = new AbstractAction("ScreenShot") {
 		@Override
 		public void actionPerformed(ActionEvent ev) {
 			OutputStream os=null;
@@ -215,12 +215,13 @@ public class RDesk extends MainPanel {
 		imgPanel.addMouseListener(mouseHnadler);
 		imgPanel.addMouseMotionListener(mouseHnadler);
 		imgPanel.addMouseWheelListener(mouseHnadler);
+		imgPanel.setShowRoi(!Log.isRelease());
 	}
 
 	@Override
 	protected JMenuBar createMenuBar() {
 		JMenuBar mb = new JMenuBar();
-		mb.add(new JMenuItem(screen_save));
+		mb.add(new JMenuItem(screen_shot));
 		return mb;
 	}
 
@@ -446,8 +447,9 @@ public class RDesk extends MainPanel {
 	}
 
 	public static void main(String[] args) {
-		RDesk desk = (RDesk)start(RDesk.class, args);
 		//Log.setTestMode();
+		Log.setReleaseMode();
+		RDesk desk = (RDesk)start(RDesk.class, args);
 		try {
 			desk.keep_connected();
 		}

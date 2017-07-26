@@ -202,7 +202,7 @@ public class Env {
 		return output;
 	}
 
-	static boolean isAppJar() {
+	static public boolean isAppJar() {
 		try {
 			URL u=Env.class.getProtectionDomain().getCodeSource().getLocation();
 			if (u.getFile().endsWith(".jar")) {

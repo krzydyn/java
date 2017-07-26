@@ -111,6 +111,7 @@ public class Log {
 
 	final public static void setReleaseMode() { tmfmt = tmfmt_rel; }
 	final public static void setTestMode() { tmfmt = tmfmt_tst; }
+	final public static boolean isRelease() { return tmfmt == tmfmt_rel; }
 
 	final public static void prn(String fmt,Object ...args) {
 		if (tmfmt == tmfmt_rel) return ;

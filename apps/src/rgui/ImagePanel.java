@@ -26,6 +26,7 @@ public class ImagePanel extends JPanel {
 		}
 	}
 
+	private boolean showRoi=false;
 	private final Object imgLock = new Object();
 	private Image img;
 	private final Dimension imgSize = new Dimension();
@@ -40,6 +41,7 @@ public class ImagePanel extends JPanel {
 	public ImagePanel() {
 		super(new BorderLayout());
 	}
+	public void setShowRoi(boolean show) {showRoi=show;}
 	public Image getImage() { return img; }
 	public void setImage(Image i) {
 		synchronized (imgLock) {
@@ -78,6 +80,7 @@ public class ImagePanel extends JPanel {
 		if (img == null) return ;
 		g.drawImage(img, 0, 0, null);
 
+		if (!showRoi) return ;
 		int mx=getWidth()/2;
 		int my=getHeight()/2;
 		int roisSize = 0;
