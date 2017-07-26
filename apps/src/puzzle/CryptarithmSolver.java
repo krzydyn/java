@@ -27,6 +27,7 @@ public class CryptarithmSolver {
 		}
 		if (c.getSymbols().isEmpty()) return ;
 
+		System.out.println("Solving: "+c.toString());
 		System.out.println(c.getSymbols());
 		System.out.println("-----------------------");
 		do {

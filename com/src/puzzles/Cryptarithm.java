@@ -55,8 +55,8 @@ public class Cryptarithm {
 		if (values.size()==0) return "[]";
 		StringBuilder b=new StringBuilder();
 		b.append("[");
-		for (Integer v : values) {
-			b.append(Integer.toString(v,BASE));
+		for (Expression v : exprs) {
+			b.append(v.toString());
 			b.append(", ");
 		}
 		b.setLength(b.length()-2);

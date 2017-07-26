@@ -446,7 +446,7 @@ public class RServer implements ChannelHandler {
 		p.setLocation(x, y);
 		return p;
 	}
-	Rectangle box_bfs(BufferedImage t, int x, int y, Rectangle r) {
+	Rectangle box_bfs(BufferedImage t, int x, int y, Rectangle r, int dv) {
 		r.setBounds(x,y,0,0);
 		List<Point> q=new ArrayList<Point>();
 		t.setRGB(x, y, 0);
@@ -456,23 +456,24 @@ public class RServer implements ChannelHandler {
 			Point p=q.remove(0);
 			x=p.x; y=p.y;
 			pntcache.add(p);
-			r.add(x,y); r.add(x+1,y+1);
-			if (x>0 && (t.getRGB(x-1,y)&0xff)!=0) {t.setRGB(x-1, y, 0);q.add(newPoint(x-1, y));}
-			if (x+1<d.width && (t.getRGB(x+1,y)&0xff)!=0) {t.setRGB(x+1, y, 0);q.add(newPoint(x+1, y));}
-			if (y>0 && (t.getRGB(x,y-1)&0xff)!=0) {t.setRGB(x, y-1, 0);q.add(newPoint(x, y-1));}
-			if (y+1<d.height && (t.getRGB(x,y+1)&0xff)!=0) {t.setRGB(x, y+1, 0);q.add(newPoint(x, y+1));}
+			r.add(x,y);
+			if (x>=dv && (t.getRGB(x-dv,y)&0xff)!=0) {t.setRGB(x-dv, y, 0);q.add(newPoint(x-dv, y));}
+			if (x+dv<d.width && (t.getRGB(x+dv,y)&0xff)!=0) {t.setRGB(x+dv, y, 0);q.add(newPoint(x+dv, y));}
+			if (y>=dv && (t.getRGB(x,y-dv)&0xff)!=0) {t.setRGB(x, y-dv, 0);q.add(newPoint(x, y-dv));}
+			if (y+dv<d.height && (t.getRGB(x,y+dv)&0xff)!=0) {t.setRGB(x, y+dv, 0);q.add(newPoint(x, y+dv));}
 		}
+		r.grow(dv, dv);
 		return r;
 	}
 
 	void addRoi(List<Rectangle> rois, Rectangle r, int maxw, int maxh) {
-		if (r.width==0 || r.height==0) return;
-		if (r.x+r.width > maxw || r.y+r.height > maxh) {
-			Log.error("ROI too large");
-			return ;
-		}
+		if (r.x < 0) {r.width+=r.x;r.x=0;}
+		if (r.y < 0) {r.height+=r.y;r.y=0;}
+		if (r.x+r.width > maxw) r.width = maxw-r.x;
+		if (r.y+r.height > maxh) r.height = maxh-r.y;
+		if (r.width<=0 || r.height<=0) return;
 
-		int g=40;
+		int g=75;
 		r.grow(g, g);
 		boolean added=false;
 		for (Rectangle rr : rois) {
@@ -490,8 +491,8 @@ public class RServer implements ChannelHandler {
 	void detectChanges(BufferedImage p,BufferedImage i) {
 		List<Rectangle> rois=new ArrayList<Rectangle>();
 
-		for (int y=0; y < p.getHeight(); ++y) {
-			for (int x=0; x < p.getWidth(); ++x) {
+		for (int y=0; y < p.getHeight(); y+=5) {
+			for (int x=0; x < p.getWidth(); x+=5) {
 				int r=Math.abs(Colors.quick_luminance(p.getRGB(x, y)) - Colors.quick_luminance(i.getRGB(x, y)));
 				//int r=Colors.errorSum(p.getRGB(x, y),i.getRGB(x, y));
 				if (r<1) r=0;
@@ -507,16 +508,14 @@ public class RServer implements ChannelHandler {
 		g.dispose();*/
 
 		Rectangle radd=new Rectangle(0,0,1,1);
-		for (int y=0; y < p.getHeight(); ++y) {
-			for (int x=0; x < p.getWidth(); ++x) {
+		for (int y=0; y < p.getHeight(); y+=5) {
+			for (int x=0; x < p.getWidth(); x+=5) {
 				if ((p.getRGB(x, y)&0xff)==0) continue;
-				box_bfs(p,x,y,radd);
+				box_bfs(p,x,y,radd, 5);
 				addRoi(rois,radd,i.getWidth(),i.getHeight());
 			}
 		}
 		for (Rectangle r : rois) {
-			if (r.x+r.width > i.getWidth()) r.width=i.getWidth()-r.x;
-			if (r.y+r.height > i.getHeight()) r.height=i.getHeight()-r.y;
 			if (r.width < 1 || r.height < 1) continue;
 			sendImageAll(i.getSubimage(r.x, r.y, r.width, r.height),r.x, r.y, 0.2f);
 		}

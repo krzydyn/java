@@ -263,6 +263,10 @@ public class SelectorThread {
 				for (int i = writeFlag.size(); i > 0;) {
 					--i;
 					SelectionKey sk = writeFlag.get(i);
+					if (!sk.isValid()) {
+						Log.warn("key is invalid (was closed)");
+						continue;
+					}
 					int ops = sk.interestOps();
 					sk.interestOps(ops|SelectionKey.OP_READ|SelectionKey.OP_WRITE);
 				}

@@ -43,6 +43,7 @@ import ui.MainPanel;
 
 @SuppressWarnings("serial")
 public class RDesk extends MainPanel {
+	final static String fileNameFormat = "screen-%03d.jpg";
 	final private SelectorThread selector;
 
 	ByteBuffer inmsg = ByteBuffer.allocate(1024*1024);
@@ -59,9 +60,10 @@ public class RDesk extends MainPanel {
 		public void actionPerformed(ActionEvent ev) {
 			OutputStream os=null;
 			try {
-				File f = new File("screen.jpg");
-				for (int i=1; f.exists(); ++i) {
-					f = new File(String.format("screen-%03d.jpg", i));
+				File f = null;
+				for (int i=1; ; ++i) {
+					f = new File(String.format(fileNameFormat, i));
+					if (!f.exists()) break;
 				}
 				os = new FileOutputStream(f);
 				RenderedImage i = (RenderedImage)imgPanel.getImage();
@@ -418,6 +420,7 @@ public class RDesk extends MainPanel {
 		b.putShort(RCommand.CLIPBOARD_SET);
 		writeUTF(b, t);
 		b.flip();
+		Log.debug("send CLIPBOARD_SET");
 		chnHandler.write(qchn, b);
 	}
 

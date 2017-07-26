@@ -68,7 +68,7 @@ public class ImagePanel extends JPanel {
 			g.dispose();
 		}
 		while (l>0) {imgq.remove(0); --l;}
-		repaint(100);
+		repaint(20);
 	}
 
 	@Override
@@ -94,6 +94,7 @@ public class ImagePanel extends JPanel {
 				}
 				else
 					g.setColor(Color.GREEN);
+				//Log.debug("roi: (%d,%d,%d,%d)",r.x,r.y,r.w,r.h);
 				g.drawRect(r.x, r.y, r.w, r.h);
 				g.drawLine(mx, my, r.x+r.w/2, r.y+r.h/2);
 			}
