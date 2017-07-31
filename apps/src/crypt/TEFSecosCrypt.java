@@ -1,5 +1,7 @@
 package crypt;
 
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.security.Provider;
 import java.security.Security;
 
@@ -212,5 +214,14 @@ public class TEFSecosCrypt extends UnitTest implements TEF_Types {
 		//try { generate(); } catch (Exception e) { Log.error(e); }
 		try { encrypt(); } catch (Exception e) { Log.error(e); }
 		try { decrypt(); } catch (Exception e) { Log.error(e); }
+
+		try {
+			MessageDigest m = MessageDigest.getInstance("MD5");
+			m.update("passwd".getBytes());
+			System.out.println(Text.hex(m.digest()));
+		} catch (NoSuchAlgorithmException e) {
+			e.printStackTrace();
+		}
+
 	}
 }

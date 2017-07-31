@@ -37,7 +37,7 @@ public class Prime {
 		}
 	}
 
-	//Eratostene Sieve
+	//Sieve of Eratosthenes
 	static void sieve()
 	{
 		int a_size = 100;
@@ -72,5 +72,16 @@ public class Prime {
 
 	static public BigInteger genFermatPrime(int bits) {
 		return BigInteger.probablePrime(bits, null);
+	}
+
+	/**
+	 * Greatest Common Divisor
+	 * @param bi
+	 * @param m
+	 * @return
+	 */
+	static public BigInteger gcd(BigInteger bi, BigInteger m) {
+		return bi.gcd(m);
+
 	}
 }

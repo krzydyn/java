@@ -36,7 +36,7 @@ import netio.SelectorThread.QueueChannel;
 
 public class RServer implements ChannelHandler {
 	private static final int FORCE_ACTION_TIME = 60*1000;
-	private static boolean preventScreenOff;
+	private static boolean keepScreenOn;
 	private final SelectorThread selector;
 	private final Robot robot;
 	private final String imgFormat="jpg";
@@ -554,7 +554,7 @@ public class RServer implements ChannelHandler {
 				i=null; p=null;
 			}
 
-			if (preventScreenOff && forceActionTm < System.currentTimeMillis()) {
+			if (keepScreenOn && forceActionTm < System.currentTimeMillis()) {
 				Point m = MouseInfo.getPointerInfo().getLocation();
 				synchronized (robot) {
 					robot.mouseMove(m.x>0?m.x-1:m.x+1, m.y);
@@ -569,8 +569,8 @@ public class RServer implements ChannelHandler {
 	public static void main(String[] args) throws Exception {
 		Log.setTestMode();
 		for (int i=0; i <args.length; ++i) {
-			if (args[i].equals("poff")) {
-				preventScreenOff=true;
+			if (args[i].equals("keepon")) {
+				keepScreenOn=true;
 			}
 		}
 		try {

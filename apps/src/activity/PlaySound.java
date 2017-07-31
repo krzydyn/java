@@ -1,4 +1,4 @@
-package puzzle;
+package activity;
 
 import java.io.File;
 

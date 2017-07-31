@@ -59,24 +59,17 @@ public class Combinations {
 	}
 
 	public static long newton(int n,int k) {
+		if (k > n) return 0;
 		if (k==0 || n==k) return 1;
-		if (k > n-k) k = n-k;
+		if (k > n-k) k = n-k; // nCr(n,k) = nCr(n,n-k)
 		long x=n;
-		for (int i=1; i < k;) {
+		int d=2;
+		for (int i=1; i < k; ++i) {
 			x*=n-i;
-			if (x<0) return -1;
-			++i;
-			x/=i;
+			if (x<0) return 0;
+			while (d <= k && x%d == 0) { x/=d; ++d; }
 		}
-		/*
-		for (int i=1,d=2; i < k; ++i) {
-			x*=n-i;
-			if (x<0) return -1;
-			while (d <= k && x%d == 0) {
-				x/=d;
-				++d;
-			}
-		}*/
+		while (d <= k) { x/=d; ++d; }
 		return x;
 	}
 }

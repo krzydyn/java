@@ -83,13 +83,20 @@ public class T_Algebra extends UnitTest {
 	}
 
 	static void nCr() {
-		for (int n=0; n < 10; ++n) {
-			System.out.printf("%d:", n);
+		List<Long> list = new ArrayList<Long>(50);
+		for (int n=0; n < 60; ++n) {
+			list.add(1L);
 			for (int k=0; k <= n; ++k) {
 				long r=Combinations.newton(n, k);
-				System.out.printf(" %d", r);
+				long er = list.get(k);
+				check(String.format("nCr(%d,%d)",n,k), er, r);
 			}
-			System.out.println();
+			long er = list.get(0);
+			for (int k=1; k <= n; ++k) {
+				long p=list.get(k);
+				list.set(k, er+p);
+				er=p;
+			}
 		}
 	}
 
@@ -102,7 +109,7 @@ public class T_Algebra extends UnitTest {
 		}
 		t0 = System.currentTimeMillis();
 		for (int i=0; i < 10000; ++i) {
-			check("gd2",a[i],Maths.gcd(10007+i, 119+i*i));
+			check("gcd2",a[i],Maths.gcd(10007+i, 119+i*i));
 		}
 		Log.info("gcd2 : %d", System.currentTimeMillis()-t0);
 		t0 = System.currentTimeMillis();

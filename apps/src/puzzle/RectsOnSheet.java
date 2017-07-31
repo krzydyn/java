@@ -2,6 +2,7 @@ package puzzle;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.event.WindowEvent;
 import java.util.ArrayList;
@@ -41,6 +42,13 @@ public class RectsOnSheet extends MainPanel {
 		p.add(labInfo);
 		add(p, BorderLayout.SOUTH);
 		add(rectpanel, BorderLayout.CENTER);
+		if (sheet.w < 800) {
+			int c = 800/sheet.w;
+			rectpanel.setPreferredSize(new Dimension(sheet.w*c, sheet.h*c));
+		}
+		else {
+			rectpanel.setPreferredSize(new Dimension(sheet.w, sheet.h));
+		}
 
 		new Thread(new Runnable() {
 			@Override
@@ -66,6 +74,7 @@ public class RectsOnSheet extends MainPanel {
 		running=false;
 	}
 
+	//better if boxes have collinear edges
 	private int quality(List<Rect> list) {
 		int q=0, n=list.size();
 		for (int i=0; i < n; ++i) {

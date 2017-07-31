@@ -306,14 +306,14 @@ public class Pentomino {
 		private final int[] y=new int[STONES];
 		private int w,h;
 
-		Fig(int x0,int y0,int x1,int y1,int x2,int y2,int x3,int y3,int x4,int y4) {
+		Fig(int ...coords) {
+			if (coords.length != 10) throw new RuntimeException("need 5 pairs");
 			type=typeCounter++;
 			subtype=subtypeCnt[type]=0;
-			x[0]=x0;y[0]=y0;
-			x[1]=x1;y[1]=y1;
-			x[2]=x2;y[2]=y2;
-			x[3]=x3;y[3]=y3;
-			x[4]=x4;y[4]=y4;
+			for (int i=0; i < STONES; ++i) {
+				x[i]=coords[i*2];
+				y[i]=coords[i*2+1];
+			}
 			w=h=-1;
 			for (int i=0; i < STONES; ++i) {
 				if (w < x[i]) w=x[i];
