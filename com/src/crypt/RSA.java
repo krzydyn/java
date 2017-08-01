@@ -30,7 +30,7 @@ public class RSA {
 	static BigInteger ZERO = BigInteger.ZERO;
 	static BigInteger ONE = BigInteger.ONE;
 	static BigInteger TWO = BigInteger.valueOf(2);
-	static BigInteger[] pubExpCand = {
+	static BigInteger[] pubExpCandidates = {
 		BigInteger.valueOf(3l),
 		BigInteger.valueOf(5l),
 		BigInteger.valueOf(17l),
@@ -123,8 +123,8 @@ public class RSA {
 		while (phi.gcd(e).compareTo(ONE) > 0 && e.compareTo(phi) < 0) {
 			e.add(TWO);
 		}*/
-		for (int i=0; i < pubExpCand.length; ++i) {
-			e = pubExpCand[pubExpCand.length-1-i];
+		for (int i=0; i < pubExpCandidates.length; ++i) {
+			e = pubExpCandidates[pubExpCandidates.length-1-i];
 			if (e.compareTo(N) < 0) break;
 		}
 		d = e.modInverse(phi);
