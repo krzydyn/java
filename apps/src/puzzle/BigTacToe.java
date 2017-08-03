@@ -11,7 +11,6 @@ import java.awt.geom.AffineTransform;
 import java.util.ArrayList;
 import java.util.List;
 
-import sys.Log;
 import sys.Sound;
 import ui.MainPanel;
 
@@ -38,7 +37,7 @@ public class BigTacToe extends MainPanel{
 		@Override
 		protected void finalize() throws Throwable {
 			super.finalize();
-			Log.debug("finalize PlayMove");
+			//Log.debug("finalize PlayMove");
 		}
 	}
 	char startSym = 'X';

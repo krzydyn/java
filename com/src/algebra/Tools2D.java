@@ -19,7 +19,11 @@ package algebra;
 
 import java.awt.Dimension;
 import java.awt.Point;
+import java.awt.geom.Point2D;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
 
 public class Tools2D {
 	private static class Segment {
@@ -126,5 +130,89 @@ public class Tools2D {
 				r.setPixel(x, y, a);
 			}
 		}
+	}
+
+	static double cross(Point2D p1, Point2D p2, Point2D p3) {
+		return(p2.getX()-p1.getX())*(p3.getY()-p1.getY())-(p2.getY()-p1.getY())*(p3.getX()-p1.getX());
+	}
+
+	/**
+	 * QuickHull convex hull algorithm
+	 * @param pnts
+	 * @return
+	 */
+	public static List<Point2D> hullQuick(List<Point2D> pnts) {
+		if (pnts.size() < 3) return new ArrayList<Point2D>(pnts);
+		List<Point2D> h = new ArrayList<Point2D>();
+		return h;
+	}
+	/**
+	 * Andrew's monotone chain convex hull algorithm
+	 * @param pnts
+	 * @return
+	 */
+	public static List<Point2D> hullAndrew(List<Point2D> pnts) {
+		if (pnts.size() < 3) return new ArrayList<Point2D>(pnts);
+		List<Point2D> h = new ArrayList<Point2D>();
+
+		Collections.sort(pnts, new Comparator<Point2D>() {
+			@Override
+			public int compare(Point2D p1, Point2D p2) {
+				double r = p1.getX()!=p2.getX() ? p1.getX()-p2.getX() : p1.getY()-p2.getY();
+				return r < 0 ? -1 : r > 0 ? 1 : 0;
+			}
+		});
+
+		// lower hull
+		for (int i=0; i < pnts.size(); ++i) {
+			while (h.size() > 2 && cross(h.get(h.size()-2), h.get(h.size()-1), pnts.get(i)) <= 0)
+				h.remove(h.size()-1);
+			h.add(pnts.get(i));
+		}
+		int l = h.size();
+		// upper hull
+		for (int i=pnts.size()-2; i >= 0 ; --i) {
+			while (h.size() > l && cross(h.get(h.size()-2), h.get(h.size()-1), pnts.get(i)) <= 0)
+				h.remove(h.size()-1);
+			h.add(pnts.get(i));
+		}
+
+		return h;
+	}
+
+	/**
+	 * Graham's scan is a method of finding the convex hull
+	 * @param pnts
+	 * @return
+	 */
+	public static List<Point2D> hullGraham(List<Point2D> pnts) {
+		if (pnts.size() < 3) return new ArrayList<Point2D>(pnts);
+		List<Point2D> h = new ArrayList<Point2D>();
+		Point2D mP = pnts.get(0);
+
+		//1. find point with lowest y then x
+		for (int i=1; i < pnts.size(); ++i) {
+			Point2D p = pnts.get(i);
+			if (mP.getY() > p.getY()) mP = p;
+			else if (mP.getY() == p.getY()) {
+				if (mP.getX() > p.getX()) mP = p;
+			}
+		}
+
+		h.add(mP);
+		//2. sort pnts by angle to x-axis
+
+		//3. skip points from which must turn right to the next
+		for (int i=1; i < pnts.size(); ++i) {
+			while (h.size() > 2 && cross(h.get(h.size()-2), h.get(h.size()-1), pnts.get(i)) <= 0) {
+				h.remove(h.size()-1);
+			}
+			h.add(pnts.get(i));
+		}
+		return h;
+	}
+
+	public static List<Point2D> convexHull(List<Point2D> pnts) {
+		return hullGraham(pnts);
 	}
 }
