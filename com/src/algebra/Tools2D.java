@@ -133,21 +133,57 @@ public class Tools2D {
 	}
 
 	static double cross(Point2D p1, Point2D p2, Point2D p3) {
-		return(p2.getX()-p1.getX())*(p3.getY()-p1.getY())-(p2.getY()-p1.getY())*(p3.getX()-p1.getX());
+		return (p2.getX()-p1.getX())*(p3.getY()-p1.getY())-(p2.getY()-p1.getY())*(p3.getX()-p1.getX());
+	}
+	static private int compareResult(double r) {
+		if (r < -1e-10) return -1;
+		if (r > 1e-10) return 1;
+		return 0;
+	}
+	static int orientation(Point2D p1, Point2D p2, Point2D p3) {
+		return compareResult(cross(p1, p2, p3));
 	}
 
+	private static double lineDistSq(Point2D p1, Point2D p2, Point2D p) {
+		return Math.abs((p.getY() - p1.getY()) * (p2.getX() - p1.getX()) -
+				(p2.getY() - p1.getY()) * (p.getX() - p1.getX()));
+	}
+	private static void hullQuick(List<Point2D> pnts, List<Point2D> h, Point2D p1, Point2D p2) {
+		Point2D mp=null;
+		double md = 0;
+		for (Point2D p : pnts) {
+			if (orientation(p1, p2, p) > 0) {
+				double d = lineDistSq(p1,p2,p);
+				if (md < d) {md=d; mp=p;}
+			}
+		}
+		if (mp == null) {
+			h.add(p1); h.add(p2);
+			return ;
+		}
+		hullQuick(pnts,h, p1, mp);
+		hullQuick(pnts,h, mp, p2);
+	}
 	/**
-	 * QuickHull convex hull algorithm
+	 * QuickHull finding the convex hull algorithm
 	 * @param pnts
 	 * @return
 	 */
 	public static List<Point2D> hullQuick(List<Point2D> pnts) {
 		if (pnts.size() < 3) return new ArrayList<Point2D>(pnts);
 		List<Point2D> h = new ArrayList<Point2D>();
+		Point2D p1,p2;
+		p1=p2=pnts.get(0);
+		for (Point2D p : pnts) {
+			if (p.getX() < p1.getX()) p1=p;
+			else if (p.getX() > p2.getX()) p2=p;
+		}
+		hullQuick(pnts, h, p1, p2); //one side
+		hullQuick(pnts, h, p2, p1); //other side
 		return h;
 	}
 	/**
-	 * Andrew's monotone chain convex hull algorithm
+	 * Andrew's monotone chain finding the convex hull algorithm
 	 * @param pnts
 	 * @return
 	 */
@@ -158,36 +194,38 @@ public class Tools2D {
 		Collections.sort(pnts, new Comparator<Point2D>() {
 			@Override
 			public int compare(Point2D p1, Point2D p2) {
-				double r = p1.getX()!=p2.getX() ? p1.getX()-p2.getX() : p1.getY()-p2.getY();
+				double r = p1.getY()!=p2.getY() ? p1.getY()-p2.getY() : p1.getX()-p2.getX();
 				return r < 0 ? -1 : r > 0 ? 1 : 0;
 			}
 		});
 
 		// lower hull
 		for (int i=0; i < pnts.size(); ++i) {
-			while (h.size() > 2 && cross(h.get(h.size()-2), h.get(h.size()-1), pnts.get(i)) <= 0)
+			while (h.size() > 1 && cross(h.get(h.size()-2), h.get(h.size()-1), pnts.get(i)) <= 0)
 				h.remove(h.size()-1);
 			h.add(pnts.get(i));
 		}
+
 		int l = h.size();
 		// upper hull
-		for (int i=pnts.size()-2; i >= 0 ; --i) {
+		for (int i=pnts.size()-2; i >= 0; --i) {
 			while (h.size() > l && cross(h.get(h.size()-2), h.get(h.size()-1), pnts.get(i)) <= 0)
 				h.remove(h.size()-1);
-			h.add(pnts.get(i));
+			if (i > 0) h.add(pnts.get(i));
 		}
+		//h.remove(h.size()-1);
 
 		return h;
 	}
 
 	/**
-	 * Graham's scan is a method of finding the convex hull
+	 * Graham's scan finding the convex hull algorithm
 	 * @param pnts
 	 * @return
 	 */
 	public static List<Point2D> hullGraham(List<Point2D> pnts) {
 		if (pnts.size() < 3) return new ArrayList<Point2D>(pnts);
-		List<Point2D> h = new ArrayList<Point2D>();
+		final List<Point2D> h = new ArrayList<Point2D>();
 		Point2D mP = pnts.get(0);
 
 		//1. find point with lowest y then x
@@ -199,12 +237,26 @@ public class Tools2D {
 			}
 		}
 
-		h.add(mP);
+		final Point2D p0 = mP;
 		//2. sort pnts by angle to x-axis
+		Collections.sort(pnts, new Comparator<Point2D>() {
+			@Override
+			public int compare(Point2D p1, Point2D p2) {
+				if (p0 == p1) return -1;
+				if (p0 == p2) return 1;
+				int r = orientation(p0, p2, p1);
+				if (r == 0) {
+					r = compareResult(p0.distanceSq(p1) - p0.distanceSq(p2));
+				}
+				return r;
+			}
+		});
+		//Log.debug("sorted: %s", Text.join("\n", pnts));
 
-		//3. skip points from which must turn right to the next
+		h.add(p0);
+		//3. build hull
 		for (int i=1; i < pnts.size(); ++i) {
-			while (h.size() > 2 && cross(h.get(h.size()-2), h.get(h.size()-1), pnts.get(i)) <= 0) {
+			while (h.size() > 1 && cross(h.get(h.size()-2), h.get(h.size()-1), pnts.get(i)) <= 0) {
 				h.remove(h.size()-1);
 			}
 			h.add(pnts.get(i));
@@ -212,7 +264,14 @@ public class Tools2D {
 		return h;
 	}
 
-	public static List<Point2D> convexHull(List<Point2D> pnts) {
-		return hullGraham(pnts);
+	/**
+	 * TODO concave hull (alpha shape), need Delaunay triangulation
+	 * @param pnts
+	 * @param a - alpha shape radius
+	 * @return hull
+	 */
+	public static List<Point2D> alphaShape(List<Point2D> pnts, double a) {
+		final List<Point2D> h = new ArrayList<Point2D>();
+		return h;
 	}
 }
