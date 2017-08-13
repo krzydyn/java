@@ -32,23 +32,31 @@ public class GFTP {
 	static FtpClient ftp = FtpClient.create();
 	static int filesSent;
 
+	static class CopyJob {
+		String src;
+		String dst;
+		public CopyJob(String s, String d) {
+			src=s; dst=d;
+		}
+	}
+
 	public static void main(String[] args) {
-		String srcDir=null, dstDir=null;
-		if (args.length >= 2) {
-			srcDir=args[0];
-			dstDir=args[1];
+		List<CopyJob> jobs = new ArrayList<>();
+		if (args.length == 2) {
+			jobs.add(new CopyJob(args[0], args[1]));
 		}
 		else {
-			//srcDir = "~/www/templates";dstDir = "/www/templates";
-			//srcDir = "~/www/cms/lib";dstDir = "/www/cms/lib";
-			srcDir = "~/www/espdb";dstDir = "/www/espdb";
+			jobs.add(new CopyJob("~/www/templates", "/www/templates"));
+			jobs.add(new CopyJob("~/www/cms/lib", "/www/cms/lib"));
+			jobs.add(new CopyJob("~/www/espdb", "/www/espdb"));
+			jobs.add(new CopyJob("~/www/bridge", "/www/bridge"));
 		}
 
 		filesSent=0;
 		try {
 			ftp.setConnectTimeout(3000);
 			ftp.setReadTimeout(2000);
-			Log.info("conncting ...");
+			Log.info("connecting ...");
 			ftp.connect(new InetSocketAddress(host, 21));
 			Log.info("user auth ...");
 			ftp.login(user, passwd.toCharArray());
@@ -56,8 +64,10 @@ public class GFTP {
 			Log.info("set binary ...");
 			ftp.setBinaryType();
 
-			Log.info("synchronize ...");
-			synchronizeDirs(new File(Env.expandEnv(srcDir)), new File(dstDir));
+			for (CopyJob cp : jobs) {
+				Log.info("synchronize ... %s", cp.src);
+				synchronizeDirs(new File(Env.expandEnv(cp.src)), new File(cp.dst));
+			}
 			//gitSyncDirs(new File(Env.expandEnv(srcDir)), new File(dstDir), "917145612cc54509a3dd52d20e0de3ca476365e1");
 		}
 		catch (Exception e) {
