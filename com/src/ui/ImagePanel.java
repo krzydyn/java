@@ -1,5 +1,7 @@
 package ui;
 
+import img.Tools2D.Segment;
+
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
@@ -43,6 +45,7 @@ public class ImagePanel extends JPanel {
 	private Image img;
 	private final Dimension imgSize = new Dimension();
 	private final List<Roi> rois = new ArrayList<Roi>();
+	private final ArrayList<Segment> selection = new ArrayList<>();
 	private final Runnable newImageNotifier = new Runnable() {
 		@Override
 		public void run() {
@@ -77,6 +80,11 @@ public class ImagePanel extends JPanel {
 		rois.add(new Roi(s, 0));
 		repaint(20);
 	}
+	public void addSelection(List<Segment> segs) {
+		selection.clear();
+		selection.addAll(segs);
+		repaint(20);
+	}
 	public void update(List<ImageUpdate> imgq) {
 		int l=imgq.size();
 		synchronized (imgLock) {
@@ -104,27 +112,35 @@ public class ImagePanel extends JPanel {
 		if (img == null) return ;
 		g2.drawImage(img, 0, 0, null);
 
+		if (selection.size() > 0) {
+			g2.setColor(Color.GREEN);
+			for (Segment s : selection) {
+				g2.drawLine(s.x0, s.y, s.x0, s.y);
+				g2.drawLine(s.x1, s.y, s.x1, s.y);
+			}
+		}
+
 		if (!showRoi) return ;
 		int mx=getWidth()/2;
 		int my=getHeight()/2;
-		int roisSize = 0;
+		int roisSize = rois.size();
 		synchronized (imgLock) {
-			roisSize = rois.size();
-			for (Iterator<Roi> i=rois.iterator(); i.hasNext(); ) {
-				Roi r = i.next();
-				if (r.tm !=0 && r.tm + 1000 < System.currentTimeMillis()) i.remove();
+			if (roisSize > 0) {
+				for (Iterator<Roi> i=rois.iterator(); i.hasNext(); ) {
+					Roi r = i.next();
+					if (r.tm !=0 && r.tm + 1000 < System.currentTimeMillis()) i.remove();
+				}
+				g2.setColor(Color.GREEN);
+				for (Roi r : rois) {
+					g2.draw(r.shape);
+				}
 			}
-			g2.setColor(Color.GREEN);
-			for (Roi r : rois) {
-				g2.draw(r.shape);
-			}
-			//Rectangle b = r.shape.getBounds();
-			//Log.debug("roi: (%d,%d,%d,%d)",r.x,r.y,r.w,r.h);
-			//g2.drawLine(mx, my, b.x+b.width/2, b.y+b.height/2);
 		}
-		g2.setColor(Color.GREEN);
-		g2.fillRect(mx-2, my-10, 25,15);
-		g2.setColor(Color.BLACK);
-		g2.drawString(String.format("%d",roisSize), mx, my);
+		if (roisSize > 0) {
+			g2.setColor(Color.GREEN);
+			g2.fillRect(mx-2, my-10, 25,15);
+			g2.setColor(Color.BLACK);
+			g2.drawString(String.format("%d",roisSize), mx, my);
+		}
 	}
 }

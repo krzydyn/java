@@ -10,6 +10,10 @@ public class BitRaster2D extends Raster2D {
 		data = new boolean[w*h];
 	}
 	@Override
+	public void dispose() {
+		data=null;
+	}
+	@Override
 	public Dimension getSize() {
 		return size;
 	}

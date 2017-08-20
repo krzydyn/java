@@ -4,12 +4,16 @@ import java.awt.Dimension;
 import java.awt.image.BufferedImage;
 
 public class ImageRaster2D extends Raster2D {
-	private final BufferedImage img;
+	private BufferedImage img;
 	private final Dimension size;
 
 	public ImageRaster2D(BufferedImage img) {
 		this.img = img;
 		size = new Dimension(img.getWidth(),img.getHeight());
+	}
+	@Override
+	public void dispose() {
+		img=null;
 	}
 
 	@Override

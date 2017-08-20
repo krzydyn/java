@@ -3,6 +3,7 @@ package img;
 import java.awt.Dimension;
 
 public abstract class Raster2D {
+	abstract public void dispose();
 	abstract public Dimension getSize();
 	abstract public int getPixel(int x,int y);
 	public void setPixel(int x,int y, int v) {

@@ -10,7 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ColorTool extends Tool {
-	public float threshold = 5;
+	public float threshold = 0.05f;
 
 	public List<Segment> select(Raster2D r, int x, int y) {
 		int c0=r.getPixel(x,y);
