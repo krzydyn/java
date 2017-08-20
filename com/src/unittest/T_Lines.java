@@ -18,11 +18,12 @@
 
 package unittest;
 
+import img.Lines;
+import img.Lines.IntersectionType;
+
 import java.awt.Point;
 import java.awt.geom.Point2D;
 
-import algebra.Lines;
-import algebra.Lines.IntersectionType;
 import algebra.Maths;
 import sys.Colors;
 import sys.Log;

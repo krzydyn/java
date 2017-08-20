@@ -38,8 +38,11 @@ public class T_Text extends UnitTest {
 		Log.info(Text.join(",", Text.lcsub("ABCDEG","BCDGK")));
 	}
 	static void lev() {
-		check("levenst",Text.levenshteinDistance("",""),0);
-		check("levenst",Text.levenshteinDistance("","a"),1);
-		check("levenst",Text.levenshteinDistance("frog","fog"),1);
+		check("levenshtein",Text.levenshteinDistance("",""),0);
+		check("levenshtein",Text.levenshteinDistance("","a"),1);
+		check("levenshtein",Text.levenshteinDistance("frog","fog"),1);
+	}
+	static void emoticonsUTF() {
+		System.out.println("\uD83D\uDE0A \uD83D\uDE22 \uD83C\uDF82");
 	}
 }

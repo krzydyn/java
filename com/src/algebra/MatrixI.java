@@ -105,8 +105,9 @@ public class MatrixI {
 		MatrixI r = new MatrixI(m.w, h);
 		for(int i = 0 ; i < r.h ; ++i)
 			for(int k = 0 ; k < m.h ; ++k) {
+				int vik = v[i*w+k];
 				for(int j = 0 ; j < r.w ; ++j) {
-					r.v[i*r.w+j]+=v[i*w+k]*m.v[k*m.w+j];
+					r.v[i*r.w+j]+=vik*m.v[k*m.w+j];
 				}
 			}
 

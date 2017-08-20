@@ -1,4 +1,4 @@
-package algebra;
+package img;
 
 import java.awt.Dimension;
 

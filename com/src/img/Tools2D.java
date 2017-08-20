@@ -15,7 +15,7 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License
  */
-package algebra;
+package img;
 
 import java.awt.Dimension;
 import java.awt.Point;
@@ -25,12 +25,14 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
+import algebra.MatrixI;
+
 public class Tools2D {
-	private static class Segment {
+	public static class Segment {
 		public Segment(int y, int x0, int x1) {
 			this.y=y; this.x0=x0; this.x1=x1;
 		}
-		int x0, x1, y;
+		public int x0, x1, y;
 	}
 
 	private static Segment makeSegment(Raster2D t,int x,int y,int sval, int xmax) {
@@ -122,12 +124,12 @@ public class Tools2D {
 	}
 
 	// y[n] = x[n] * h[n]
-	public static void convolve(Raster2D r, MatrixI k) {
-		Dimension dim = r.getSize();
+	public static void convolve(Raster2D yr, Raster2D xr, MatrixI k) {
+		Dimension dim = xr.getSize();
 		for (int y=0; y < dim.height; ++y ) {
 			for (int x=0; x < dim.width; ++x) {
-				int a=convolve(r, k, x, y);
-				r.setPixel(x, y, a);
+				int a=convolve(xr, k, x, y);
+				yr.setPixel(x, y, a);
 			}
 		}
 	}

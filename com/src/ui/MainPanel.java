@@ -22,12 +22,12 @@ import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.EventQueue;
 import java.awt.LayoutManager;
+import java.awt.Window;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowFocusListener;
 import java.awt.event.WindowListener;
-
 import javax.swing.InputMap;
 import javax.swing.JComponent;
 import javax.swing.JFrame;
@@ -58,7 +58,7 @@ public void setDockMenu(java.awt.PopupMenu)
 public void setDockIconBadge(String)
 
 //http://www.oracle.com/technetwork/articles/javase/javatomac-140486.html
-System.setProperty("com.apple.macos.useScreenMenuBar", "true");
+System.setProperty("apple.laf.useScreenMenuBar", "true");
 System.setProperty("com.apple.mrj.application.apple.menu.about.name","xxx");//not works
 System.setProperty("com.apple.mrj.application.growbox.intrudes","false");
 
@@ -177,7 +177,8 @@ public class MainPanel extends JPanel implements WindowListener,WindowFocusListe
 	static private MainPanel internal_start(final Class<? extends MainPanel> mainclass, final String[] args) throws Exception {
 		final MainPanel[] mp = {null};
 		if (Env.isMacos()) {
-			System.setProperty("com.apple.macos.useScreenMenuBar", "true");
+			//System.setProperty("apple.awt.graphics.EnableQ2DX", "true");//???
+			System.setProperty("apple.laf.useScreenMenuBar", "true");
 		}
 		EventQueue.invokeAndWait(new Runnable() {
 			@Override
@@ -192,6 +193,7 @@ public class MainPanel extends JPanel implements WindowListener,WindowFocusListe
 					f.setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
 					f.addWindowListener(main);
 					f.addWindowFocusListener(main);
+					if (Env.isMacos()) installQuitHandler(f, main);
 					f.addComponentListener(new ComponentAdapter() {
 						@Override
 						public void componentResized(ComponentEvent e) {
@@ -225,5 +227,21 @@ public class MainPanel extends JPanel implements WindowListener,WindowFocusListe
 			}
 		});
 		return mp[0];
+	}
+
+	private static void installQuitHandler(final Window w,final WindowListener l) {
+		if (!Env.isMacos()) return ;
+		try {
+			com.apple.eawt.Application app = com.apple.eawt.Application.getApplication();
+			app.setQuitHandler(new com.apple.eawt.QuitHandler() {
+				@Override
+				public void handleQuitRequestWith(com.apple.eawt.AppEvent.QuitEvent ev, com.apple.eawt.QuitResponse qr) {
+					WindowEvent we=new WindowEvent(w,0);
+					l.windowClosing(we);
+					qr.performQuit();  // or qr.cancelQuit(); to cancel Quiting
+					l.windowClosed(we);
+				}
+			});
+		} catch (Throwable e) {Log.error(e);}
 	}
 }

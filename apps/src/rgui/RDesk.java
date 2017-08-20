@@ -29,17 +29,19 @@ import java.util.List;
 import javax.imageio.ImageIO;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
+import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 
 import netio.ChannelHandler;
 import netio.SelectorThread;
 import netio.SelectorThread.QueueChannel;
-import rgui.ImagePanel.ImageBox;
 import sys.Env;
 import sys.Log;
 import sys.XThread;
+import ui.ImagePanel;
 import ui.MainPanel;
+import ui.ImagePanel.ImageUpdate;
 
 @SuppressWarnings("serial")
 public class RDesk extends MainPanel {
@@ -49,7 +51,7 @@ public class RDesk extends MainPanel {
 	ByteBuffer inmsg = ByteBuffer.allocate(1024*1024);
 	int inlen;
 	private final ImagePanel imgPanel = new ImagePanel();
-	private final List<ImageBox> imgq = new ArrayList<ImageBox>();
+	private final List<ImageUpdate> imgq = new ArrayList<ImageUpdate>();
 	QueueChannel qchn;
 	Point prevMouseLoc = new Point();
 	String Host = null;
@@ -221,7 +223,9 @@ public class RDesk extends MainPanel {
 	@Override
 	protected JMenuBar createMenuBar() {
 		JMenuBar mb = new JMenuBar();
-		mb.add(new JMenuItem(screen_shot));
+		JMenu m = new JMenu("File");
+		m.add(new JMenuItem(screen_shot));
+		mb.add(m);
 		return mb;
 	}
 
@@ -300,7 +304,7 @@ public class RDesk extends MainPanel {
 					Log.debug("recv fullscr %d,%d,%d,%d  bytes=%d",x,y,i.getWidth(null),i.getHeight(null),inmsg.remaining());
 				}
 				else {
-					imgq.add(new ImageBox(i,x,y));
+					imgq.add(new ImageUpdate(i,x,y));
 					if (imgq.size()>1) Log.debug("roiq len=%d",imgq.size());
 				}
 				//TODO update fullImg in separate thread
@@ -447,8 +451,8 @@ public class RDesk extends MainPanel {
 	}
 
 	public static void main(String[] args) {
-		//Log.setTestMode();
-		Log.setReleaseMode();
+		Log.setTestMode();
+		//Log.setReleaseMode();
 		RDesk desk = (RDesk)start(RDesk.class, args);
 		try {
 			desk.keep_connected();

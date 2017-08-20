@@ -21,6 +21,7 @@ import graphs.BinTree;
 import graphs.HeapTree;
 import graphs.SortedArray;
 import graphs.Sorting;
+import img.Tools2D;
 
 import java.awt.geom.Point2D;
 import java.util.ArrayList;
@@ -34,7 +35,6 @@ import algebra.Expression;
 import algebra.Maths;
 import algebra.MatrixI;
 import algebra.Permutate;
-import algebra.Tools2D;
 import sys.Log;
 import sys.UnitTest;
 import text.Text;
