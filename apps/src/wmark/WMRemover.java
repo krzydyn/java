@@ -12,6 +12,7 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.FileFilter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -19,17 +20,19 @@ import java.util.List;
 import javax.imageio.ImageIO;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
+import javax.swing.JFileChooser;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
-
 import sys.Log;
+import ui.Dialogs;
 import ui.ImagePanel;
 import ui.MainPanel;
 
 @SuppressWarnings("serial")
 public class WMRemover extends MainPanel {
 
+	private final JFileChooser chooser = Dialogs.createFileChooser(false);
 	private final ImagePanel imgPanel = new ImagePanel();
 	private Tool currTool = null;
 	private final ArrayList<Segment> selection = new ArrayList<>();
@@ -43,10 +46,16 @@ public class WMRemover extends MainPanel {
 		add(createScrolledPanel(imgPanel), BorderLayout.CENTER);
 
 		currTool = colorTool;
+		Dialogs.addFilter(chooser, new FileFilter() {
+			@Override
+			public boolean accept(File pathname) {
+				return pathname.getName().endsWith("jpg");
+			}
+		}, "jpg");
 
 		if (args.length > 0) {
 			try {
-				openFile(args[0]);
+				openFile(new File(args[0]));
 			} catch (IOException e) {Log.error(e);}
 		}
 
@@ -63,6 +72,15 @@ public class WMRemover extends MainPanel {
 	Action file_open = new AbstractAction("Open") {
 		@Override
 		public void actionPerformed(ActionEvent ev) {
+			int r = chooser.showOpenDialog(topFrame());
+			if (r == JFileChooser.APPROVE_OPTION) {
+				File f = chooser.getSelectedFile();
+				try {
+					openFile(f);
+				} catch (IOException e) {
+					Log.error(e);
+				}
+			}
 		}
 	};
 	Action file_quit = new AbstractAction("Quit") {
@@ -81,7 +99,6 @@ public class WMRemover extends MainPanel {
 		@Override
 		public void actionPerformed(ActionEvent ev) {
 			calc_alpha();
-			repaint(20);
 		}
 	};
 	Action func_unwatermark = new AbstractAction("Unwatermark") {
@@ -110,8 +127,8 @@ public class WMRemover extends MainPanel {
 		return mb;
 	}
 
-	private void openFile(String file) throws IOException {
-		imgPanel.setImage(ImageIO.read(new File(file)));
+	private void openFile(File file) throws IOException {
+		imgPanel.setImage(ImageIO.read(file));
 	}
 
 	private void mouseClickSelect(int x,int y) {

@@ -49,14 +49,11 @@ public class Text {
 	private static String join_it(String sep, Iterable<?> a, int off,int len) {
 		Iterator<?> it = a.iterator();
 		if (!it.hasNext()) return "";
-		StringBuilder b=new StringBuilder(30*(sep.length()+2));
-		for (int i = 0; ;) {
-			if (i < off) {
-				it.next();
-				continue;
-			}
-			b.append(it.next());
-			if (len==-1 && !it.hasNext()) break;
+		StringBuilder b=new StringBuilder(len*(sep.length()+2));
+		for (int i = 0; it.hasNext();) {
+			Object n = it.next();
+			if (i < off) {n=null;continue;}
+			b.append(n);
 			if (++i == off+len) break;
 			b.append(sep);
 		}
@@ -99,7 +96,6 @@ public class Text {
 		if (a.length==0) return "";
 		if (len < 0) len = a.length;
 		StringBuilder b=new StringBuilder(len*(sep.length()+2));
-		b.append(a[0]);
 		for (int i = 0; ; ) {
 			b.append(a[off+i]);
 			if (++i == len) break;
@@ -113,7 +109,7 @@ public class Text {
 		if (o instanceof short[]) return join_i(sep, (short[])o,off,len);
 		if (o instanceof int[]) return join_i(sep, (int[])o,off,len);
 		if (o instanceof Object[]) return join_o(sep, (Object[])o,off,len);
-		if (o instanceof Iterable) return join_it(sep, (List<?>)o,off,len);
+		if (o instanceof Iterable) return join_it(sep, (Iterable<?>)o,off,len);
 		return o.toString();
 	}
 

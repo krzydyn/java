@@ -25,8 +25,8 @@ import javax.swing.filechooser.FileFilter;
 
 public class Dialogs {
 	static class WrapIoFilter extends FileFilter {
-		private java.io.FileFilter filter;
-		private String description;
+		private final java.io.FileFilter filter;
+		private final String description;
 		WrapIoFilter(java.io.FileFilter f, String descr) {
 			filter=f;
 			description=descr;
@@ -43,7 +43,7 @@ public class Dialogs {
 	};
 
 	static public JFileChooser createFileChooser(boolean multsel) {
-		JFileChooser chooser = new JFileChooser();
+		JFileChooser chooser = new JFileChooser(new File("."));
 		//chooser.approveSelection();
 		chooser.setMultiSelectionEnabled(multsel);
 		return chooser;

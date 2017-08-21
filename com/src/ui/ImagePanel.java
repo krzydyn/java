@@ -118,7 +118,7 @@ public class ImagePanel extends JPanel {
 		synchronized (imgLock) {img=this.img;}
 		if (img == null) return ;
 
-		long tm = System.currentTimeMillis();
+		//long tm = System.currentTimeMillis();
 		AffineTransform tr = g2.getTransform();
 		g2.scale(scale, scale);
 		g2.drawImage(img, 0, 0, null);

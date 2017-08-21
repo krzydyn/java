@@ -238,12 +238,14 @@ public class MainPanel extends JPanel implements WindowListener,WindowFocusListe
 			Class<?> capp = Class.forName("com.apple.eawt.Application");
 			Class<?> cqs = Class.forName("com.apple.eawt.QuitStrategy");
 			Object app = capp.newInstance();
-			Method msetqs = capp.getMethod("setQuitStrategy", cqs);
-			msetqs.invoke(app, cqs.getField("CLOSE_ALL_WINDOWS"));
+			Method qs_val = cqs.getMethod("valueOf", String.class);
+			Method app_setqs = capp.getMethod("setQuitStrategy", cqs);
+			Object qs_closeall = qs_val.invoke(null, "CLOSE_ALL_WINDOWS");
+			app_setqs.invoke(app, qs_closeall);
+
 			/*
 			Method msetqh = capp.getMethod("setQuitHandler", cqh);
 			mapp.invoke(app, cqh.newInstance());
-
 			app.setQuitHandler(new com.apple.eawt.QuitHandler() {
 				@Override
 				public void handleQuitRequestWith(com.apple.eawt.AppEvent.QuitEvent ev, com.apple.eawt.QuitResponse qr) {
