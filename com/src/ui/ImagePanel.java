@@ -5,17 +5,19 @@ import img.Tools2D.Segment;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
-import java.awt.EventQueue;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Image;
 import java.awt.Rectangle;
 import java.awt.Shape;
+import java.awt.geom.AffineTransform;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
 import javax.swing.JPanel;
+
+import sys.Log;
 
 @SuppressWarnings("serial")
 public class ImagePanel extends JPanel {
@@ -44,18 +46,18 @@ public class ImagePanel extends JPanel {
 	private final Object imgLock = new Object();
 	private Image img;
 	private final Dimension imgSize = new Dimension();
+	private final Dimension vSize = new Dimension();
 	private final List<Roi> rois = new ArrayList<Roi>();
 	private final ArrayList<Segment> selection = new ArrayList<>();
-	private final Runnable newImageNotifier = new Runnable() {
-		@Override
-		public void run() {
-			setSize(imgSize);
-			setPreferredSize(imgSize);
-		}
-	};
+	private float scale = 5f;
+
 	public ImagePanel() {
 		super(new BorderLayout());
 	}
+
+	public float getScale() {return scale;}
+	public void setScale(float s) {scale=s;}
+
 	public void setShowRoi(boolean show) {showRoi=show;}
 	public Image getImage() { return img; }
 	public void setImage(Image i) {
@@ -70,7 +72,10 @@ public class ImagePanel extends JPanel {
 				imgSize.width = imgSize.height = 0;
 			}
 		}
-		EventQueue.invokeLater(newImageNotifier);
+		vSize.setSize(imgSize.width*scale, imgSize.height*scale);
+		setSize(vSize);
+		setPreferredSize(vSize);
+		//EventQueue.invokeLater(newImageNotifier);
 	}
 	public void clearRois() {
 		rois.clear();
@@ -83,6 +88,7 @@ public class ImagePanel extends JPanel {
 	public void addSelection(List<Segment> segs) {
 		selection.clear();
 		selection.addAll(segs);
+		Log.debug("selection: %s segs", segs.size());
 		repaint(20);
 	}
 	public void update(List<ImageUpdate> imgq) {
@@ -106,10 +112,15 @@ public class ImagePanel extends JPanel {
 
 	@Override
 	protected void paintComponent(Graphics g) {
+		super.paintComponent(g);
 		Graphics2D g2 = (Graphics2D)g;
 		Image img;
 		synchronized (imgLock) {img=this.img;}
 		if (img == null) return ;
+
+		long tm = System.currentTimeMillis();
+		AffineTransform tr = g2.getTransform();
+		g2.scale(scale, scale);
 		g2.drawImage(img, 0, 0, null);
 
 		if (selection.size() > 0) {
@@ -119,8 +130,7 @@ public class ImagePanel extends JPanel {
 				g2.drawLine(s.x1, s.y, s.x1, s.y);
 			}
 		}
-
-		if (!showRoi) return ;
+		if (!showRoi) {g2.setTransform(tr);return ;}
 		int mx=getWidth()/2;
 		int my=getHeight()/2;
 		int roisSize = rois.size();
@@ -142,5 +152,6 @@ public class ImagePanel extends JPanel {
 			g2.setColor(Color.BLACK);
 			g2.drawString(String.format("%d",roisSize), mx, my);
 		}
+		g2.setTransform(tr);
 	}
 }

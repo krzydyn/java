@@ -28,6 +28,8 @@ import java.awt.event.ComponentEvent;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowFocusListener;
 import java.awt.event.WindowListener;
+import java.lang.reflect.Method;
+
 import javax.swing.InputMap;
 import javax.swing.JComponent;
 import javax.swing.JFrame;
@@ -179,6 +181,7 @@ public class MainPanel extends JPanel implements WindowListener,WindowFocusListe
 		if (Env.isMacos()) {
 			//System.setProperty("apple.awt.graphics.EnableQ2DX", "true");//???
 			System.setProperty("apple.laf.useScreenMenuBar", "true");
+			System.setProperty("apple.eawt.quitStrategy", "CLOSE_ALL_WINDOWS");
 		}
 		EventQueue.invokeAndWait(new Runnable() {
 			@Override
@@ -187,13 +190,13 @@ public class MainPanel extends JPanel implements WindowListener,WindowFocusListe
 					JFrame f = new JFrame();
 					final MainPanel main = create(mainclass, args);
 					mp[0]=main;
+					if (Env.isMacos()) installQuitHandler(f, main);
 					main.mainFame = f;
 					f.setContentPane(main);
 					f.setTitle(main.getName());
 					f.setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
 					f.addWindowListener(main);
 					f.addWindowFocusListener(main);
-					if (Env.isMacos()) installQuitHandler(f, main);
 					f.addComponentListener(new ComponentAdapter() {
 						@Override
 						public void componentResized(ComponentEvent e) {
@@ -232,7 +235,15 @@ public class MainPanel extends JPanel implements WindowListener,WindowFocusListe
 	private static void installQuitHandler(final Window w,final WindowListener l) {
 		if (!Env.isMacos()) return ;
 		try {
-			com.apple.eawt.Application app = com.apple.eawt.Application.getApplication();
+			Class<?> capp = Class.forName("com.apple.eawt.Application");
+			Class<?> cqs = Class.forName("com.apple.eawt.QuitStrategy");
+			Object app = capp.newInstance();
+			Method msetqs = capp.getMethod("setQuitStrategy", cqs);
+			msetqs.invoke(app, cqs.getField("CLOSE_ALL_WINDOWS"));
+			/*
+			Method msetqh = capp.getMethod("setQuitHandler", cqh);
+			mapp.invoke(app, cqh.newInstance());
+
 			app.setQuitHandler(new com.apple.eawt.QuitHandler() {
 				@Override
 				public void handleQuitRequestWith(com.apple.eawt.AppEvent.QuitEvent ev, com.apple.eawt.QuitResponse qr) {
@@ -242,6 +253,7 @@ public class MainPanel extends JPanel implements WindowListener,WindowFocusListe
 					l.windowClosed(we);
 				}
 			});
+			*/
 		} catch (Throwable e) {Log.error(e);}
 	}
 }

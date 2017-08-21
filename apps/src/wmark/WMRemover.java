@@ -36,6 +36,8 @@ public class WMRemover extends MainPanel {
 
 	private static final ColorTool colorTool = new ColorTool();
 
+	private float alpha = 1f;
+
 	public WMRemover(String args[]) {
 		setPreferredSize(new Dimension(800,600));
 		add(createScrolledPanel(imgPanel), BorderLayout.CENTER);
@@ -58,11 +60,43 @@ public class WMRemover extends MainPanel {
 		});
 	}
 
+	Action file_open = new AbstractAction("Open") {
+		@Override
+		public void actionPerformed(ActionEvent ev) {
+		}
+	};
+	Action file_quit = new AbstractAction("Quit") {
+		@Override
+		public void actionPerformed(ActionEvent ev) {
+			topFrame().dispose();
+		}
+	};
+	Action sel_color = new AbstractAction("By Color") {
+		@Override
+		public void actionPerformed(ActionEvent ev) {
+			currTool = colorTool;
+		}
+	};
+	Action func_calcalpha = new AbstractAction("Calc alpha") {
+		@Override
+		public void actionPerformed(ActionEvent ev) {
+			calc_alpha();
+			repaint(20);
+		}
+	};
+	Action func_unwatermark = new AbstractAction("Unwatermark") {
+		@Override
+		public void actionPerformed(ActionEvent ev) {
+			unwatermark();
+			repaint(20);
+		}
+	};
 	@Override
 	protected JMenuBar createMenuBar() {
 		JMenuBar mb = new JMenuBar();
 		JMenu m = new JMenu("File");
-		m.add(new JMenuItem(open_file));
+		m.add(new JMenuItem(file_open));
+		m.add(new JMenuItem(file_quit));
 		mb.add(m);
 
 		m = new JMenu("Selection");
@@ -70,6 +104,7 @@ public class WMRemover extends MainPanel {
 		mb.add(m);
 
 		m = new JMenu("Functions");
+		m.add(new JMenuItem(func_calcalpha));
 		m.add(new JMenuItem(func_unwatermark));
 		mb.add(m);
 		return mb;
@@ -84,51 +119,55 @@ public class WMRemover extends MainPanel {
 		if (currTool == colorTool) selectByColor(colorTool, x, y);
 	}
 
-	Action open_file = new AbstractAction("Open") {
-		@Override
-		public void actionPerformed(ActionEvent ev) {
-		}
-	};
-	Action sel_color = new AbstractAction("By Color") {
-		@Override
-		public void actionPerformed(ActionEvent ev) {
-			currTool = colorTool;
-		}
-	};
-	Action func_unwatermark = new AbstractAction("Unwotermark") {
-		@Override
-		public void actionPerformed(ActionEvent ev) {
-			BufferedImage img = (BufferedImage)imgPanel.getImage();
-			for (Segment s : selection) {
-				unwotermark(img,s);
+	private void calc_alpha() {
+		BufferedImage img = (BufferedImage)imgPanel.getImage();
+		float[] fc={0,0,0};
+		float av=0;
+		int n=0;
+		for (Segment s : selection) {
+			for (int x=s.x0; x < s.x1; ++x) {
+				Colors.rgbToFloat(img.getRGB(x, s.y), fc);
+				av += (fc[0]+fc[1]+fc[2])/3;
 			}
-			repaint(20);
+			n += s.x1-s.x0;
+			if (n > 1000) break;
 		}
-	};
+		av /= n;
 
+		Log.debug("float aver: %f",av);
+		alpha = 1f/av-1f + (1f/av-1f)/7f;
+	}
 	/**
 	 *
 	 * @param img
 	 * @param s
 	 *
-	 * watermark: x = a*q + b*(1-q)
-	 * unwatermar: a = (x-b*(1-q))/q
+	 * watermark: dst = s1*A + s2*(1-A) = (s1-s2)*A + s2
+	 * unwatermar: s1 = (dst - s2*(1-A))/A
+	 * alpha:      A  = (dst - s2)/(s1-s2)
 	 */
-	static void unwotermark(BufferedImage img, Segment s) {
-		float q=0.4f;
+	private void unwatermark() {
+		BufferedImage img = (BufferedImage)imgPanel.getImage();
 		float[] fc={0,0,0};
-		for (int x=s.x0; x < s.x1; ++x) {
-			int c = img.getRGB(x, s.y);
-			Colors.rgbGet(fc, c);
-			for (int i=0; i < 3; ++i)
-				fc[i] = (fc[i] - (1f-q))/q;
-			c = Colors.rgb(fc);
-			img.setRGB(x, s.y, c);
+
+		Log.debug("alpha: %f", alpha);
+		for (Segment s : selection) {
+			for (int x=s.x0; x < s.x1; ++x) {
+				int c = img.getRGB(x, s.y);
+				Colors.rgbToFloat(c, fc);
+				for (int i=0; i < 3; ++i)
+					fc[i] = (fc[i] - (1f-alpha))/alpha;
+				c = Colors.rgb(fc);
+				img.setRGB(x, s.y, c);
+			}
 		}
 	}
 
 	void selectByColor(ColorTool tool, int x0, int y0) {
 		BufferedImage img = (BufferedImage)imgPanel.getImage();
+		x0 = (int)(x0/imgPanel.getScale());
+		y0 = (int)(y0/imgPanel.getScale());
+
 		List<Segment> seq = tool.select(new ImageRaster2D(img), x0, y0);
 		selection.clear();
 		selection.addAll(seq);

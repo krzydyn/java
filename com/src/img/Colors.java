@@ -12,15 +12,18 @@ public class Colors {
 	 * @param c2
 	 * @return
 	 */
-	public static float rgbError(int c1,int c2){
-		float err=0;
-		err+=Math.abs(((c1>>16)&0xff)-((c2>>16)&0xff))/255f;
-		err+=Math.abs(((c1>>8)&0xff)-((c2>>8)&0xff))/255f;
-		err+=Math.abs((c1&0xff)-(c2&0xff))/255f;
+	public static float rgbErrorSq(int c1,int c2){
+		float err=0, e;
+		e=(((c1>>16)&0xff)-((c2>>16)&0xff))/255f;
+		err += e*e;
+		e=(((c1>>8)&0xff)-((c2>>8)&0xff))/255f;
+		err += e*e;
+		e=((c1&0xff)-(c2&0xff))/255f;
+		err += e*e;
 		return err/3f;
 	}
 
-	public static void rgbGet(float[] s,int c){
+	public static void rgbToFloat(int c, float[] s){
 		s[0]=((c>>16)&0xff)/255f;
 		s[1]=((c>>8)&0xff)/255f;
 		s[2]=(c&0xff)/255f;
