@@ -48,8 +48,8 @@ public class WMRemover extends MainPanel {
 		currTool = colorTool;
 		Dialogs.addFilter(chooser, new FileFilter() {
 			@Override
-			public boolean accept(File pathname) {
-				return pathname.getName().endsWith("jpg");
+			public boolean accept(File path) {
+				return path.getName().endsWith(".jpg") || path.isDirectory();
 			}
 		}, "jpg");
 

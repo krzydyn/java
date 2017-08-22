@@ -77,7 +77,6 @@ public class TEF implements TEF_Types {
 		javax.crypto.Cipher cipher;
 
 		String algoName = keyid.transformName()+"/"+algorithm.getName();
-		//Log.debug("create cipher %s", algoName);
 		cipher = javax.crypto.Cipher.getInstance(algoName);
 		byte[] iv=null;
 		if (algorithm.map.containsKey(tef_algorithm_param_e.TEF_IV)) {
@@ -108,21 +107,58 @@ public class TEF implements TEF_Types {
 		//cipher.init(javax.crypto.Cipher.ENCRYPT_MODE, keyid.key, pspec);
 		//cipher.init(javax.crypto.Cipher.ENCRYPT_MODE, keyid.key, param);
 
-		if (algorithm.chaining == tef_chaining_mode_e.TEF_GCM) {
-			if (algorithm.map.containsKey(tef_algorithm_param_e.TEF_AAD)) {
-				cipher.updateAAD((byte[])algorithm.map.get(tef_algorithm_param_e.TEF_AAD));
-			}
+		if (algorithm.map.containsKey(tef_algorithm_param_e.TEF_AAD)) {
+			cipher.updateAAD((byte[])algorithm.map.get(tef_algorithm_param_e.TEF_AAD));
 		}
 
-		return cipher.doFinal(data, 0, dataLen, edata);
+		int r = cipher.doFinal(data, 0, dataLen, edata);
+		if (algorithm.chaining == tef_chaining_mode_e.TEF_GCM) {
+			int tl = (Integer)algorithm.map.get(tef_algorithm_param_e.TEF_AUTHTAG_LEN)/8;
+			if (r >= tl) {
+				byte[] tag = new byte[tl];
+				//for (int i=0; i < tl; ++i)tag[i]=edata
+				System.arraycopy(edata, r-tl, tag, 0, tl);
+				algorithm.map.put(tef_algorithm_param_e.TEF_AUTHTAG, tag);
+			}
+		}
+		return r;
 	}
 
 	int tef_decrypt(tef_cipher_token keyid, tef_algorithm algorithm,
 			byte[] edata, int edataLen, byte[] data) throws GeneralSecurityException {
-		javax.crypto.Cipher cipher = javax.crypto.Cipher.getInstance(keyid.transformName());
+		javax.crypto.Cipher cipher;
+		String algoName = keyid.transformName()+"/"+algorithm.getName();
+		cipher = javax.crypto.Cipher.getInstance(algoName);
 		cipher.init(javax.crypto.Cipher.DECRYPT_MODE, keyid.key);
 
-		return cipher.doFinal(data, 0, edataLen, edata);
+		byte[] iv=null;
+		if (algorithm.map.containsKey(tef_algorithm_param_e.TEF_IV)) {
+			iv = (byte[])algorithm.map.get(tef_algorithm_param_e.TEF_IV);
+		}
+		else if (algorithm.chaining != tef_chaining_mode_e.TEF_ECB) {
+			Log.warn("setting IV=ZERO");
+			iv = ZERO_IV;
+		}
+		AlgorithmParameterSpec pspec = null;
+		if (algorithm.chaining == tef_chaining_mode_e.TEF_GCM) {
+			int taglen = (Integer)algorithm.map.get(tef_algorithm_param_e.TEF_AUTHTAG_LEN);
+			pspec = new GCMParameterSpec(taglen, iv); // iv = nonce
+		}
+		else if (iv != null){
+			pspec = new IvParameterSpec(iv, 0, cipher.getBlockSize());
+		}
+		if (pspec!=null) {
+			cipher.init(javax.crypto.Cipher.DECRYPT_MODE, keyid.key, pspec);
+		}
+		else {
+			cipher.init(javax.crypto.Cipher.DECRYPT_MODE, keyid.key);
+		}
+
+		if (algorithm.map.containsKey(tef_algorithm_param_e.TEF_AAD)) {
+			cipher.updateAAD((byte[])algorithm.map.get(tef_algorithm_param_e.TEF_AAD));
+		}
+
+		return cipher.doFinal(edata, 0, edataLen, data);
 	}
 
 	int tef_digest(tef_cipher_token keyid, tef_digest_e digest,

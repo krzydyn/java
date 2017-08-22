@@ -2,15 +2,32 @@
 <project name="com" default="compile" basedir=".">
 	<property name="JAVA_VERSION" value="1.7"/>
 	<property name="build" value="build"/>
-	<property name="libdir" value="lib"/>
+	<property name="comdir" value="../com"/>
 	
-	<target name="compile">
+	<target name="common">
+		<ant dir="${comdir}" antfile="build.xml" target="compile" />
+	</target>
+	
+	<target name="compile" depends="common">
 		<mkdir dir="${build}"/>
 		<javac srcdir="src" destdir="${build}" debug="true" listfiles="true"
 			encoding="UTF-8" source="${JAVA_VERSION}" target="${JAVA_VERSION}"
 			includeantruntime="false"
-			classpath="${libdir}/RXTXcomm.jar"
+			classpath="${comdir}/${build}"
 		/>
+	</target>
+	
+	<target name="myaes" depends="compile">
+		<delete file="${comdir}/lib/myaes.jar"/>
+		<jar destfile="${comdir}/lib/myaes.jar">
+			<fileset dir="./${build}"
+				includes="crypt/CryptX_*.class"
+				excludes="**/.class"
+			/>
+			
+			<manifest>
+			</manifest>
+		</jar>
 	</target>
 	
 	<!-- 

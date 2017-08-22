@@ -18,8 +18,17 @@
 
 package unittest;
 
+import java.io.IOException;
 import java.math.BigInteger;
+import java.net.URL;
+import java.security.AccessController;
+import java.security.CodeSource;
 import java.security.Key;
+import java.security.PrivilegedAction;
+import java.security.ProtectionDomain;
+import java.security.Provider;
+import java.security.Security;
+import java.util.jar.JarException;
 
 import crypt.AES2;
 import crypt.AES3;
@@ -78,6 +87,40 @@ public class T_Crypt extends UnitTest {
 
 	}
 
+	@SuppressWarnings("unchecked")
+	static URL getCodeBase(final Class<?> clazz) {
+		URL url = (URL)AccessController.doPrivileged(new PrivilegedAction() {
+		                @Override
+						public Object run() {
+		                    ProtectionDomain pd = clazz.getProtectionDomain();
+		                    if (pd != null) {
+		                        CodeSource cs = pd.getCodeSource();
+		                        if (cs != null) {
+		                            return cs.getLocation();
+		                        }
+		                    }
+		                    return null;
+		                }
+		            });
+		return url;
+	}
+
+	static class JarVerifier {
+		private URL jarURL;
+		private boolean savePerms;
+		JarVerifier(URL jarURL, boolean savePerms) {
+			this.jarURL = jarURL;
+			this.savePerms = savePerms;
+		}
+		void verify() throws JarException, IOException {
+			if (!savePerms) {
+				Log.debug("savePerm=false ... verify ok");
+				return;
+			}
+			//JarURLConnection conn =(JarURLConnection) url.openConnection();
+		}
+	}
+
 	static void listProviders() {
 		CryptX_Provider.register();
 		/*for (Provider provider: Security.getProviders()) {
@@ -90,9 +133,13 @@ public class T_Crypt extends UnitTest {
 		CryptX_AES.test();
 
 		//test CryptXProvider
-		/*
 		try {
 			Provider p = Security.getProvider("CryptX");
+			URL providerURL = getCodeBase(p.getClass());
+			Log.debug("providerURL '%s'", providerURL);
+			JarVerifier jv = new JarVerifier(providerURL, false);
+			jv.verify();
+
 			javax.crypto.Cipher cipher;
 
 			cipher = javax.crypto.Cipher.getInstance("AES/ECB/ISO9797_1PADDING",p);
@@ -103,7 +150,7 @@ public class T_Crypt extends UnitTest {
 
 		} catch (Exception e) {
 			Log.error(e);
-		}*/
+		}
 	}
 
 	static void des_aes() {
