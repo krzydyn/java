@@ -19,8 +19,6 @@ package unittest;
 
 import graphs.BinTree;
 import graphs.HeapTree;
-import graphs.SortedArray;
-import graphs.Sorting;
 import img.Tools2D;
 
 import java.awt.geom.Point2D;
@@ -28,6 +26,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
+import puzzles.BlackJack;
 import puzzles.GameBoard.Rect;
 import puzzles.GameBoard.Sheet;
 import algebra.Combinations;
@@ -35,6 +34,8 @@ import algebra.Expression;
 import algebra.Maths;
 import algebra.MatrixI;
 import algebra.Permutate;
+import algebra.SortedArray;
+import algebra.Sorting;
 import sys.Log;
 import sys.UnitTest;
 import text.Text;
@@ -131,7 +132,7 @@ public class T_Algebra extends UnitTest {
 		String[] test = {"", "AA", "XA", "9AA", "8AA", "8AAA"};
 		int [] res    = {0,   12,   21,    21,    20,     21};
 		for (int i=0; i < test.length; ++i) {
-			int r=Maths.blackjackPoints(test[i]);
+			int r=BlackJack.getPoints(test[i]);
 			check(String.format("%s=%d, should be %d", test[i], r, res[i]), r==res[i]);
 		}
 	}

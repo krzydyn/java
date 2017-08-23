@@ -20,6 +20,8 @@ package graphs;
 import java.util.ArrayList;
 import java.util.List;
 
+import algebra.Sorting;
+
 public class HeapTree<T extends Comparable<T>> {
 	private final List<T> tree;
 	private final boolean lazyBuild=true;

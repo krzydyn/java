@@ -15,7 +15,9 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License
  */
-package graphs;
+package algebra;
+
+import graphs.HeapTree;
 
 import java.util.Comparator;
 import java.util.List;
@@ -27,13 +29,13 @@ public class Sorting {
 	public static int rdCnt=0; //number of data read operations
 	public static int wrCnt=0; //number of data write operations
 
-	private static final void swap(int[] a, int i, int j) {
+	public static final void swap(int[] a, int i, int j) {
 		int t=a[i]; a[i]=a[j]; a[j]=t;
 		rdCnt+=2;
 		wrCnt+=2;
 	}
-	private static final void swap(List<?> a, int i, int j) {
-        @SuppressWarnings("unchecked")
+	public static final void swap(List<?> a, int i, int j) {
+		@SuppressWarnings("unchecked")
 		final List<Object> l = (List<Object>)a;
 		Object t=a.get(i); l.set(i, l.get(j)); l.set(j, t);
 		rdCnt+=2;

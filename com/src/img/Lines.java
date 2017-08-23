@@ -20,6 +20,7 @@ package img;
 import java.awt.Point;
 import java.awt.geom.Line2D;
 import java.awt.geom.Point2D;
+import java.util.List;
 
 public class Lines {
 	final public static double EPS = 1e-10;
@@ -104,5 +105,17 @@ public class Lines {
 		if (Math.abs(ua) < EPS || Math.abs(ua-1.0) < EPS) return IntersectionType.TOUCH;
 
 		return IntersectionType.CROSS_IN;
+	}
+
+	public static boolean pointInPolygon(Point2D p, List<Point2D> poly) {
+		boolean c=false;
+		int n = poly.size();
+		for (int i = 0, j = n-1; i < n; j = i++) {
+			if ( ((poly.get(i).getY()>p.getY()) != (poly.get(j).getY()>p.getY())) &&
+					(p.getX() < (poly.get(j).getX()-poly.get(i).getX()) *
+							(p.getY()-poly.get(i).getY()) / (poly.get(j).getY()-poly.get(i).getY()) + poly.get(i).getX()) )
+			c = !c;
+		}
+		return c;
 	}
 }

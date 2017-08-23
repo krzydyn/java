@@ -166,6 +166,34 @@ public class Tools2D {
 		hullQuick(pnts,h, p1, mp);
 		hullQuick(pnts,h, mp, p2);
 	}
+
+	static List<Point2D> quadriInHull(List<Point2D> pnts) {
+		Point2D left,top,right,bot;
+
+		left=right=top=bot=pnts.get(0);
+		// find the leftmost, rightmost, topmost and bottommost points
+		for (Point2D p : pnts) {
+			if (p.getX() < left.getX()) left = p;
+			if (p.getX() > right.getX()) right = p;
+			if (p.getY() < top.getY()) top = p;
+			if (p.getY() > bot.getY()) bot = p;
+		}
+
+		List<Point2D> h = new ArrayList<Point2D>();
+		h.add(left); h.add(top); h.add(right); h.add(bot);
+		return h;
+	}
+
+	static List<Point2D> cutout(List<Point2D> pnts) {
+		List<Point2D> a = new ArrayList<Point2D>();
+		List<Point2D> h = quadriInHull(pnts);
+		for (Point2D p : pnts) {
+			if (!Lines.pointInPolygon(p, h)) a.add(p);
+		}
+		h.clear();
+		return a;
+	}
+
 	/**
 	 * QuickHull finding the convex hull algorithm
 	 * @param pnts
@@ -173,7 +201,10 @@ public class Tools2D {
 	 */
 	public static List<Point2D> hullQuick(List<Point2D> pnts) {
 		if (pnts.size() < 3) return new ArrayList<Point2D>(pnts);
-		List<Point2D> h = new ArrayList<Point2D>();
+
+		List<Point2D> h = quadriInHull(pnts);
+		pnts = cutout(pnts);
+
 		Point2D p1,p2;
 		p1=p2=pnts.get(0);
 		for (Point2D p : pnts) {
@@ -192,6 +223,7 @@ public class Tools2D {
 	public static List<Point2D> hullAndrew(List<Point2D> pnts) {
 		if (pnts.size() < 3) return new ArrayList<Point2D>(pnts);
 		List<Point2D> h = new ArrayList<Point2D>();
+		pnts = cutout(pnts);
 
 		Collections.sort(pnts, new Comparator<Point2D>() {
 			@Override
@@ -228,8 +260,9 @@ public class Tools2D {
 	public static List<Point2D> hullGraham(List<Point2D> pnts) {
 		if (pnts.size() < 3) return new ArrayList<Point2D>(pnts);
 		final List<Point2D> h = new ArrayList<Point2D>();
-		Point2D mP = pnts.get(0);
+		pnts = cutout(pnts);
 
+		Point2D mP = pnts.get(0);
 		//1. find point with lowest y then x
 		for (int i=1; i < pnts.size(); ++i) {
 			Point2D p = pnts.get(i);

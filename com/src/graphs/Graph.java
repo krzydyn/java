@@ -25,6 +25,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import algebra.Sorting;
 import sys.Log;
 import text.Text;
 

@@ -1,4 +1,4 @@
-package graphs;
+package algebra;
 
 import java.util.AbstractCollection;
 import java.util.ArrayList;
