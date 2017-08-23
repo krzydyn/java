@@ -34,6 +34,6 @@ final public class CryptX_Provider extends Provider {
 	public static void register() {
 		Provider p = new CryptX_Provider();
 		int r=Security.addProvider(p);
-		Log.info("%s register: %d", p.getClass().getSimpleName(), r);
+		Log.info("%s register at index: %d", p.getClass().getSimpleName(), r);
 	}
 }

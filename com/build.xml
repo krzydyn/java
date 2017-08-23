@@ -10,6 +10,7 @@
 			encoding="UTF-8" source="${JAVA_VERSION}" target="${JAVA_VERSION}"
 			includeantruntime="false"
 			classpath="${libdir}/RXTXcomm.jar"
+			excludes="unittest/**"
 		/>
 	</target>
 	

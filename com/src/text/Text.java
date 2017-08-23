@@ -49,6 +49,7 @@ public class Text {
 	private static String join_it(String sep, Iterable<?> a, int off,int len) {
 		Iterator<?> it = a.iterator();
 		if (!it.hasNext()) return "";
+		if (len<0) len=10;
 		StringBuilder b=new StringBuilder(len*(sep.length()+2));
 		for (int i = 0; it.hasNext();) {
 			Object n = it.next();

@@ -33,8 +33,8 @@ import java.util.jar.JarException;
 import crypt.AES2;
 import crypt.AES3;
 import crypt.Base64;
-import crypt.CryptX_Provider;
 import crypt.CryptX_AES;
+import crypt.CryptX_Provider;
 import crypt.Prime;
 import crypt.RSA;
 import crypt.SuperHash;
@@ -106,8 +106,8 @@ public class T_Crypt extends UnitTest {
 	}
 
 	static class JarVerifier {
-		private URL jarURL;
-		private boolean savePerms;
+		private final URL jarURL;
+		private final boolean savePerms;
 		JarVerifier(URL jarURL, boolean savePerms) {
 			this.jarURL = jarURL;
 			this.savePerms = savePerms;
