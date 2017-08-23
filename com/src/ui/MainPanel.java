@@ -94,7 +94,7 @@ public class MainPanel extends JPanel implements WindowListener,WindowFocusListe
 	@Override
 	public void windowClosing(WindowEvent e) {}
 	@Override
-	public void windowClosed(WindowEvent e) {}
+	public void windowClosed(WindowEvent e) {Log.info("Application closed");}
 	@Override
 	public void windowIconified(WindowEvent e) {}
 	@Override
@@ -181,7 +181,8 @@ public class MainPanel extends JPanel implements WindowListener,WindowFocusListe
 		if (Env.isMacos()) {
 			//System.setProperty("apple.awt.graphics.EnableQ2DX", "true");//???
 			System.setProperty("apple.laf.useScreenMenuBar", "true");
-			System.setProperty("apple.eawt.quitStrategy", "CLOSE_ALL_WINDOWS");
+			//following does not work, installQuitHandler is ok.
+			//System.setProperty("apple.eawt.quitStrategy", "CLOSE_ALL_WINDOWS");
 		}
 		EventQueue.invokeAndWait(new Runnable() {
 			@Override
