@@ -18,7 +18,6 @@
 
 package unittest;
 
-import java.io.IOException;
 import java.math.BigInteger;
 import java.net.URL;
 import java.security.AccessController;
@@ -28,8 +27,6 @@ import java.security.PrivilegedAction;
 import java.security.ProtectionDomain;
 import java.security.Provider;
 import java.security.Security;
-import java.util.jar.JarException;
-
 import crypt.AES2;
 import crypt.AES3;
 import crypt.Base64;
@@ -105,22 +102,6 @@ public class T_Crypt extends UnitTest {
 		return url;
 	}
 
-	static class JarVerifier {
-		private final URL jarURL;
-		private final boolean savePerms;
-		JarVerifier(URL jarURL, boolean savePerms) {
-			this.jarURL = jarURL;
-			this.savePerms = savePerms;
-		}
-		void verify() throws JarException, IOException {
-			if (!savePerms) {
-				Log.debug("savePerm=false ... verify ok");
-				return;
-			}
-			//JarURLConnection conn =(JarURLConnection) url.openConnection();
-		}
-	}
-
 	static void listProviders() {
 		CryptX_Provider.register();
 		/*for (Provider provider: Security.getProviders()) {
@@ -137,8 +118,6 @@ public class T_Crypt extends UnitTest {
 			Provider p = Security.getProvider("CryptX");
 			URL providerURL = getCodeBase(p.getClass());
 			Log.debug("providerURL '%s'", providerURL);
-			JarVerifier jv = new JarVerifier(providerURL, false);
-			jv.verify();
 
 			javax.crypto.Cipher cipher;
 

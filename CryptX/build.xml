@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project name="com" default="compile" basedir=".">
+<project name="cryptx" default="compile" basedir=".">
 	<property name="JAVA_VERSION" value="1.7"/>
 	<property name="build" value="build"/>
 	<property name="comdir" value="../com"/>
@@ -26,24 +26,31 @@
 			/>
 			
 			<manifest>
+				<attribute name="Trusted-Library" value="true"/>
 			</manifest>
 		</jar>
 	</target>
 	
+	<target name="clean">
+		<delete dir="${build}"/>
+	</target>
+
 	<!-- 
 	http://docs.oracle.com/javase/7/docs/technotes/guides/security/crypto/HowToImplAProvider.html
 	-->
+	<!-- generate a DSA keypair -->
 	<target name="gen_DSA_pair">
 		<exec executable="keytool" dir="." failonerror="true">
 			<arg value="-genkeypair"/>
 			<arg value="-alias"/> <arg value="myAlias"/>
-			<arg value="-dname"/> <arg value="cn=krzydyn,ou=Java Software Code Signing,o=Sun Microsystems Inc"/>
+			<arg value="-dname"/> <arg value="cn=krzydyn,ou=Java Software Code Signing,o=KySoft"/>
 			<arg value="-keystore"/> <arg value="myKeyStore.ks"/>
 			<arg value="-storepass"/> <arg value="test00"/>
 		</exec>
 	</target>
-	
-	<target name="gen_Sign_req">
+
+	<!-- generate a certificate signing request -->
+	<target name="gen_CSR">
 		<exec executable="keytool" dir="." failonerror="true">
 			<arg value="-certreq"/>
 			<arg value="-alias"/> <arg value="myAlias"/>
@@ -52,9 +59,94 @@
 			<arg value="-storepass"/> <arg value="test00"/>
 		</exec>
 	</target>
-
-	<target name="clean">
-		<delete dir="${build}"/>
+	
+	<!-- import the CA's certificate as a "trusted certificate" obtained from JCA -->
+	<target name="import_CA_from_JCA">
+		<exec executable="keytool" dir="." failonerror="true">
+			<arg value="-import"/>
+			<arg value="-alias"/> <arg value="caAlias"/>
+			<arg value="-file"/> <arg value="ca.cert"/>
+			<arg value="-keystore"/> <arg value="myKeyStore.ks"/>
+			<arg value="-storepass"/> <arg value="test00"/>
+		</exec>
 	</target>
 
+	<!-- import the code-signing certificate" (replaces self signed cert with one signed by JCA -->
+	<target name="import_code_cert">
+		<exec executable="keytool" dir="." failonerror="true">
+			<arg value="-import"/>
+			<arg value="-alias"/> <arg value="myAlias"/>
+			<arg value="-file"/> <arg value="cs.cert"/>
+			<arg value="-keystore"/> <arg value="myKeyStore.ks"/>
+			<arg value="-storepass"/> <arg value="test00"/>
+		</exec>
+	</target>
+	
+	<target name="delete_CA">
+		<exec executable="keytool" dir="." failonerror="true">
+			<arg value="-delete"/>
+			<arg value="-alias"/> <arg value="caAlias"/>
+			<arg value="-keystore"/> <arg value="myKeyStore.ks"/>
+			<arg value="-storepass"/> <arg value="test00"/>
+		</exec>
+	</target>
+			
+	<!-- generate a RSA key (self-signed)-->
+	<target name="gen_RSA_CA">
+		<exec executable="keytool" dir="." failonerror="true">
+			<arg value="-genkeypair"/>
+			<arg value="-keyalg"/> <arg value="RSA"/>
+			<arg value="-alias"/> <arg value="caAlias"/>
+			<arg value="-dname"/> <arg value="CN=www.kysoft.pl,O=KySoft,L=Warsaw,ST=Mazovia,C=PL"/>
+			<arg value="-validity"/> <arg value="3600"/>
+			<arg value="-keysize"/> <arg value="1024"/>
+			<arg value="-ext"/> <arg value="BasicConstraints:critical=ca:true"/>
+			<arg value="-ext"/> <arg value="KeyUsage:critical=keyCertSign"/>
+			<arg value="-keystore"/> <arg value="myKeyStore.ks"/>
+			<arg value="-storepass"/> <arg value="test00"/>
+		</exec>
+	</target>
+
+	<target name="export_CA">
+		<exec executable="keytool" dir="." failonerror="true">
+			<arg value="-exportcert"/>
+			<arg value="-keystore"/> <arg value="myKeyStore.ks"/>
+			<arg value="-storepass"/> <arg value="test00"/>
+			<arg value="-alias"/> <arg value="selfAlias"/>
+			<arg value="-file"/> <arg value="selfca.crt"/>
+		</exec>
+	</target>
+
+	<!-- Sign the JAR file with the code-signing certificate -->
+	<target name="selfsign_provider">
+		<exec executable="jarsigner" dir="." failonerror="true">
+			<arg value="-keystore"/> <arg value="myKeyStore.ks"/>
+			<arg value="-storepass"/> <arg value="test00"/>
+			<arg value="-verbose"/>
+			<arg value="${comdir}/lib/myaes.jar"/>
+			<arg value="selfAlias"/>
+		</exec>
+	</target>
+
+	
+	<!-- from http://support.eset.pl/kb6243/?locale=pl_PL&viewlocale=pl_PL
+	Generate a key pair (CA) 
+	keytool -genkeypair -v -alias aliasName -keystore keystore.jks -keyalg RSA -keysize 2048 -ext KeyUsage:critical="keyCertSign" -ext BasicConstraints:critical="ca:true" -validity 3650
+	
+	Export the CA from the keystore
+	keytool -exportcert -alias "aliasName" -file aliasName.der -keystore keystore.jks
+	
+	Generate a key pair for the certificate
+	keytool -genkeypair -v -alias "aliasName" -keytore keystore.jks -keyalg RSA -keysize 2048 -storepass "yourPassword" -keypass "yourPassword"
+
+	Create a certificate request (.csr file) for the certificate
+	keytool -certreq -keystore keystore.jks -storepass "yourPassword" -alias "aliasName" -file file.csr
+
+	Create a certificate with the certificate request
+	keytool -gencert -keystore keystore.jks -storepass "yourPassword" -alias "aliasName" -infile file.csr -outfile output.cer
+
+	Create a .pfx file from keystore.jks
+	keytool -importkeystore -v -srcalias aliasName -srckeystore keystore.jks -srcstorepass yourPassword -srcstoretype JKS -destkeystore aliasName.pfx -destkeypass yourPassword -deststorepass yourPassword -deststoretype PKCS12 -destalias aliasName
+	
+	-->
 </project>
