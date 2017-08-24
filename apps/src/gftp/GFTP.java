@@ -28,7 +28,7 @@ import text.Text;
 public class GFTP {
 	static String host = "www.kysoft.pl";
 	static String user = host;
-	static String passwd = "misio2";
+	static String passwd = "";
 	static FtpClient ftp = FtpClient.create();
 	static int filesSent;
 
@@ -42,10 +42,19 @@ public class GFTP {
 
 	public static void main(String[] args) {
 		List<CopyJob> jobs = new ArrayList<>();
-		if (args.length == 2) {
-			jobs.add(new CopyJob(args[0], args[1]));
+		for (int i =0; i < args.length; ++i) {
+			String a=args[i];
+			if (a.startsWith("-")) {
+				if (a.equals("-h")) host = args[++i];
+				if (a.equals("-u")) user = args[++i];
+				if (a.equals("-p")) passwd = args[++i];
+			}
+			else {
+				jobs.add(new CopyJob(a, args[++i]));
+			}
 		}
-		else {
+
+		if (jobs.size() == 0) {
 			jobs.add(new CopyJob("~/www/templates", "/www/templates"));
 			jobs.add(new CopyJob("~/www/cms/lib", "/www/cms/lib"));
 			jobs.add(new CopyJob("~/www/espdb", "/www/espdb"));
