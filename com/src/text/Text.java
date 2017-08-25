@@ -46,20 +46,6 @@ public class Text {
 		return true;
 	}
 
-	private static String join_it(String sep, Iterable<?> a, int off,int len) {
-		Iterator<?> it = a.iterator();
-		if (!it.hasNext()) return "";
-		if (len<0) len=10;
-		StringBuilder b=new StringBuilder(len*(sep.length()+2));
-		for (int i = 0; it.hasNext();) {
-			Object n = it.next();
-			if (i < off) {n=null;continue;}
-			b.append(n);
-			if (++i == off+len) break;
-			b.append(sep);
-		}
-		return b.toString();
-	}
 	private static String join_b(String sep, byte[] a, int off,int len) {
 		if (a.length==0) return "";
 		if (len < 0) len = a.length;
@@ -98,8 +84,42 @@ public class Text {
 		if (len < 0) len = a.length;
 		StringBuilder b=new StringBuilder(len*(sep.length()+2));
 		for (int i = 0; ; ) {
-			b.append(a[off+i]);
+			Object o = a[off+i];
+			if (o.getClass().isArray()) {
+				b.append("[");
+				b.append(join(sep, o, 0, -1));
+				b.append("]");
+			}
+			else if (o instanceof Iterable) {
+				b.append("[");
+				b.append(join_it(sep, (Iterable<?>)o, 0, -1));
+				b.append("]");
+			}
+			else b.append(o);
 			if (++i == len) break;
+			b.append(sep);
+		}
+		return b.toString();
+	}
+	private static String join_it(String sep, Iterable<?> a, int off,int len) {
+		Iterator<?> it = a.iterator();
+		if (!it.hasNext()) return "";
+		StringBuilder b=new StringBuilder((len<0?10:len)*(sep.length()+2));
+		for (int i = 0; it.hasNext();) {
+			Object o = it.next();
+			if (i < off) {o=null;continue;}
+			if (o.getClass().isArray()) {
+				b.append("[");
+				b.append(join(sep, o, 0, -1));
+				b.append("]");
+			}
+			else if (o instanceof Iterable) {
+				b.append("[");
+				b.append(join_it(sep, (Iterable<?>)o, 0, -1));
+				b.append("]");
+			}
+			else b.append(o);
+			if (len > 0 && ++i == off+len) break;
 			b.append(sep);
 		}
 		return b.toString();
@@ -114,6 +134,9 @@ public class Text {
 		return o.toString();
 	}
 
+	public static String join(String sep,Object o, int len) {
+		return join(sep,o,0,len);
+	}
 	public static String join(String sep,Object o) {
 		return join(sep,o,0,-1);
 	}

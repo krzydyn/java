@@ -31,9 +31,11 @@ final public class CryptX_Provider extends Provider {
 		put("Cipher.AES SupportedModes","GCM");
 	}
 
+	private static boolean added = false;
 	public static void register() {
-		Provider p = new CryptX_Provider();
-		int r=Security.addProvider(p);
-		Log.info("%s register at index: %d", p.getClass().getSimpleName(), r);
+		if (added) return ;
+		int r=Security.addProvider(new CryptX_Provider());
+		added = true;
+		Log.info("%s register at index: %d", CryptX_Provider.class.getSimpleName(), r);
 	}
 }
