@@ -21,14 +21,13 @@ import sys.Log;
 
 @SuppressWarnings("serial")
 public class ImagePanel extends JPanel {
-	public static class ImageUpdate {
+	public static class ImageUpdate extends Rectangle {
 		Image i;
-		int x,y,w,h;
 		public ImageUpdate(Image i, int x, int y) {
 			this.i=i;
 			this.x=x; this.y=y;
-			this.w=i.getWidth(null);
-			this.h=i.getHeight(null);
+			this.width=i.getWidth(null);
+			this.height=i.getHeight(null);
 		}
 	}
 
@@ -49,7 +48,7 @@ public class ImagePanel extends JPanel {
 	private final Dimension vSize = new Dimension();
 	private final List<Roi> rois = new ArrayList<Roi>();
 	private final ArrayList<Segment> selection = new ArrayList<>();
-	private float scale = 5f;
+	private float scale = 1f;
 
 	public ImagePanel() {
 		super(new BorderLayout());
@@ -93,20 +92,34 @@ public class ImagePanel extends JPanel {
 	}
 	public void update(List<ImageUpdate> imgq) {
 		int l=imgq.size();
+		for (int i=l; i > 0; ) {
+			--i;
+			ImageUpdate ib = imgq.get(i);
+			for (int j=0; j < i; ++j) {
+				ImageUpdate jb = imgq.get(j);
+				if (ib.contains(jb)) {
+					jb.i=null;
+					imgq.remove(j);
+					--j; --i;
+				}
+			}
+		}
 		synchronized (imgLock) {
 			Graphics g = img.getGraphics();
 			for (int i=0; i < l; ++i) {
 				ImageUpdate ib = imgq.get(i);
 				g.drawImage(ib.i, ib.x, ib.y, null);
 				if (showRoi) {
-					Roi r = new Roi(new Rectangle(ib.x, ib.y, ib.w, ib.h),1000);
+					Roi r = new Roi(ib,1000);
 					rois.add(r);
 				}
-				ib.i=null;
 			}
 			g.dispose();
 		}
-		while (l>0) {imgq.remove(0); --l;}
+		while (l > 0) {
+			ImageUpdate ib = imgq.remove(0); --l;
+			ib.i=null;
+		}
 		repaint(20);
 	}
 

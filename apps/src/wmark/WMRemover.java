@@ -67,6 +67,7 @@ public class WMRemover extends MainPanel {
 				mouseClickSelect(p.x, p.y);
 			}
 		});
+		imgPanel.setScale(5f);
 	}
 
 	Action file_open = new AbstractAction("Open") {

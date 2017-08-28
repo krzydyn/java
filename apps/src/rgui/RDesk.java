@@ -130,7 +130,7 @@ public class RDesk extends MainPanel {
 						continue;
 					}
 					if (inlen < 0) throw new RuntimeException("Message outof sync");
-					if (inlen > 1024*1024) throw new RuntimeException("Message too long "+inlen);
+					if (inlen > 10*1024*1024) throw new RuntimeException("Message too long "+inlen);
 				}
 				if (readTCP(inlen, buf) < inlen) {
 					continue;

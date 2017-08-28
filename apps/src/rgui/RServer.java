@@ -39,7 +39,7 @@ public class RServer implements ChannelHandler {
 	private static boolean keepScreenOn;
 	private final SelectorThread selector;
 	private final Robot robot;
-	private final String imgFormat="jpg";
+	private final String imgFormat="png";
 	private final boolean imgAddQuality=true;
 	private final int mouseButtonMask;
 
@@ -370,10 +370,7 @@ public class RServer implements ChannelHandler {
 			dos.writeInt(x);
 			dos.writeInt(y);
 
-			if (!imgAddQuality) {
-				ImageIO.write(img, imgFormat, dos);
-			}
-			else if ("jpg".equals(imgFormat)) {
+			if (imgAddQuality && "jpg".equals(imgFormat)) {
 				JPEGImageWriteParam jpegParams = new JPEGImageWriteParam(null);
 				jpegParams.setCompressionMode(ImageWriteParam.MODE_EXPLICIT);
 				jpegParams.setCompressionQuality(q);
@@ -405,17 +402,17 @@ public class RServer implements ChannelHandler {
 			dos.writeInt(x);
 			dos.writeInt(y);
 
-			if (imgAddQuality) {
+			if (imgAddQuality && "jpg".equals(imgFormat)) {
 				JPEGImageWriteParam jpegParams = new JPEGImageWriteParam(null);
 				jpegParams.setCompressionMode(ImageWriteParam.MODE_EXPLICIT);
 				jpegParams.setCompressionQuality(q);
-				ImageWriter writer = ImageIO.getImageWritersByFormatName("jpg").next();
+				ImageWriter writer = ImageIO.getImageWritersByFormatName(imgFormat).next();
 				writer.setOutput(ImageIO.createImageOutputStream(dos));
 				writer.write(null, new IIOImage(img, null, null), jpegParams);
 				writer.dispose();
 			}
 			else
-				ImageIO.write(img, "jpg", dos);
+				ImageIO.write(img, imgFormat, dos);
 			dos.close();
 			byte[] ba=os.toByteArray();
 			//Log.info("send img %d bytes",ba.length);
@@ -473,7 +470,7 @@ public class RServer implements ChannelHandler {
 		if (r.y+r.height > maxh) r.height = maxh-r.y;
 		if (r.width<=0 || r.height<=0) return;
 
-		int g=75;
+		int g=25;
 		r.grow(g, g);
 		boolean added=false;
 		for (Rectangle rr : rois) {
@@ -508,10 +505,11 @@ public class RServer implements ChannelHandler {
 		g.dispose();*/
 
 		Rectangle radd=new Rectangle(0,0,1,1);
-		for (int y=0; y < p.getHeight(); y+=5) {
-			for (int x=0; x < p.getWidth(); x+=5) {
+		final int dv=5;
+		for (int y=0; y < p.getHeight(); y+=dv) {
+			for (int x=0; x < p.getWidth(); x+=dv) {
 				if ((p.getRGB(x, y)&0xff)==0) continue;
-				box_bfs(p,x,y,radd, 5);
+				box_bfs(p,x,y,radd, dv);
 				addRoi(rois,radd,i.getWidth(),i.getHeight());
 			}
 		}
