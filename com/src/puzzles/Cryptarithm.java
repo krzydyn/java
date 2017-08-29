@@ -21,7 +21,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import algebra.Expression;
-import algebra.Permutate;
+import algebra.Permutation;
 import algebra.Expression.SymbolMapper;
 
 public class Cryptarithm {
@@ -102,7 +102,7 @@ public class Cryptarithm {
 		return true;
 	}
 	public boolean next() {
-		return Permutate.nextPermutation(values);
+		return Permutation.nextPermutation(values);
 	}
 	public void solve() {
 		if (symbols.isEmpty()) return ;

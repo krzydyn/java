@@ -17,19 +17,40 @@
  */
 package algebra;
 
+import java.io.DataInput;
+import java.io.DataInputStream;
+import java.io.DataOutput;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
-public class Permutate {
-	final int pos[];
-	final List<Object> set;
-	public Permutate(List<?> l) {
+public class Permutation {
+	private final List<Object> set;
+	private int[] pos;
+
+	public Permutation(List<?> l) {
 		pos = new int[l.size()];
 		set=new ArrayList<Object>(l);
 		for (int i=0; i < pos.length; ++i) pos[i]=i;
 	}
+	public void save(OutputStream stream) throws IOException {
+		DataOutput s = new DataOutputStream(stream);
+		s.writeInt(pos.length);
+		for (int i = 0; i < pos.length; ++i)
+			s.writeInt(pos[i]);
+	}
+	public void load(InputStream stream) throws IOException {
+		DataInput s = new DataInputStream(stream);
+		pos = new int[s.readInt()];
+		for (int i = 0; i < pos.length; ++i)
+			pos[i] = s.readInt();
+	}
+
 
 	static private void swap(int a[], int s,int e) {
 		int temp = a[s];

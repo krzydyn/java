@@ -29,11 +29,11 @@ import java.util.Random;
 import puzzles.BlackJack;
 import puzzles.GameBoard.Rect;
 import puzzles.GameBoard.Sheet;
-import algebra.Combinations;
+import algebra.Combination;
 import algebra.Expression;
 import algebra.Maths;
 import algebra.MatrixI;
-import algebra.Permutate;
+import algebra.Permutation;
 import algebra.SortedArray;
 import algebra.Sorting;
 import sys.Log;
@@ -61,7 +61,7 @@ public class T_Algebra extends UnitTest {
 		do {
 			++n;
 			//Log.debug("%d: %s", n, l.toString());
-		} while (Permutate.nextPermutation(l));
+		} while (Permutation.nextPermutation(l));
 		check("should be 6 permutations", n == 6);
 
 		l.clear(); n=0;
@@ -69,21 +69,30 @@ public class T_Algebra extends UnitTest {
 		do {
 			++n;
 			//Log.debug("%d: %s", n, l.toString());
-		} while (Permutate.nextPermutation(l));
+		} while (Permutation.nextPermutation(l));
 		check("should be 720 permutations", n == 720);
 	}
 
 	static void combinatory() {
 		List<Character> l = new ArrayList<Character>();
 		for (int i=0; i < 5; ++i) l.add((char)('a'+i));
-		Combinations comb = new Combinations(l,2);
+		Combination comb = new Combination(l,3, false);
 		int n=0;
 		do {
 			++n;
 			comb.getSelection(l);
-			Log.debug("%d: %s", n, l.toString());
+			Log.debug("%d: %s",n,Text.join(",", l));
 		} while (comb.next());
-		Log.debug("num = %d", n);
+		check("comb(10,2)", 10, n);
+
+		comb.reset(true);
+		n=0;
+		do {
+			++n;
+			comb.getSelection(l);
+			Log.debug("%d: %s",n,Text.join(",", l));
+		} while (comb.next());
+		check("comb(10,2)", 125, n);
 	}
 
 	static void nCr() {
@@ -91,7 +100,7 @@ public class T_Algebra extends UnitTest {
 		for (int n=0; n < 60; ++n) {
 			list.add(1L);
 			for (int k=0; k <= n; ++k) {
-				long r=Combinations.newton(n, k);
+				long r=Combination.newton(n, k);
 				long er = list.get(k);
 				check(String.format("nCr(%d,%d)",n,k), er, r);
 			}
@@ -190,7 +199,7 @@ public class T_Algebra extends UnitTest {
 		}
 		System.out.println(a.toString());
 	}
-	static void bintree() {
+	static void _bintree() {
 		BinTree<Integer> tree = new BinTree<Integer>();
 		Random rnd=new Random(2);
 		for (int i=0; i < 10; ) {

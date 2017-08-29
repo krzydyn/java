@@ -17,30 +17,72 @@
  */
 package algebra;
 
+import java.io.DataInput;
+import java.io.DataInputStream;
+import java.io.DataOutput;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Combinations {
-	final int pos[];
-	final List<Object> set;
+public class Combination {
+	private final List<Object> set;
+	private int[] pos;
+	private boolean rep;
 
-	public Combinations(List<?> l, int k) {
+	public Combination(List<?> l, int k, boolean rep) {
 		pos = new int[k];
-		set=new ArrayList<Object>(l);
+		set = new ArrayList<Object>(l);
+		this.rep = rep;
 		reset();
 	}
+	public void save(OutputStream stream) throws IOException {
+		DataOutput s = new DataOutputStream(stream);
+		s.writeBoolean(rep);
+		s.writeInt(pos.length);
+		for (int i = 0; i < pos.length; ++i)
+			s.writeInt(pos[i]);
+	}
+	public void load(InputStream stream) throws IOException {
+		DataInput s = new DataInputStream(stream);
+		rep = s.readBoolean();
+		int l = s.readInt();
+		if (pos == null || l != pos.length)
+			pos = new int[l];
+		for (int i = 0; i < pos.length; ++i)
+			pos[i] = s.readInt();
+	}
+
 	public void reset() {
-		for (int i=0; i < pos.length; ++i) pos[i]=i;
+		if (rep)
+			for (int i=0; i < pos.length; ++i) pos[i]=0;
+		else
+			for (int i=0; i < pos.length; ++i) pos[i]=i;
+	}
+	public void reset(boolean rep) {
+		this.rep=rep;
+		reset();
 	}
 	public boolean next() {
 		int i = pos.length-1;
-		for (int maxpos = set.size()-1; pos[i] >= maxpos; --maxpos) {
-			if (i==0) return false;
-			--i;
+		if (rep) {
+			for (int maxpos = set.size()-1; pos[i] >= maxpos; ) {
+				if (i==0) return false;
+				--i;
+			}
+			++pos[i];
+			while (++i < pos.length) pos[i]=0;
 		}
-		++pos[i];
-		while (++i < pos.length)
-			pos[i]=pos[i-1]+1;
+		else {
+			for (int maxpos = set.size()-1; pos[i] >= maxpos; --maxpos) {
+				if (i==0) return false;
+				--i;
+			}
+			++pos[i];
+			while (++i < pos.length) pos[i]=pos[i-1]+1;
+		}
 		return true;
 	}
 
