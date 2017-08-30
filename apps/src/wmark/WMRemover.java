@@ -144,7 +144,7 @@ public class WMRemover extends MainPanel {
 		int n=0;
 		for (Segment s : selection) {
 			for (int x=s.x0; x < s.x1; ++x) {
-				Colors.rgbToFloat(img.getRGB(x, s.y), fc);
+				Colors.rgb2float(img.getRGB(x, s.y), fc);
 				av += (fc[0]+fc[1]+fc[2])/3;
 			}
 			n += s.x1-s.x0;
@@ -172,7 +172,7 @@ public class WMRemover extends MainPanel {
 		for (Segment s : selection) {
 			for (int x=s.x0; x < s.x1; ++x) {
 				int c = img.getRGB(x, s.y);
-				Colors.rgbToFloat(c, fc);
+				Colors.rgb2float(c, fc);
 				for (int i=0; i < 3; ++i)
 					fc[i] = (fc[i] - (1f-alpha))/alpha;
 				c = Colors.rgb(fc);

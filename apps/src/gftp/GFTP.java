@@ -64,10 +64,10 @@ public class GFTP {
 		filesSent=0;
 		try {
 			ftp.setConnectTimeout(3000);
-			ftp.setReadTimeout(2000);
+			ftp.setReadTimeout(4000);
 			Log.info("connecting ...");
 			ftp.connect(new InetSocketAddress(host, 21));
-			Log.info("user auth ...");
+			Log.info("user auth %s:%s...",user,passwd);
 			ftp.login(user, passwd.toCharArray());
 			ftp.enablePassiveMode(true);
 			Log.info("set binary ...");
