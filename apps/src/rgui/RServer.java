@@ -1,5 +1,7 @@
 package rgui;
 
+import img.Colors;
+
 import java.awt.Dimension;
 import java.awt.GraphicsDevice;
 import java.awt.GraphicsEnvironment;
@@ -25,7 +27,6 @@ import javax.imageio.ImageWriteParam;
 import javax.imageio.ImageWriter;
 import javax.imageio.plugins.jpeg.JPEGImageWriteParam;
 
-import sys.Colors;
 import sys.Env;
 import sys.Log;
 import sys.XThread;
