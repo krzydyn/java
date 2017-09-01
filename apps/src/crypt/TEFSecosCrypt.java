@@ -5,6 +5,8 @@ import java.security.NoSuchAlgorithmException;
 import java.security.Provider;
 import java.security.Security;
 
+import crypt.tef.TEF;
+import crypt.tef.TEF_Types;
 import sys.Log;
 import sys.UnitTest;
 import text.Text;

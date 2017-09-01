@@ -1,4 +1,4 @@
-package crypt;
+package crypt.tef;
 
 import java.security.GeneralSecurityException;
 import java.security.NoSuchAlgorithmException;
@@ -14,7 +14,7 @@ import text.Text;
 public class TEF implements TEF_Types {
 	static final byte[] ZERO_IV = new byte[16];
 
-	tef_cipher_token tef_key_generate(tef_key_type_e key_type, int key_bit_len)
+	public tef_cipher_token tef_key_generate(tef_key_type_e key_type, int key_bit_len)
 			throws NoSuchAlgorithmException {
 		Log.debug("generate key %s, %d bits", key_type, key_bit_len);
 
@@ -38,7 +38,7 @@ public class TEF implements TEF_Types {
 		return token;
 	}
 
-	tef_cipher_token tef_key_import_raw(tef_key_type_e key_type, byte[] data, int dataLen) {
+	public tef_cipher_token tef_key_import_raw(tef_key_type_e key_type, byte[] data, int dataLen) {
 		int key_bit_len = dataLen*8;
 		String keyAlgo;
 		if ("DES".equals(key_type.getName())) {
@@ -72,7 +72,7 @@ public class TEF implements TEF_Types {
 		return algorithm.get(param);
 	}
 
-	int tef_encrypt(tef_cipher_token keyid, tef_algorithm algorithm,
+	public int tef_encrypt(tef_cipher_token keyid, tef_algorithm algorithm,
 			byte[] data, int dataLen, byte[] edata) throws GeneralSecurityException {
 		javax.crypto.Cipher cipher;
 

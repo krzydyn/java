@@ -1,4 +1,4 @@
-package crypt;
+package crypt.tef;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -74,7 +74,7 @@ public interface TEF_Types {
 		final tef_chaining_mode_e chaining;
 		final tef_padding_mode_e padding;
 		final Map<tef_algorithm_param_e, Object> map = new HashMap<tef_algorithm_param_e, Object>();
-		tef_algorithm(tef_chaining_mode_e chain, tef_padding_mode_e pad) {
+		public tef_algorithm(tef_chaining_mode_e chain, tef_padding_mode_e pad) {
 			this.chaining = chain; this.padding = pad;
 		}
 		String getName() {
