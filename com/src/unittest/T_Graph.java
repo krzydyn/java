@@ -1,7 +1,10 @@
 package unittest;
 
+import java.util.Random;
+
 import sys.Log;
 import sys.UnitTest;
+import graphs.BinTree;
 import graphs.Graph;
 
 public class T_Graph extends UnitTest {
@@ -42,4 +45,23 @@ public class T_Graph extends UnitTest {
 	static void graph_dijkstra() {
 		g.shortestPathDijkstra(0, -1);
 	}
+
+	static void bintree() {
+		BinTree<Integer> tree = new BinTree<Integer>();
+		Random rnd=new Random(2);
+		for (int i=0; i < 10; ) {
+			int x = rnd.nextInt(50);
+			if (!tree.add(x)) continue;
+			Log.info("add(%d): %s",x,tree.toString());
+			++i;
+		}
+
+		Log.info("---------");
+		while (tree.size() > 0) {
+			Log.info("remove: %s", tree.root());
+			tree.removeRoot();
+			Log.info("%s",tree.toString());
+		}
+	}
+
 }

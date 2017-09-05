@@ -134,9 +134,16 @@ public class Tools2D {
 		}
 	}
 
-	static double cross(Point2D p1, Point2D p2, Point2D p3) {
+	public static double cross(Point2D p1, Point2D p2, Point2D p3) {
 		return (p2.getX()-p1.getX())*(p3.getY()-p1.getY())-(p2.getY()-p1.getY())*(p3.getX()-p1.getX());
 	}
+
+	public static double lineDistSq(Point2D p1, Point2D p2, Point2D p) {
+		return Math.abs((p.getY() - p1.getY()) * (p2.getX() - p1.getX()) -
+				(p2.getY() - p1.getY()) * (p.getX() - p1.getX()));
+	}
+
+
 	static private int compareResult(double r) {
 		if (r < -1e-10) return -1;
 		if (r > 1e-10) return 1;
@@ -146,10 +153,6 @@ public class Tools2D {
 		return compareResult(cross(p1, p2, p3));
 	}
 
-	private static double lineDistSq(Point2D p1, Point2D p2, Point2D p) {
-		return Math.abs((p.getY() - p1.getY()) * (p2.getX() - p1.getX()) -
-				(p2.getY() - p1.getY()) * (p.getX() - p1.getX()));
-	}
 	private static void hullQuick(List<Point2D> pnts, List<Point2D> h, Point2D p1, Point2D p2) {
 		Point2D mp=null;
 		double md = 0;

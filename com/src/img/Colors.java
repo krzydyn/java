@@ -73,7 +73,6 @@ public class Colors {
 	 */
 	public static void rgb2hsv(int rgb,float[] hsv){
 		rgb2float(rgb, hsv);
-
 	}
 	public static int hsv2rgb(float h, float s, float v) {
 		if (s <= 0.0) {

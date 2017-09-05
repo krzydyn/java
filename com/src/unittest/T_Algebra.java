@@ -17,7 +17,6 @@
  */
 package unittest;
 
-import graphs.BinTree;
 import graphs.HeapTree;
 import img.Tools2D;
 
@@ -198,22 +197,6 @@ public class T_Algebra extends UnitTest {
 			a.add(inp[i]);
 		}
 		System.out.println(a.toString());
-	}
-	static void _bintree() {
-		BinTree<Integer> tree = new BinTree<Integer>();
-		Random rnd=new Random(2);
-		for (int i=0; i < 10; ) {
-			int x = rnd.nextInt(50);
-			if (!tree.add(x)) continue;
-			System.out.printf("add(%d): %s\n",x,tree.toString());
-			++i;
-		}
-
-		System.out.println();
-		while (tree.size() > 0) {
-			tree.removeRoot();
-			System.out.println(tree.toString());
-		}
 	}
 
 	private static void _printStat(String l) {
