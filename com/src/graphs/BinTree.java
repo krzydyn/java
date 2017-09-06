@@ -1,7 +1,5 @@
 package graphs;
 
-import sys.Log;
-
 public class BinTree<T extends Comparable<T>> {
 	public static class Node<T> {
 		private Node(Object o,Node<T> p) {e=o;this.p=p;}
@@ -77,17 +75,17 @@ public class BinTree<T extends Comparable<T>> {
 	}
 	private boolean removeNode(Node<T> v) {
 		if (v == null) return false;
-		Log.debug("removeNode(%s)",v.e);
+		//Log.debug("removeNode(%s)",v.e);
 		if (v.l == null && v.r == null) {
-			Log.debug("no children");
 			// no child
+			//Log.debug("no children");
 			if (v.p == null) root = null;
 			else if (v.p.l == v) v.p.l = null;
 			else v.p.r = null;
 		}
 		else if (v.l == null) {
 			// one child (right)
-			Log.debug("child right");
+			//Log.debug("child right");
 			v.r.p = v.p;
 			if (v.p == null) root = v.r;
 			else if (v.p.l == v) v.p.l = v.r;
@@ -95,15 +93,15 @@ public class BinTree<T extends Comparable<T>> {
 		}
 		else if (v.r == null) {
 			// one child (left)
-			Log.debug("child left");
+			//Log.debug("child left");
 			v.l.p = v.p;
 			if (v.p == null) root = v.l;
 			else if (v.p.l == v) v.p.l = v.l;
 			else v.p.r = v.l;
 		}
 		else {
-			Log.debug("both children");
 			// both children
+			//Log.debug("both children");
 			//find max in left or min in right subtree
 			// put it in place of v
 			Node<T> x = nextNode(v);
@@ -164,5 +162,43 @@ public class BinTree<T extends Comparable<T>> {
 			st.append(" ");
 		}
 		return st.toString();
+	}
+	private void calcHeight(Node<T> n) {
+		int h=1;
+		if (n.l != null) {
+			calcHeight(n.l);
+			if (h < n.l.h) h = n.l.h;
+		}
+		if (n.r != null) {
+			calcHeight(n.r);
+			if (h < n.r.h) h = n.r.h;
+		}
+		n.h=h;
+	}
+	public void print(String prefix, Node<T> n, boolean isLeft) {
+		if (n != null) {
+			System.out.println (prefix + (isLeft ? "|-- " : "\\-- ") + n.e);
+			print(prefix + (isLeft ? "|   " : "    "), n.l, true);
+			print(prefix + (isLeft ? "|   " : "    "), n.r, false);
+		}
+	}
+	public void print(String prefix, Node<T> l, Node<T> r) {
+		if (l == null && r == null) return ;
+		if (l != null) {
+			System.out.println (prefix + "L-- " + l.e);
+			print(prefix + "|   ", l.l, l.r);
+		}
+		if (r != null) {
+			System.out.println (prefix + "R-- " + r.e);
+			print(prefix + "    ", r.l, r.r);
+		}
+	}
+	public void print() {
+		//calcHeight(root);
+		//print("",root,false);
+		if (root != null) {
+			System.out.println (root.e);
+			print("",root.l,root.r);
+		}
 	}
 }

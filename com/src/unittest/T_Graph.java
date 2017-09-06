@@ -57,10 +57,12 @@ public class T_Graph extends UnitTest {
 		}
 
 		Log.info("---------");
+		tree.print();
 		while (tree.size() > 0) {
 			Log.info("remove: %s", tree.root());
 			tree.removeRoot();
 			Log.info("%s",tree.toString());
+			tree.print();
 		}
 	}
 
