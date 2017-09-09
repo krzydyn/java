@@ -17,9 +17,11 @@
  */
 package algebra;
 
+import graphs.BinTree;
 import graphs.HeapTree;
 
 import java.util.Comparator;
+import java.util.Iterator;
 import java.util.List;
 
 import sys.ArrayInt;
@@ -185,5 +187,16 @@ public class Sorting {
 		opCnt=0;rdCnt=0;wrCnt=0;
 		HeapTree<T> h = new HeapTree<T>(a);
 		h.sort();
+	}
+
+	static public void treeSort(int... a) {
+		opCnt=0;rdCnt=0;wrCnt=0;
+		BinTree<Integer> h = new BinTree<Integer>();
+		for (int i=0; i < a.length; ++i)
+			h.add(a[i]);
+		Iterator<Integer> it = h.iterator();
+		for (int i=0; it.hasNext(); ++i) {
+			a[i] = it.next();
+		}
 	}
 }

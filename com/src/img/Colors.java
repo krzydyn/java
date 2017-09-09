@@ -47,6 +47,9 @@ public class Colors {
 		s[2]=(rgb&0xff)/255f;
 		if (s.length>3) s[3] = ((rgb>>24)&0xff)/255f;
 	}
+	public static int rgb(float r, float g, float b){
+		return (int)(r*255)<<16 + (int)(g*255)<<8 + (int)(b*255);
+	}
 	public static int rgb(float[] s){
 		int c,r;
 		r=(int)(s[0]*255);
@@ -67,21 +70,45 @@ public class Colors {
 	}
 
 	/*
-	 * h : 0..255 => 0..360 degrees
-	 * s : 0..255 =>
-	 * v : 0..255 =>
+	 * h : 0..360
+	 * s : 0..1
+	 * v : 0..1
+	 * https://codepen.io/katsew/pen/GZNEVE
 	 */
 	public static void rgb2hsv(int rgb,float[] hsv){
 		rgb2float(rgb, hsv);
+		float min,max;
+		min=max=hsv[0];
+		for (int i = 1; i < 3; ++i) {
+			if (min > hsv[i]) min = hsv[i];
+			if (max < hsv[i]) max = hsv[i];
+		}
+		if (max == 0f) {
+			hsv[0] = hsv[1] = hsv[2] = 0f;
+		}
+		else if (max-min == 0f) {
+			hsv[0]=max;
+			hsv[1] = hsv[2] = 0f;
+		}
+		else {
+			//s = (max - min) / max;
+		}
 	}
+	//https://github.com/tmpvar/hsv2rgb
 	public static int hsv2rgb(float h, float s, float v) {
 		if (s <= 0.0) {
 			int r = (int)(v*255);
 			return (r<<16) + (r<<8) + r;
 		}
-		float region = h / 43;
-	    float remainder = (h - (region * 43)) * 6;
-		return 0;
+		float b = ((1 - s) * v);
+		float vb = v - b;
+		float hm = h % 60;
+		if (h < 60) return rgb(v, vb * h / 60 + b, b);
+		if (h < 120) return rgb(vb * (60 - hm) / 60 + b, v, b);
+		if (h < 180) return rgb(b, v, vb * hm / 60 + b);
+		if (h < 240) return rgb(b, vb * (60 - hm) / 60 + b, v);
+		if (h < 300) return rgb(vb * hm / 60 + b, b, v);
+		return rgb(v, b, vb * (60 - hm) / 60 + b);
 	}
 
 	public static float luminance(int rgb) {

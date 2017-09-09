@@ -236,6 +236,11 @@ public class T_Algebra extends UnitTest {
 		Sorting.heapSort(a);
 		_printStat("heapSort");
 		check(a,sorted,0);
+
+		System.arraycopy(unsorted, 0, a, 0, a.length);
+		Sorting.treeSort(a);
+		_printStat("bintreeSort");
+		check(a,sorted,0);
 	}
 
 	static double input_pnts[] = {
