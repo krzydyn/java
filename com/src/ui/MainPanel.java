@@ -21,6 +21,7 @@ package ui;
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.EventQueue;
+import java.awt.Image;
 import java.awt.LayoutManager;
 import java.awt.Window;
 import java.awt.event.ComponentAdapter;
@@ -30,6 +31,7 @@ import java.awt.event.WindowFocusListener;
 import java.awt.event.WindowListener;
 import java.lang.reflect.Method;
 
+import javax.swing.ImageIcon;
 import javax.swing.InputMap;
 import javax.swing.JComponent;
 import javax.swing.JFrame;
@@ -68,17 +70,16 @@ System.setProperty("com.apple.mrj.application.growbox.intrudes","false");
 
 @SuppressWarnings("serial")
 public class MainPanel extends JPanel implements WindowListener,WindowFocusListener {
-
 	private JFrame mainFame;
 
 	public MainPanel(LayoutManager l) {
 		super(l);
-	}
-	public MainPanel() {
-		this(new BorderLayout());
 		setEnabled(true);
 		setFocusable(true);
 		setRequestFocusEnabled(true);
+	}
+	public MainPanel() {
+		this(new BorderLayout());
 	}
 
 	public JFrame topFrame() { return mainFame; }
@@ -191,7 +192,10 @@ public class MainPanel extends JPanel implements WindowListener,WindowFocusListe
 					JFrame f = new JFrame();
 					final MainPanel main = create(mainclass, args);
 					mp[0]=main;
-					if (Env.isMacos()) installQuitHandler(f, main);
+					if (Env.isMacos()) {
+						osxSetupQuitStrategy(f, main);
+						System.setProperty("com.apple.mrj.application.apple.menu.about.name", main.getName());
+					}
 					main.mainFame = f;
 					f.setContentPane(main);
 					f.setTitle(main.getName());
@@ -233,8 +237,28 @@ public class MainPanel extends JPanel implements WindowListener,WindowFocusListe
 		return mp[0];
 	}
 
-	private static void installQuitHandler(final Window w,final WindowListener l) {
-		if (!Env.isMacos()) return ;
+	public final void setIcon(ImageIcon icon){
+		if (icon==null) return ;
+		if (Env.isMacos()) {
+			Class<?> cl;
+			try {
+				cl = Class.forName("com.apple.eawt.Application");
+				Method m = cl.getMethod("getApplication");
+				Object app=m.invoke(null);
+				m=cl.getMethod("setDockIconImage", Image.class);
+				m.invoke(app, icon.getImage());
+			} catch (Exception e) {}
+		}
+		else {
+			mainFame.setIconImage(icon.getImage());
+		}
+	}
+
+	public final void setModified(boolean m) {
+		mainFame.getRootPane().putClientProperty("windowModified", m);
+	}
+
+	private static void osxSetupQuitStrategy(final Window w,final WindowListener l) {
 		try {
 			Class<?> capp = Class.forName("com.apple.eawt.Application");
 			Class<?> cqs = Class.forName("com.apple.eawt.QuitStrategy");
@@ -243,20 +267,6 @@ public class MainPanel extends JPanel implements WindowListener,WindowFocusListe
 			Method app_setqs = capp.getMethod("setQuitStrategy", cqs);
 			Object qs_closeall = qs_val.invoke(null, "CLOSE_ALL_WINDOWS");
 			app_setqs.invoke(app, qs_closeall);
-
-			/*
-			Method msetqh = capp.getMethod("setQuitHandler", cqh);
-			mapp.invoke(app, cqh.newInstance());
-			app.setQuitHandler(new com.apple.eawt.QuitHandler() {
-				@Override
-				public void handleQuitRequestWith(com.apple.eawt.AppEvent.QuitEvent ev, com.apple.eawt.QuitResponse qr) {
-					WindowEvent we=new WindowEvent(w,0);
-					l.windowClosing(we);
-					qr.performQuit();  // or qr.cancelQuit(); to cancel Quiting
-					l.windowClosed(we);
-				}
-			});
-			*/
 		} catch (Throwable e) {Log.error(e);}
 	}
 }
