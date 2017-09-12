@@ -93,11 +93,12 @@ public class Tools2D {
 		while (!q.isEmpty()) {
 			Point c=q.remove(q.size()-1);
 			x=c.x;y=c.y;
+			if (t.getPixel(x,y)==sval) continue;
 			t.drawHline(x, x+1, y, dval);
-			if (x>0 && t.getPixel(x-1,y)==1) q.add(new Point(x-1, y));
-			if (x+1<d.width && t.getPixel(x+1,y)==1) q.add(new Point(x+1, y));
-			if (y>0 && t.getPixel(x,y-1)==1) q.add(new Point(x, y-1));
-			if (y+1<d.height && t.getPixel(x,y+1)==1) q.add(new Point(x, y+1));
+			if (x>0 && t.getPixel(x-1,y)==sval) q.add(new Point(x-1, y));
+			if (x+1<d.width && t.getPixel(x+1,y)==sval) q.add(new Point(x+1, y));
+			if (y>0 && t.getPixel(x,y-1)==sval) q.add(new Point(x, y-1));
+			if (y+1<d.height && t.getPixel(x,y+1)==sval) q.add(new Point(x, y+1));
 		}
 	}
 

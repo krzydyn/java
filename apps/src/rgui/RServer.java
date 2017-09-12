@@ -91,7 +91,6 @@ public class RServer implements ChannelHandler {
 
 		try {
 		if (cmd == RCommand.SCREEN_INFO) {
-			Log.debug("processing SCREEN_INFO");
 			getScreenInfo(chn);
 		}
 		else if (cmd == RCommand.MOUSE_MOVE) {
@@ -115,6 +114,8 @@ public class RServer implements ChannelHandler {
 			int w = msg.getShort();
 			int h = msg.getShort();
 			float q = msg.getFloat();
+			if (w <= 0) w =  (int)screenRect.getMaxX();
+			if (h <= 0) h =  (int)screenRect.getMaxY();
 			sendImage(chn, 0, 0, w, h, q);
 		}
 		else if (cmd == RCommand.CLIENT_REGISTER) {
@@ -437,8 +438,8 @@ public class RServer implements ChannelHandler {
 		}
 	}
 
-	List<Point> pntcache = new ArrayList<Point>();
-	private Point newPoint(int x, int y) {
+	static List<Point> pntcache = new ArrayList<Point>();
+	static private Point newPoint(int x, int y) {
 		if (pntcache.size() == 0) return new Point(x, y);
 		Point p = pntcache.remove(pntcache.size()-1);
 		p.setLocation(x, y);
@@ -568,9 +569,7 @@ public class RServer implements ChannelHandler {
 	public static void main(String[] args) throws Exception {
 		Log.setTestMode();
 		for (int i=0; i <args.length; ++i) {
-			if (args[i].equals("keepon")) {
-				keepScreenOn=true;
-			}
+			if (args[i].equalsIgnoreCase("keepon")) keepScreenOn=true;
 		}
 		try {
 			new RServer().run();

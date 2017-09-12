@@ -15,6 +15,7 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseWheelEvent;
 import java.awt.event.WindowEvent;
+import java.awt.image.BufferedImage;
 import java.awt.image.RenderedImage;
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -276,6 +277,7 @@ public class RDesk extends MainPanel {
 			int w = inmsg.getInt();
 			int h = inmsg.getInt();
 			Log.info("%s: %d %d %d %d",id,x,y,w,h);
+			imgPanel.setImage(new BufferedImage(w, h, BufferedImage.TYPE_INT_RGB));
 
 			Rectangle scr = null;
 			for (GraphicsDevice gd : GraphicsEnvironment.getLocalGraphicsEnvironment().getScreenDevices()) {
@@ -299,14 +301,8 @@ public class RDesk extends MainPanel {
 			try { i = ImageIO.read(is);}
 			catch (IOException e) {Log.error(e);}
 			if (i!=null) {
-				if (imgPanel.getImage()==null) {
-					imgPanel.setImage(i);
-					Log.debug("recv fullscr %d,%d,%d,%d  bytes=%d",x,y,i.getWidth(null),i.getHeight(null),inmsg.remaining());
-				}
-				else {
-					imgq.add(new ImageUpdate(i,x,y));
-					if (imgq.size()>1) Log.debug("roiq len=%d",imgq.size());
-				}
+				imgq.add(new ImageUpdate(i,x,y));
+				if (imgq.size()>1) Log.debug("roiq len=%d",imgq.size());
 				//TODO update fullImg in separate thread
 				imgPanel.update(imgq);
 			}
@@ -368,8 +364,8 @@ public class RDesk extends MainPanel {
 		if (w<=0 || h <=0) return ;
 		ByteBuffer b = ByteBuffer.allocate(10);
 		b.putShort(RCommand.SCREEN_IMG);
-		b.putShort((short)3000);
-		b.putShort((short)2000);
+		b.putShort((short)0);
+		b.putShort((short)0);
 		b.putFloat(0.2f);
 		b.flip();
 		Log.debug("send SCREEN_IMG");
@@ -433,7 +429,7 @@ public class RDesk extends MainPanel {
 		ByteBuffer b = ByteBuffer.allocate(2);
 		b.putShort(RCommand.CLIPBOARD_GET);
 		b.flip();
-		Log.debug("send CLIPBOARD_GET");
+		//Log.debug("send CLIPBOARD_GET");
 		chnHandler.write(qchn, b);
 	}
 
