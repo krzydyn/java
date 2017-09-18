@@ -366,7 +366,7 @@ public class RDesk extends MainPanel {
 		b.putShort(RCommand.SCREEN_IMG);
 		b.putShort((short)0);
 		b.putShort((short)0);
-		b.putFloat(0.2f);
+		b.putFloat(1f);
 		b.flip();
 		Log.debug("send SCREEN_IMG");
 		chnHandler.write(qchn, b);

@@ -40,8 +40,6 @@ public class RServer implements ChannelHandler {
 	private static boolean keepScreenOn;
 	private final SelectorThread selector;
 	private final Robot robot;
-	private final String imgFormat="png";
-	private final boolean imgAddQuality=true;
 	private final int mouseButtonMask;
 
 	private long forceActionTm=0;
@@ -51,7 +49,7 @@ public class RServer implements ChannelHandler {
 
 	private RServer() throws Exception{
 		robot = new Robot();
-		robot.setAutoDelay(10); // delay before generating even
+		robot.setAutoDelay(10); // delay before generating event
 
 		mouseButtonMask = InputEvent.BUTTON1_MASK|InputEvent.BUTTON2_MASK|InputEvent.BUTTON3_MASK |
 					InputEvent.BUTTON1_DOWN_MASK|InputEvent.BUTTON2_DOWN_MASK|InputEvent.BUTTON3_DOWN_MASK;
@@ -355,6 +353,30 @@ public class RServer implements ChannelHandler {
 
 	}
 
+	private byte[] buildImageMsg(RenderedImage img, int x, int y, float q) throws IOException {
+		ByteArrayOutputStream os = new ByteArrayOutputStream(img.getWidth()*img.getHeight());
+		DataOutputStream dos = new DataOutputStream(os);
+
+		dos.writeShort(RCommand.SCREEN_IMG);
+		dos.writeInt(x);
+		dos.writeInt(y);
+
+		if (q > 0f && q < 1f) {
+			JPEGImageWriteParam jpegParams = new JPEGImageWriteParam(null);
+			jpegParams.setCompressionMode(ImageWriteParam.MODE_EXPLICIT);
+			jpegParams.setCompressionQuality(q);
+			ImageWriter writer = ImageIO.getImageWritersByFormatName("jpg").next();
+			writer.setOutput(ImageIO.createImageOutputStream(dos));
+			writer.write(null, new IIOImage(img, null, null), jpegParams);
+			writer.dispose();
+		}
+		else {
+			ImageIO.write(img, "png", dos);
+		}
+		dos.close();
+		return os.toByteArray();
+	}
+
 	private void sendImage(QueueChannel chn, int x, int y, int w, int h, float q) {
 		if (w<=0 || h<=0) return ;
 		if (x >= screenRect.x+screenRect.width) x=screenRect.x+screenRect.width;
@@ -365,28 +387,8 @@ public class RServer implements ChannelHandler {
 		if (y+h > screenRect.y+screenRect.height) h = screenRect.y+screenRect.height-y;
 
 		RenderedImage img = getScreen(x,y,w,h);
-		ByteArrayOutputStream os = new ByteArrayOutputStream(512*1024);
-		DataOutputStream dos = new DataOutputStream(os);
 		try {
-			dos.writeShort(RCommand.SCREEN_IMG);
-			dos.writeInt(x);
-			dos.writeInt(y);
-
-			if (imgAddQuality && "jpg".equals(imgFormat)) {
-				JPEGImageWriteParam jpegParams = new JPEGImageWriteParam(null);
-				jpegParams.setCompressionMode(ImageWriteParam.MODE_EXPLICIT);
-				jpegParams.setCompressionQuality(q);
-				ImageWriter writer = ImageIO.getImageWritersByFormatName("jpg").next();
-				writer.setOutput(ImageIO.createImageOutputStream(dos));
-				writer.write(null, new IIOImage(img, null, null), jpegParams);
-				writer.dispose();
-			}
-			else {
-				ImageIO.write(img, imgFormat, dos);
-			}
-			dos.close();
-			byte[] ba=os.toByteArray();
-			//Log.info("send img %d bytes",ba.length);
+			byte[] ba = buildImageMsg(img, x, y, q);
 			write(chn,ByteBuffer.wrap(ba));
 		} catch (IOException e) {
 			Log.error(e);
@@ -397,27 +399,8 @@ public class RServer implements ChannelHandler {
 		if (clients.size() == 0) return ;
 		//Log.debug("sendImage to %d",clients.size());
 
-		ByteArrayOutputStream os = new ByteArrayOutputStream(512*1024);
-		DataOutputStream dos = new DataOutputStream(os);
 		try {
-			dos.writeShort(RCommand.SCREEN_IMG);
-			dos.writeInt(x);
-			dos.writeInt(y);
-
-			if (imgAddQuality && "jpg".equals(imgFormat)) {
-				JPEGImageWriteParam jpegParams = new JPEGImageWriteParam(null);
-				jpegParams.setCompressionMode(ImageWriteParam.MODE_EXPLICIT);
-				jpegParams.setCompressionQuality(q);
-				ImageWriter writer = ImageIO.getImageWritersByFormatName(imgFormat).next();
-				writer.setOutput(ImageIO.createImageOutputStream(dos));
-				writer.write(null, new IIOImage(img, null, null), jpegParams);
-				writer.dispose();
-			}
-			else
-				ImageIO.write(img, imgFormat, dos);
-			dos.close();
-			byte[] ba=os.toByteArray();
-			//Log.info("send img %d bytes",ba.length);
+			byte[] ba=buildImageMsg(img, x, y, q);
 
 			for (Iterator<QueueChannel> i=clients.iterator(); i.hasNext(); ) {
 				QueueChannel chn = i.next();
@@ -499,12 +482,6 @@ public class RServer implements ChannelHandler {
 				p.setRGB(x, y, (r<<16)|(r<<8)|r);
 			}
 		}
-
-		/*Image si = p.getScaledInstance(200, 200*p.getHeight()/p.getWidth(), 0);
-		BufferedImage bi=new BufferedImage(si.getWidth(null), si.getHeight(null), BufferedImage.TYPE_BYTE_GRAY);
-		Graphics2D g = bi.createGraphics();
-		g.drawImage(si, 0, 0, bi.getWidth(), bi.getHeight(), null);
-		g.dispose();*/
 
 		Rectangle radd=new Rectangle(0,0,1,1);
 		final int dv=5;
