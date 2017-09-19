@@ -70,9 +70,9 @@ public class Colors {
 	}
 
 	/*
-	 * h : 0..360
-	 * s : 0..1
-	 * v : 0..1
+	 * h : 0..360 //hue
+	 * s : 0..1   //saturation
+	 * v : 0..1   //value (or lightness)
 	 * https://codepen.io/katsew/pen/GZNEVE
 	 */
 	public static void rgb2hsv(int rgb,float[] hsv){
@@ -117,8 +117,9 @@ public class Colors {
 		float b = invGamma((rgb&0xff)/255f);
 		return 0.2126f*r + 0.7152f*g + 0.0722f*b;
 	}
+
 	/**
-	 * Relative luminance
+	 * Relative luminance (photometric)
 	 * @param r
 	 * @param g
 	 * @param b
@@ -127,10 +128,23 @@ public class Colors {
 	public static float luminanceRelative(float r,float g, float b) {
 		return 0.2126f*r + 0.7152f*g + 0.0722f*b;
 	}
-	public static float luminance2(float r,float g, float b) {
-		//return (float)Math.sqrt(r*r*0.241 + g*g*0.691 + b*b*0.068);
+	/**
+	 * Luminance (digital)
+	 * @param r
+	 * @param g
+	 * @param b
+	 * @return
+	 */
+	public static float luminance(float r,float g, float b) {
 		return r*0.299f + g*0.587f + b*0.114f;
 	}
+	public static float luminanceHSP(float r,float g, float b) {
+		return (float)Math.sqrt(r*r*0.299f + g*g*0.587f + b*b*0.114f);
+	}
+	public static float brightness(float r,float g, float b) {
+		return (float)Math.sqrt(0.241f*r*r + 0.691f*g*g + 0.068f*b*b);
+	}
+
 	public static int luminance2(int rgb) {
 		int r = (rgb>>16)&0xff;
 		int g = (rgb>>8)&0xff;
@@ -143,15 +157,17 @@ public class Colors {
 		int r = (rgb>>16)&0xff;
 		int g = (rgb>>8)&0xff;
 		int b = rgb&0xff;
-		return ((r<<1)+(g<<2)+b)>>>3;
+		return (r+(r<<1)+(g<<2)+b)>>>3; //(R+R+R+B+G+G+G+G)>>3
 	}
 
 	/**
 	 *  @param y - relative luminance
-	 *
+	 * Priest: V^2 = 100 * Y (V = 0..10)
+	 * Munsell: V^2 = 1.4742*Y - 0.004743*Y^2
+	 * Kodak: V = 2.468Y^(1/3)-1.636
 	 */
 	public static float lightness(float y) {
-		return 0f;
+		return (float)Math.sqrt(2.468*y-1.636);
 	}
 
 }
