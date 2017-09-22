@@ -8,8 +8,21 @@ public class ImageRaster2D extends Raster2D {
 	private final Dimension size;
 
 	public ImageRaster2D(BufferedImage img) {
-		this.img = img;
 		size = new Dimension(img.getWidth(),img.getHeight());
+		this.img = img;
+	}
+	public ImageRaster2D(int w, int h) {
+		size = new Dimension(w, h);
+		this.img = new BufferedImage(w, h, BufferedImage.TYPE_INT_RGB);
+	}
+	public ImageRaster2D(Raster2D r) {
+		size = r.getSize();
+		img = new BufferedImage(size.width, size.height, BufferedImage.TYPE_INT_RGB);
+		for (int y=0; y < size.height; ++y) {
+			for (int x=0; x < size.width; ++x) {
+				img.setRGB(x, y, r.getPixel(x, y));
+			}
+		}
 	}
 	@Override
 	public void dispose() {

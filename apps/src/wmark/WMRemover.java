@@ -1,7 +1,6 @@
 package wmark;
 
 import img.Colors;
-import img.ImageRaster2D;
 import img.Tools2D.Segment;
 
 import java.awt.BorderLayout;
@@ -21,13 +20,18 @@ import javax.imageio.ImageIO;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.JFileChooser;
+import javax.swing.JFrame;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
+
 import sys.Log;
 import ui.Dialogs;
 import ui.ImagePanel;
 import ui.MainPanel;
+import wmark.Tool.EdgeTool;
+import wmark.Tool.GaussTool;
+import wmark.Tool.LumaTool;
 
 @SuppressWarnings("serial")
 public class WMRemover extends MainPanel {
@@ -38,6 +42,9 @@ public class WMRemover extends MainPanel {
 	private final ArrayList<Segment> selection = new ArrayList<>();
 
 	private static final ColorTool colorTool = new ColorTool();
+	private static final GaussTool gaussTool = new GaussTool();
+	private static final LumaTool lumaTool = new LumaTool();
+	private static final EdgeTool edgeTool = new EdgeTool();
 
 	private float alpha = 1f;
 
@@ -67,7 +74,7 @@ public class WMRemover extends MainPanel {
 				mouseClickSelect(p.x, p.y);
 			}
 		});
-		imgPanel.setScale(5f);
+		//imgPanel.setScale(5f);
 	}
 
 	Action file_open = new AbstractAction("Open") {
@@ -109,22 +116,60 @@ public class WMRemover extends MainPanel {
 			repaint(20);
 		}
 	};
+
+	Action filter_luma = new AbstractAction("GrayScale") {
+		@Override
+		public void actionPerformed(ActionEvent ev) {
+			lumaTool.filter(imgPanel.getRaster());
+			imgPanel.repaint();
+		}
+	};
+	Action filter_gauss = new AbstractAction("Gauss") {
+		@Override
+		public void actionPerformed(ActionEvent ev) {
+			gaussTool.filter(imgPanel.getRaster());
+			imgPanel.repaint();
+		}
+	};
+	Action filter_edge = new AbstractAction("Edge detect") {
+		@Override
+		public void actionPerformed(ActionEvent ev) {
+			edgeTool.filter(imgPanel.getRaster());
+			imgPanel.repaint();
+		}
+	};
+	Action show_hough = new AbstractAction("Hough space") {
+		@Override
+		public void actionPerformed(ActionEvent ev) {
+			JFrame f = new JFrame((String)getValue(Action.NAME));
+			ImagePanel i = new ImagePanel();
+			f.setContentPane(createScrolledPanel(i));
+		}
+	};
 	@Override
 	protected JMenuBar createMenuBar() {
 		JMenuBar mb = new JMenuBar();
 		JMenu m = new JMenu("File");
+		mb.add(m);
 		m.add(new JMenuItem(file_open));
 		m.add(new JMenuItem(file_quit));
-		mb.add(m);
 
 		m = new JMenu("Selection");
-		m.add(new JMenuItem(sel_color));
 		mb.add(m);
+		m.add(new JMenuItem(sel_color));
 
 		m = new JMenu("Functions");
+		mb.add(m);
 		m.add(new JMenuItem(func_calcalpha));
 		m.add(new JMenuItem(func_unwatermark));
+
+		m = new JMenu("Filters");
 		mb.add(m);
+		m.add(new JMenuItem(filter_luma));
+		m.add(new JMenuItem(filter_gauss));
+		m.add(new JMenuItem(filter_edge));
+		m.add(new JMenuItem(show_hough));
+
 		return mb;
 	}
 
@@ -182,11 +227,10 @@ public class WMRemover extends MainPanel {
 	}
 
 	void selectByColor(ColorTool tool, int x0, int y0) {
-		BufferedImage img = (BufferedImage)imgPanel.getImage();
 		x0 = (int)(x0/imgPanel.getScale());
 		y0 = (int)(y0/imgPanel.getScale());
 
-		List<Segment> seq = tool.select(new ImageRaster2D(img), x0, y0);
+		List<Segment> seq = tool.select(imgPanel.getRaster(), x0, y0);
 		selection.clear();
 		selection.addAll(seq);
 		seq.clear();

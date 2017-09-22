@@ -28,6 +28,17 @@ import java.util.List;
 import algebra.MatrixI;
 
 public class Tools2D {
+	public static void luminance(Raster2D r) {
+		Dimension dim = r.getSize();
+		for (int y=0; y < dim.height; ++y ) {
+			for (int x=0; x < dim.width; ++x) {
+				int a = r.getPixel(x, y);
+				a = Colors.luminance2(a);
+				r.setPixel(x, y, (a<<16) + (a<<8) + a);
+			}
+		}
+	}
+
 	public static class Segment {
 		public Segment(int y, int x0, int x1) {
 			this.y=y; this.x0=x0; this.x1=x1;
@@ -105,8 +116,8 @@ public class Tools2D {
 	private static int convolve(Raster2D r, MatrixI k, int x0, int y0) {
 		Dimension dim = r.getSize();
 		int a=0;
-		x0 -= k.getWidth()/2;
-		y0 -= k.getHeight()/2;
+		x0 -= k.getWidth()/2+1;
+		y0 -= k.getHeight()/2+1;
 		for (int y=0; y < k.getHeight(); ++y) {
 			for (int x=0; x < k.getWidth(); ++x) {
 				int p=0, rx=x0+x,ry=y0+y;
@@ -117,7 +128,7 @@ public class Tools2D {
 				if (ry < 0) ry=0;
 				else if (ry >= dim.height) ry=dim.height-1;
 
-				p=r.getPixel(rx, ry);
+				p=r.getPixel(rx, ry)&0xff;
 				a += p*k.get(x, y);
 			}
 		}
@@ -125,12 +136,88 @@ public class Tools2D {
 	}
 
 	// y[n] = x[n] * h[n]
-	public static void convolve(Raster2D yr, Raster2D xr, MatrixI k) {
-		Dimension dim = xr.getSize();
+	public static void convolve(Raster2D dst, Raster2D src, MatrixI k) {
+		int div=0;
+		for (int y=0; y < k.getHeight(); ++y ) {
+			for (int x=0; x < k.getWidth(); ++x ) {
+				div += k.get(x, y);
+			}
+		}
+		if (div==0) div=1;
+		Dimension dim = src.getSize();
+
 		for (int y=0; y < dim.height; ++y ) {
 			for (int x=0; x < dim.width; ++x) {
-				int a=convolve(xr, k, x, y);
-				yr.setPixel(x, y, a);
+				int a=convolve(src, k, x, y)/div;
+				if (a > 255) a=255;
+				else if (a < 0) a=0;
+				dst.setPixel(x, y, (a<<16) + (a<<8) + a);
+			}
+		}
+	}
+
+	public static void gauss(Raster2D r) {
+		Dimension dim = r.getSize();
+		MatrixI gx = new MatrixI(5,
+				2, 4, 5, 4, 2,
+				4, 9,12, 9, 4,
+				5,12,15,12, 5,
+				4, 9,12, 9, 4,
+				2, 4, 5, 4, 2);
+		Raster2D rr = new ImageRaster2D(dim.width, dim.height);
+		convolve(rr, r, gx);
+
+		for (int y=0; y < dim.height; ++y ) {
+			for (int x=0; x < dim.width; ++x) {
+				int a = rr.getPixel(x, y)&0xff;
+				r.setPixel(x, y, (a<<16) + (a<<8) + a);
+			}
+		}
+	}
+
+	public static void sobel(Raster2D r) {
+		sobel(r, null);
+	}
+	public static void sobel(Raster2D r, Raster2D alpha) {
+		Dimension dim = r.getSize();
+		MatrixI gx = new MatrixI(3, -1, 0, 1, -2, 0, 2, -1, 0, 1);
+		MatrixI gy = new MatrixI(3, 1, 2, 1, 0, 0, 0, -1, -2, -1);
+		Raster2D rx = new ImageRaster2D(dim.width, dim.height);
+		Raster2D ry = new ImageRaster2D(dim.width, dim.height);
+		convolve(rx, r, gx);
+		convolve(ry, r, gy);
+
+		for (int y=0; y < dim.height; ++y ) {
+			for (int x=0; x < dim.width; ++x) {
+				int ax = rx.getPixel(x, y)&0xff;
+				int ay = ry.getPixel(x, y)&0xff;
+				int a = (int)(Math.sqrt(ax*ax+ay*ay));
+				r.setPixel(x, y, (a<<16) + (a<<8) + a);
+			}
+		}
+		if (alpha != null) {
+			for (int y=0; y < dim.height; ++y ) {
+				for (int x=0; x < dim.width; ++x) {
+					int ax = rx.getPixel(x, y)&0xff;
+					int ay = ry.getPixel(x, y)&0xff;
+					double a = Math.atan2(ay, ax);
+					if (a < -127.0) a = -127.0;
+					else if (a > 128.0) a = 128.0;
+					alpha.setPixel(x, y, (int)(a+127.5));
+				}
+			}
+		}
+	}
+	public static void sobel2(Raster2D r) {
+		Dimension dim = r.getSize();
+		MatrixI g = new MatrixI(3, 1, -2, -1, -2, 0, 2, 1, 2, -1);
+		Raster2D rr = new ImageRaster2D(dim.width, dim.height);
+		convolve(rr, r, g);
+
+		for (int y=0; y < dim.height; ++y ) {
+			for (int x=0; x < dim.width; ++x) {
+				int a = rr.getPixel(x, y)&0xff;
+				r.setPixel(x, y, (a<<16) + (a<<8) + a);
 			}
 		}
 	}

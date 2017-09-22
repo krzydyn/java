@@ -1,5 +1,7 @@
 package ui;
 
+import img.ImageRaster2D;
+import img.Raster2D;
 import img.Tools2D.Segment;
 
 import java.awt.BorderLayout;
@@ -11,6 +13,7 @@ import java.awt.Image;
 import java.awt.Rectangle;
 import java.awt.Shape;
 import java.awt.geom.AffineTransform;
+import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -50,15 +53,26 @@ public class ImagePanel extends JPanel {
 	private final ArrayList<Segment> selection = new ArrayList<>();
 	private float scale = 1f;
 
+	private void updateSize() {
+		vSize.setSize(imgSize.width*scale, imgSize.height*scale);
+		setSize(vSize);
+		setPreferredSize(vSize);
+	}
+
 	public ImagePanel() {
 		super(new BorderLayout());
 	}
 
+
 	public float getScale() {return scale;}
-	public void setScale(float s) {scale=s;}
+	public void setScale(float s) {
+		scale=s;
+		updateSize();
+	}
 
 	public void setShowRoi(boolean show) {showRoi=show;}
 	public Image getImage() { return img; }
+	public Raster2D getRaster() { return new ImageRaster2D((BufferedImage)img); }
 	public void setImage(Image i) {
 		synchronized (imgLock) {
 			rois.clear();
@@ -71,10 +85,8 @@ public class ImagePanel extends JPanel {
 				imgSize.width = imgSize.height = 0;
 			}
 		}
-		vSize.setSize(imgSize.width*scale, imgSize.height*scale);
-		setSize(vSize);
-		setPreferredSize(vSize);
-		//EventQueue.invokeLater(newImageNotifier);
+		updateSize();
+		repaint();
 	}
 	public void clearRois() {
 		rois.clear();
