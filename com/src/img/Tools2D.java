@@ -149,14 +149,13 @@ public class Tools2D {
 		for (int y=0; y < dim.height; ++y ) {
 			for (int x=0; x < dim.width; ++x) {
 				int a=convolve(src, k, x, y)/div;
-				if (a > 255) a=255;
-				else if (a < 0) a=0;
+				if (a < 0) a=0; else if (a > 255) a=255;
 				dst.setPixel(x, y, (a<<16) + (a<<8) + a);
 			}
 		}
 	}
 
-	public static void gauss(Raster2D r) {
+	public static void smoothGauss(Raster2D r) {
 		Dimension dim = r.getSize();
 		MatrixI gx = new MatrixI(5,
 				2, 4, 5, 4, 2,
@@ -175,10 +174,10 @@ public class Tools2D {
 		}
 	}
 
-	public static void sobel(Raster2D r) {
-		sobel(r, null);
+	public static void edgeSobel(Raster2D r) {
+		edgeSobel(r, null);
 	}
-	public static void sobel(Raster2D r, Raster2D alpha) {
+	public static void edgeSobel(Raster2D r, Raster2D gradients) {
 		Dimension dim = r.getSize();
 		MatrixI gx = new MatrixI(3, -1, 0, 1, -2, 0, 2, -1, 0, 1);
 		MatrixI gy = new MatrixI(3, 1, 2, 1, 0, 0, 0, -1, -2, -1);
@@ -195,31 +194,32 @@ public class Tools2D {
 				r.setPixel(x, y, (a<<16) + (a<<8) + a);
 			}
 		}
-		if (alpha != null) {
+		if (gradients != null) {
 			for (int y=0; y < dim.height; ++y ) {
 				for (int x=0; x < dim.width; ++x) {
 					int ax = rx.getPixel(x, y)&0xff;
 					int ay = ry.getPixel(x, y)&0xff;
-					double a = Math.atan2(ay, ax);
-					if (a < -127.0) a = -127.0;
-					else if (a > 128.0) a = 128.0;
-					alpha.setPixel(x, y, (int)(a+127.5));
+					double phi = Math.atan2(ay-127, ax-127); // -pi .. pi
+					//int a = (int)((phi+Math.PI)*255.0/Math.PI);
+					int a = (int)(Math.abs(phi)*255.0/Math.PI);
+					//if (a != 0) Log.debug("%d,%d  phi = %.3f  a = %d", x,y,phi,a);
+					if (a < 0) a = 0; else if (a > 255) a=255;
+					gradients.setPixel(x, y, (a<<16) + (a<<8) + a);
 				}
 			}
 		}
+		rx.dispose();
+		ry.dispose();
 	}
-	public static void sobel2(Raster2D r) {
-		Dimension dim = r.getSize();
-		MatrixI g = new MatrixI(3, 1, -2, -1, -2, 0, 2, 1, 2, -1);
-		Raster2D rr = new ImageRaster2D(dim.width, dim.height);
-		convolve(rr, r, g);
-
-		for (int y=0; y < dim.height; ++y ) {
-			for (int x=0; x < dim.width; ++x) {
-				int a = rr.getPixel(x, y)&0xff;
-				r.setPixel(x, y, (a<<16) + (a<<8) + a);
-			}
-		}
+	public static void edgeCanny(Raster2D r) {
+		// 1. Apply Gaussian filter to smooth the image in order to remove the noise
+		smoothGauss(r);
+		// 2. Find the intensity gradients of the image
+		edgeSobel(r);
+		// 3. non-maximum suppression
+		// 4. Apply double threshold to determine potential edges
+		// 5. Track edge by hysteresis: Finalize the detection of edges by suppressing
+		//    all the other edges that are weak and not connected to strong edges.
 	}
 
 	public static double cross(Point2D p1, Point2D p2, Point2D p3) {

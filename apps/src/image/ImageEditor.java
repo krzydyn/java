@@ -1,5 +1,9 @@
-package wmark;
+package image;
 
+import image.Tool.EdgeTool;
+import image.Tool.GaussTool;
+import image.Tool.GradientTool;
+import image.Tool.LumaTool;
 import img.Colors;
 import img.Tools2D.Segment;
 
@@ -29,12 +33,9 @@ import sys.Log;
 import ui.Dialogs;
 import ui.ImagePanel;
 import ui.MainPanel;
-import wmark.Tool.EdgeTool;
-import wmark.Tool.GaussTool;
-import wmark.Tool.LumaTool;
 
 @SuppressWarnings("serial")
-public class WMRemover extends MainPanel {
+public class ImageEditor extends MainPanel {
 
 	private final JFileChooser chooser = Dialogs.createFileChooser(false);
 	private final ImagePanel imgPanel = new ImagePanel();
@@ -45,10 +46,11 @@ public class WMRemover extends MainPanel {
 	private static final GaussTool gaussTool = new GaussTool();
 	private static final LumaTool lumaTool = new LumaTool();
 	private static final EdgeTool edgeTool = new EdgeTool();
+	private static final GradientTool gradTool = new GradientTool();
 
 	private float alpha = 1f;
 
-	public WMRemover(String args[]) {
+	public ImageEditor(String args[]) {
 		setPreferredSize(new Dimension(800,600));
 		add(createScrolledPanel(imgPanel), BorderLayout.CENTER);
 
@@ -74,7 +76,7 @@ public class WMRemover extends MainPanel {
 				mouseClickSelect(p.x, p.y);
 			}
 		});
-		//imgPanel.setScale(5f);
+		imgPanel.setScale(3f);
 	}
 
 	Action file_open = new AbstractAction("Open") {
@@ -138,6 +140,13 @@ public class WMRemover extends MainPanel {
 			imgPanel.repaint();
 		}
 	};
+	Action filter_grad = new AbstractAction("Gradient") {
+		@Override
+		public void actionPerformed(ActionEvent ev) {
+			gradTool.filter(imgPanel.getRaster());
+			imgPanel.repaint();
+		}
+	};
 	Action show_hough = new AbstractAction("Hough space") {
 		@Override
 		public void actionPerformed(ActionEvent ev) {
@@ -168,6 +177,8 @@ public class WMRemover extends MainPanel {
 		m.add(new JMenuItem(filter_luma));
 		m.add(new JMenuItem(filter_gauss));
 		m.add(new JMenuItem(filter_edge));
+		m.add(new JMenuItem(filter_grad));
+
 		m.add(new JMenuItem(show_hough));
 
 		return mb;
@@ -238,6 +249,6 @@ public class WMRemover extends MainPanel {
 	}
 
 	public static void main(String[] args) {
-		start(WMRemover.class, args);
+		start(ImageEditor.class, args);
 	}
 }

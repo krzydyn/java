@@ -1,4 +1,4 @@
-package wmark;
+package image;
 
 import img.BitRaster2D;
 import img.Colors;
