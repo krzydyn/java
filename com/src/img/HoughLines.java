@@ -1,40 +1,36 @@
 package img;
 
 import java.awt.Dimension;
-import java.awt.geom.Point2D;
 
 //https://www.uio.no/studier/emner/matnat/ifi/INF4300/h09/undervisningsmateriale/hough09.pdf
-
-public class HoughLinear {
-	static private final int NUM_PHI = 200;
-	static private final int NUM_R = 200;
+//TODO Radon Transform
+public class HoughLines {
+	static private final int NUM_PHI = 100;
+	static private final int NUM_R = 100;
 
 	private final Raster2D img;
-	private float[] acc = new float[NUM_PHI*NUM_R];
+	private float[] acc = new float[NUM_PHI*NUM_R]; //Hough transform accumulator
 	private int[] lacc = new int[NUM_PHI];
 
-	public HoughLinear(Raster2D img) {
+	public HoughLines(Raster2D img) {
 		this.img = img;
 	}
 
-	private boolean lineEvidence(int x0, int y0, Point2D rp) {
+	private void lineScan(int x0, int y0) {
 		for (double phi = 0; phi < Math.PI; phi += Math.PI/NUM_PHI) {
 
 		}
-		return false;
 	}
-	private void add(Point2D rp) {
-		float phi = (float)rp.getX();
-		float r = (float)rp.getY();
+	private void add(float r, float phi) {
 		if (r < 0) return ;
+
 	}
 	public void transform() {
 		for (int i=0; i < acc.length; ++i) acc[i]=0f;
 		Dimension size = img.getSize();
-		Point2D rp = new Point2D.Double();
 		for (int y = 0; y < size.height; ++y) {
 			for (int x = 0; x < size.width; ++x) {
-				if (lineEvidence(x,y,rp)) add(rp);
+				lineScan(x,y);
 			}
 		}
 	}
