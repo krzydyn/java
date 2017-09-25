@@ -1,8 +1,14 @@
 package img;
 
 import java.awt.Dimension;
+import java.io.Closeable;
+import java.io.IOException;
 
-public abstract class Raster2D {
+public abstract class Raster2D implements Closeable {
+	@Override
+	public void close() throws IOException {
+		dispose();
+	}
 	abstract public void dispose();
 	abstract public Dimension getSize();
 	abstract public int getPixel(int x,int y);

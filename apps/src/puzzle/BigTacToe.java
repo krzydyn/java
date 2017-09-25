@@ -104,6 +104,7 @@ public class BigTacToe extends MainPanel{
 	}
 	@Override
 	public void windowClosed(WindowEvent e) {
+		super.windowClosed(e);
 		moves.clear();
 		System.gc();
 	}
