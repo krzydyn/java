@@ -19,6 +19,8 @@
 package io;
 
 import java.io.Closeable;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -44,6 +46,9 @@ public class IOText extends AbstractSelectableChannel implements Readable,Append
 		this.wr=os;
 
 	}
+	public void write(CharSequence csq) throws IOException {
+        wr.write(csq.toString());
+    }
 	public void write(String str) throws IOException {
         wr.write(str);
     }
@@ -55,10 +60,7 @@ public class IOText extends AbstractSelectableChannel implements Readable,Append
 	}
 	@Override
 	public Appendable append(CharSequence csq) throws IOException {
-		if (csq == null)
-            wr.write("null");
-        else
-            wr.write(csq.toString());
+		wr.write(csq.toString());
         return this;
 	}
 	@Override
@@ -96,5 +98,11 @@ public class IOText extends AbstractSelectableChannel implements Readable,Append
 	@Override
 	public int validOps() {
 		return 0;
+	}
+
+	public static void save(File f, CharSequence data) throws IOException {
+		IOText io = new IOText(null, new FileOutputStream(f));
+		io.write(data);
+		io.close();
 	}
 }

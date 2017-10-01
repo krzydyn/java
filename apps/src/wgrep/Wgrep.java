@@ -44,9 +44,9 @@ public class Wgrep {
 	static String basePath;
 	static Connection conn;
 	static List<String> visitedDirs = new ArrayList<String>();
-	static long tmPrn;
 
 	static LapTime lap=new LapTime("B");
+	static long tmPrn;
 
 	public static void main(String[] args) {
 		int i=0;
@@ -99,7 +99,7 @@ public class Wgrep {
 		else {
 			Log.debug("Connecting %s", url);
 			Response resp=conn.execute();
-			IOText io = new IOText(null, new FileOutputStream("wgrep.html"));
+			IOText io = new IOText(null, new FileOutputStream(saved));
 			io.write(resp.body());
 			io.close();
 			doc = resp.parse();
