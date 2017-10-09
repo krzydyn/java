@@ -3,6 +3,7 @@ package img;
 import java.awt.Dimension;
 
 //https://www.uio.no/studier/emner/matnat/ifi/INF4300/h09/undervisningsmateriale/hough09.pdf
+//TODO HoughTransfor for variable number of params
 //TODO Radon Transform
 public class HoughLines {
 	static private final int NUM_PHI = 100;
@@ -17,8 +18,11 @@ public class HoughLines {
 	}
 
 	private void lineScan(int x0, int y0) {
-		for (double phi = 0; phi < Math.PI; phi += Math.PI/NUM_PHI) {
-
+		for (double phi = 0; phi < 2*Math.PI; phi += Math.PI/NUM_PHI) {
+			for (float r = 0; r < 10; r+=0.1) {
+				double x = x0 + r*Math.cos(phi);
+				double y = y0 + r*Math.sin(phi);
+			}
 		}
 	}
 	private void add(float r, float phi) {
