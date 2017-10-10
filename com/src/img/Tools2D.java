@@ -25,6 +25,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
+import sys.Log;
 import algebra.MatrixI;
 
 public class Tools2D {
@@ -140,19 +141,24 @@ public class Tools2D {
 		int div=0;
 		for (int y=0; y < k.getHeight(); ++y ) {
 			for (int x=0; x < k.getWidth(); ++x ) {
-				div += k.get(x, y);
+				div += Math.abs(k.get(x, y));
 			}
 		}
 		if (div==0) div=1;
 		Dimension dim = src.getSize();
 
+		int amin=Integer.MAX_VALUE,amax=Integer.MIN_VALUE;
 		for (int y=0; y < dim.height; ++y ) {
 			for (int x=0; x < dim.width; ++x) {
 				int a=convolve(src, k, x, y)/div;
+				a += 127;
+				if (amin > a) amin=a;
+				if (amax < a) amax=a;
 				if (a < 0) a=0; else if (a > 255) a=255;
 				dst.setPixel(x, y, (a<<16) + (a<<8) + a);
 			}
 		}
+		Log.debug("convol: amin=%d   amax=%d", amin, amax);
 	}
 
 	public static void smoothGauss(Raster2D r) {
@@ -186,27 +192,38 @@ public class Tools2D {
 		convolve(rx, r, gx);
 		convolve(ry, r, gy);
 
+		int amin=Integer.MAX_VALUE,amax=Integer.MIN_VALUE;
+		double sqm = Math.sqrt(2)*127;
 		for (int y=0; y < dim.height; ++y ) {
 			for (int x=0; x < dim.width; ++x) {
-				int ax = rx.getPixel(x, y)&0xff;
-				int ay = ry.getPixel(x, y)&0xff;
-				int a = (int)(Math.sqrt(ax*ax+ay*ay));
+				int ax = (rx.getPixel(x, y)&0xff)-127;
+				int ay = (ry.getPixel(x, y)&0xff)-127;
+				int a = (int)Math.round(255*Math.sqrt(ax*ax+ay*ay)/sqm);
+				if (amin > a) amin=a;
+				if (amax < a) amax=a;
+				if (a < 0) a = 0; else if (a > 255) a=255;
 				r.setPixel(x, y, (a<<16) + (a<<8) + a);
 			}
 		}
+		Log.debug("sobel: amin=%d   amax=%d", amin, amax);
 		if (gradients != null) {
+			//save gradients
+			amin=Integer.MAX_VALUE; amax=Integer.MIN_VALUE;
 			for (int y=0; y < dim.height; ++y ) {
 				for (int x=0; x < dim.width; ++x) {
-					int ax = rx.getPixel(x, y)&0xff;
-					int ay = ry.getPixel(x, y)&0xff;
-					double phi = Math.atan2(ay-127, ax-127); // -pi .. pi
-					//int a = (int)((phi+Math.PI)*255.0/Math.PI);
-					int a = (int)(Math.abs(phi)*255.0/Math.PI);
-					//if (a != 0) Log.debug("%d,%d  phi = %.3f  a = %d", x,y,phi,a);
+					int ax = (rx.getPixel(x, y)&0xff)-127;
+					int ay = (ry.getPixel(x, y)&0xff)-127;
+					double phi = Math.atan2(ay, ax); // phi = (-pi .. pi)
+					int a = (int)(Math.round(255*Math.abs(phi)/Math.PI));
+					//double phi = (Math.atan2(ay, ax)+Math.PI)/2; // phi = (0 .. pi)
+					//int a = (int)(Math.round(255*phi/Math.PI));
+					if (amin > a) amin=a;
+					if (amax < a) amax=a;
 					if (a < 0) a = 0; else if (a > 255) a=255;
 					gradients.setPixel(x, y, (a<<16) + (a<<8) + a);
 				}
 			}
+			Log.debug("gradient: amin=%d   amax=%d", amin, amax);
 		}
 		rx.dispose();
 		ry.dispose();

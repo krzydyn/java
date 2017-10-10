@@ -17,7 +17,7 @@ public class HoughLines {
 	static private final int NUM_R = 300;
 
 	private final Raster2D img;
-	private float[] acc = new float[NUM_PHI*NUM_R]; //Hough transform accumulator
+	private final float[] acc = new float[NUM_PHI*NUM_R]; //Hough transform accumulator
 	float maxAcc=0f;
 	float threshold = 0.01f;
 
@@ -37,15 +37,17 @@ public class HoughLines {
 		float a = acc[nphi*NUM_R+nr];
 		if (maxAcc < a) maxAcc=a;
 	}
-	private void lineScan(int x0, int y0) {
-		if (Colors.luminance(img.getPixel(x0, y0)) <= threshold) return ;
+	private void lineScan(int x, int y) {
+		if (Colors.luminance(img.getPixel(x, y)) <= threshold) return ;
 
+		int x0 = img.getSize().width/2;
+		int y0 = img.getSize().height/2;
 		double maxphi=Math.PI;
-		double maxr = 2*Math.hypot(img.getSize().width, img.getSize().height);
+		double maxr = Math.hypot(img.getSize().width, img.getSize().height);
 		for (int nphi = 0; nphi < NUM_PHI; ++nphi) {
 			double phi = nphi*maxphi/NUM_PHI - maxphi/2.0;
-			double r = x0*Math.cos(phi)+y0*Math.sin(phi)+maxr/2;
-			//circle: r=sqrt((x-a)^2+(y-b)^2); for all a,b
+			double r = (x-x0)*Math.cos(phi)+(y-y0)*Math.sin(phi)+maxr/2;
+			//circle: r=sqrt((x-x0)^2+(y-y0)^2); for all a,b
 			if (r >= 0 && r < maxr) {
 				int nr = (int)Math.round(NUM_R*r/maxr);
 				add(nr,nphi);
@@ -69,7 +71,7 @@ public class HoughLines {
 		for (int nphi = 0; nphi < NUM_PHI; ++nphi) {
 			for (int nr = 0; nr < NUM_R; ++nr) {
 				float v = acc[nphi*NUM_R+nr];
-				int a = (int)(255*v/maxAcc);
+				int a = Math.round(255*v/maxAcc);
 				i.setPixel(nphi, nr, (a<<16) + (a<<8) + a);
 			}
 		}

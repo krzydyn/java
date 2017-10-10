@@ -11,7 +11,9 @@ import img.Raster2D;
 import img.Tools2D.Segment;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.Graphics2D;
 import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.awt.event.MouseAdapter;
@@ -104,8 +106,10 @@ public class ImageEditor extends MainPanel {
 		@Override
 		public void actionPerformed(ActionEvent ev) {
 			BufferedImage i = new BufferedImage(100, 100, BufferedImage.TYPE_INT_RGB);
-			i.setRGB(10, 10, 0xffffff);
-			i.setRGB(90, 60, 0xffffff);
+			Graphics2D g = (Graphics2D) i.getGraphics();
+			g.setColor(Color.WHITE);
+			g.fillRect(10, 10, 50, 50);
+			g.dispose();
 			imgPanel.setImage(i);
 		}
 	};

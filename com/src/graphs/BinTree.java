@@ -112,10 +112,10 @@ public class BinTree<T extends Comparable<T>> {
 	}
 	private void updateHeight(Node<T> p) {
 		for (; p!=null; p = p.p) {
-			int lh=-1,rh=-1;
-			if (p.l != null) lh=p.l.h;
-			if (p.r != null) rh=p.r.h;
-			int h = Math.max(lh, rh)+1;
+			int h=0;
+			if (p.l != null && p.r != null) h = Math.max(p.l.h, p.r.h)+1;
+			else if (p.l != null) h = p.l.h+1;
+			else if (p.r != null) h = p.r.h+1;
 			if (p.h == h) break;
 			p.h = h;
 		}
