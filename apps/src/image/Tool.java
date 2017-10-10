@@ -1,5 +1,6 @@
 package image;
 
+import img.HoughLines;
 import img.ImageRaster2D;
 import img.Raster2D;
 import img.Tools2D;
@@ -29,4 +30,11 @@ public class Tool {
 		}
 	}
 
+	static public class HoughTool extends Tool {
+		Raster2D transform(Raster2D r) {
+			HoughLines h = new HoughLines(r);
+			h.transform();
+			return h.toImage();
+		}
+	}
 }

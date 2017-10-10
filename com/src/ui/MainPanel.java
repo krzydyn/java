@@ -147,6 +147,8 @@ public class MainPanel extends JPanel implements WindowListener,WindowFocusListe
 		sb=sp.getHorizontalScrollBar();
 		sb.setUnitIncrement(16); // default is 1
 		sb.setFocusable(false);
+
+		sp.setPreferredSize(c.getPreferredSize());
 		return sp;
 	}
 

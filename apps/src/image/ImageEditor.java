@@ -3,8 +3,11 @@ package image;
 import image.Tool.EdgeTool;
 import image.Tool.GaussTool;
 import image.Tool.GradientTool;
+import image.Tool.HoughTool;
 import image.Tool.LumaTool;
 import img.Colors;
+import img.ImageRaster2D;
+import img.Raster2D;
 import img.Tools2D.Segment;
 
 import java.awt.BorderLayout;
@@ -47,6 +50,7 @@ public class ImageEditor extends MainPanel {
 	private static final LumaTool lumaTool = new LumaTool();
 	private static final EdgeTool edgeTool = new EdgeTool();
 	private static final GradientTool gradTool = new GradientTool();
+	private static final HoughTool houghTool = new HoughTool();
 
 	private float alpha = 1f;
 
@@ -58,7 +62,10 @@ public class ImageEditor extends MainPanel {
 		Dialogs.addFilter(chooser, new FileFilter() {
 			@Override
 			public boolean accept(File path) {
-				return path.getName().endsWith(".jpg") || path.isDirectory();
+				return path.isDirectory()
+						|| path.getName().endsWith(".jpg")
+						|| path.getName().endsWith(".gif")
+						|| path.getName().endsWith(".png");
 			}
 		}, "jpg");
 
@@ -91,6 +98,15 @@ public class ImageEditor extends MainPanel {
 					Log.error(e);
 				}
 			}
+		}
+	};
+	Action file_create = new AbstractAction("Create") {
+		@Override
+		public void actionPerformed(ActionEvent ev) {
+			BufferedImage i = new BufferedImage(100, 100, BufferedImage.TYPE_INT_RGB);
+			i.setRGB(10, 10, 0xffffff);
+			i.setRGB(90, 60, 0xffffff);
+			imgPanel.setImage(i);
 		}
 	};
 	Action file_quit = new AbstractAction("Quit") {
@@ -151,8 +167,14 @@ public class ImageEditor extends MainPanel {
 		@Override
 		public void actionPerformed(ActionEvent ev) {
 			JFrame f = new JFrame((String)getValue(Action.NAME));
+			f.setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
 			ImagePanel i = new ImagePanel();
+			i.setScale(2);
+			Raster2D r = houghTool.transform(imgPanel.getRaster());
+			i.setImage(((ImageRaster2D)r).getImage());
 			f.setContentPane(createScrolledPanel(i));
+			f.setSize(i.getPreferredSize());
+			f.setVisible(true);
 		}
 	};
 	@Override
@@ -161,6 +183,7 @@ public class ImageEditor extends MainPanel {
 		JMenu m = new JMenu("File");
 		mb.add(m);
 		m.add(new JMenuItem(file_open));
+		m.add(new JMenuItem(file_create));
 		m.add(new JMenuItem(file_quit));
 
 		m = new JMenu("Selection");
