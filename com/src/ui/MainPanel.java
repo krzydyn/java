@@ -162,7 +162,7 @@ public class MainPanel extends JPanel implements WindowListener,WindowFocusListe
 		return split;
 	}
 
-	static public MainPanel start(final Class<? extends MainPanel> mainclass, String... args) {
+	static public MainPanel startGUI(final Class<? extends MainPanel> mainclass, String... args) {
 		try { return internal_start(mainclass, args);}
 		catch (Throwable e) {Log.error(e);}
 		return null;

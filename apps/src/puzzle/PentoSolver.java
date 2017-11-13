@@ -120,7 +120,7 @@ public class PentoSolver extends MainPanel implements ChangeListener {
 	}
 
 	public static void main(String[] args) {
-		start(PentoSolver.class);
+		startGUI(PentoSolver.class);
 		//Pentomino.printAllFigs();
 	}
 }

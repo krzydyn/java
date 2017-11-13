@@ -205,6 +205,6 @@ public class SerialMain extends MainPanel {
 	public static void main(String[] args) {
 		Log.notice("Serial version %s", Serial.getVersion());
 		Log.setReleaseMode();
-		start(SerialMain.class, args);
+		startGUI(SerialMain.class, args);
 	}
 }

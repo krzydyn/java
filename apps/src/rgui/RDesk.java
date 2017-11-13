@@ -449,7 +449,7 @@ public class RDesk extends MainPanel {
 	public static void main(String[] args) {
 		Log.setTestMode();
 		//Log.setReleaseMode();
-		RDesk desk = (RDesk)start(RDesk.class, args);
+		RDesk desk = (RDesk)startGUI(RDesk.class, args);
 		try {
 			desk.keep_connected();
 		}

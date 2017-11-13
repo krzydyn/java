@@ -110,7 +110,7 @@ public class BigTacToe extends MainPanel{
 	}
 
 	public static void main(String[] args) {
-		start(BigTacToe.class);
+		startGUI(BigTacToe.class);
 	}
 
 }
