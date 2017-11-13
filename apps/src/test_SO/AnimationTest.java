@@ -2,7 +2,6 @@ package test_SO;
 
 import java.io.File;
 import java.util.Iterator;
-
 import javax.imageio.ImageIO;
 import javax.imageio.ImageReader;
 import javax.imageio.metadata.IIOMetadata;

@@ -27,7 +27,7 @@
 			</fileset>
 
 			<manifest>
-			<attribute name="Main-Class" value="git.GitLog"/>
+				<attribute name="Main-Class" value="git.GitLog"/>
 			</manifest>
 		</jar>
 

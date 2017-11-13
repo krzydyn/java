@@ -62,8 +62,7 @@ public class SortedArray<T extends Comparable<T>> extends AbstractCollection<T> 
 		int l = 0, h = tree.size();
 		while (l < h) {
 			int p = (l+h)/2;
-			Sorting.rdCnt+=1;
-			Sorting.opCnt+=1;
+			Sorting.rdCnt+=1; Sorting.opCnt+=1;
 			int r = tree.get(p).compareTo(e);
 			if (r == 0) return p;
 			if (r < 0) l = p+1;

@@ -2,7 +2,6 @@ package gftp;
 
 import git.GitRepo;
 
-import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -27,7 +26,7 @@ import text.Text;
  */
 public class GFTP {
 	static String host = "www.kysoft.pl";
-	static String user = host;
+	static String user = "guest";
 	static String passwd = "";
 	static FtpClient ftp = FtpClient.create();
 	static int filesSent;
@@ -57,8 +56,9 @@ public class GFTP {
 		if (jobs.size() == 0) {
 			jobs.add(new CopyJob("~/www/templates", "/www/templates"));
 			jobs.add(new CopyJob("~/www/cms/lib", "/www/cms/lib"));
-			jobs.add(new CopyJob("~/www/espdb", "/www/espdb"));
-			jobs.add(new CopyJob("~/www/bridge", "/www/bridge"));
+			//jobs.add(new CopyJob("~/www/espdb", "/www/espdb"));
+			//jobs.add(new CopyJob("~/www/bridge", "/www/bridge"));
+			//jobs.add(new CopyJob("~/www/ankieta.php", "/www/"));
 		}
 
 		filesSent=0;
@@ -124,16 +124,6 @@ public class GFTP {
 	}
 
 	public static void synchronizeDirs(File src, File dst) throws Exception {
-		InputStream tmi = new ByteArrayInputStream("\n".getBytes(Env.UTF8_Charset));
-		String tmfile = dst.getPath()+"/"+".time";
-		Log.info("send file ...");
-		sendFile(tmi, ftp.putFileStream(tmfile));
-		long tmloc=System.currentTimeMillis();
-		Log.info("get modtime ...");
-		long tm = ftp.getLastModified(tmfile).getTime();
-		Log.debug("dtm = %d", tmloc-tm);
-		ftp.deleteFile(tmfile);
-		Log.info("sync recursive ...");
 		syncDirs(src, dst);
 	}
 	private static void syncDirs(File src, File dst) throws Exception {
