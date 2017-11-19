@@ -20,10 +20,10 @@ package git;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
-import sys.ArrayObj;
 import sys.Env;
 
 public class GitRepo {
@@ -49,7 +49,7 @@ public class GitRepo {
 		return Env.exec(path, a);
 	}
 	public String log(String ...args) throws Exception {
-		return log(new ArrayObj<String>(args));
+		return log(Arrays.asList(args));
 	}
 
 	public String lstree(List<String> args) throws Exception {
@@ -60,7 +60,7 @@ public class GitRepo {
 		return Env.exec(path, a);
 	}
 	public String lstree(String ...args) throws Exception {
-		return lstree(new ArrayObj<String>(args));
+		return lstree(Arrays.asList(args));
 	}
 
 	public String diff(List<String> args) throws Exception {
@@ -71,6 +71,6 @@ public class GitRepo {
 		return Env.exec(path, a);
 	}
 	public String diff(String ...args) throws Exception {
-		return diff(new ArrayObj<String>(args));
+		return diff(Arrays.asList(args));
 	}
 }

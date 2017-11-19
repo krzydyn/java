@@ -276,7 +276,6 @@ public class ImageEditor extends MainPanel {
 	}
 
 	public static void main(String[] args) {
-		Throwable t;
 		startGUI(ImageEditor.class, args);
 	}
 }

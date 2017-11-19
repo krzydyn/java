@@ -4,9 +4,9 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
+import java.util.Arrays;
 import java.util.List;
 
-import sys.ArrayObj;
 import sys.Env;
 import sys.Log;
 import text.Text;
@@ -25,7 +25,7 @@ public class ScriptShell {
 		lastrd=null;
 	}
 	public ScriptShell(File dir, String ...args) {
-		this(dir, new ArrayObj<String>(args));
+		this(dir, Arrays.asList(args));
 	}
 
 	public void start() {

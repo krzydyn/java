@@ -40,6 +40,7 @@ import java.nio.charset.Charset;
 import java.nio.file.FileSystems;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import text.Text;
@@ -128,11 +129,11 @@ public class Env {
 	}
 
 	static public String exec(File dir, String ...args) throws IOException {
-		return exec(dir,new ArrayObj<String>(args));
+		return exec(dir,Arrays.asList(args));
 	}
 
 	static public String exec(String ...args) throws IOException {
-		return exec(null,new ArrayObj<String>(args));
+		return exec(null,Arrays.asList(args));
 	}
 
 	static private ClipboardOwner manClipboard = new ClipboardOwner() {

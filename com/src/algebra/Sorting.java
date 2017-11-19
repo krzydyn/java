@@ -24,7 +24,7 @@ import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 
-import sys.ArrayInt;
+import sys.RawArray;
 
 public class Sorting {
 	public static int opCnt=0; //number of comparison operations
@@ -180,7 +180,7 @@ public class Sorting {
 
 	static public void heapSort(int... a) {
 		opCnt=0;rdCnt=0;wrCnt=0;
-		HeapTree<Integer> h = new HeapTree<Integer>(new ArrayInt(a));
+		HeapTree<Integer> h = new HeapTree<Integer>(RawArray.asList(a));
 		h.sort();
 	}
 	static public <T extends Comparable<T>> void heapSort(List<T> a) {

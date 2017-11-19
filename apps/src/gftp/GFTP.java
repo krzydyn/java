@@ -38,6 +38,7 @@ public class GFTP {
 			src=s; dst=d;
 		}
 	}
+	static List<String> exclude = new ArrayList<>();
 
 	public static void main(String[] args) {
 		List<CopyJob> jobs = new ArrayList<>();
@@ -54,10 +55,13 @@ public class GFTP {
 		}
 
 		if (jobs.size() == 0) {
-			jobs.add(new CopyJob("~/www/templates", "/www/templates"));
-			jobs.add(new CopyJob("~/www/cms/lib", "/www/cms/lib"));
+			exclude.add(Env.expandEnv("~/www/cms/ckeditor"));
+			//jobs.add(new CopyJob("~/www/cms/lib", "/www/cms/lib"));
+			jobs.add(new CopyJob("~/www", "/www"));
+			//jobs.add(new CopyJob("~/www/templates", "/www/templates"));
 			//jobs.add(new CopyJob("~/www/espdb", "/www/espdb"));
 			//jobs.add(new CopyJob("~/www/bridge", "/www/bridge"));
+			//jobs.add(new CopyJob("~/www/przepisy", "/www/przepisy"));
 			//jobs.add(new CopyJob("~/www/ankieta.php", "/www/"));
 		}
 
@@ -67,7 +71,7 @@ public class GFTP {
 			ftp.setReadTimeout(4000);
 			Log.info("connecting ...");
 			ftp.connect(new InetSocketAddress(host, 21));
-			Log.info("user auth %s:%s...",user,passwd);
+			Log.info("user auth %s:[passwd]",user);
 			ftp.login(user, passwd.toCharArray());
 			ftp.enablePassiveMode(true);
 			Log.info("set binary ...");
@@ -86,6 +90,89 @@ public class GFTP {
 			try {ftp.close();}catch(Exception e){}
 		}
 		Log.info("Files sent %d\n", filesSent);
+	}
+	public static void synchronizeDirs(File src, File dst) throws Exception {
+		syncDirs(src, dst);
+	}
+
+	private static void syncDirs(File src, File dst) throws Exception {
+		if (!src.exists()) return ;
+		Log.debug("gitsync dir %s", src);
+		GitRepo git = new GitRepo(src.getPath());
+		List<File> candidateFiles = new ArrayList<>();
+		if (src.isFile()) {
+			++filesSent;
+			Log.debug("send file '%s' -> '%s'", src.getPath(), dst.getName());
+			sendFile(new FileInputStream(src), ftp.putFileStream(dst.getName()));
+			return ;
+		}
+		else {
+			String[] list = git.lstree("--name-only", "HEAD").split("\n");
+			for (String fn : list) {
+				if (fn.equals(".gitignore")) continue;
+				File f = new File(src.getPath()+"/"+fn);
+				if (exclude.contains(f.getPath())) continue;
+				candidateFiles.add(f);
+			}
+		}
+
+		//Log.debug("local files: \n%s",Text.join(",", localFiles));
+		Iterator<FtpDirEntry> it = ftp.listFiles(dst.getPath());
+		List<File> filesToAdd = new ArrayList<>();
+		List<File> dirsToGo = new ArrayList<>();
+		while (it.hasNext()) {
+			FtpDirEntry fde = it.next();
+			if (fde.getName().equals(".") || fde.getName().equals("..")) continue;
+			//Log.debug("file: %s, %s, %s", fde.getName(), fde.getType(), fde.getSize());
+
+			int i = indexOf(candidateFiles, fde.getName());
+			if (i < 0) {
+				Log.debug("[git:NOT EXISTS] %s", fde.getName());
+			}
+			else {
+				File f = candidateFiles.get(i);
+				String d = dst.getPath()+"/"+f.getName();
+				candidateFiles.remove(i);
+				if (f.isDirectory()) {
+					dirsToGo.add(f);
+					continue;
+				}
+				if (f.length() != fde.getSize()) {
+					filesToAdd.add(f);
+					Log.debug("ADD (%d != %d) %s", f.length(), fde.getSize(), d);
+				}
+				else if (f.lastModified() > fde.getLastModified().getTime()) {
+					filesToAdd.add(f);
+					Log.debug("ADD (dtm %d) %s", f.lastModified() - fde.getLastModified().getTime(), d);
+				}
+				else {
+					//Log.info("SAME (%d == %d) %s", f.length(), fde.getSize(), d);
+				}
+			}
+		}
+		for (File f : filesToAdd) {
+			++filesSent;
+			String d = dst.getPath()+"/"+f.getName();
+			Log.info("send file '%s' -> '%s'", f.getPath(), d);
+			sendFile(new FileInputStream(f), ftp.putFileStream(d));
+		}
+		for (File f : dirsToGo) {
+			if (f.isFile()) {continue;}
+			syncDirs(f, new File(dst.getPath()+"/"+f.getName()));
+		}
+		for (File f : candidateFiles) {
+			String d = dst.getPath()+"/"+f.getName();
+			if (f.isDirectory()) {
+				Log.info("NEW DIR %s", d);
+				ftp.makeDirectory(d);
+				syncDirs(f, new File(d));
+				continue;
+			}
+			if (!f.isFile()) continue;
+			++filesSent;
+			Log.info("NEW FILE %s", d);
+			sendFile(new FileInputStream(f), ftp.putFileStream(d));
+		}
 	}
 
 	public static void gitSyncDirs(File src, File dst, String hash) throws Exception {
@@ -120,87 +207,6 @@ public class GFTP {
 			++filesSent;
 			Log.info("send file '%s' -> '%s'", f.getPath(), d);
 			//sendFile(new FileInputStream(f), ftp.putFileStream(d));
-		}
-	}
-
-	public static void synchronizeDirs(File src, File dst) throws Exception {
-		syncDirs(src, dst);
-	}
-	private static void syncDirs(File src, File dst) throws Exception {
-		if (!src.exists()) return ;
-		Log.debug("gitsync dir %s", src);
-		GitRepo git = new GitRepo(src.getPath());
-		List<File> localFiles = new ArrayList<>();
-		if (src.isFile()) {
-			++filesSent;
-			Log.debug("send file '%s' -> '%s'", src.getPath(), dst.getName());
-			sendFile(new FileInputStream(src), ftp.putFileStream(dst.getName()));
-			return ;
-		}
-		else {
-			String[] list = git.lstree("--name-only", "HEAD").split("\n");
-			for (String fn : list) {
-				File f = new File(src.getPath()+"/"+fn);
-				localFiles.add(f);
-			}
-		}
-
-		//Log.debug("local files: \n%s",Text.join(",", localFiles));
-		Iterator<FtpDirEntry> it = ftp.listFiles(dst.getPath());
-		List<File> filesToAdd = new ArrayList<>();
-		List<File> dirsToGo = new ArrayList<>();
-		while (it.hasNext()) {
-			FtpDirEntry fde = it.next();
-			if (fde.getName().equals(".") || fde.getName().equals("..")) continue;
-			//Log.debug("file: %s, %s, %s", fde.getName(), fde.getType(), fde.getSize());
-
-			int i = indexOf(localFiles, fde.getName());
-			if (i < 0) {
-				Log.debug("[NOT EXISTS] %s", fde.getName());
-			}
-			else {
-				File f = localFiles.get(i);
-				String d = dst.getPath()+"/"+f.getName();
-				localFiles.remove(i);
-				if (f.isDirectory()) {
-					dirsToGo.add(f);
-					continue;
-				}
-				if (f.length() != fde.getSize()) {
-					filesToAdd.add(f);
-					Log.debug("ADD (%d != %d) %s", f.length(), fde.getSize(), d);
-				}
-				else if (f.lastModified() > fde.getLastModified().getTime()) {
-					filesToAdd.add(f);
-					Log.debug("ADD (dtm %d) %s", f.lastModified() - fde.getLastModified().getTime(), d);
-				}
-				else {
-					Log.info("SAME (%d == %d) %s", f.length(), fde.getSize(), d);
-				}
-			}
-		}
-		for (File f : filesToAdd) {
-			++filesSent;
-			String d = dst.getPath()+"/"+f.getName();
-			Log.info("send file '%s' -> '%s'", f.getPath(), d);
-			sendFile(new FileInputStream(f), ftp.putFileStream(d));
-		}
-		for (File f : dirsToGo) {
-			if (f.isFile()) {continue;}
-			syncDirs(f, new File(dst.getPath()+"/"+f.getName()));
-		}
-		for (File f : localFiles) {
-			String d = dst.getPath()+"/"+f.getName();
-			if (f.isDirectory()) {
-				Log.info("NEW DIR %s", d);
-				ftp.makeDirectory(d);
-				syncDirs(f, new File(d));
-				continue;
-			}
-			if (!f.isFile()) continue;
-			++filesSent;
-			Log.info("NEW FILE %s", d);
-			sendFile(new FileInputStream(f), ftp.putFileStream(d));
 		}
 	}
 
