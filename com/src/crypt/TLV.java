@@ -1,5 +1,8 @@
 package crypt;
 
+import sys.Log;
+import text.Text;
+
 /*
 TLV stands for Tag Length Value
 
@@ -85,19 +88,61 @@ Tag Primitive 	Use
 30 	BMPString
 */
 public class TLV {
+	static final int TAG_SEQ   = 0x1f;
+	static final int TAG_NEXT  = 0x80;
+	static final int TAG_CONST = 0x20;
+	static final int LEN_BYTE  = 0x80;
+	int t;
+	int l;
+	int vi;
+	byte[] buf;
 
-	public int read(byte[] b, int i, int j) {
-		return 0;
+	public int read(boolean vlen,byte[] b, int offs, int len) {
+		int i=0;
+		vi=-1; l=0;
+		while (i < len && b[offs+i]==0) ++i;
+		if (i >= len) return i;
+		buf = b;
+		t = b[offs+i];
+
+		if ((t&TAG_SEQ) == TAG_SEQ) {
+			Log.debug("sq tag = %x", t);
+			do
+				{ ++i; t <<= 8; t |= b[offs+i]&0xff; }
+			while(offs+i < len && (b[offs+i]&TAG_NEXT) != 0);
+		}
+		else {
+			Log.debug("short tag = %x", t);
+		}
+		++i;
+		l = b[offs+i]&0xff; ++i;
+		if (vlen && (l&LEN_BYTE) != 0) {
+			int ll = l&0x7f;
+			l=0;
+			for (int ii=0; ii < ll; ++ii) {
+				l <<= 8; l |= b[offs+i]&0xff; ++i;
+			}
+			if (i+l > len) l = len-i;
+			Log.debug("long len = %d (ll=%d)", l, ll);
+		}
+		else {
+			Log.debug("short len = %d", l);
+		}
+		vi = offs+i;
+		return i+l;
 	}
 
-	public boolean isComplex() {
-		// TODO Auto-generated method stub
-		return false;
+	public boolean isConstructed() {
+		int t0 = t <= 0xff ? t : (t >> 8)&0xff;
+		return (t0&TAG_CONST) != 0;
 	}
 
-	public byte[] getVal() {
-		// TODO Auto-generated method stub
-		return null;
+	public int getValIdx() {
+		return vi;
 	}
 
+	@Override
+	public String toString() {
+		return String.format("T=%02x L=%d V=%s",t,l,Text.hex(buf,vi,l));
+	}
 }
