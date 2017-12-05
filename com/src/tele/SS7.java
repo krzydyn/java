@@ -1,5 +1,7 @@
 package tele;
 
+//http://documentation.telestax.com/core/gmlc/GMLC_Admin_Guide.html
+
 //ftp://ftp.dcs.shef.ac.uk/share/nlp/amities/resources/forAlbany/sr5.1/TMPP/doc/htmlfiles/gcss7tug/1380-03t.htm
 
 //MAP-MT-FORWARD-SHORT-MESSAGE-REQ (TLV!!!)

@@ -217,8 +217,9 @@ public class Text {
 		int bc=0;
 		for (int i=0; i<s.length(); ++i) {
 			bt<<=4;
-			char c = Character.toUpperCase(s.charAt(i));
+			char c = s.charAt(i);
 			if (c >= '0' && c <= '9') bt|=c-'0';
+			else if (c >= 'a' && c <= 'f') bt|=c-'a'+10;
 			else if (c >= 'A' && c <= 'F') bt|=c-'A'+10;
 			else {continue;}
 			++bc;

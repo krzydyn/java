@@ -92,21 +92,32 @@ public class TLV {
 	static final int TAG_NEXT  = 0x80;
 	static final int TAG_CONST = 0x20;
 	static final int LEN_BYTE  = 0x80;
+	final int fixedtag;
+	final int fixedlen;
 	int t;
 	int l;
 	int vi;
 	byte[] buf;
 
-	public int read(boolean vlen,byte[] b, int offs, int len) {
+	TLV() {fixedtag=0; fixedlen=0;}
+	TLV(int ft,int fl) {fixedtag=ft; fixedlen=fl;}
+
+	public int read(byte[] b, int offs, int len) {
 		int i=0;
-		vi=-1; l=0;
+		t=0; vi=-1; l=0;
 		while (i < len && b[offs+i]==0) ++i;
 		if (i >= len) return i;
 		buf = b;
 		t = b[offs+i];
 
-		if ((t&TAG_SEQ) == TAG_SEQ) {
-			Log.debug("sq tag = %x", t);
+		if (fixedtag > 0) {
+			for (int ii=1; ii < fixedtag; ++ii) {
+				t <<= 8; t |= b[offs+i]&0xff; ++i;
+			}
+			Log.debug("fixed tag = %x", t);
+		}
+		else if ((t&TAG_SEQ) == TAG_SEQ) {
+			Log.debug("long tag = %x", t);
 			do
 				{ ++i; t <<= 8; t |= b[offs+i]&0xff; }
 			while(offs+i < len && (b[offs+i]&TAG_NEXT) != 0);
@@ -116,7 +127,13 @@ public class TLV {
 		}
 		++i;
 		l = b[offs+i]&0xff; ++i;
-		if (vlen && (l&LEN_BYTE) != 0) {
+		if (fixedlen > 0) {
+			for (int ii=1; ii < fixedlen; ++ii) {
+				l <<= 8; l |= b[offs+i]&0xff; ++i;
+			}
+			Log.debug("fixed len = %d", l);
+		}
+		else if ((l&LEN_BYTE) != 0) {
 			int ll = l&0x7f;
 			l=0;
 			for (int ii=0; ii < ll; ++ii) {
@@ -143,6 +160,8 @@ public class TLV {
 
 	@Override
 	public String toString() {
+		Integer x = 5;
+		x += 10;
 		return String.format("T=%02x L=%d V=%s",t,l,Text.hex(buf,vi,l));
 	}
 }
