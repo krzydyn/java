@@ -6,18 +6,11 @@ import sys.Log;
 import algebra.Sorting;
 
 public class BinTree<T extends Comparable<T>> {
-	public static class Node<T> {
-		private Node(Object o,Node<T> p) {e=o;this.p=p;}
-		private final Object e;
+	private static class Node<T> {
+		private Node(T o,Node<T> p) {e=o;this.p=p;}
+		private final T e;
 		private int h;
 		private Node<T> p,l,r; //parent,left-child,right-child
-
-		@SuppressWarnings("unchecked")
-		public T value() { return (T)e; }
-		public int height() {return h;}
-		public Node<T> parent() {return p;}
-		public Node<T> left() {return l;}
-		public Node<T> right() {return l;}
 	}
 
 	private static class BinTreeIterator<T extends Comparable<T>> implements Iterator<T> {
@@ -31,12 +24,11 @@ public class BinTree<T extends Comparable<T>> {
 		public boolean hasNext() {
 			return next != null;
 		}
-		@SuppressWarnings("unchecked")
 		@Override
 		public T next() {
 			Node<T> cur = next;
 			next = tree.nextNode(cur);
-			return (T)cur.e;
+			return cur.e;
 		}
 
 		@Override
@@ -47,13 +39,14 @@ public class BinTree<T extends Comparable<T>> {
 
 	private Node<T> root;
 	private int nElems;
+	private boolean duplicates = false;
 
-	public BinTree() {}
+	public BinTree(boolean dup) {duplicates=dup;}
+	public BinTree() {this(false);}
 	public int size() { return nElems; }
 	public Iterator<T> iterator() { return new BinTreeIterator<>(this); }
 
-	@SuppressWarnings("unchecked")
-	public T root() { return (T)root.e; }
+	public T root() { return root.e; }
 	public int getHeight() { return root==null?-1:root.h;}
 
 	public boolean add(T e) {
@@ -69,28 +62,29 @@ public class BinTree<T extends Comparable<T>> {
 		return removeNode(root);
 	}
 
-	@SuppressWarnings("unchecked")
 	public T min() {
 		Node<T> v = minNode(root);
 		if (v == null) return null;
-		return (T)v.e;
+		return v.e;
 	}
-	@SuppressWarnings("unchecked")
 	public T max() {
 		Node<T> v = maxNode(root);
 		if (v == null) return null;
-		return (T)v.e;
+		return v.e;
 	}
 
-	@SuppressWarnings("unchecked")
 	private Node<T> searchNode(Node<T> v, T e,boolean add) {
 		if (root != null && v == null) return null;
 		Node<T> p = null;
 		int r = 0;
 		while (v != null) {
 			p = v; ++Sorting.rdCnt;
-			r = ((T)v.e).compareTo(e); ++Sorting.opCnt;
-			if (r == 0) return add?null:v;
+			if (v.e == e) r = 0;
+			else {r = v.e.compareTo(e); ++Sorting.opCnt;}
+			if (r == 0) {
+				if (add == false) return v;
+				if (duplicates == false) return null;
+			}
 			if (r < 0) v = v.r;
 			else v = v.l;
 		}

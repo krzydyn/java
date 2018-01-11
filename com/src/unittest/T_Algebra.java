@@ -22,6 +22,7 @@ import img.Tools2D;
 
 import java.awt.geom.Point2D;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 
@@ -200,47 +201,66 @@ public class T_Algebra extends UnitTest {
 	}
 
 	private static void _printStat(String l) {
-		Log.prn("%s: ops %d mem %d/%d",l,Sorting.opCnt,Sorting.rdCnt,Sorting.wrCnt);
+		Log.prn("%s: cmp %d   rd/wr %d/%d",l,Sorting.opCnt,Sorting.rdCnt,Sorting.wrCnt);
 	}
-	static void quickersort() {
-		int[] unsorted = {9,9,7,7,5,5,3,3,2,2,1,1};
-		int[] sorted = {1,1,2,2,3,3,5,5,7,7,9,9};
+	static void _sortalgos(int[] unsorted, int[] verific) {
 		int[] a = new int[unsorted.length];
 
 		System.arraycopy(unsorted, 0, a, 0, a.length);
 		Sorting.quickSort(a);
 		_printStat("quickSort");
-		check(a,sorted,0);
+		check(a,verific,0);
 
 		System.arraycopy(unsorted, 0, a, 0, a.length);
 		Sorting.selectionSort(a);
 		_printStat("selectionSort");
-		check(a,sorted,0);
+		check(a,verific,0);
 
 		System.arraycopy(unsorted, 0, a, 0, a.length);
 		Sorting.insertionSort(a);
 		_printStat("insertionSort");
-		check(a,sorted,0);
+		check(a,verific,0);
 
 		System.arraycopy(unsorted, 0, a, 0, a.length);
 		Sorting.comboSort(a);
 		_printStat("comboSort");
-		check(a,sorted,0);
+		check(a,verific,0);
 
 		System.arraycopy(unsorted, 0, a, 0, a.length);
 		Sorting.shellSort(a);
 		_printStat("shellSort");
-		check(a,sorted,0);
+		check(a,verific,0);
 
 		System.arraycopy(unsorted, 0, a, 0, a.length);
 		Sorting.heapSort(a);
 		_printStat("heapSort");
-		check(a,sorted,0);
+		check(a,verific,0);
 
 		System.arraycopy(unsorted, 0, a, 0, a.length);
 		Sorting.treeSort(a);
 		_printStat("bintreeSort");
-		check(a,sorted,0);
+		check(a,verific,0);
+	}
+
+	static void sortalgos() {
+		Random rnd = new Random(10);
+		int[] verif = {1,1,2,2,3,3,5,5,7,7,9,9};
+
+		Log.prn(">>> sorted");
+		int[] t1 = {1,1,2,2,3,3,5,5,7,7,9,9};
+		_sortalgos(t1, verif);
+
+		Log.prn(">>> rev-sorted");
+		int[] t2 = {9,9,7,7,5,5,3,3,2,2,1,1};
+		_sortalgos(t2, verif);
+
+		int[] t3 = new int[10000];
+		for (int i=0; i < t3.length; ++i)
+			t3[i] = rnd.nextInt(t3.length)+1;
+		int[] verif3 = Arrays.copyOf(t3,t3.length);
+		Arrays.sort(verif3);
+		Log.prn(">>> random");
+		_sortalgos(t3, verif3);
 	}
 
 	static double input_pnts[] = {
@@ -254,6 +274,7 @@ public class T_Algebra extends UnitTest {
 		Log.debug("Andrew Hull: %s", Text.join("\n", ha));
 		List<Point2D> hg = Tools2D.hullGraham(pnts);
 		Log.debug("Graham Hull: %s", Text.join("\n", hg));
-
+		List<Point2D> hq = Tools2D.hullQuick(pnts);
+		Log.debug("Quick Hull: %s", Text.join("\n", hq));
 	}
 }

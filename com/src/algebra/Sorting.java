@@ -191,9 +191,10 @@ public class Sorting {
 
 	static public void treeSort(int... a) {
 		opCnt=0;rdCnt=0;wrCnt=0;
-		BinTree<Integer> h = new BinTree<Integer>();
+		BinTree<Integer> h = new BinTree<Integer>(true);
 		for (int i=0; i < a.length; ++i)
 			h.add(a[i]);
+		for (int i=0; i < a.length; ++i) a[i]=-1;
 		Iterator<Integer> it = h.iterator();
 		for (int i=0; it.hasNext(); ++i) {
 			a[i] = it.next();

@@ -31,6 +31,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
+import text.Text;
 import time.LapTime;
 
 public class UnitTest {
@@ -291,6 +292,7 @@ public class UnitTest {
 		for (int i=0; i < n; ++i) {
 			if (t1[i] != t2[i]) {
 				Log.error(1, "check failed: int[%d] %d!=%d", i, t1[i], t2[i]);
+				Log.error(1, Text.join(",", t1) + " <> " + Text.join(",", t2));
 				++current.errors;
 				return ;
 			}

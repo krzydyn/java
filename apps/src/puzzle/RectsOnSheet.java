@@ -126,7 +126,7 @@ public class RectsOnSheet extends MainPanel {
 			}
 			if (draw) {
 				rects = best;
-				if (rectpanel.updateWhenReady(rects)) {
+				if (rectpanel.updateIfReady(rects)) {
 					int rs=rect.w*rect.h;
 					int rest=sheet.w*sheet.h-rects.size()*rs;
 					labInfo.setText(String.format("Nr = %d/%d/%d  Q = %d  Waste=%d/%d",rects.size(),nmax,nq,q,rest,rs));

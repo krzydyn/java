@@ -18,6 +18,8 @@
 
 package sys;
 
+import java.awt.Dimension;
+import java.awt.GraphicsDevice;
 import java.awt.GraphicsEnvironment;
 import java.awt.Toolkit;
 import java.awt.datatransfer.Clipboard;
@@ -61,6 +63,11 @@ public class Env {
 
 	static public final boolean isHeadless() {
 		return GraphicsEnvironment.isHeadless();
+	}
+
+	static public final Dimension defaultScreenSize() {
+		GraphicsDevice gd = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice();
+		return new Dimension(gd.getDisplayMode().getWidth(), gd.getDisplayMode().getHeight());
 	}
 
 	static public final String expandEnv(String p) {

@@ -14,14 +14,18 @@ import puzzles.GameBoard.Sheet;
 public class RectsPanel extends JPanel {
 	private volatile boolean ready=true;
 	private final Object readyLock = new Object();
-	private final Sheet sheet;
 	private final List<Rect> list = new ArrayList<Rect>();
+	private Sheet sheet;
 	public RectsPanel(Sheet sheet) {
 		super(null);
 		this.sheet=sheet;
 	}
+	public RectsPanel() { this(null); }
 
-	public boolean updateWhenReady(List<Rect> l) {
+	public void setSheet(Sheet sheet) {
+		this.sheet=sheet;
+	}
+	public boolean updateIfReady(List<Rect> l) {
 		if (!ready) return false;
 		update(l);
 		return true;
