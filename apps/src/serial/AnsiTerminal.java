@@ -29,6 +29,8 @@ import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.Transferable;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.AdjustmentEvent;
+import java.awt.event.AdjustmentListener;
 import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
 import java.awt.event.KeyEvent;
@@ -40,11 +42,13 @@ import java.awt.image.BufferedImage;
 import javax.swing.Action;
 import javax.swing.ActionMap;
 import javax.swing.BorderFactory;
+import javax.swing.BoundedRangeModel;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
 import javax.swing.JTextPane;
 import javax.swing.border.Border;
 import javax.swing.text.AttributeSet;
@@ -87,7 +91,7 @@ public class AnsiTerminal extends JPanel implements FocusListener,KeyListener {
 	final static Border unfocusedBorder = BorderFactory.createEmptyBorder(3, 3, 3, 3);
 
 	final static Color[] colorTable = {
-		Color.GRAY, new Color(0xff4040), Color.GREEN.darker(), Color.YELLOW, new Color(0x8080FF), Color.MAGENTA.darker(), Color.CYAN, Color.WHITE
+		Color.DARK_GRAY, new Color(0xff4040), Color.GREEN.darker(), Color.YELLOW, new Color(0x8080FF), Color.MAGENTA.darker(), Color.CYAN, Color.WHITE
 	};
 
 	private static final int MAX_IN_BUFFER=1024*1024;
@@ -172,7 +176,21 @@ public class AnsiTerminal extends JPanel implements FocusListener,KeyListener {
 		p.add(b);
 
 		add(p, BorderLayout.NORTH);
-		add(MainPanel.createScrolledPanel(editor), BorderLayout.CENTER);
+		final JScrollPane sp = MainPanel.createScrolledPanel(editor);
+		//FIXME try to stop scrolling when scrollbar moved (not working)
+		sp.getVerticalScrollBar().addAdjustmentListener(new AdjustmentListener() {
+			BoundedRangeModel brm = sp.getVerticalScrollBar().getModel();
+			boolean wasAtBottom = true;
+			@Override
+			public void adjustmentValueChanged(AdjustmentEvent e) {
+				if (!brm.getValueIsAdjusting()) {
+					if (wasAtBottom) brm.setValue(brm.getMaximum());
+				}
+				else wasAtBottom = ((brm.getValue() + brm.getExtent()) == brm.getMaximum());
+
+			}
+		});
+		add(sp, BorderLayout.CENTER);
 
 		editor.addMouseListener(new MouseAdapter() {
 			@Override
@@ -354,6 +372,11 @@ public class AnsiTerminal extends JPanel implements FocusListener,KeyListener {
 		}
 	}
 
+	private void clearAttributes() {
+		attrib.removeAttributes(attrib);
+		Log.debug("clearAttributes (left %d)", attrib.getAttributeCount());
+	}
+
 	private void handleEscSeq(String seq) {
 		if (seq.charAt(0) != Ansi.Code.ESC) {
 			throw new RuntimeException("No Escape mark");
@@ -366,11 +389,8 @@ public class AnsiTerminal extends JPanel implements FocusListener,KeyListener {
 			else if (seq.equals(Ansi.ERASE_ABOVE)) eraseLineAbove();
 			else if (seq.equals(Ansi.ERASE_INLINE)) eraseLineRight();
 			else if (seq.equals(Ansi.CURSOR_POS)) cursorHome();
-			else if (seq.equals(Ansi.SGR_RESET)) {
-				attrib.removeAttributes(attrib);
-			}
+			else if (seq.equals(Ansi.SGR_RESET)) clearAttributes();
 			else if (seq.equals(Ansi.SGR_ITALIC)) {
-
 			}
 			else if (seq.equals(Ansi.DSR_STATUS)) {
 				inputBuffer.append(String.format("%s%dn", Ansi.CSI, 0));
@@ -384,7 +404,10 @@ public class AnsiTerminal extends JPanel implements FocusListener,KeyListener {
 				insertBlank(n);
 			}
 			else if (seq.endsWith("C")) {
-				int n = Integer.parseInt(seq.substring(Ansi.CSI.length(), seq.length()-1));
+				int n = 0;
+				try {
+					Integer.parseInt(seq.substring(Ansi.CSI.length(), seq.length()-1));
+				} catch (Exception e) {}
 				cursorMove(n);
 			}
 			else if (seq.endsWith("D")) {
@@ -431,6 +454,7 @@ public class AnsiTerminal extends JPanel implements FocusListener,KeyListener {
 			else if (seq.endsWith("m")) {
 				String code = seq.substring(Ansi.CSI.length(), seq.length()-1);
 				int regIntens=0;
+				Log.debug("m-code %s", code);
 				//process numbers separate with ';'
 				for (int j,i=0; i < code.length(); i=j+1) {
 					j=code.indexOf(';', i);
@@ -444,7 +468,7 @@ public class AnsiTerminal extends JPanel implements FocusListener,KeyListener {
 					}
 
 					if (n==0) { //normal
-						attrib.removeAttributes(attrib);
+						clearAttributes();
 						regIntens=0;
 					}
 					else if (n==1) { //increased intensity
@@ -634,6 +658,7 @@ public class AnsiTerminal extends JPanel implements FocusListener,KeyListener {
 	}
 	public void eraseAll() {
 		Log.debug("buffer: eraseAll");
+		clearAttributes();
 		Document doc = editor.getDocument();
 		int p0=0, p = doc.getLength();
 		if (p != p0) {

@@ -28,6 +28,7 @@ public class CutIt extends MainPanel {
 	}
 
 	public static void main(String[] args) {
+		Object o;
 		startGUI(CutIt.class, args);
 	}
 

@@ -408,7 +408,7 @@ public class Tools2D {
 	}
 
 	/**
-	 * TODO concave hull (alpha shape), need Delaunay triangulation
+	 * TODO concave hull (alpha shape), need Delaunay triangulation, maybe not
 	 * @param pnts
 	 * @param a - alpha shape radius
 	 * @return hull
