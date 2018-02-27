@@ -90,11 +90,11 @@ Tag Primitive 	Use
 public class TLV {
 	static final int TAG_SEQ   = 0x1f;
 	static final int TAG_NEXT  = 0x80;
-	static final int TAG_CONST = 0x20;
+	static final int TAG_CONSTR = 0x20;
 	static final int LEN_BYTE  = 0x80;
 	final int fixedtag;
 	final int fixedlen;
-	int t;
+	int ti;
 	int l;
 	int vi;
 	byte[] buf;
@@ -102,30 +102,45 @@ public class TLV {
 	TLV() {fixedtag=0; fixedlen=0;}
 	TLV(int ft,int fl) {fixedtag=ft; fixedlen=fl;}
 
+	long tag() {
+		if (ti < 0) return -1;
+		long t = buf[ti];;
+		if (fixedtag > 0) {
+			for (int i = 1; i < fixedtag; ++i) {
+				t <<= 8; t |= buf[ti+i]&0xff;
+			}
+		}
+		else if ((buf[ti]&TAG_SEQ) == TAG_SEQ) {
+			int i=1;
+			do {
+				t <<= 8; t |= buf[ti+i]&0xff;
+				++i;
+			}
+			while ((buf[ti+i]&TAG_NEXT) != 0);
+		}
+		return t;
+	}
+
 	public int read(byte[] b, int offs, int len) {
 		int i=0;
-		t=0; vi=-1; l=0;
+		ti=-1; vi=-1; l=0;
 		while (i < len && b[offs+i]==0) ++i;
-		if (i >= len) return i;
-		buf = b;
-		t = b[offs+i];
+		if (i >= len) return 0;
+		buf = b; ti = offs + i;
 
 		if (fixedtag > 0) {
-			for (int ii=1; ii < fixedtag; ++ii) {
-				t <<= 8; t |= b[offs+i]&0xff; ++i;
-			}
-			Log.debug("fixed tag = %x", t);
+			i += fixedtag;
+			Log.debug("fixed tag = %x", tag());
 		}
-		else if ((t&TAG_SEQ) == TAG_SEQ) {
-			Log.debug("long tag = %x", t);
-			do
-				{ ++i; t <<= 8; t |= b[offs+i]&0xff; }
-			while(offs+i < len && (b[offs+i]&TAG_NEXT) != 0);
+		else if ((buf[offs+i]&TAG_SEQ) == TAG_SEQ) {
+			for (++i; (b[offs+i]&TAG_NEXT) != 0; ++i) ;
+			++i;
+			Log.debug("long tag = %x", tag());
 		}
 		else {
-			Log.debug("short tag = %x", t);
+			++i;
+			Log.debug("short tag = %x", tag());
 		}
-		++i;
 		l = b[offs+i]&0xff; ++i;
 		if (fixedlen > 0) {
 			for (int ii=1; ii < fixedlen; ++ii) {
@@ -150,8 +165,8 @@ public class TLV {
 	}
 
 	public boolean isConstructed() {
-		int t0 = t <= 0xff ? t : (t >> 8)&0xff;
-		return (t0&TAG_CONST) != 0;
+		if (ti < 0) return false;
+		return (buf[ti]&TAG_CONSTR) != 0;
 	}
 
 	public int getValIdx() {
@@ -160,8 +175,6 @@ public class TLV {
 
 	@Override
 	public String toString() {
-		Integer x = 5;
-		x += 10;
-		return String.format("T=%02x L=%d V=%s",t,l,Text.hex(buf,vi,l));
+		return String.format("T=%02x L=%d V=%s",tag(),l,Text.hex(buf,vi,l));
 	}
 }
