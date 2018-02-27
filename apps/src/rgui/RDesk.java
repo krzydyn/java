@@ -57,6 +57,7 @@ public class RDesk extends MainPanel {
 	Point prevMouseLoc = new Point();
 	String Host = null;
 	int errCnt = 0;
+	String lastRemoteClipboard = "";
 
 	Action screen_shot = new AbstractAction("ScreenShot") {
 		@Override
@@ -232,8 +233,11 @@ public class RDesk extends MainPanel {
 
 	@Override
 	public void windowGainedFocus(WindowEvent e) {
-		sendSetClipboard(Env.getClipboardText());
+		String s = Env.getClipboardText();
+		if (!lastRemoteClipboard.equals(s))
+			sendSetClipboard(s);
 	}
+
 	@Override
 	public void windowLostFocus(WindowEvent e) {
 		sendGetClipboard();
@@ -311,6 +315,8 @@ public class RDesk extends MainPanel {
 			String s = readUTF(inmsg);
 			try {
 				Env.setClipboardText(s);
+				Log.debug("recv CLIPBOARD '%s'", (s.length()>100?s.substring(0, 100) : s));
+				lastRemoteClipboard = s;
 			} catch (Exception e) {
 				Log.error(e);
 			}
@@ -415,13 +421,14 @@ public class RDesk extends MainPanel {
 		b.flip();
 		chnHandler.write(qchn, b);
 	}
-	private void sendSetClipboard(String t) {
-		if (t==null) return ;
-		ByteBuffer b = ByteBuffer.allocate(4+t.length()*4);
+	private void sendSetClipboard(String s) {
+		if (s==null) return ;
+		lastRemoteClipboard = s;
+		ByteBuffer b = ByteBuffer.allocate(4+s.length()*2);
 		b.putShort(RCommand.CLIPBOARD_SET);
-		writeUTF(b, t);
+		writeUTF(b, s);
 		b.flip();
-		Log.debug("send CLIPBOARD_SET");
+		Log.debug("send CLIPBOARD '%s'", (s.length()>100?s.substring(0, 100) : s));
 		chnHandler.write(qchn, b);
 	}
 
@@ -429,7 +436,6 @@ public class RDesk extends MainPanel {
 		ByteBuffer b = ByteBuffer.allocate(2);
 		b.putShort(RCommand.CLIPBOARD_GET);
 		b.flip();
-		//Log.debug("send CLIPBOARD_GET");
 		chnHandler.write(qchn, b);
 	}
 

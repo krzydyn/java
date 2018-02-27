@@ -18,15 +18,16 @@ There is *com* package with common classes:
 12. Time - calculate elapsed time
 13. ui - user interface primiives
 14. UnitTests - unit tests of *com*
+15. img - image processing
 
 
 There is *apps* package with application classes:
-1. activity - activity measurement (wip)
-2. checker - parse file and check syntax (wip)
+1. activity - activity measurement (in progress)
+2. checker - parse file and check syntax (in progress)
 3. crypt - pem file analizer, number generator, testcase generator
 4. GFTP - git-ftp, send files tracked in git to remote server (deploy)
-5. git - save git log as svg graphics file
+5. GitLog - save git log as svg graphics file
 6. Puzzle solver/plaer apps - TicTacToe, Criptarithms, Pentomino, Sudoku, Rects
-7. Remote control (cleint-sever)
+7. Remote desktop control (client & sever)
 8. Serial - advanced terminal app
 9. wgrep - Web Ggrep - grep-like app to scan www pages

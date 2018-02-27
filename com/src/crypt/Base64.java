@@ -84,7 +84,7 @@ public class Base64 {
 			}
 		}
 		//final
-		if (cbits >= 6) {
+		if (cbits > 0) {
 			c <<= 8 - cbits;
 			int y = c & 0xff;
 			b.write(y);
