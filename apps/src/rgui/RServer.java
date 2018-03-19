@@ -36,6 +36,7 @@ import netio.TcpFilter;
 import netio.SelectorThread.QueueChannel;
 
 public class RServer implements ChannelHandler {
+	private static final int RSERVER_PORT = 9085; // IANA IBM remote system console
 	private static final int FORCE_ACTION_TIME = 60*1000;
 	private static boolean keepScreenOn;
 	private final SelectorThread selector;
@@ -521,7 +522,7 @@ public class RServer implements ChannelHandler {
 		screenImg = robot.createScreenCapture(rect);
 
 		selector.start();
-		selector.bind(null, 3367, this);
+		selector.bind(null, RSERVER_PORT, this);
 		while (selector.isRunning()) {
 			if (clients.size()>0) {
 				BufferedImage i = robot.createScreenCapture(rect);

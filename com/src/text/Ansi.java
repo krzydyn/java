@@ -172,10 +172,10 @@ public class Ansi {
 	public final static String SGR_BLUE = CSI + "0;34m";
 	public final static String SGR_MAGENTA = CSI + "0;35m";
 	public final static String SGR_CYAN = CSI + "0;36m";
-	public final static String SGR_GRAYLIGHT = CSI + "0;37m";
+	public final static String SGR_LIGHTGRAY = CSI + "0;37m";
 	public final static String SGR_GRAY = CSI + "1;30m";
-	public final static String SGR_REDLIGHT = CSI + "1;31m";
-	public final static String SGR_GREENLIGHT = CSI + "1;32m";
+	public final static String SGR_LIGHTRED = CSI + "1;31m";
+	public final static String SGR_LIGHTGREEN = CSI + "1;32m";
 	public final static String SGR_LIGHTYELLOW = CSI + "1;33m";
 	public final static String SGR_LIGHTBLUE = CSI + "1;34m";
 	public final static String SGR_LIGHTMAGENTA = CSI + "1;35m";

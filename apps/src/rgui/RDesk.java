@@ -46,6 +46,7 @@ import ui.ImagePanel.ImageUpdate;
 
 @SuppressWarnings("serial")
 public class RDesk extends MainPanel {
+	private static final int RSERVER_PORT = 9085;
 	final static String fileNameFormat = "screen-%03d.jpg";
 	final private SelectorThread selector;
 
@@ -442,7 +443,7 @@ public class RDesk extends MainPanel {
 	private void keep_connected() throws Exception {
 		while (selector.isRunning()) {
 			if (qchn==null) {
-				SelectionKey sk = selector.connect(Host, 3367, chnHandler);
+				SelectionKey sk = selector.connect(Host, RSERVER_PORT, chnHandler);
 				qchn = (QueueChannel)sk.attachment();
 			}
 			if (errCnt >= 3) break;

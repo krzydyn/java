@@ -140,10 +140,6 @@ public class SelectorThread {
 		}
 	}
 
-	private void close(SelectableChannel chn) {
-		disconnect(chn.keyFor(selector),null);
-	}
-
 	public SelectionKey bind(String addr, int port, ChannelHandler d) throws IOException {
 		Log.debug("binding to %s:%d",addr==null?"*":addr,port);
 		if (d == null) throw new NullPointerException("ChannelHandler is null");
@@ -157,7 +153,7 @@ public class SelectorThread {
 	public SelectionKey connect(String addr, int port, ChannelHandler d) throws IOException {
 		Log.debug("connecting ... %s:%d", addr, port);
 		if (d == null) throw new NullPointerException("ChannelHandler is null");
-		SocketChannel chn=selector.provider().openSocketChannel();
+		SocketChannel chn = selector.provider().openSocketChannel();
 		chn.configureBlocking(false);
 		wakeup(true);
 		chn.connect(new InetSocketAddress(addr, port));
