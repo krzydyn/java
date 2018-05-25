@@ -25,7 +25,7 @@ public class RingByteBuffer extends RingCollection {
 		if (l == 0) return 0;
 
 		int i0=(idx+len)%buf.length;
-		if (i0+l < buf.length) {
+		if (i0+l <= buf.length) {
 			Log.debug("writing1: idx=%d, len=%d, l=%d, end=%d",idx,len,l,i0);
 			System.arraycopy(b, o, buf, i0, l);
 		}

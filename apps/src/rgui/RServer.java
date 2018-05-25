@@ -523,6 +523,7 @@ public class RServer implements ChannelHandler {
 
 		selector.start();
 		selector.bind(null, RSERVER_PORT, this);
+		Point lastMouseLoc = null;
 		while (selector.isRunning()) {
 			if (clients.size()>0) {
 				BufferedImage i = robot.createScreenCapture(rect);
@@ -534,10 +535,13 @@ public class RServer implements ChannelHandler {
 
 			if (keepScreenOn && forceActionTm < System.currentTimeMillis()) {
 				Point m = MouseInfo.getPointerInfo().getLocation();
-				synchronized (robot) {
-					robot.mouseMove(m.x>0?m.x-1:m.x+1, m.y);
-					robot.mouseMove(m.x, m.y);
+				if (lastMouseLoc != null && lastMouseLoc.equals(m)) {
+					synchronized (robot) {
+						robot.mouseMove(m.x>0?m.x-1:m.x+1, m.y);
+						robot.mouseMove(m.x, m.y);
+					}
 				}
+				else lastMouseLoc = m;
 				forceActionTm = System.currentTimeMillis()+FORCE_ACTION_TIME;
 			}
 			XThread.sleep(1000/50);

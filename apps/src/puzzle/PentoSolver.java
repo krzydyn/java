@@ -37,7 +37,9 @@ public class PentoSolver extends MainPanel implements ChangeListener {
 	int cnt=0;
 	boolean done=false;
 	long t0=0,elapsed=0;
-	public PentoSolver() {}
+	public PentoSolver() {
+		pentomino.setListener(this);
+	}
 
 	@Override
 	public Dimension getMinimumSize() {
@@ -105,7 +107,6 @@ public class PentoSolver extends MainPanel implements ChangeListener {
 		new Thread("Solver") {
 			@Override
 			public void run() {
-				pentomino.setListener(PentoSolver.this);
 				t0=System.currentTimeMillis();
 				pentomino.solve();
 				done=true;
