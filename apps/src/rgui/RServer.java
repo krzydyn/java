@@ -46,13 +46,13 @@ public class RServer implements ChannelHandler {
 	private long forceActionTm=0;
 	private BufferedImage screenImg;
 	private Rectangle screenRect;
-	private final List<QueueChannel> clients=new ArrayList<QueueChannel>();
+	private final List<QueueChannel> clients=new ArrayList<>();
 
 	private RServer() throws Exception{
 		robot = new Robot();
 		robot.setAutoDelay(10); // delay before generating event
 
-		mouseButtonMask = InputEvent.BUTTON1_MASK|InputEvent.BUTTON2_MASK|InputEvent.BUTTON3_MASK |
+		mouseButtonMask = /*InputEvent.BUTTON1_MASK|InputEvent.BUTTON2_MASK|InputEvent.BUTTON3_MASK |*/
 					InputEvent.BUTTON1_DOWN_MASK|InputEvent.BUTTON2_DOWN_MASK|InputEvent.BUTTON3_DOWN_MASK;
 
 		selector = new SelectorThread();
@@ -422,7 +422,7 @@ public class RServer implements ChannelHandler {
 		}
 	}
 
-	static List<Point> pntcache = new ArrayList<Point>();
+	static List<Point> pntcache = new ArrayList<>();
 	static private Point newPoint(int x, int y) {
 		if (pntcache.size() == 0) return new Point(x, y);
 		Point p = pntcache.remove(pntcache.size()-1);
@@ -431,7 +431,7 @@ public class RServer implements ChannelHandler {
 	}
 	Rectangle box_bfs(BufferedImage t, int x, int y, Rectangle r, int dv) {
 		r.setBounds(x,y,0,0);
-		List<Point> q=new ArrayList<Point>();
+		List<Point> q=new ArrayList<>();
 		t.setRGB(x, y, 0);
 		q.add(newPoint(x,y));
 		Dimension d=new Dimension(t.getWidth(), t.getHeight());
@@ -472,7 +472,7 @@ public class RServer implements ChannelHandler {
 		}
 	}
 	void detectChanges(BufferedImage p,BufferedImage i) {
-		List<Rectangle> rois=new ArrayList<Rectangle>();
+		List<Rectangle> rois=new ArrayList<>();
 
 		for (int y=0; y < p.getHeight(); y+=5) {
 			for (int x=0; x < p.getWidth(); x+=5) {
@@ -520,6 +520,7 @@ public class RServer implements ChannelHandler {
 
 		Rectangle rect = new Rectangle(0,0,(int)screenRect.getMaxX(),(int)screenRect.getMaxY());
 		screenImg = robot.createScreenCapture(rect);
+		Log.info("update rect (%d,%d %dx%d)",rect.x,rect.y,rect.width,rect.height);
 
 		selector.start();
 		selector.bind(null, RSERVER_PORT, this);

@@ -8,13 +8,17 @@ import image.Tool.LumaTool;
 import img.Colors;
 import img.ImageRaster2D;
 import img.Raster2D;
+import img.Text2D;
 import img.Tools2D.Segment;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Point;
+import java.awt.Shape;
 import java.awt.event.ActionEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
@@ -73,7 +77,8 @@ public class ImageEditor extends MainPanel {
 
 		if (args.length > 0) {
 			try {
-				openFile(new File(args[0]));
+				File f = new File(args[0]);
+				if (f.exists()) openFile(f);
 			} catch (IOException e) {Log.error(e);}
 		}
 
@@ -209,6 +214,16 @@ public class ImageEditor extends MainPanel {
 		m.add(new JMenuItem(show_hough));
 
 		return mb;
+	}
+
+	Font font = new Font("Arial", Font.BOLD, 24);
+
+	@Override
+	public void paintComponent(Graphics g) {
+		super.paintComponent(g);
+		Graphics2D g2 = (Graphics2D)g;
+		Shape s = new java.awt.geom.Ellipse2D.Double(20,20,400,200);
+		Text2D.textOnPath(g2, s, "Test string", font);
 	}
 
 	private void openFile(File file) throws IOException {

@@ -53,7 +53,7 @@ public class RDesk extends MainPanel {
 	ByteBuffer inmsg = ByteBuffer.allocate(1024*1024);
 	int inlen;
 	private final ImagePanel imgPanel = new ImagePanel();
-	private final List<ImageUpdate> imgq = new ArrayList<ImageUpdate>();
+	private final List<ImageUpdate> imgq = new ArrayList<>();
 	QueueChannel qchn;
 	Point prevMouseLoc = new Point();
 	String Host = null;

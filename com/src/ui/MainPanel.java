@@ -19,8 +19,10 @@
 package ui;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.EventQueue;
+import java.awt.Graphics;
 import java.awt.Image;
 import java.awt.LayoutManager;
 import java.awt.Window;
@@ -111,6 +113,17 @@ public class MainPanel extends JPanel implements WindowListener,WindowFocusListe
 	public void windowGainedFocus(WindowEvent e) {}
 
 	protected JMenuBar createMenuBar() {return null;}
+
+	@Override
+	protected void paintChildren(Graphics g) {
+		super.paintChildren(g);
+		if (getComponentCount() > 0) {
+			Color c = getBackground();
+			setBackground(new Color(0x0, true));
+			paintComponent(g);
+			setBackground(c);
+		}
+	}
 
 	static public void append(JTextPane t, String s) {
 		try {
