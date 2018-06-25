@@ -219,10 +219,10 @@ public class ImageEditor extends MainPanel {
 	Font font = new Font("Arial", Font.BOLD, 24);
 
 	@Override
-	public void paintComponent(Graphics g) {
+	public void postChildren(Graphics g) {
 		super.paintComponent(g);
 		Graphics2D g2 = (Graphics2D)g;
-		Shape s = new java.awt.geom.Ellipse2D.Double(20,20,400,200);
+		Shape s = new java.awt.geom.Ellipse2D.Double(20,120,400,200);
 		Text2D.textOnPath(g2, s, "Test string", font);
 	}
 
