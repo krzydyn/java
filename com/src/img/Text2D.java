@@ -50,6 +50,7 @@ public class Text2D {
 		GlyphVector glyphVector = font.createGlyphVector(frc, text);
 		int length = glyphVector.getNumGlyphs();
 		if (length == 0) return ;
+		Log.debug("Draw text on Path, glyphs = %d", length);
 
 		float coords[] = new float[6];
 		float moveX = 0f, moveY = 0f;
@@ -73,9 +74,10 @@ public class Text2D {
 				//fall...
 			case PathIterator.SEG_LINETO:
 				float dx = coords[0]-lastX;
-				float dy = coords[1]-lastX;
+				float dy = coords[1]-lastY;
 				float distance = (float)Math.sqrt(dx*dx + dy*dy);
 				float r = 1.0f/distance;
+				Log.debug("Line to %.2f %.2f  (from %.3f %.2f)  dist = %.2f", coords[0], coords[1], lastX, lastY, distance);
 				if (nextCharOffs < distance) {
 					float angle = (float)Math.atan2(dy, dx);
 					for (; curr < length && nextCharOffs < distance; ++curr) {
@@ -84,9 +86,10 @@ public class Text2D {
 						float x = lastX + nextCharOffs * dx * r;
 						float y = lastY + nextCharOffs * dy * r;
 						float advance = glyphVector.getGlyphMetrics(curr).getAdvance();
+						Log.debug("   %d adv = %.2f", curr, advance);
 						t.setToTranslation(x, y);
 						t.rotate (angle);
-						t.translate(-p.getX() - advance*0.5, -p.getY());
+						t.translate(-p.getX(), -p.getY());
 						g.setTransform(t);
 						g.fill(glyph);
 						nextCharOffs += advance;
@@ -94,7 +97,7 @@ public class Text2D {
 				}
 				nextCharOffs -= distance;
 				lastX = coords[0];
-				lastX = coords[1];
+				lastY = coords[1];
 				break;
 			default:
 				Log.debug("Wrong Segment type " + type);
