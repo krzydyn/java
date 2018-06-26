@@ -22,6 +22,7 @@ import java.awt.Shape;
 import java.awt.event.ActionEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.geom.Arc2D;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileFilter;
@@ -222,8 +223,8 @@ public class ImageEditor extends MainPanel {
 	public void postChildren(Graphics g) {
 		super.paintComponent(g);
 		Graphics2D g2 = (Graphics2D)g;
-		Shape s = new java.awt.geom.Ellipse2D.Double(20,120,400,200);
-		Text2D.textOnPath(g2, s, "Test string", font);
+		Shape s = new Arc2D.Double(20,120,400,200, 0, -120, Arc2D.OPEN);
+		Text2D.textOnPath(g2, s, "Test string", font, 0.5f);
 	}
 
 	private void openFile(File file) throws IOException {
