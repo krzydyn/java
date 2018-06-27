@@ -41,13 +41,13 @@ import sys.Log;
 public class SelectorThread {
 	private final Selector selector;
 	private static final int RWBUFLEN=8*1024; //by default it is 8kB
-	private final List<ByteBuffer> bpool=new ArrayList<ByteBuffer>();
+	private final List<ByteBuffer> bpool=new ArrayList<>();
 	private boolean running = false;
 	private boolean stopReq = false;
 	private boolean registerReq = false;
 	private final Object registerLock = new Object();
 
-	private final List<SelectionKey> writeFlag=new ArrayList<SelectionKey>();
+	private final List<SelectionKey> writeFlag=new ArrayList<>();
 
 	final static public class QueueChannel {
 		private QueueChannel(SelectorThread s, SelectableChannel c, ChannelHandler h) {
@@ -202,7 +202,7 @@ public class SelectorThread {
 			buf.position(buf.position() + maxbytes);
 			dst.flip();
 			synchronized (qchn) {
-				if (qchn.writeq == null) qchn.writeq = new ArrayList<ByteBuffer>();
+				if (qchn.writeq == null) qchn.writeq = new ArrayList<>();
 				/*if (qchn.writeq.size() > 0) {
 					ByteBuffer lst = qchn.writeq.get(qchn.writeq.size()-1);
 					if (lst.capacity() - lst.limit() >= dst.remaining()) {
@@ -260,7 +260,7 @@ public class SelectorThread {
 					--i;
 					SelectionKey sk = writeFlag.get(i);
 					if (!sk.isValid()) {
-						Log.warn("key is invalid (was closed)");
+						Log.warn("key %d is invalid (was closed)", i);
 						continue;
 					}
 					int ops = sk.interestOps();

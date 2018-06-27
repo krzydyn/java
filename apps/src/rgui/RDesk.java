@@ -60,7 +60,7 @@ public class RDesk extends MainPanel {
 	int errCnt = 0;
 	String lastRemoteClipboard = "";
 
-	Action screen_shot = new AbstractAction("ScreenShot") {
+	Action act_screenshot = new AbstractAction("ScreenShot") {
 		@Override
 		public void actionPerformed(ActionEvent ev) {
 			OutputStream os=null;
@@ -79,6 +79,16 @@ public class RDesk extends MainPanel {
 			}
 			finally {
 				Env.close(os);
+			}
+		}
+	};
+	Action act_connect = new AbstractAction("Connect") {
+		@Override
+		public void actionPerformed(ActionEvent ev) {
+			try {
+				connect();
+			} catch (Exception e) {
+				Log.error(e);
 			}
 		}
 	};
@@ -221,13 +231,15 @@ public class RDesk extends MainPanel {
 		imgPanel.addMouseMotionListener(mouseHnadler);
 		imgPanel.addMouseWheelListener(mouseHnadler);
 		imgPanel.setShowRoi(!Log.isRelease());
+		if (Host != null) connect();
 	}
 
 	@Override
 	protected JMenuBar createMenuBar() {
 		JMenuBar mb = new JMenuBar();
 		JMenu m = new JMenu("File");
-		m.add(new JMenuItem(screen_shot));
+		m.add(new JMenuItem(act_screenshot));
+		m.add(new JMenuItem(act_connect));
 		mb.add(m);
 		return mb;
 	}
@@ -440,13 +452,19 @@ public class RDesk extends MainPanel {
 		chnHandler.write(qchn, b);
 	}
 
+	private void connect() throws Exception {
+		if (qchn==null) {
+			SelectionKey sk = selector.connect(Host, RSERVER_PORT, chnHandler);
+			qchn = (QueueChannel)sk.attachment();
+		}
+	}
+
 	private void keep_connected() throws Exception {
 		while (selector.isRunning()) {
-			if (qchn==null) {
-				SelectionKey sk = selector.connect(Host, RSERVER_PORT, chnHandler);
-				qchn = (QueueChannel)sk.attachment();
+			if (errCnt >= 50) {
+				Log.error("Can't connect %d times", errCnt);
+				break;
 			}
-			if (errCnt >= 3) break;
 			if (errCnt > 0) XThread.sleep(5000);
 			else XThread.sleep(1000);
 		}
@@ -456,12 +474,7 @@ public class RDesk extends MainPanel {
 	public static void main(String[] args) {
 		Log.setTestMode();
 		//Log.setReleaseMode();
-		RDesk desk = (RDesk)startGUI(RDesk.class, args);
-		try {
-			desk.keep_connected();
-		}
-		catch (Throwable e) {
-			Log.error(e);
-		}
+		startGUI(RDesk.class, args);
 	}
+
 }

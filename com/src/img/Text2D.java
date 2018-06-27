@@ -103,12 +103,12 @@ public class Text2D {
 				float dx = coords[0]-lastX;
 				float dy = coords[1]-lastY;
 				float distance = (float)Math.sqrt(dx*dx + dy*dy);
-				float r = 1.0f/distance;
 				g.fill(new Ellipse2D.Double(coords[0]-1, coords[1]-1, 2, 2));
 				Log.debug("Line to %.2f %.2f  (from %.3f %.2f)  dist = %.2f", coords[0], coords[1], lastX, lastY, distance);
 				if (nextCharOffs < distance) {
+					float r = 1.0f/distance;
 					float angle = (float)Math.atan2(dy, dx);
-					for (; curr < nGlyphs && nextCharOffs < distance; ++curr) {
+					for (; curr < nGlyphs && nextCharOffs <= distance; ++curr) {
 						Shape glyph = glyphVector.getGlyphOutline(curr);
 						Point2D p = glyphVector.getGlyphPosition(curr);
 						float advance = glyphVector.getGlyphMetrics(curr).getAdvance();
