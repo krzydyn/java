@@ -8,21 +8,17 @@ import image.Tool.LumaTool;
 import img.Colors;
 import img.ImageRaster2D;
 import img.Raster2D;
-import img.Text2D;
 import img.Tools2D.Segment;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
-import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Point;
-import java.awt.Shape;
 import java.awt.event.ActionEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.awt.geom.Arc2D;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileFilter;
@@ -219,13 +215,13 @@ public class ImageEditor extends MainPanel {
 
 	Font font = new Font("Arial", Font.BOLD, 24);
 
+	/*
 	@Override
 	public void postChildren(Graphics g) {
-		super.paintComponent(g);
 		Graphics2D g2 = (Graphics2D)g;
 		Shape s = new Arc2D.Double(20,120,400,200, 0, -120, Arc2D.OPEN);
 		Text2D.textOnPath(g2, s, "Test string", font, 0.5f);
-	}
+	}*/
 
 	private void openFile(File file) throws IOException {
 		imgPanel.setImage(ImageIO.read(file));

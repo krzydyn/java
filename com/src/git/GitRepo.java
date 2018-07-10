@@ -27,7 +27,7 @@ import java.util.List;
 import sys.Env;
 
 public class GitRepo {
-	private final static String git = "/usr/bin/git";
+	private final static String git = "git";
 	private final File path;
 
 	public GitRepo(String p) {
@@ -35,14 +35,14 @@ public class GitRepo {
 	}
 
 	public String cmd(Collection<String> args) throws Exception {
-		List<String> a = new ArrayList<String>();
+		List<String> a = new ArrayList<>();
 		a.add(git);
 		a.addAll(args);
 		return Env.exec(path, a);
 	}
 
 	public String log(List<String> args) throws Exception {
-		List<String> a = new ArrayList<String>();
+		List<String> a = new ArrayList<>();
 		a.add(git);
 		a.add("log");
 		a.addAll(args);
@@ -53,7 +53,7 @@ public class GitRepo {
 	}
 
 	public String lstree(List<String> args) throws Exception {
-		List<String> a = new ArrayList<String>();
+		List<String> a = new ArrayList<>();
 		a.add(git);
 		a.add("ls-tree");
 		a.addAll(args);
@@ -64,7 +64,7 @@ public class GitRepo {
 	}
 
 	public String diff(List<String> args) throws Exception {
-		List<String> a = new ArrayList<String>();
+		List<String> a = new ArrayList<>();
 		a.add(git);
 		a.add("diff");
 		a.addAll(args);

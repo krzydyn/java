@@ -33,7 +33,7 @@ public class Text {
 
 	public static boolean isAnagram(String s1, String s2) {
 		if (s1.length() != s2.length()) return false;
-		Map<Character, Integer> chars=new HashMap<Character, Integer>();
+		Map<Character, Integer> chars=new HashMap<>();
 		//calc histogram
 		for (char c:s1.toCharArray()) chars.put(c, 0);
 		for (char c:s1.toCharArray()) chars.put(c, chars.get(c)+1);
@@ -79,28 +79,6 @@ public class Text {
 		}
 		return b.toString();
 	}
-	private static String join_o(String sep, Object[] a, int off,int len) {
-		if (a.length==0) return "";
-		if (len < 0) len = a.length;
-		StringBuilder b=new StringBuilder(len*(sep.length()+2));
-		for (int i = 0; ; ) {
-			Object o = a[off+i];
-			if (o.getClass().isArray()) {
-				b.append("[");
-				b.append(join(sep, o, 0, -1));
-				b.append("]");
-			}
-			else if (o instanceof Iterable) {
-				b.append("[");
-				b.append(join_it(sep, (Iterable<?>)o, 0, -1));
-				b.append("]");
-			}
-			else b.append(o);
-			if (++i == len) break;
-			b.append(sep);
-		}
-		return b.toString();
-	}
 	private static String join_it(String sep, Iterable<?> a, int off,int len) {
 		Iterator<?> it = a.iterator();
 		if (!it.hasNext()) return "";
@@ -124,13 +102,38 @@ public class Text {
 		}
 		return b.toString();
 	}
+	private static String join_o(String sep, Object[] a, int off,int len) {
+		if (a.length==0) return "";
+		if (len < 0) len = a.length;
+		StringBuilder b=new StringBuilder(len*(sep.length()+2));
+		for (int i = 0; ; ) {
+			Object o = a[off+i];
+			if (o.getClass().isArray()) {
+				b.append("[");
+				b.append(join(sep, o, 0, -1));
+				b.append("]");
+			}
+			else if (o instanceof Iterable) {
+				b.append("[");
+				b.append(join_it(sep, (Iterable<?>)o, 0, -1));
+				b.append("]");
+			}
+			else b.append(o.toString());
+			if (++i == len) break;
+			b.append(sep);
+		}
+		return b.toString();
+	}
 	public static String join(String sep,Object o, int off,int len) {
 		if (o == null) return null;
-		if (o instanceof byte[]) return join_b(sep, (byte[])o,off,len);
-		if (o instanceof short[]) return join_i(sep, (short[])o,off,len);
-		if (o instanceof int[]) return join_i(sep, (int[])o,off,len);
-		if (o instanceof Object[]) return join_o(sep, (Object[])o,off,len);
-		if (o instanceof Iterable) return join_it(sep, (Iterable<?>)o,off,len);
+		if (o.getClass().isArray()) {
+			if (o instanceof byte[]) return join_b(sep, (byte[])o,off,len);
+			if (o instanceof short[]) return join_i(sep, (short[])o,off,len);
+			if (o instanceof int[]) return join_i(sep, (int[])o,off,len);
+			if (o instanceof long[]) return join_i(sep, (long[])o,off,len);
+			if (o instanceof Object[]) return join_o(sep, (Object[])o,off,len);
+			if (o instanceof Iterable) return join_it(sep, (Iterable<?>)o,off,len);
+		}
 		return o.toString();
 	}
 
@@ -277,7 +280,7 @@ public class Text {
 	public static List<String> lcsub_simple(String s1, String s2) {
 		int n=s1.length(), m=s2.length();
 		int z=0;
-		List<String> ret = new ArrayList<String>();
+		List<String> ret = new ArrayList<>();
 		for (int i=0; i < n; ++i) {
 			for (int j=0; j < m; ++j) {
 				int k;
@@ -308,7 +311,7 @@ public class Text {
 		int[] prev = new int[m];
 		int[] curr = new int[m];
 		int z=0;
-		List<String> ret = new ArrayList<String>();
+		List<String> ret = new ArrayList<>();
 		for (int i=0; i < n; ++i) {
 			for (int j=0; j < m; ++j) {
 				if (s1.charAt(i) != s2.charAt(j)) curr[j]=0;
