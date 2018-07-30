@@ -79,6 +79,17 @@ public class Text {
 		}
 		return b.toString();
 	}
+	private static String join_i(String sep, long[] a, int off,int len) {
+		if (a.length==0) return "";
+		if (len < 0) len = a.length;
+		StringBuilder b=new StringBuilder(len*(sep.length()+2));
+		for (int i = 0; ;) {
+			b.append(a[off+i]);
+			if (++i == len) break;
+			b.append(sep);
+		}
+		return b.toString();
+	}
 	private static String join_it(String sep, Iterable<?> a, int off,int len) {
 		Iterator<?> it = a.iterator();
 		if (!it.hasNext()) return "";
@@ -189,7 +200,7 @@ public class Text {
 	public static StringBuilder vis(StringBuilder b, byte[] s, int off, int len) {
 		b.ensureCapacity(b.length()+len);
 		for (int i=0; i<len; ++i) {
-			b.append(Ansi.toString((char)s[off+i]));
+			b.append(Ansi.toString((char)(s[off+i]&0xff)));
 		}
 		return b;
 	}

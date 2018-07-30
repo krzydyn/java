@@ -53,7 +53,7 @@ generally:
 0xe0-0xfe:      (30 tags) private class, constructed
 0xff00-0xff7f: (127 tags) private class, constructed
 
-universal tags(t0) meaning
+universal tags(t0) meaning (ASN.1)
 Tag Primitive 	Use
 0 	RFU (for BER internal mechanism)
 1 	BOOLEAN
@@ -86,8 +86,46 @@ Tag Primitive 	Use
 28 	UniversalString
 29 	CHARACTER STRING
 30 	BMPString
+
+31  Card Service Data
 */
 public class TLV {
+	enum TYPE {
+		RFU, BOOLEAN, INTEGER, BITSTRING, STRING, NULL, OBJID
+	}
+	TYPE tlvType[] = {
+			TYPE.RFU,       //0
+			TYPE.BOOLEAN,   //1
+			TYPE.INTEGER,   //2
+			TYPE.BITSTRING, //3
+			TYPE.STRING,    //4
+			TYPE.NULL,      //5
+			TYPE.OBJID,     //6
+			TYPE.RFU,       //7
+			TYPE.RFU,       //8
+			TYPE.RFU,       //9
+			TYPE.RFU,       //10
+			TYPE.RFU,       //11
+			TYPE.STRING,    //12
+			TYPE.RFU,       //13
+			TYPE.RFU,       //14
+			TYPE.RFU,       //15
+			TYPE.RFU,       //16
+			TYPE.RFU,       //17
+			TYPE.STRING,    //18
+			TYPE.STRING,    //19
+			TYPE.STRING,    //20
+			TYPE.STRING,    //21
+			TYPE.STRING,    //22
+			TYPE.STRING,    //23
+			TYPE.STRING,    //24
+			TYPE.STRING,    //25
+			TYPE.STRING,    //26
+			TYPE.STRING,    //27
+			TYPE.STRING,    //28
+			TYPE.STRING,    //29
+			TYPE.STRING,    //30
+	};
 	static final int TAG_SEQ   = 0x1f;
 	static final int TAG_NEXT  = 0x80;
 	static final int TAG_CONSTR = 0x20;
@@ -104,21 +142,39 @@ public class TLV {
 
 	long tag() {
 		if (ti < 0) return -1;
-		long t = buf[ti];;
+		long t = buf[ti]&0xff;
 		if (fixedtag > 0) {
 			for (int i = 1; i < fixedtag; ++i) {
 				t <<= 8; t |= buf[ti+i]&0xff;
 			}
 		}
 		else if ((buf[ti]&TAG_SEQ) == TAG_SEQ) {
-			int i=1;
+			int l=1;
 			do {
-				t <<= 8; t |= buf[ti+i]&0xff;
-				++i;
+				t <<= 8; t |= buf[ti+l]&0xff;
+				++l;
 			}
-			while ((buf[ti+i]&TAG_NEXT) != 0);
+			while ((buf[ti+l]&TAG_NEXT) != 0);
 		}
 		return t;
+	}
+	byte tagByte(int i) {
+		if (fixedtag > 0) {
+			if (i < fixedtag) return buf[ti+i];
+			return -1;
+		}
+		else if ((buf[ti]&TAG_SEQ) == TAG_SEQ) {
+			if (i == 0) return buf[ti];
+			int l=1;
+			do {
+				if (i == l) return buf[ti+i];
+			} while ((buf[ti+l]&TAG_NEXT) != 0);
+			return -1;
+		}
+		else {
+			if (i == 0) return buf[ti+i];
+			return -1;
+		}
 	}
 
 	public int read(byte[] b, int offs, int len) {
@@ -135,11 +191,11 @@ public class TLV {
 		else if ((buf[offs+i]&TAG_SEQ) == TAG_SEQ) {
 			for (++i; (b[offs+i]&TAG_NEXT) != 0; ++i) ;
 			++i;
-			Log.debug("long tag = %x", tag());
+			//Log.debug("long tag = %x", tag());
 		}
 		else {
 			++i;
-			Log.debug("short tag = %x", tag());
+			//Log.debug("short tag = %x", tag());
 		}
 		l = b[offs+i]&0xff; ++i;
 		if (fixedlen > 0) {
@@ -155,10 +211,10 @@ public class TLV {
 				l <<= 8; l |= b[offs+i]&0xff; ++i;
 			}
 			if (i+l > len) l = len-i;
-			Log.debug("long len = %d (ll=%d)", l, ll);
+			//Log.debug("long len = %d (ll=%d)", l, ll);
 		}
 		else {
-			Log.debug("short len = %d", l);
+			//Log.debug("short len = %d", l);
 		}
 		vi = offs+i;
 		return i+l;
@@ -169,12 +225,16 @@ public class TLV {
 		return (buf[ti]&TAG_CONSTR) != 0;
 	}
 
-	public int getValIdx() {
+	public int getValueOffset() {
 		return vi;
 	}
 
 	@Override
 	public String toString() {
-		return String.format("T=%02x L=%d V=%s",tag(),l,Text.hex(buf,vi,l));
+		if ((buf[ti]&TAG_SEQ) < tlvType.length && tlvType[buf[ti]&TAG_SEQ] == TYPE.STRING)
+			return String.format("T=%02x L=%d V=%s",tag(),l,Text.vis(buf,vi,l));
+		else
+			return String.format("T=%02x L=%d V=%s",tag(),l,Text.hex(buf,vi,l));
+
 	}
 }
