@@ -16,7 +16,7 @@
  *  limitations under the License
  */
 
-package unittest;
+package crypt;
 
 import java.math.BigInteger;
 import java.net.URL;
@@ -30,8 +30,6 @@ import java.security.Security;
 import crypt.AES2;
 import crypt.AES3;
 import crypt.Base64;
-import crypt.CryptX_AES;
-import crypt.CryptX_Provider;
 import crypt.Prime;
 import crypt.RSA;
 import crypt.SuperHash;

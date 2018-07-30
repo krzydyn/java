@@ -57,8 +57,8 @@ public class GFTP {
 		if (jobs.size() == 0) {
 			exclude.add(Env.expandEnv("~/www/cms/ckeditor"));
 			//jobs.add(new CopyJob("~/www/cms/lib", "/www/cms/lib"));
-			jobs.add(new CopyJob("~/www", "/www"));
-			//jobs.add(new CopyJob("~/www/templates", "/www/templates"));
+			//jobs.add(new CopyJob("~/www", "/www"));
+			jobs.add(new CopyJob("~/Work/www/templates", "/www/templates"));
 			//jobs.add(new CopyJob("~/www/espdb", "/www/espdb"));
 			//jobs.add(new CopyJob("~/www/bridge", "/www/bridge"));
 			//jobs.add(new CopyJob("~/www/przepisy", "/www/przepisy"));
@@ -94,6 +94,10 @@ public class GFTP {
 	public static void synchronizeDirs(File src, File dst) throws Exception {
 		syncDirs(src, dst);
 	}
+	
+	private static String linuxPath(File f) {
+		return f.getPath().replace('\\', '/');
+	}
 
 	private static void syncDirs(File src, File dst) throws Exception {
 		if (!src.exists()) return ;
@@ -117,7 +121,7 @@ public class GFTP {
 		}
 
 		//Log.debug("local files: \n%s",Text.join(",", localFiles));
-		Iterator<FtpDirEntry> it = ftp.listFiles(dst.getPath());
+		Iterator<FtpDirEntry> it = ftp.listFiles(linuxPath(dst));
 		List<File> filesToAdd = new ArrayList<>();
 		List<File> dirsToGo = new ArrayList<>();
 		while (it.hasNext()) {
@@ -131,7 +135,7 @@ public class GFTP {
 			}
 			else {
 				File f = candidateFiles.get(i);
-				String d = dst.getPath()+"/"+f.getName();
+				String d = linuxPath(dst)+"/"+f.getName();
 				candidateFiles.remove(i);
 				if (f.isDirectory()) {
 					dirsToGo.add(f);
@@ -152,7 +156,7 @@ public class GFTP {
 		}
 		for (File f : filesToAdd) {
 			++filesSent;
-			String d = dst.getPath()+"/"+f.getName();
+			String d = linuxPath(dst)+"/"+f.getName();
 			Log.info("send file '%s' -> '%s'", f.getPath(), d);
 			sendFile(new FileInputStream(f), ftp.putFileStream(d));
 		}
