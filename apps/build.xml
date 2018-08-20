@@ -63,6 +63,7 @@
 		<jar destfile="bin/rserver.jar" basedir="${build}">
 			<fileset dir="${comdir}/${build}">
 				<include name="sys/*"/>
+				<include name="io/IO*"/>
 				<include name="img/Colors*"/>
 				<include name="netio/**"/>
 				<include name="text/Text*"/>

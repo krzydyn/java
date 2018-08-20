@@ -20,6 +20,7 @@ package io;
 
 import java.io.Closeable;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -104,5 +105,16 @@ public class IOText extends AbstractSelectableChannel implements Readable,Append
 		IOText io = new IOText(null, new FileOutputStream(f));
 		io.write(data);
 		io.close();
+	}
+	public static CharSequence load(File f) throws IOException {
+		StringBuilder s = new StringBuilder();
+		char data[] = new char[1024];
+		int r;
+		IOText io = new IOText(new FileInputStream(f), null);
+		while ((r = io.read(data)) > 0) {
+			s.append(data, 0, r);
+		}
+		io.close();
+		return s;
 	}
 }

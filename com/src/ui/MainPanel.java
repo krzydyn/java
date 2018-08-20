@@ -180,10 +180,10 @@ public class MainPanel extends JPanel implements WindowListener,WindowFocusListe
 		if (args != null && args.length>0) {
 			try {return mainclass.getConstructor(String[].class).newInstance(new Object[]{args});}
 			catch (NoSuchMethodException e) {}
-			return mainclass.newInstance();
+			return mainclass.getDeclaredConstructor().newInstance();
 		}
 		else {
-			try {return mainclass.newInstance();}
+			try {return mainclass.getDeclaredConstructor().newInstance();}
 			catch (InstantiationException e) {}
 			return mainclass.getConstructor(String[].class).newInstance(new Object[]{args});
 		}

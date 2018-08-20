@@ -1,20 +1,28 @@
 package rgui;
 
 import img.Colors;
+import io.IOText;
 
+import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.FlowLayout;
 import java.awt.GraphicsDevice;
 import java.awt.GraphicsEnvironment;
 import java.awt.MouseInfo;
 import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.Robot;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.FocusEvent;
+import java.awt.event.FocusListener;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 import java.awt.image.BufferedImage;
 import java.awt.image.RenderedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -26,6 +34,10 @@ import javax.imageio.ImageIO;
 import javax.imageio.ImageWriteParam;
 import javax.imageio.ImageWriter;
 import javax.imageio.plugins.jpeg.JPEGImageWriteParam;
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JPasswordField;
+import javax.swing.JTextField;
 
 import sys.Env;
 import sys.Log;
@@ -39,14 +51,19 @@ public class RServer implements ChannelHandler {
 	private static final int RSERVER_PORT = 9085; // IANA IBM remote system console
 	private static final int FORCE_ACTION_TIME = 60*1000;
 	private static boolean keepScreenOn;
+	private static boolean lockScreenOn;
 	private final SelectorThread selector;
 	private final Robot robot;
 	private final int mouseButtonMask;
+	private final File passwdFile;
 
 	private long forceActionTm=0;
 	private BufferedImage screenImg;
 	private Rectangle screenRect;
 	private final List<QueueChannel> clients=new ArrayList<>();
+	private JFrame lockScreen;
+	private JTextField passwdInput;
+	private String passwd;
 
 	private RServer() throws Exception{
 		robot = new Robot();
@@ -56,6 +73,13 @@ public class RServer implements ChannelHandler {
 					InputEvent.BUTTON1_DOWN_MASK|InputEvent.BUTTON2_DOWN_MASK|InputEvent.BUTTON3_DOWN_MASK;
 
 		selector = new SelectorThread();
+		if (File.pathSeparatorChar == '/')
+			passwdFile = new File(Env.expandEnv("~/.rserver.conf"));
+		else
+			passwdFile = new File(Env.expandEnv("~/rserver.conf"));
+		if (passwdFile.exists()) passwd = IOText.load(passwdFile).toString().trim();
+		else passwd = "dupa";
+		Log.info("conf: %s", passwdFile);
 	}
 
 	@Override
@@ -518,6 +542,50 @@ public class RServer implements ChannelHandler {
 		screenRect.y -= shiftY;
 		Log.info("screen bounds (%d,%d %dx%d)",screenRect.x,screenRect.y,screenRect.width,screenRect.height);
 
+		if (lockScreenOn) {
+			lockScreen = new JFrame();
+			lockScreen.setUndecorated(true);
+			lockScreen.setAlwaysOnTop(true);
+			lockScreen.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+			//lockScreen.setExtendedState(JFrame.MAXIMIZED_BOTH);
+
+			lockScreen.getContentPane().setLayout(new FlowLayout());
+			lockScreen.getContentPane().setBackground(Color.BLACK);
+			//passwdInput = new JTextField(10);
+			passwdInput = new JPasswordField(10);
+
+			lockScreen.add(passwdInput);
+			JButton b = new JButton("Unlock");
+			b.addActionListener(new ActionListener() {
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					if (!passwdInput.getText().equals(passwd)) return ;
+					selector.stop();
+					lockScreen.setVisible(false);
+					lockScreen.dispose();
+				}
+			});
+			lockScreen.add(b);
+			lockScreen.getRootPane().setDefaultButton(b);
+			lockScreen.addFocusListener(new FocusListener() {
+
+				@Override
+				public void focusLost(FocusEvent e) {
+					lockScreen.toFront();
+					lockScreen.requestFocus();
+				}
+
+				@Override
+				public void focusGained(FocusEvent e) {
+				}
+			});
+			lockScreen.setBounds(screenRect);
+			lockScreen.setMinimumSize(lockScreen.getSize());
+			lockScreen.setResizable(false);
+			lockScreen.setVisible(true);
+		}
+
+
 		Rectangle rect = new Rectangle(0,0,(int)screenRect.getMaxX(),(int)screenRect.getMaxY());
 		screenImg = robot.createScreenCapture(rect);
 		Log.info("update rect (%d,%d %dx%d)",rect.x,rect.y,rect.width,rect.height);
@@ -553,6 +621,7 @@ public class RServer implements ChannelHandler {
 		Log.setTestMode();
 		for (int i=0; i <args.length; ++i) {
 			if (args[i].equalsIgnoreCase("keepon")) keepScreenOn=true;
+			else if (args[i].equalsIgnoreCase("lockon")) lockScreenOn=true;
 		}
 		try {
 			new RServer().run();
