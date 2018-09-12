@@ -579,6 +579,7 @@ public class RServer implements ChannelHandler {
 				public void focusGained(FocusEvent e) {
 				}
 			});
+			//GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice().setFullScreenWindow(lockScreen);
 			lockScreen.setBounds(screenRect);
 			lockScreen.setMinimumSize(lockScreen.getSize());
 			lockScreen.setResizable(false);
@@ -629,6 +630,7 @@ public class RServer implements ChannelHandler {
 			Log.info("rserver finished");
 			Log.error(e);
 		}
+
 	}
 }
 
