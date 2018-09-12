@@ -111,6 +111,9 @@ public class Text {
 			if (len > 0 && ++i == off+len) break;
 			b.append(sep);
 		}
+		if (len < 0) {
+			b.setLength(b.length()-sep.length());
+		}
 		return b.toString();
 	}
 	private static String join_o(String sep, Object[] a, int off,int len) {
@@ -143,8 +146,9 @@ public class Text {
 			if (o instanceof int[]) return join_i(sep, (int[])o,off,len);
 			if (o instanceof long[]) return join_i(sep, (long[])o,off,len);
 			if (o instanceof Object[]) return join_o(sep, (Object[])o,off,len);
-			if (o instanceof Iterable) return join_it(sep, (Iterable<?>)o,off,len);
+
 		}
+		else if (o instanceof Iterable) return join_it(sep, (Iterable<?>)o,off,len);
 		return o.toString();
 	}
 
