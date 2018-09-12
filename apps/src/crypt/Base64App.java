@@ -81,24 +81,95 @@ public class Base64App {
 			"Io4Fr8Y=\n"
 			;
 
-	public static void parseTLV(byte[] b, int offs, int len) {
+
+	static String inter_cert = "MIIEpDCCAowCAQAwXzELMAkGA1UEBhMCUEwxDDAKBgNVBAgMA01hejEMMAoGA1UE\n" +
+			"BwwDV2F3MQ4wDAYDVQQKDAVTUlBPTDEOMAwGA1UECwwFU2Vjb3MxFDASBgNVBAMM\n" +
+			"C0lORVJNRURJQVRFMIICIjANBgkqhkiG9w0BAQEFAAOCAg8AMIICCgKCAgEArhND\n" +
+			"rnpcc5uFpFUV2Jxvxo9IhQI00glD+HRSWmryolUpQD57lvikvkHYM7vTpAMQJ5U2\n" +
+			"FuzGoB1feS9euJCKpK/5K3FXrQkZfqDqYyO3OvzT2RWsCX7tOq3sGV26ZzIq/aAq\n" +
+			"EE/LrfLJardgwgr7MJxpt6TUYVIyPGwkR25acMgIpDfjEMDGbJyotF+Ko2QjvlYt\n" +
+			"+oeQYv7VSrwy18JwiQYxs4HmJbiFsc/sZU10dWJO10q/hjibKd++8MNIZVwQ7VBY\n" +
+			"6mEMmSfEZPDnqI6s/VUs4S1kR/KevXu8Z4WtF4yDq7XxauiVb4OcBwrDQ/l6x9uR\n" +
+			"MCujHfnbFouxCVQobIUUydmkjsuseTMGvAEuvNfZUY3Zv6yMH/grgs5cpfeotFYC\n" +
+			"8t1MZu/o+sJbAyDPAU3hCcgFDWYi50/hNERsqjFsk4fHu1lBhZ45LCH5wkRJTp8n\n" +
+			"xLE2npb/gdTyzbYDCn3Oyt6nlRu+PwkBlNEwTYSaD0BqLXDzAL+Cgegdnn7sxGlW\n" +
+			"WiePhjmK37/87dN8YVfVPD1lcCyUy8AbNZ869wxkeyu3huOd32LgZDEiOZ5GDoef\n" +
+			"w4/tEThoiKrbb+dLfE/xWduX4r0qyc9pSpQuaNan/GiWOoaAmoq/uw9NWFqYMWQW\n" +
+			"WlhDnqI5dKevavBJfnW7kAadx1vE3j/LOxBFTZ0CAwEAAaAAMA0GCSqGSIb3DQEB\n" +
+			"CwUAA4ICAQCLkk8kr90aAlD3q1VGR/LAsUro6D8/tA1p3ySHKyvdgyfjIknlLfm1\n" +
+			"Yr72NHaTBRZCKScuWY0NRN5vWv+flENSPc8livNz7lRt1nZ2Iwgx1OLgYTJJCoqn\n" +
+			"mx6Jy6KkrGV0aszBqClH7XCoSapLBvQ71ts07nB+5J7PxWYzb3FZ2eRE+2tyD4Y3\n" +
+			"P5rHQbVMR2LXirpMDV+t400n0cedLxtC/H/Zq2hnmkoN+Vno5h3LfXipPPG8Sa0+\n" +
+			"YKYpXtuVWE1Vu5BlUqziB5G0BeSFslBmXzqLCm+8Z3asnT9iH5OFQFpjUGsVwpre\n" +
+			"0RU4XciZketvNyJ9T2voGJiYM8YVQAEwYlqxOZzb0STWv5p49tWX6gIH3xUmdpmO\n" +
+			"8Kv2xywq/FuNGe9PEwr7a6GJDZfjcd6Y/N2oDnnTyU9Dzdbdln/ZJBrBd1eFtjZl\n" +
+			"P60NitqZPF7gqlrf+i610Zowd+FOxDGPbf6HjXkCQFBM0MXl4hE+tH77DMloC5w9\n" +
+			"0PlG0P0p2u5n7KR9naAKhCjZXn8WSEfj7/klrOmkqSsORPcHKXh54tTGNHwDn4hO\n" +
+			"O5WoQEzy08HW/rU/9c6oddlXg+/gj0juBrDucQlqzDTU0Nhrv4rIyGdXFHPk5imO\n" +
+			"tBOHWgVYEAVufA5xsAKMUh0oHVT0o3cqOvgzejI8BkyOepj1V9qMuQ==";
+
+	static String pkcs7 = "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\n" +
+			"H6DJPpSr+80BmJyey+f1A9v7jHj1w86yll3gMA==\n";
+
+	public static void parseTLV(int ind, byte[] b, int offs, int len) {
 		String[] elems = {"version","modulus","publicExponent","privateExponent",
 				"prime1","prime2","exponent1","exponent2","coefficient","otherPrimeInfos",
 		};
 		int r=0,el=0;
 		TLV tlv = new TLV();
+		String indent = Text.repeat("  ", ind);
 		for (int i=0; i < len; i+=r) {
 			r = tlv.read(b, offs+i, len-i);
 			if (r == 0) break;
 			if (tlv.isConstructed()) {
-				Log.prn("SEQUENCE (read=%d) TLV: %s", r, tlv.toString());
-				parseTLV(b, tlv.getValueOffset(), tlv.l);
+				Log.prn("%sSEQUENCE (read=%d) T=%x L=%d", indent, r, tlv.tag(), tlv.l);
+				parseTLV(ind+1, b, tlv.getValueOffset(), tlv.l);
 			}
 			else {
-				if (el < elems.length)
-					Log.prn("%s (read=%d)  %s", elems[el], r, tlv.toString());
-				else
-					Log.prn("Elem[%d] (read=%d):\n  %s", el, r, tlv.toString());
+				//if (el < elems.length)
+				//	Log.prn("%s (read=%d)  %s", elems[el], r, tlv.toString());
+				//else
+					Log.prn("%sElem[%d] (read=%d):  %s", indent, el, r, tlv.toString());
 				++el;
 			}
 		}
@@ -117,8 +188,8 @@ public class Base64App {
 
 	public static void main(String[] args) {
 		byte[] bin = Base64.decode(rsa_prv2);
-		Log.prn("%s", Text.hex(bin));
-		parseTLV(bin,0,bin.length);
+/*		Log.prn("%s", Text.hex(bin));
+		parseTLV(0, bin,0,bin.length);
 
 		//bin = Text.bin(map_mt_req);
 		//parseTLV(bin,0,bin.length);
@@ -132,6 +203,16 @@ public class Base64App {
 		bin = Base64.decode(cert);
 		Log.prn("%s", Text.hex(bin));
 		parseTLV(bin,0,bin.length);
+
+		Log.prn("-----------------------------------");
+		bin = Base64.decode(inter_cert);
+		Log.prn("%s", Text.hex(bin));
+		parseTLV(bin,0,bin.length);
+*/
+		Log.prn("-----------------------------------");
+		bin = Base64.decode(pkcs7);
+		Log.prn("%s", Text.hex(bin));
+		parseTLV(0,bin,0,bin.length);
 	}
 
 }

@@ -91,7 +91,7 @@ Tag Primitive 	Use
 */
 public class TLV {
 	enum TYPE {
-		RFU, BOOLEAN, INTEGER, BITSTRING, STRING, NULL, OBJID
+		RFU, BOOLEAN, INTEGER, BITSTRING, STRING, NULL, OBJID, OBJDESCCR
 	}
 	TYPE tlvType[] = {
 			TYPE.RFU,       //0
@@ -101,7 +101,7 @@ public class TLV {
 			TYPE.STRING,    //4
 			TYPE.NULL,      //5
 			TYPE.OBJID,     //6
-			TYPE.RFU,       //7
+			TYPE.OBJDESCCR, //7
 			TYPE.RFU,       //8
 			TYPE.RFU,       //9
 			TYPE.RFU,       //10
