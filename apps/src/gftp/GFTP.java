@@ -9,6 +9,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 
@@ -70,7 +71,7 @@ public class GFTP {
 			ftp.setConnectTimeout(3000);
 			ftp.setReadTimeout(4000);
 			Log.info("connecting ...");
-			ftp.connect(new InetSocketAddress(host, 21));
+			ftp.connect(new InetSocketAddress(host, FtpClient.defaultPort()));
 			Log.info("user auth %s:[passwd]",user);
 			ftp.login(user, passwd.toCharArray());
 			ftp.enablePassiveMode(true);
@@ -143,7 +144,7 @@ public class GFTP {
 				}
 				if (f.length() != fde.getSize()) {
 					filesToAdd.add(f);
-					Log.debug("ADD (%d != %d) %s", f.length(), fde.getSize(), d);
+					Log.debug("ADD (sz %d != %d) %s", f.length(), fde.getSize(), d);
 				}
 				else if (f.lastModified() > fde.getLastModified().getTime()) {
 					filesToAdd.add(f);
@@ -154,11 +155,14 @@ public class GFTP {
 				}
 			}
 		}
+		Date time = new Date();
 		for (File f : filesToAdd) {
 			++filesSent;
 			String d = linuxPath(dst)+"/"+f.getName();
 			Log.info("send file '%s' -> '%s'", f.getPath(), d);
 			sendFile(new FileInputStream(f), ftp.putFileStream(d));
+			time.setTime(f.lastModified()+1000);
+			ftp.setLastModified(d, time);
 		}
 		for (File f : dirsToGo) {
 			if (f.isFile()) {continue;}
@@ -176,6 +180,8 @@ public class GFTP {
 			++filesSent;
 			Log.info("NEW FILE %s", d);
 			sendFile(new FileInputStream(f), ftp.putFileStream(d));
+			time.setTime(f.lastModified()+1000);
+			ftp.setLastModified(d, time);
 		}
 	}
 

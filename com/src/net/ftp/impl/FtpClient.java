@@ -2255,4 +2255,17 @@ public class FtpClient extends net.ftp.FtpClient {
 		issueCommandCheck("SITE " + cmd);
 		return this;
 	}
+
+	@Override
+	public void setLastModified(String path, Date dttm) throws net.ftp.FtpProtocolException, IOException {
+		SimpleDateFormat fmt = new SimpleDateFormat("yyyyMMddHHmmss");
+		issueCommandCheck("MFMT " + fmt.format(dttm) + " " + path);
+		if (lastReplyCode == FtpReplyCode.FILE_STATUS) {
+			String s = getResponseString().substring(4).trim();
+			System.err.println("Resp: "+s+", Requested: "+fmt.format(dttm));
+		}
+		else {
+			System.err.println("ReplyCode: "+lastReplyCode);
+		}
+	}
 }

@@ -919,4 +919,6 @@ public abstract class FtpClient implements java.io.Closeable {
      * @throws FtpProtocolException if the command was rejected by the server
      */
     public abstract FtpClient siteCmd(String cmd) throws FtpProtocolException, IOException;
+
+    public abstract void setLastModified(String path, Date dttm) throws FtpProtocolException, IOException;
 }
