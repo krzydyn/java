@@ -48,7 +48,7 @@ public class Text2D {
 		return length;
 	}
 
-	static public float glyghLength(GlyphVector glyphVector) {
+	static public float glyphLength(GlyphVector glyphVector) {
 		float length = 0f;
 		for (int i=0; i < glyphVector.getNumGlyphs(); ++i) {
 			length += glyphVector.getGlyphMetrics(i).getAdvance();
@@ -78,7 +78,7 @@ public class Text2D {
 
 		if (align > 0f && align <= 1.0f) {
 			float pl = pathLength(shape);
-			float gl = glyghLength(glyphVector);
+			float gl = glyphLength(glyphVector);
 			nextCharOffs = align * (pl - gl);
 		}
 

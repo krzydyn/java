@@ -15,7 +15,7 @@ public class BitRaster2D extends Raster2D {
 	}
 	@Override
 	public Dimension getSize() {
-		return size;
+		return new Dimension(size);
 	}
 
 	@Override

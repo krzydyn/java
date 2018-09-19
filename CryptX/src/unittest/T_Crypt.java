@@ -16,7 +16,7 @@
  *  limitations under the License
  */
 
-package crypt;
+package unittest;
 
 import java.math.BigInteger;
 import java.net.URL;
@@ -30,6 +30,8 @@ import java.security.Security;
 import crypt.AES2;
 import crypt.AES3;
 import crypt.Base64;
+import crypt.CryptX_AES;
+import crypt.CryptX_Provider;
 import crypt.Prime;
 import crypt.RSA;
 import crypt.SuperHash;
@@ -58,8 +60,8 @@ public class T_Crypt extends UnitTest {
 		check(Base64.decode("Nzg5MEE"), new byte[] {'7','8','9','0', 'A'});
 		check(Base64.decode("Nzg5MEFC"), new byte[] {'7','8','9','0', 'A', 'B'});
 	}
-	static void rsa() {
 
+	static void rsa() {
 		checkNoThrow(new RunThrowable() {
 			@Override
 			public void run() {new RSA(1024);}
@@ -83,7 +85,7 @@ public class T_Crypt extends UnitTest {
 	}
 
 	@SuppressWarnings("unchecked")
-	static URL getCodeBase(final Class<?> clazz) {
+	private static URL getCodeBase(final Class<?> clazz) {
 		URL url = (URL)AccessController.doPrivileged(new PrivilegedAction() {
 		                @Override
 						public Object run() {

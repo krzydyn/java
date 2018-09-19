@@ -70,9 +70,13 @@ public class Env {
 		return new Dimension(gd.getDisplayMode().getWidth(), gd.getDisplayMode().getHeight());
 	}
 
+	private static String linuxPath(File f) {
+		return f.getPath().replace('\\', '/');
+	}
+
 	static public final String expandEnv(String p) {
 		if (p.startsWith("~/") || p.equals("~")) {
-			p=System.getProperty("user.home")+p.substring(1);
+			p=linuxPath(new File(System.getProperty("user.home")+p.substring(1)));
 		}
 		int s=0,i,e;
 		while ((s=p.indexOf('$',s))>=0) {

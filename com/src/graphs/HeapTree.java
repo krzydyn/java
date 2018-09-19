@@ -77,7 +77,7 @@ public class HeapTree<T extends Comparable<T>> {
 				if (tree.get(v).compareTo(tree.get(v+1)) < 0) ++v;
 			}
 
-			++Sorting.opCnt;
+			++Sorting.opCnt; Sorting.rdCnt+=2;
 			if (tree.get(p).compareTo(tree.get(v)) < 0) {
 				swap(p, v);
 				p = v;

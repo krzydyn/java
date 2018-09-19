@@ -27,15 +27,15 @@ import sys.Log;
 import text.Text;
 
 public class RSA {
-	static BigInteger ZERO = BigInteger.ZERO;
-	static BigInteger ONE = BigInteger.ONE;
-	static BigInteger TWO = BigInteger.valueOf(2);
-	static BigInteger[] pubExpCandidates = {
-		BigInteger.valueOf(3l),
-		BigInteger.valueOf(5l),
-		BigInteger.valueOf(17l),
-		BigInteger.valueOf(257l),
-		BigInteger.valueOf(65537l),
+	final static BigInteger ZERO = BigInteger.ZERO;
+	final static BigInteger ONE = BigInteger.ONE;
+	final static BigInteger TWO = BigInteger.valueOf(2);
+	final static BigInteger[] pubExpCandidates = {
+		BigInteger.valueOf(3),
+		BigInteger.valueOf(5),
+		BigInteger.valueOf(17),
+		BigInteger.valueOf(257),
+		BigInteger.valueOf(65537),
 	};
 
 	private BigInteger e,d,N;
@@ -149,29 +149,28 @@ public class RSA {
 	}
 
 	/*
-Select a value of e from {3, 5, 17, 257, 65537}
-repeat
-   p ← genprime(k/2)
-until (p mod e) ≠ 1
-repeat
-   q ← genprime(k - k/2)
-until (q mod e) ≠ 1
-N ← pq
-phi ← (p-1)(q-1)
-d ← modinv(e, phi)
-return (N, e, d)
-	 */
+	Select a value of e from {3, 5, 17, 257, 65537}
+	repeat
+	   p = genprime(k/2)
+	until (p mod e) !=  1
+	repeat
+	   q = genprime(k - k/2)
+	until (q mod e) !=  1
+	N = p*q
+	phi = (p-1)*(q-1)
+	d = modinv(e, phi)
+	return (N, e, d)
+	*/
 	public RSA(int bits, BigInteger e) {
 		Random r = new Random();
 
 		do {
-			p = BigInteger.probablePrime(bits, r);
+			p = BigInteger.probablePrime(bits/2, r);
 		} while (p.subtract(ONE).gcd(e).compareTo(ONE) != 0);
 
 		do {
-			q = BigInteger.probablePrime(bits, r);
+			q = BigInteger.probablePrime(bits-bits/2, r);
 		} while (q.subtract(ONE).gcd(e).compareTo(ONE) != 0);
-
 
 		this.e = e;
 		N = p.multiply(q);

@@ -83,11 +83,13 @@ public class UnitTest {
 			pkg=prefix.substring(0, pkg.lastIndexOf('.'));
 			url = cl.getResource(pkg.replace(".", "/"));
 		}
+		Log.debug("reading from: %s", url.getPath());
 		BufferedReader rd = new BufferedReader(new InputStreamReader((InputStream) url.getContent()));
 		String line = null;
 		while ((line = rd.readLine()) != null) {
 			if(line.endsWith(classExt) && !line.contains("$")) {
 				String unit = pkg + "." + line.substring(0, line.length() - classExt.length());
+				Log.debug("adding test unit: %s", unit);
 				if (unit.startsWith(prefix))
 				try {
 					Class<?> c = cl.loadClass(unit);;
@@ -117,7 +119,7 @@ public class UnitTest {
 			Log.info("* TestUnit: %s start", unit);
 			time.reset(0);
 			for (Method m : mts) {
-				if (!Modifier.isStatic(m.getModifiers())) {
+				if (!Modifier.isStatic(m.getModifiers()) || Modifier.isPrivate(m.getModifiers())) {
 					continue;
 				}
 				if ("main".equals(m.getName()) || m.getName().contains("$")) continue;
@@ -257,7 +259,7 @@ public class UnitTest {
 		}
 		else {
 			if (t1.length != t2.length) {
-				Log.error(2,"check failed: length %d!=%d", t1.length, t2.length);
+				Log.error(2,"check failed: length %d!=%d  (%s != %s)", t1.length, t2.length, Text.hex(t1), Text.hex(t2));
 				++current.errors;
 				return ;
 			}

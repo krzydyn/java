@@ -56,10 +56,10 @@ public class GFTP {
 		}
 
 		if (jobs.size() == 0) {
-			exclude.add(Env.expandEnv("~/www/cms/ckeditor"));
+			exclude.add(Env.expandEnv("~/Work/www/cms"));
 			//jobs.add(new CopyJob("~/www/cms/lib", "/www/cms/lib"));
-			//jobs.add(new CopyJob("~/www", "/www"));
-			jobs.add(new CopyJob("~/Work/www/templates", "/www/templates"));
+			jobs.add(new CopyJob("~/Work/www", "/www"));
+			//jobs.add(new CopyJob("~/Work/www/templates", "/www/templates"));
 			//jobs.add(new CopyJob("~/www/espdb", "/www/espdb"));
 			//jobs.add(new CopyJob("~/www/bridge", "/www/bridge"));
 			//jobs.add(new CopyJob("~/www/przepisy", "/www/przepisy"));
@@ -102,7 +102,7 @@ public class GFTP {
 
 	private static void syncDirs(File src, File dst) throws Exception {
 		if (!src.exists()) return ;
-		Log.debug("gitsync dir %s", src);
+		Log.debug("gitsync dir %s", linuxPath(src));
 		GitRepo git = new GitRepo(src.getPath());
 		List<File> candidateFiles = new ArrayList<>();
 		if (src.isFile()) {
@@ -116,7 +116,6 @@ public class GFTP {
 			for (String fn : list) {
 				if (fn.equals(".gitignore")) continue;
 				File f = new File(src.getPath()+"/"+fn);
-				if (exclude.contains(f.getPath())) continue;
 				candidateFiles.add(f);
 			}
 		}
@@ -132,12 +131,16 @@ public class GFTP {
 
 			int i = indexOf(candidateFiles, fde.getName());
 			if (i < 0) {
-				Log.debug("[git:NOT EXISTS] %s", fde.getName());
+				Log.debug("[git:NOT EXISTS localy] %s", fde.getName());
 			}
 			else {
 				File f = candidateFiles.get(i);
 				String d = linuxPath(dst)+"/"+f.getName();
 				candidateFiles.remove(i);
+				if (exclude.contains(linuxPath(f))) {
+					Log.debug("Ignored %s", linuxPath(f));
+					continue;
+				}
 				if (f.isDirectory()) {
 					dirsToGo.add(f);
 					continue;
