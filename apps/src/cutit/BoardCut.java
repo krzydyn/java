@@ -8,12 +8,12 @@ import ui.MainPanel;
 import ui.RectsPanel;
 
 @SuppressWarnings("serial")
-public class CutIt extends MainPanel {
+public class BoardCut extends MainPanel {
 	static int TITLEBAR_HEIGHT = 30;
 	Sheet sheet = new Sheet(500, 300);
 	RectsPanel rectpanel = new RectsPanel(sheet);
 
-	public CutIt() {
+	public BoardCut() {
 		add(rectpanel, BorderLayout.CENTER);
 		Dimension d = Env.defaultScreenSize();
 		d.height -= TITLEBAR_HEIGHT;
@@ -28,7 +28,7 @@ public class CutIt extends MainPanel {
 	}
 
 	public static void main(String[] args) {
-		startGUI(CutIt.class, args);
+		startGUI(BoardCut.class, args);
 	}
 
 }

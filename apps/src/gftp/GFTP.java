@@ -56,7 +56,7 @@ public class GFTP {
 		}
 
 		if (jobs.size() == 0) {
-			exclude.add(Env.expandEnv("~/Work/www/cms"));
+			exclude.add(Env.expandEnv("~/Work/www/cms/ckeditor"));
 			//jobs.add(new CopyJob("~/www/cms/lib", "/www/cms/lib"));
 			jobs.add(new CopyJob("~/Work/www", "/www"));
 			//jobs.add(new CopyJob("~/Work/www/templates", "/www/templates"));

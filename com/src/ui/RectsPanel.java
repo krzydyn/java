@@ -49,7 +49,7 @@ public class RectsPanel extends JPanel {
 
 	@Override
 	public void paintComponent(Graphics g) {
-		float w=getWidth()-2, h=getHeight()-2;
+		float w=getWidth()-1, h=getHeight()-1;
 		float s=Math.min(w/sheet.w, h/sheet.h);
 
 		//Graphics2D g2 = (Graphics2D)g;

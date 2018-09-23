@@ -46,14 +46,12 @@ public class PentoSolver extends MainPanel implements ChangeListener {
 		Dimension d=getPreferredSize();
 		//return getPreferredSize();
 		//return super.getMaximumSize();
-		d.width-=10;
-		d.height-=10;
 		return d;
 	}
 	@Override
 	public Dimension getPreferredSize() {
 		int w=pentomino.getWidth(), h=pentomino.getHeight();
-		Dimension d = new Dimension((w+1)*20, (h+2)*20);
+		Dimension d = new Dimension((w+1)*20+5, (h+2)*20+10+5);
 		Log.debug("getPreferredSize %d x %d",d.width,d.height);
 		return d;
 	}
@@ -69,11 +67,12 @@ public class PentoSolver extends MainPanel implements ChangeListener {
 			g2.setBackground(getBackground());
 			g2.clearRect(0, 0, getWidth(),getHeight());
 			g2.setColor(Color.BLACK);
-			g2.drawRect(9, 9, w*20+1, h*20+1);
 			g2.drawString(
 					String.format("found: %d, time: %d ms", cnt, elapsed),
-					10,20*(h+1)+10);
-			if (done) g2.drawString("DONE",10,20*(h+2)+10);
+					10,10+20*(h+1));
+			if (done) g2.drawString("DONE",10,10+20*(h+1)+15);
+
+			g2.drawRect(9, 9, w*20+1, h*20+1);
 			for (FigPos fp : current) {
 				if (fp.fig.type < 6) g2.setColor(colorTable[fp.fig.type]);
 				else g2.setColor(colorTable[fp.fig.type-6].darker());

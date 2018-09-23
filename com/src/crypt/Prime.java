@@ -57,7 +57,7 @@ public class Prime {
 	static public final BigInteger TWO = BigInteger.valueOf(2);
 
 	static public boolean isPrime(BigInteger p) {
-		if (p.compareTo(BigInteger.ONE) < 0) return false;
+		if (p.compareTo(BigInteger.ONE) <= 0) return false;
 		if (p.compareTo(TWO) == 0) return true;
 		for (int i=0; i < PRIMES.length; ++i) {
 			if (p.remainder(BigInteger.valueOf(PRIMES[i])).equals(BigInteger.ZERO)) return false;
