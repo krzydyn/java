@@ -33,6 +33,17 @@ public class GenFromXml {
 
 	static String repoTestCodePath = repoPath + "/trustzone-application/test_usability/ca_tests/gp_suite";
 
+	static String boilerPlate = "/*\n" +
+					" *\n" +
+					" * This source file is proprietary property of Samsung Electronics Co., Ltd.\n" +
+					" *\n" +
+					" * Copyright (C) 2018 Samsung Electronics Co., Ltd All Rights Reserved\n" +
+					" *\n" +
+					" * Contact: Krzysztof Dynowski <k.dynowski@samsung.com>\n" +
+					" *\n" +
+					" */\n";
+
+
 	static int MAX_LINE_LENGHT = 120;
 
 	static String INDENT = "    ";
@@ -376,10 +387,20 @@ public class GenFromXml {
 		public void enumEntry(PrintStream pr) {
 			pr.printf(INDENT+"test_%s,\n", name);
 		}
+		public void serviceAddEntry(String sect, PrintStream pr) {
+			String desc = name.replace("_", " ");
+			if (desc.length() > 40) desc = desc.substring(0,40-3)+"...";
+			pr.printf("ADD_TEST_GP_SUITE(gp_test_%s, \"TTA_%s\", \"%s%s\", test_%s);\n",
+					name, sect, desc, id, name);
+		}
+		public void serviceTabEntry(PrintStream pr) {
+			pr.printf(INDENT+"&test_gp_test_%s,\n",name);
+		}
 	}
 
 
 	private static boolean filterPrefix(TestCaseInfo tc) {
+		if (tcPrefix.isEmpty()) return true;
 		for (String p : tcPrefix) {
 			if (tc.name.startsWith(p)) return true;
 		}
@@ -569,15 +590,7 @@ public class GenFromXml {
 			throw new RuntimeException(e);
 		}
 
-		pr.println("/*\n" +
-				" *\n" +
-				" * This source file is proprietary property of Samsung Electronics Co., Ltd.\n" +
-				" *\n" +
-				" * Copyright (C) 2018 Samsung Electronics Co., Ltd All Rights Reserved\n" +
-				" *\n" +
-				" * Contact: Krzysztof Dynowski <k.dynowski@samsung.com>\n" +
-				" *\n" +
-				" */\n");
+		pr.println(boilerPlate);
 
 		String def = String.format("__TTA_TEST_%s_H__", name.toUpperCase());
 		pr.println("#ifndef " + def);
@@ -597,7 +610,7 @@ public class GenFromXml {
 		pr.println();
 		pr.printf("extern tests_API_%s[];\n", name);
 		pr.println();
-		pr.println("#endif");
+		pr.printf("#endif // %s\n", def);
 
 	}
 	private static void genTestCasesCode(String name, List<TestCaseInfo> tcs) {
@@ -615,29 +628,22 @@ public class GenFromXml {
 			throw new RuntimeException(e);
 		}
 
-		pr.println("/*\n" +
-				" *\n" +
-				" * This source file is proprietary property of Samsung Electronics Co., Ltd.\n" +
-				" *\n" +
-				" * Copyright (C) 2018 Samsung Electronics Co., Ltd All Rights Reserved\n" +
-				" *\n" +
-				" * Contact: Krzysztof Dynowski <k.dynowski@samsung.com>\n" +
-				" *\n" +
-				" */\n");
+		pr.println(boilerPlate);
 
 		pr.println("#define ECC_IMPLEMENTATION");
 		pr.println("#include \"tf_gp_suite.h\"");
 		pr.printf("#include \"include/tta_test_%s.h\"\n", name);
 		pr.printf("#include \"include/tta_test_%s_Internal.h\"\n", name);
 		pr.println();
+		pr.println("//TODO: following defines should be moved to adaptation layer header");
 		pr.println("#define false 0");
 		pr.println("#define iHandleFlagsNone 0");
 		pr.println("#define iObjectUsageUnknown 0");
 		pr.println("#define iObjectDataFlagsNone 0");
 		pr.println("#define iObjectUsageNone 0");
 		pr.println("#define iObjectDataFlagsNone 0");
-		//pr.println("#define iObjectUsageAllBitsOne 0xffff");
 		pr.println();
+		pr.println("//TODO: following static should be moved to adaptation layer code (and make non static)");
 		pr.println("static AttributeList iAttributeListEmpty = {0,};");
 		pr.println();
 
@@ -646,7 +652,7 @@ public class GenFromXml {
 		}
 
 		pr.println();
-		pr.printf("testStruct tests_%s[] = {\n", name);
+		pr.printf("testStruct tests_API_%s[] = {\n", name);
 		for (TestCaseInfo tc : tcs) {
 			tc.tableEntry(pr);
 		}
@@ -657,6 +663,45 @@ public class GenFromXml {
 				+ INDENT+INDENT+"false\n"
 				+ INDENT+"},");
 		pr.println("};");
+	}
+
+	private static void genTestCasesService(String name, List<TestCaseInfo> tcs) {
+		String fn = null;
+		String header = null;
+		if (name.equals("ClientAPI")) {
+			fn = String.format("%s/test_service_tta_test_%s_auto.c", repoTestCodePath, name);
+			header = String.format("include/tta_test_%s_auto.h", name);
+		}
+		else {
+			fn = String.format("%s/test_service_tta_test_API_%s_auto.c", repoTestCodePath, name);
+			header = String.format("include/tta_test_API_%s_auto.h", name);
+		}
+
+		Log.info("generating file %s", fn);
+		PrintStream pr;
+		try {
+			pr = new PrintStream(fn);
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+
+		pr.println(boilerPlate);
+
+		pr.printf("#include \"%s\"\n", header);
+		pr.println("#include \"tf_gp_suite.h\"");
+		pr.println();
+		pr.printf("static testStruct* pack = tests_API_%s;\n", name);
+		for (TestCaseInfo tc : tcs) {
+			tc.serviceAddEntry(name, pr);
+		}
+		pr.println();
+		pr.println("static struct test_case *tests_table[] = {");
+		for (TestCaseInfo tc : tcs) {
+			tc.serviceTabEntry(pr);
+		}
+		pr.println(INDENT+"NULL\n};");
+		pr.println();
+		pr.println("INITIALIZE_TEST_MODULE(tests_table);");
 	}
 
 	static class Text {
@@ -686,8 +731,9 @@ public class GenFromXml {
 	static void generateTC(String name) {
 		try {
 			List<TestCaseInfo> tcs = parseTestCaseXML(name);
-			//genTestCasesHeader(name, tcs);
+			genTestCasesHeader(name, tcs);
 			genTestCasesCode(name, tcs);
+			genTestCasesService(name, tcs);
 		} catch (Exception e) {
 			Log.error(e);
 		}

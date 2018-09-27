@@ -14,9 +14,11 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
+import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Point;
 import java.awt.event.ActionEvent;
+import java.awt.event.InputEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
@@ -84,7 +86,7 @@ public class ImageEditor extends MainPanel {
 			public void mouseReleased(MouseEvent e) {
 				super.mouseReleased(e);
 				Point p = e.getPoint();
-				mouseClickSelect(p.x, p.y);
+				mouseClickSelect(p.x, p.y, e.getModifiersEx() == InputEvent.SHIFT_DOWN_MASK);
 			}
 		});
 		imgPanel.setScale(3f);
@@ -213,23 +215,22 @@ public class ImageEditor extends MainPanel {
 		return mb;
 	}
 
-	Font font = new Font("Arial", Font.BOLD, 24);
+	Font font = new Font("Arial", Font.PLAIN, 34);
 
-	/*
 	@Override
 	public void postChildren(Graphics g) {
 		Graphics2D g2 = (Graphics2D)g;
-		Shape s = new Arc2D.Double(20,120,400,200, 0, -120, Arc2D.OPEN);
-		Text2D.textOnPath(g2, s, "Test string", font, 0.5f);
-	}*/
+		//Shape s = new Arc2D.Double(20,120,400,200, -180, 360, Arc2D.OPEN);
+		//Text2D.textOnPath(g2, s, "Test string hohoho", font, 0.5f);
+	}
 
 	private void openFile(File file) throws IOException {
 		imgPanel.setImage(ImageIO.read(file));
 	}
 
-	private void mouseClickSelect(int x,int y) {
+	private void mouseClickSelect(int x,int y, boolean append) {
 		if (currTool == null) {Log.debug("Tool not selected");return ;}
-		if (currTool == colorTool) selectByColor(colorTool, x, y);
+		if (currTool == colorTool) selectByColor(colorTool, x, y, append);
 	}
 
 	private void calc_alpha() {
@@ -276,15 +277,15 @@ public class ImageEditor extends MainPanel {
 		}
 	}
 
-	void selectByColor(ColorTool tool, int x0, int y0) {
+	void selectByColor(ColorTool tool, int x0, int y0, boolean append) {
 		x0 = (int)(x0/imgPanel.getScale());
 		y0 = (int)(y0/imgPanel.getScale());
 
 		List<Segment> seq = tool.select(imgPanel.getRaster(), x0, y0);
-		selection.clear();
+		if (append == false) selection.clear();
 		selection.addAll(seq);
 		seq.clear();
-		imgPanel.addSelection(selection);
+		imgPanel.setSelection(selection);
 	}
 
 	public static void main(String[] args) {

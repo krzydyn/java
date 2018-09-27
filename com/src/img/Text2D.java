@@ -82,6 +82,10 @@ public class Text2D {
 			nextCharOffs = align * (pl - gl);
 		}
 
+		float fontHeight = g.getFontMetrics(font).getAscent();
+		float nextGlyphWidth = 0;
+		if (nGlyphs > 0)
+			nextGlyphWidth = glyphVector.getGlyphMetrics(0).getAdvance();
 		g.draw(shape);
 		g.setColor(Color.GREEN);
 		AffineTransform st = g.getTransform();
@@ -120,10 +124,10 @@ public class Text2D {
 						t.translate(-p.getX(), -p.getY());
 						g.setTransform(t);
 						g.fill(glyph);
-						g.setTransform(st);
 						nextCharOffs += advance;
 					}
 				}
+				g.setTransform(st);
 				nextCharOffs -= distance;
 				lastX = coords[0];
 				lastY = coords[1];

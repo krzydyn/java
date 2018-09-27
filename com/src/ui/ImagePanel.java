@@ -96,7 +96,7 @@ public class ImagePanel extends JPanel {
 		rois.add(new Roi(s, 0));
 		repaint(20);
 	}
-	public void addSelection(List<Segment> segs) {
+	public void setSelection(List<Segment> segs) {
 		selection.clear();
 		selection.addAll(segs);
 		Log.debug("selection: %s segs", segs.size());
