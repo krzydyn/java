@@ -31,7 +31,8 @@ public class GenFromXml {
 	static String repoPath = "/home/k.dynowski/Secos/Trustware";
 	static String xmlBasePath = "/home/k.dynowski/Secos/TEE-Initial-Configuration/TEE_Initial_Configuration-Test_Suite_v2_0_0_2-2017_06_09/packages";
 
-	static String repoTestCodePath = repoPath + "/trustzone-application/test_usability/ca_tests/gp_suite";
+	static String repoTestCodePath = repoPath + "/trustzone-application/test_usability";
+	static String repoGPSuitePath = repoTestCodePath + "/ca_tests/gp_suite";
 
 	static String boilerPlate = "/*\n" +
 					" *\n" +
@@ -86,14 +87,14 @@ public class GenFromXml {
 
 	static Map<String, String> opNameMap = new HashMap<>();
 	static {
-		opNameMap.put("SetUp_TEE", "");
-		opNameMap.put("SelectApp", "");
-		opNameMap.put("CloseSession", "TEEC_CloseSession");
-		opNameMap.put("FinalizeContext", "TEEC_FinalizeContext");
-		opNameMap.put("TearDown_TEE", "");
+		//opNameMap.put("SetUp_TEE", "");
+		//opNameMap.put("SelectApp", "");
+		//opNameMap.put("CloseSession", "TEEC_CloseSession");
+		//opNameMap.put("FinalizeContext", "TEEC_FinalizeContext");
+		//opNameMap.put("TearDown_TEE", "");
 
 		//operation has the same name as one of test cases
-		opNameMap.put("Invoke_Crypto_GenerateRandom", "intern_Invoke_Crypto_GenerateRandom");
+		//opNameMap.put("Invoke_Crypto_GenerateRandom", "adaptation_Invoke_Crypto_GenerateRandom");
 	}
 
 
@@ -135,7 +136,16 @@ public class GenFromXml {
 		opAddContext.add("Macro_GetRSAAttributes");
 		opAddContext.add("Invoke_GetNextPersistentObject_All");
 		opAddContext.add("Macro_GetDHAttributes");
+	}
 
+	static Set<String> argPtr = new TreeSet<>();
+	static {
+		argPtr.add("ALL_CONTEXTS");
+		argPtr.add("ALL_SESSIONS");
+		argPtr.add("AttributeList");
+		argPtr.add("ALL_OPERATIONS");
+		argPtr.add("ALL_TEMPORARY_MEMORIES");
+		argPtr.add("ALL_SHARED_MEMORIES");
 	}
 
 	static ArgInfo uint8buf_4k = new ArgInfo("4096", "uint8_t", "operationBuffer4k");
@@ -160,18 +170,18 @@ public class GenFromXml {
 		opAppendArgs.put("Invoke_GetObjectValueAttribute", uint8buf_32);
 		opAppendArgs.put("Check_ObjectValueAttribute", uint8buf_32);
 
-		opAppendArgs.put("Macro_GetRSAAttributes", uint8buf_32);
-		opAppendArgs.put("Macro_GetDHAttributes", uint8buf_32);
-		opAppendArgs.put("Check_GeneratedRSAAttributes", uint8buf_32);
+		opAppendArgs.put("Macro_GetRSAAttributes", uint8buf_4k);
+		opAppendArgs.put("Macro_GetDHAttributes", uint8buf_4k);
+		opAppendArgs.put("Check_GeneratedRSAAttributes", uint8buf_4k);
 
 		opAppendArgs.put("Invoke_GetNextPersistentObject_All", uint8buf_4k);
 		opAppendArgs.put("Check_ReadObjectData_DataRead", uint8buf_4k);
 		opAppendArgs.put("Check_ReadObjectData_AfterWrite", uint8buf_4k);
 		opAppendArgs.put("Check_ReadObjectData_AfterTruncate", uint8buf_4k);
 
-		opAppendArgs.put("Check_GeneratedDHAttributes", uint8buf_32);
-		opAppendArgs.put("Check_EnumeratedPersistentObject", uint8buf_32);
-		opAppendArgs.put("Check_ObjectBufferAttribute_ValueIsTheFullKeySize", uint8buf_32);
+		opAppendArgs.put("Check_GeneratedDHAttributes", uint8buf_4k);
+		opAppendArgs.put("Check_EnumeratedPersistentObject", uint8buf_4k);
+		opAppendArgs.put("Check_ObjectBufferAttribute_ValueIsTheFullKeySize", uint8buf_4k);
 	}
 
 	static Set<OperationInfo> operationTypes = new TreeSet<>();
@@ -201,56 +211,48 @@ public class GenFromXml {
 
 		@Override
 		public String toString() {
-			if (type.equals("ALL_TEEC_UUID")) return "&"+value;
+			if (argPtr.contains(type) ) {
+				if (value.equals("NULL")) return value;
+				if (value.equals("IGNORE")) return "NULL";
+				return "&"+value;
+			}
+			else if (type.equals("ALL_TEEC_VALUES")) {
+				if (value.equals("IGNORE")) return "TEEC_VALUE_IGNORE";
+			}
+			else if (type.equals("ALL_MEMORY_SIZES")) {
+				if (value.equals("IGNORE")) return "MEMORY_SIZE_IGNORE";
+			}
+			else if (type.equals("ALL_KIND_MEMORIES")) {
+				if (value.equals("TEMPORARY")) return "KIND_MEMORY_TEMPORARY";
+				if (value.equals("SHARED")) return "KIND_MEMORY_SHARED";
+			}
 			else if (type.equals("ALL_RETURN_ORIGINS")) {
-				if (value.equals("NULL")) return "ORIGIN_NULL";
+				if (value.equals("NULL")) return "RETURN_ORIGIN_NULL";
 			}
 			else if (type.equals("ALL_TEE_OBJECT_HANDLES")) {
 				if (value.equals("NULL")) return "0";
 			}
 			else if (type.equals("ALL_TTA_STORED_OBJECT_ENUMERATORS")) {
-				if (value.equals("NULL")) return "STORED_OBJECT_NULL"; //0xFFFFFF00
+				if (value.equals("NULL")) return "STORED_OBJECT_NULL";
 			}
-			else if (type.equals("ALL_TEE_RESULTS")) { //FIXME maybe TEE_xxx should added
-				if (value.startsWith("TEE_"))
-					return "TEEC" + value.substring(3);
-			}
-			else if (type.equals("ALL_CONTEXTS")) {
-				if (value.equals("NULL")) return value;
-				return "&"+value;
-			}
-			else if (type.equals("ALL_SESSIONS")) {
-				if (value.equals("NULL")) return value;
-				return "&"+value;
-			}
-			else if (type.equals("AttributeList")) {
-				if (value.equals("NULL")) return value;
-				return "&"+value;
-			}
-			else if (type.equals("ALL_OPERATIONS")) {
-				if (value.equals("NULL")) return value;
-				return "&"+value;
-			}
-			else if (type.equals("ALL_SHARED_MEMORIES")) {
-				if (value.equals("NULL")) return value;
-				return "&"+value;
-			}
-
-			/*
-			if (type.equals("HandleFlags") && parameter.endsWith("instance")) {
-				return "&"+value;
-			}
-			if (type.equals("DataFlags") && parameter.endsWith("instance")) {
-				return "&"+value;
-			}
-			if (type.equals("ObjectUsage") && parameter.endsWith("instance")) {
-				return "&"+value;
-			}
-			*/
 			if (parameter.endsWith("instance")) {
 				return "&"+value;
 			}
 			return value;
+		}
+
+		public String prototype() {
+			if (type.equals("uint8_t"))
+				return String.format("%s* %s,", type, value);
+
+			String p = parameter;
+			if (p.startsWith("IN_")) p = p.substring(3);
+			else if (p.startsWith("OUT_")) p = p.substring(4);
+			if (p.equals("case")) p = "a_case";
+			if (argPtr.contains(type) || parameter.endsWith("instance")) {
+				return String.format("%s* %s,", type, p);
+			}
+			return String.format("%s %s,", type, p);
 		}
 	}
 	static class OperationInfo implements Comparable<OperationInfo> {
@@ -270,7 +272,8 @@ public class GenFromXml {
 			return name.hashCode();
 		}
 		private boolean hasReturnCode() {
-			if (name.startsWith("Check")) return true;
+			if (name.startsWith("Check") || name.startsWith("check")) return true;
+			if (name.equals("AllocateTempMemory") || name.equals("AllocateSharedMemory")) return true;
 			for (ArgInfo a : args) {
 				if (a.type.equals("ALL_TEE_RESULTS") || a.type.equals("ALL_RETURN_CODES")) return true;
 			}
@@ -289,7 +292,17 @@ public class GenFromXml {
 					sep = ",\n"+openIndent.replaceAll(".", " ");
 				}
 
+				if (name.equals("Invoke_GetNextPersistentObject_All")) {
+					tc.checkEnumObjectIndex = 0;
+				}
+				else if (name.equals("Check_EnumeratedPersistentObject")) {
+					ArgInfo a = args.get(args.size()-1);
+					a.value = String.valueOf(tc.checkEnumObjectIndex);
+					++tc.checkEnumObjectIndex;
+				}
+
 				pr.printf(INDENT+"res = %s(%s);\n", mapname, Text.join(sep, args));
+
 				if (name.equals("InitializeContext"))
 					pr.printf(INDENT+"if (res != TEEC_SUCCESS) return res;\n\n");
 				else
@@ -309,17 +322,24 @@ public class GenFromXml {
 			if (hasReturnCode()) b.append("TEEC_Result ");
 			else b.append("void ");
 			b.append(name+"(");
-			for (ArgInfo a : args) {
-				if (a.type.startsWith("uint"))
-					b.append(String.format("%s %s, ", a.type, a.value));
-				else {
-					String p = a.parameter;
-					if (p.startsWith("IN_")) p = p.substring(3);
-					else if (p.startsWith("OUT_")) p = p.substring(4);
-					b.append(String.format("%s %s, ", a.type, p));
+			int indent = b.length();
+			for (int i = 0; i < args.size(); ++i) {
+				ArgInfo a = args.get(i);
+				b.append(a.prototype());
+				if (i < args.size()-1)
+					b.append(" ");
+			}
+			if (b.length() > MAX_LINE_LENGHT) {
+				b.setLength(indent);
+				String openIndent = b.toString().replaceAll(".", " ");
+				for (int i = 0; i < args.size(); ++i) {
+					ArgInfo a = args.get(i);
+					b.append(a.prototype());
+					if (i < args.size()-1)
+						b.append("\n" + openIndent);
 				}
 			}
-			if (b.charAt(b.length()-1)==' ') b.setLength(b.length()-2);
+			if (b.charAt(b.length()-1)==',') b.setLength(b.length()-1);
 			b.append(");");
 			pr.println(b.toString());
 		}
@@ -346,28 +366,38 @@ public class GenFromXml {
 		}
 	}
 	static class TestCaseInfo {
+		int checkEnumObjectIndex = -1;
 		boolean postamble = false;
 		String name;
-		String lastContext = null;
 		String id;
-		List<String> initVar = new ArrayList<>();
+		List<String> localVars = new ArrayList<>();
 		List<StepInfo> steps = new ArrayList<>();
-		public void addInitVar(String init) {
-			if (!initVar.contains(init))
-				initVar.add(init);
-			if (init.contains("CONTEXT01")) lastContext = "CONTEXT01";
-			else if (init.contains("CONTEXT02")) lastContext = "CONTEXT02";
+		public void addLocalVar(String init) {
+			if (!localVars.contains(init))
+				localVars.add(init);
 		}
 		public void implement(PrintStream pr) {
 			pr.printf("//Test: %s %s\n", name, id);
-			pr.printf("static TEEC_Result %s()\n", name);
+			pr.printf("static int tc_%s()\n", name);
 			pr.printf("{\n");
 
-			for (String init : initVar) {
+			for (String init : localVars) {
 				pr.printf(INDENT+"%s;\n", init);
 			}
 			pr.printf(INDENT+"TEEC_Result res = TEEC_SUCCESS;\n");
 			pr.println();
+
+			if (!steps.isEmpty()) { // check first and last step
+				OperationInfo op;
+				op = steps.get(0).ops.get(0);
+				if (!op.name.equals("SetUp_TEE")) {
+					throw new RuntimeException("no SetUp_TEE for " + name);
+				}
+				op = steps.get(steps.size()-1).ops.get(0);
+				if (!op.name.equals("TearDown_TEE")) {
+					throw new RuntimeException("no TearDown_TEE for " + name);
+				}
+			}
 
 			for (StepInfo si : steps) {
 				si.implement(pr);
@@ -375,6 +405,11 @@ public class GenFromXml {
 			}
 
 			pr.printf(INDENT+"return res;\n}\n");
+		}
+		public void addTestMacro(String sect, PrintStream pr) {
+			String desc = name.replace("_", " ");
+			if (desc.length() > 40) desc = desc.substring(0,40-3)+"...";
+			pr.printf("CREATE_TEST_CUSTOM(test_%s,\"%s\",\"%s\", adaptation_test_prepare, tc_%s, adaptation_test_fin);\n", name, sect, desc, name);
 		}
 		public void tableEntry(PrintStream pr) {
 			pr.println(INDENT+"{");
@@ -430,56 +465,64 @@ public class GenFromXml {
 
 		OperationInfo op = new OperationInfo(tc);
 		op.name = n.getAttributes().getNamedItem("name").getTextContent();
-		Log.info("    operation %s", op.name);
+		if (op.name == null || op.name.isEmpty()) return null;
+
+		//Log.info("    operation %s", op.name);
 		op.args = new ArrayList<>(args.getLength());
+		/*
 		if (opAddContext.contains(op.name)) {
 			ArgInfo arg = new ArgInfo();
 			arg.parameter = "IN_context";
 			arg.type = "ALL_CONTEXTS";
 			arg.value = tc.lastContext;
 			op.args.add(arg);
-		}
+		}*/
 		for (int i = 0; i < args.getLength(); ++i) {
 			Node a = args.item(i);
 			ArgInfo arg = parseArgument(a);
 			if (arg == null) throw new RuntimeException("cannot parse Argument");
-			if (arg.type.equals("ALL_COMMAND_ID_INTERNAL_API")) continue;
-			if (arg.type.equals("ALL_COMMAND_IDS_CLIENT_API")) continue;
 
 			if (arg.type.equals("ALL_CONTEXTS")) {
 				if (!arg.value.equals("NULL"))
-					tc.addInitVar(String.format("TEEC_Context %s = {0,}",arg.value));
+					tc.addLocalVar(String.format("%s %s = {0,}",arg.type,arg.value));
 			}
 			else if (arg.type.equals("ALL_SESSIONS")) {
 				if (!arg.value.equals("NULL"))
-					tc.addInitVar(String.format("TEEC_Session %s = {0,}",arg.value));
+					tc.addLocalVar(String.format("%s %s = {0,}",arg.type,arg.value));
 			}
 			else if (arg.type.equals("AttributeList")) {
 				if (!arg.value.endsWith("Empty"))
-					tc.addInitVar(String.format("AttributeList %s = {0,}",arg.value));
+					tc.addLocalVar(String.format("%s %s = {0,}",arg.type,arg.value));
 			}
 			if (arg.type.equals("ALL_OPERATIONS")) {
 				if (!arg.value.equals("NULL"))
-					tc.addInitVar(String.format("TEEC_Operation %s = {0,}",arg.value));
+					tc.addLocalVar(String.format("%s %s = {0,}",arg.type,arg.value));
+			}
+			else if (arg.type.equals("ALL_TEMPORARY_MEMORIES")) {
+				if (!arg.value.equals("NULL"))
+					tc.addLocalVar(String.format("%s %s = {0,}",arg.type,arg.value));
 			}
 			else if (arg.type.equals("ALL_SHARED_MEMORIES")) {
-				if (!arg.value.equals("NULL"))
-					tc.addInitVar(String.format("TEEC_SharedMemory %s = {0,}",arg.value));
+				if (!arg.value.equals("NULL") && !arg.value.equals("IGNORE"))
+					tc.addLocalVar(String.format("%s %s = {0,}",arg.type,arg.value));
 			}
 			else if (arg.type.equals("HandleFlags") || arg.type.equals("DataFlags")) {
 				if (!arg.value.endsWith("None"))
-					tc.addInitVar(String.format("uint32_t %s = 0",arg.value));
+					tc.addLocalVar(String.format("%s %s = 0",arg.type,arg.value));
 			}
 			else if (arg.type.equals("ObjectUsage")) {
 				if (!arg.value.endsWith("None") && !arg.value.endsWith("AllBitsOne") && !arg.value.endsWith("Unknown"))
-					tc.addInitVar(String.format("uint32_t %s = 0",arg.value));
+					tc.addLocalVar(String.format("%s %s = 0",arg.type,arg.value));
 			}
 			op.args.add(arg);
 		}
 		if (opAppendArgs.containsKey(op.name)) {
 			ArgInfo a = opAppendArgs.get(op.name);
-			tc.addInitVar(String.format("%s %s[%s]", a.type, a.value, a.parameter));
+			tc.addLocalVar(String.format("%s %s[%s]", a.type, a.value, a.parameter));
 			op.args.add(a);
+		}
+		if (op.name.equals("Check_EnumeratedPersistentObject")) {
+			op.args.add(new ArgInfo("idx", "uint32_t", "-1"));
 		}
 		return op;
 	}
@@ -488,7 +531,6 @@ public class GenFromXml {
 		Document d = documentBuilder.newDocument();
 		d.appendChild(d.importNode(n, true));
 		NodeList ops = d.getElementsByTagName("operation");
-
 		if (ops.getLength() == 0) return null;
 
 		StepInfo si = new StepInfo();
@@ -499,7 +541,6 @@ public class GenFromXml {
 			if (op == null) throw new RuntimeException("cannot parse Operation");;
 			operationTypes.add(op);
 			si.ops.add(op);
-
 		}
 		return si;
 	}
@@ -508,10 +549,9 @@ public class GenFromXml {
 		Document d = documentBuilder.newDocument();
 		d.appendChild(d.importNode(n, true));
 		NodeList steps = d.getElementsByTagName("call");
-
 		for (int i = 0; i < steps.getLength(); ++i) {
 			Node s = steps.item(i);
-			Log.info("  step[%d]: %s", i, s.getAttributes().getNamedItem("stepNumber"));
+			//Log.info("  step[%d]: %s", i, s.getAttributes().getNamedItem("stepNumber"));
 			StepInfo si = parseStep(tc, s);
 			if (si == null) throw new RuntimeException("cannot parse Step");
 			tc.steps.add(si);
@@ -575,12 +615,15 @@ public class GenFromXml {
 		return tcs;
 	}
 
-	private static void genTestCasesHeader(String name, List<TestCaseInfo> tcs) {
-		String fn = null;
+	private static void genAdaptationHeader() {
+		String name = "gp_adaptation_api";
+		String fn = String.format("%s/%s.h", repoTestCodePath, name);
+		/*
 		if (name.equals("ClientAPI"))
 			fn = String.format("%s/include/tta_test_%s_auto.h", repoTestCodePath, name);
 		else
 			fn = String.format("%s/include/tta_test_API_%s_auto.h", repoTestCodePath, name);
+		*/
 
 		Log.info("generating file %s", fn);
 		PrintStream pr;
@@ -591,24 +634,17 @@ public class GenFromXml {
 		}
 
 		pr.println(boilerPlate);
-
-		String def = String.format("__TTA_TEST_%s_H__", name.toUpperCase());
+		//String def = String.format("__TTA_TEST_%s_H__", name.toUpperCase());
+		String def = String.format("__%s_H__", name.toUpperCase());
 		pr.println("#ifndef " + def);
 		pr.println("#define " + def);
 		pr.println();
-		pr.println("typedef enum\n{");
-
-		for (TestCaseInfo tc : tcs) {
-			tc.enumEntry(pr);
-		}
-
-		pr.printf("} test_%s;\n", name);
+		pr.println("#include \"gp_adaptation_types.h\"");
 		pr.println();
+		Log.info("  operations %d", operationTypes.size());
 		for (OperationInfo op : operationTypes) {
 			op.prototype(pr);
 		}
-		pr.println();
-		pr.printf("extern tests_API_%s[];\n", name);
 		pr.println();
 		pr.printf("#endif // %s\n", def);
 
@@ -616,9 +652,9 @@ public class GenFromXml {
 	private static void genTestCasesCode(String name, List<TestCaseInfo> tcs) {
 		String fn = null;
 		if (name.equals("ClientAPI"))
-			fn = String.format("%s/tta_test_%s_auto.c", repoTestCodePath, name);
+			fn = String.format("%s/tta_test_%s_auto.c", repoGPSuitePath, name);
 		else
-			fn = String.format("%s/tta_test_API_%s_auto.c", repoTestCodePath, name);
+			fn = String.format("%s/tta_test_API_%s_auto.c", repoGPSuitePath, name);
 
 		Log.info("generating file %s", fn);
 		PrintStream pr;
@@ -630,50 +666,39 @@ public class GenFromXml {
 
 		pr.println(boilerPlate);
 
-		pr.println("#define ECC_IMPLEMENTATION");
-		pr.println("#include \"tf_gp_suite.h\"");
-		pr.printf("#include \"include/tta_test_%s.h\"\n", name);
-		pr.printf("#include \"include/tta_test_%s_Internal.h\"\n", name);
-		pr.println();
-		pr.println("//TODO: following defines should be moved to adaptation layer header");
-		pr.println("#define false 0");
-		pr.println("#define iHandleFlagsNone 0");
-		pr.println("#define iObjectUsageUnknown 0");
-		pr.println("#define iObjectDataFlagsNone 0");
-		pr.println("#define iObjectUsageNone 0");
-		pr.println("#define iObjectDataFlagsNone 0");
-		pr.println();
-		pr.println("//TODO: following static should be moved to adaptation layer code (and make non static)");
-		pr.println("static AttributeList iAttributeListEmpty = {0,};");
+		pr.println("#include \"gp_adaptation_api.h\"");
 		pr.println();
 
+		int n = 0;
 		for (TestCaseInfo tc : tcs) {
 			tc.implement(pr);
 		}
-
 		pr.println();
-		pr.printf("testStruct tests_API_%s[] = {\n", name);
+
+		pr.println("#include \"tf.h\"");
 		for (TestCaseInfo tc : tcs) {
-			tc.tableEntry(pr);
+			tc.addTestMacro(name, pr);
 		}
-		pr.println(INDENT+"{\n"
-				+ INDENT+INDENT+"test_MaxNumTests,\n"
-				+ INDENT+INDENT+"\"NONE\",\n"
-				+ INDENT+INDENT+"NULL,\n"
-				+ INDENT+INDENT+"false\n"
-				+ INDENT+"},");
+
+		pr.println("static struct test_case *test_array[] = {");
+		for (TestCaseInfo tc : tcs) {
+			pr.printf(INDENT+"&test_%s,\n", tc.name);
+		}
+		pr.println(INDENT + "NULL");
 		pr.println("};");
+
+		pr.println("INITIALIZE_TEST_MODULE(test_array);");
 	}
 
 	private static void genTestCasesService(String name, List<TestCaseInfo> tcs) {
 		String fn = null;
 		String header = null;
 		if (name.equals("ClientAPI")) {
-			fn = String.format("%s/test_service_tta_test_%s_auto.c", repoTestCodePath, name);
+			fn = String.format("%s/test_service_tta_test_%s_auto.c", repoGPSuitePath, name);
 			header = String.format("include/tta_test_%s_auto.h", name);
 		}
 		else {
-			fn = String.format("%s/test_service_tta_test_API_%s_auto.c", repoTestCodePath, name);
+			fn = String.format("%s/test_service_tta_test_API_%s_auto.c", repoGPSuitePath, name);
 			header = String.format("include/tta_test_API_%s_auto.h", name);
 		}
 
@@ -722,6 +747,10 @@ public class GenFromXml {
 		public static void error(Exception e) {
 			e.printStackTrace(System.err);
 		}
+		public static void error(String format, Object... args) {
+			System.err.printf("ERROR: "+format, args);
+			System.err.println();
+		}
 		public static void info(String format, Object... args) {
 			System.err.printf(format, args);
 			System.err.println();
@@ -731,17 +760,21 @@ public class GenFromXml {
 	static void generateTC(String name) {
 		try {
 			List<TestCaseInfo> tcs = parseTestCaseXML(name);
-			genTestCasesHeader(name, tcs);
 			genTestCasesCode(name, tcs);
-			genTestCasesService(name, tcs);
+			//genTestCasesService(name, tcs);
 		} catch (Exception e) {
 			Log.error(e);
 		}
 	}
 
 	static void usage() {
-		//TODO
+		Log.info("gentool [cmd] parts\n"
+				+ "where parts is one or more from:\n"
+				+ "  ClientAPI Crypto DataStorage");
+
 	}
+
+	private static final int CMD_TC = 0;
 	public static void main(String[] args) {
 		try {
 			//documentBuilderFactory.setNamespaceAware(true);
@@ -751,13 +784,19 @@ public class GenFromXml {
 			Log.error(e);
 			return ;
 		}
-		if (args.length < 2) usage();
+		if (args.length < 1) usage();
+
+		int cmd = CMD_TC;
 		for (int i = 0; i < args.length; ++i) {
 			if (args[i].equals("tc")) {
-				generateTC(args[i+1]);
-				++i;
+				cmd = CMD_TC;
 			}
+			else {
+				if (cmd == CMD_TC) generateTC(args[i]);
+			}
+
 		}
+		genAdaptationHeader();
 	}
 
 }
