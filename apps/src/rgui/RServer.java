@@ -49,15 +49,15 @@ import netio.SelectorThread.QueueChannel;
 
 public class RServer implements ChannelHandler {
 	private static final int RSERVER_PORT = 9085; // IANA IBM remote system console
-	private static final int FORCE_ACTION_TIME = 60*1000;
-	private static boolean keepScreenOn;
+	private static final int FORCE_ACTION_TIME = 10*1000;
+	private static boolean keepOn;
 	private static boolean lockScreenOn;
 	private final SelectorThread selector;
 	private final Robot robot;
 	private final int mouseButtonMask;
 	private final File passwdFile;
 
-	private long forceActionTm=0;
+	private long doActionTm=0;
 	private BufferedImage screenImg;
 	private Rectangle screenRect;
 	private final List<QueueChannel> clients=new ArrayList<>();
@@ -210,7 +210,6 @@ public class RServer implements ChannelHandler {
 	private BufferedImage getScreen(int x, int y, int w, int h) {
 		BufferedImage i = null;
 		synchronized (this) {
-			if (screenImg==null) return null;
 			i=screenImg;
 		}
 		return i.getSubimage(x, y, w, h);
@@ -220,7 +219,7 @@ public class RServer implements ChannelHandler {
 		synchronized (robot) {
 			robot.mouseMove(x, y);
 		}
-		forceActionTm = System.currentTimeMillis()+FORCE_ACTION_TIME;
+		doActionTm = System.currentTimeMillis()+FORCE_ACTION_TIME;
 	}
 	private void mounseClick(int x,int y,int buttons) {
 		Log.info("mouseClick(%d,%d,%x) / %x",x,y,buttons,mouseButtonMask);
@@ -228,7 +227,7 @@ public class RServer implements ChannelHandler {
 		robot.mouseMove(x, y);
 		robot.mousePress(buttons);
 		robot.mouseRelease(buttons);
-		forceActionTm = System.currentTimeMillis()+FORCE_ACTION_TIME;
+		doActionTm = System.currentTimeMillis()+FORCE_ACTION_TIME;
 	}
 	private void keyType(int keycode) {
 		int key = keycode&0xffff;
@@ -339,11 +338,11 @@ public class RServer implements ChannelHandler {
 		synchronized (robot) {
 			robot.mouseRelease(buttons);
 		}
-		forceActionTm = System.currentTimeMillis()+FORCE_ACTION_TIME;
+		doActionTm = System.currentTimeMillis()+FORCE_ACTION_TIME;
 	}
 	private void mouseWheel(int rot) {
 		robot.mouseWheel(rot);
-		forceActionTm = System.currentTimeMillis()+FORCE_ACTION_TIME;
+		doActionTm = System.currentTimeMillis()+FORCE_ACTION_TIME;
 	}
 	private String getUTF(ByteBuffer b) {
 		int l=b.getShort();
@@ -527,6 +526,7 @@ public class RServer implements ChannelHandler {
 	private void run() throws Exception {
 		screenRect = null;
 		int shiftX=0,shiftY=0;
+		GraphicsDevice gdev = null;
 
 		for (GraphicsDevice gd : GraphicsEnvironment.getLocalGraphicsEnvironment().getScreenDevices()) {
 			Rectangle r = gd.getDefaultConfiguration().getBounds();
@@ -537,6 +537,7 @@ public class RServer implements ChannelHandler {
 				if (r.y == 0) shiftY = screenRect.y;
 				screenRect = screenRect.union(r);
 			}
+			if (gdev == null) gdev = gd;
 		}
 		screenRect.x -= shiftX;
 		screenRect.y -= shiftY;
@@ -547,7 +548,6 @@ public class RServer implements ChannelHandler {
 			lockScreen.setUndecorated(true);
 			lockScreen.setAlwaysOnTop(true);
 			lockScreen.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
-			//lockScreen.setExtendedState(JFrame.MAXIMIZED_BOTH);
 
 			lockScreen.getContentPane().setLayout(new FlowLayout());
 			lockScreen.getContentPane().setBackground(Color.BLACK);
@@ -579,9 +579,14 @@ public class RServer implements ChannelHandler {
 				public void focusGained(FocusEvent e) {
 				}
 			});
-			//GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice().setFullScreenWindow(lockScreen);
+			//Method 1.
+			//lockScreen.setExtendedState(JFrame.MAXIMIZED_BOTH);
+			//Method 2.
+			//gdev.setFullScreenWindow(lockScreen);
+			//Method 3.
 			lockScreen.setBounds(screenRect);
 			lockScreen.setMinimumSize(lockScreen.getSize());
+
 			lockScreen.setResizable(false);
 			lockScreen.setVisible(true);
 		}
@@ -591,8 +596,9 @@ public class RServer implements ChannelHandler {
 		screenImg = robot.createScreenCapture(rect);
 		Log.info("update rect (%d,%d %dx%d)",rect.x,rect.y,rect.width,rect.height);
 
+		try {
 		selector.start();
-		selector.bind(null, RSERVER_PORT, this);
+		//selector.bind(null, RSERVER_PORT, this);
 		Point lastMouseLoc = null;
 		while (selector.isRunning()) {
 			if (clients.size()>0) {
@@ -603,25 +609,29 @@ public class RServer implements ChannelHandler {
 				i=null; p=null;
 			}
 
-			if (keepScreenOn && forceActionTm < System.currentTimeMillis()) {
+			if (keepOn && doActionTm < System.currentTimeMillis()) {
 				Point m = MouseInfo.getPointerInfo().getLocation();
-				if (lastMouseLoc != null && lastMouseLoc.equals(m)) {
+				if (lastMouseLoc != null && lastMouseLoc.equals(m) && m.x > 10) {
 					synchronized (robot) {
-						robot.mouseMove(m.x>0?m.x-1:m.x+1, m.y);
+						robot.mouseMove(m.x-5, m.y);
+						XThread.sleep(1000/20);
 						robot.mouseMove(m.x, m.y);
 					}
 				}
 				else lastMouseLoc = m;
-				forceActionTm = System.currentTimeMillis()+FORCE_ACTION_TIME;
+				doActionTm = System.currentTimeMillis()+FORCE_ACTION_TIME;
 			}
 			XThread.sleep(1000/50);
+		}
+		}finally {
+			selector.stop();
 		}
 	}
 
 	public static void main(String[] args) throws Exception {
 		Log.setTestMode();
 		for (int i=0; i <args.length; ++i) {
-			if (args[i].equalsIgnoreCase("keepon")) keepScreenOn=true;
+			if (args[i].equalsIgnoreCase("keepon")) keepOn=true;
 			else if (args[i].equalsIgnoreCase("lockon")) lockScreenOn=true;
 		}
 		try {
@@ -630,7 +640,6 @@ public class RServer implements ChannelHandler {
 			Log.info("rserver finished");
 			Log.error(e);
 		}
-
 	}
 }
 
