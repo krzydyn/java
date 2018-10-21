@@ -42,6 +42,7 @@ import javax.swing.JTextField;
 import sys.Env;
 import sys.Log;
 import sys.XThread;
+import ui.ImagePanel;
 import netio.ChannelHandler;
 import netio.SelectorThread;
 import netio.TcpFilter;
@@ -543,13 +544,19 @@ public class RServer implements ChannelHandler {
 		screenRect.y -= shiftY;
 		Log.info("screen bounds (%d,%d %dx%d)",screenRect.x,screenRect.y,screenRect.width,screenRect.height);
 
+		Rectangle rect = new Rectangle(0,0,(int)screenRect.getMaxX(),(int)screenRect.getMaxY());
+		screenImg = robot.createScreenCapture(rect);
+		Log.info("update rect (%d,%d %dx%d)",rect.x,rect.y,rect.width,rect.height);
+
 		if (lockScreenOn) {
+			ImagePanel ip = new ImagePanel(new FlowLayout());
+			//ip.setImage(screenImg);
 			lockScreen = new JFrame();
 			lockScreen.setUndecorated(true);
 			lockScreen.setAlwaysOnTop(true);
 			lockScreen.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 
-			lockScreen.getContentPane().setLayout(new FlowLayout());
+			lockScreen.setContentPane(ip);
 			lockScreen.getContentPane().setBackground(Color.BLACK);
 			//passwdInput = new JTextField(10);
 			passwdInput = new JPasswordField(10);
@@ -591,10 +598,6 @@ public class RServer implements ChannelHandler {
 			lockScreen.setVisible(true);
 		}
 
-
-		Rectangle rect = new Rectangle(0,0,(int)screenRect.getMaxX(),(int)screenRect.getMaxY());
-		screenImg = robot.createScreenCapture(rect);
-		Log.info("update rect (%d,%d %dx%d)",rect.x,rect.y,rect.width,rect.height);
 
 		try {
 		selector.start();

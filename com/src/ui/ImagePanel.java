@@ -10,6 +10,7 @@ import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Image;
+import java.awt.LayoutManager;
 import java.awt.Rectangle;
 import java.awt.Shape;
 import java.awt.geom.AffineTransform;
@@ -59,6 +60,9 @@ public class ImagePanel extends JPanel {
 		setPreferredSize(vSize);
 	}
 
+	public ImagePanel(LayoutManager layout) {
+		super(layout);
+	}
 	public ImagePanel() {
 		super(new BorderLayout());
 	}
@@ -146,7 +150,7 @@ public class ImagePanel extends JPanel {
 		//long tm = System.currentTimeMillis();
 		AffineTransform tr = g2.getTransform();
 		g2.scale(scale, scale);
-		g2.drawImage(img, 0, 0, null);
+		g2.drawImage(img, 0, 0, this);
 
 		if (selection.size() > 0) {
 			g2.setColor(Color.GREEN);
