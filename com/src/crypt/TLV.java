@@ -91,34 +91,35 @@ Tag Primitive 	Use
 */
 public class TLV {
 	enum TYPE {
-		RFU, BOOLEAN, INTEGER, BITSTRING, STRING, NULL, OBJID, OBJDESCCR
+		RFU, BOOLEAN, INTEGER, REAL, BITSTRING, OCTSTRING, STRING, NULL, OBJID, OBJDESCCR,
+		SEQUENCE, SET, TIME
 	}
-	TYPE tlvType[] = {
+	TYPE asnType[] = {
 			TYPE.RFU,       //0
 			TYPE.BOOLEAN,   //1
 			TYPE.INTEGER,   //2
 			TYPE.BITSTRING, //3
-			TYPE.STRING,    //4
+			TYPE.OCTSTRING, //4
 			TYPE.NULL,      //5
 			TYPE.OBJID,     //6
 			TYPE.OBJDESCCR, //7
 			TYPE.RFU,       //8
-			TYPE.RFU,       //9
+			TYPE.REAL,      //9
 			TYPE.RFU,       //10
 			TYPE.RFU,       //11
 			TYPE.STRING,    //12
 			TYPE.RFU,       //13
 			TYPE.RFU,       //14
 			TYPE.RFU,       //15
-			TYPE.RFU,       //16
-			TYPE.RFU,       //17
+			TYPE.SEQUENCE,  //16
+			TYPE.SET,       //17
 			TYPE.STRING,    //18
 			TYPE.STRING,    //19
 			TYPE.STRING,    //20
 			TYPE.STRING,    //21
 			TYPE.STRING,    //22
-			TYPE.STRING,    //23
-			TYPE.STRING,    //24
+			TYPE.TIME,      //23
+			TYPE.TIME,      //24
 			TYPE.STRING,    //25
 			TYPE.STRING,    //26
 			TYPE.STRING,    //27
@@ -231,10 +232,11 @@ public class TLV {
 
 	@Override
 	public String toString() {
-		if ((buf[ti]&TAG_SEQ) < tlvType.length && tlvType[buf[ti]&TAG_SEQ] == TYPE.STRING)
-			return String.format("T=%02x L=%d V=%s",tag(),l,Text.vis(buf,vi,l));
-		else
-			return String.format("T=%02x L=%d V=%s",tag(),l,Text.hex(buf,vi,l));
-
+		if ((buf[ti]&TAG_SEQ) < asnType.length) {
+			TYPE type = asnType[buf[ti]&TAG_SEQ];
+			if (type == TYPE.STRING)
+				return String.format("T=%02x L=%d V=%s",tag(),l,Text.vis(buf,vi,l));
+		}
+		return String.format("T=%02x L=%d V=%s",tag(),l,Text.hex(buf,vi,l));
 	}
 }

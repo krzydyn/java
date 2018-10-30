@@ -133,7 +133,12 @@ public class TEFSecosCrypt extends UnitTest implements TEF_Types {
 				.set(tef_algorithm_param_e.TEF_AAD, Text.bin("a481e81c70e65eeb94cdf4e25b0a225a4f48b58b12cde148a3a9aa4db0d2988da27591d65827eed39ad6933f267e486c31dc586c36ebaa0c349b9c12ed33221a463737695743cebb456f0705a9895a5aac720f8a53981a231fde"))
 				.set(tef_algorithm_param_e.TEF_AUTHTAG_LEN, 96),
 
+		new TEF.tef_algorithm(tef_chaining_mode_e.TEF_CCM, tef_padding_mode_e.TEF_PADDING_NONE)
+				.set(tef_algorithm_param_e.TEF_NONCE, Text.bin("00:8d:49:3b:30:ae:8b:3c:96:96:76:6c:fa"))
+				.set(tef_algorithm_param_e.TEF_AUTHTAG_LEN, 112),
+
 		new TEF.tef_algorithm(tef_chaining_mode_e.TEF_PCBC, tef_padding_mode_e.TEF_PADDING_NONE),
+
 	};
 
 	static class EncryptTC {
@@ -190,6 +195,9 @@ public class TEFSecosCrypt extends UnitTest implements TEF_Types {
 		new EncryptTC(keys_nist[6],algos_nist[8],
 				Text.bin("6081f9455583c4a35ed9400799e209fb7e75a7887868aa4bb0c9f7b78f67125678e03c618e615bfad03ab077315b7787418f50"),
 				Text.bin("18eca8d7ec92b6209c8d3c82d10c876047b470e22b74346ad609f44cc338b38c881103636fd056634907c28e32efb32dcddb23 de01691b9b99851636c7c8d5")),
+
+		//CCM-AES
+		new EncryptTC(keys_nist[3],algos_nist[9],"".getBytes(),Text.bin("250327c674aaf477aef2675748cf6971")),
 	};
 
 	static void encrypt() throws Exception {

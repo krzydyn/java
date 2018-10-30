@@ -96,7 +96,7 @@ public class GenSecosCrypt {
 				new CryptoTest("DESede/CBC/NoPadding", keys[2]),
 
 				new CryptoTest("AES/CTS/PKCS5Padding", keys[1]),
-				//new CryptoTest("AES/CTS/PKCS5Padding", keys[1]),
+				new CryptoTest("AES/CTS/NoPadding", keys[1]),
 		};
 		final String message = "111111112222222233333333444444445555555566666666777777778888888899999999"
 				+ "0000000011111111222222223333333344444444555555556666666677777777888888880";

@@ -14,7 +14,7 @@ public class PlaySound {
 
 		try {
 			//File f = new File("res/SampleAudio_0.5mb.mp3");
-			File f = new File("../resources/vivaldi-spring.mp3");
+			File f = new File("res/SampleAudio_0.5mb.mp3");
 			clip = Sound.play(f.toURI().toURL());
 		} catch (Exception e) {
 			e.printStackTrace();

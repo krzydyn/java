@@ -1,6 +1,7 @@
 package generator;
 
 import java.io.File;
+import java.io.FileFilter;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -29,7 +30,9 @@ import org.w3c.dom.NodeList;
 
 public class GenFromXml {
 	static String repoPath = "/home/k.dynowski/Secos/Trustware";
-	static String xmlBasePath = "/home/k.dynowski/Secos/TEE-Initial-Configuration/TEE_Initial_Configuration-Test_Suite_v2_0_0_2-2017_06_09/packages";
+	static String xmlBasePath = "/home/k.dynowski/Secos/TEE-Initial-Configuration/TEE_Initial_Configuration-Test_Suite_v2_0_0_2-2017_06_09";
+	static String xmlPackagesPath = xmlBasePath + "/packages";
+	static String xmlValuesPath = xmlBasePath + "/Values";
 
 	static String repoTestCodePath = repoPath + "/trustzone-application/test_usability";
 	static String repoGPSuitePath = repoTestCodePath + "/ca_tests/gp_suite";
@@ -98,48 +101,9 @@ public class GenFromXml {
 	}
 
 
-	static Set<String> opAddContext = new TreeSet<>();
-	static {
-		opAddContext.add("Invoke_Crypto_InitObjectWithKeys");
-		opAddContext.add("Invoke_Crypto_InitObjectWithKeysExt");
-		opAddContext.add("Macro_StoreRefAttribute");
-		opAddContext.add("Invoke_Crypto_GetOperationInfoMultiple");
-		opAddContext.add("Invoke_GetObjectBufferAttribute");
-		opAddContext.add("Invoke_Crypto_GenerateRandom");
-
-		opAddContext.add("Invoke_Crypto_AEInit");
-		opAddContext.add("Invoke_Crypto_AEUpdateAAD");
-		opAddContext.add("Invoke_Crypto_AEUpdate_for_encryption");
-		opAddContext.add("Invoke_Crypto_AEEncryptFinal");
-		opAddContext.add("Invoke_Crypto_AEDecryptFinal");
-
-		opAddContext.add("Invoke_Crypto_CipherInit");
-		opAddContext.add("Invoke_Crypto_CipherUpdate");
-		opAddContext.add("Invoke_Crypto_CipherDoFinal");
-
-		opAddContext.add("Invoke_Crypto_DigestInit");
-		opAddContext.add("Invoke_Crypto_DigestUpdate");
-		opAddContext.add("Invoke_Crypto_DigestDoFinal");
-
-		opAddContext.add("Invoke_Crypto_MACInit");
-		opAddContext.add("Invoke_Crypto_MACUpdate");
-		opAddContext.add("Invoke_Crypto_MACCompareFinal");
-		opAddContext.add("Invoke_Crypto_MACComputeFinal");
-
-		opAddContext.add("Invoke_CreatePersistentObject");
-		opAddContext.add("Invoke_OpenPersistentObject");
-		opAddContext.add("Invoke_StoreBuffer");
-
-		opAddContext.add("Invoke_ReadObjectData");
-		opAddContext.add("Invoke_RenamePersistentObject");
-		opAddContext.add("Invoke_StoreAttributeBuffer");
-		opAddContext.add("Macro_GetRSAAttributes");
-		opAddContext.add("Invoke_GetNextPersistentObject_All");
-		opAddContext.add("Macro_GetDHAttributes");
-	}
-
 	static Set<String> argPtr = new TreeSet<>();
 	static {
+		argPtr.add("ALL_THREADS");
 		argPtr.add("ALL_CONTEXTS");
 		argPtr.add("ALL_SESSIONS");
 		argPtr.add("AttributeList");
@@ -149,31 +113,32 @@ public class GenFromXml {
 	}
 
 	static ArgInfo uint8buf_4k = new ArgInfo("4096", "uint8_t", "operationBuffer4k");
-	static ArgInfo uint8buf_32 = new ArgInfo("32", "uint8_t", "operationBuffer32");
+	//static ArgInfo uint8buf_32 = new ArgInfo("32", "uint8_t", "operationBuffer32");
 
 	static Map<String,ArgInfo> opAppendArgs = new HashMap<>();
 	static {
-		opAppendArgs.put("Invoke_Crypto_GetOperationInfo", uint8buf_32);
-		opAppendArgs.put("Check_OperationInfo", uint8buf_32);
+		opAppendArgs.put("Invoke_Crypto_GetOperationInfo", uint8buf_4k);
+		opAppendArgs.put("Check_OperationInfo", uint8buf_4k);
 
 		opAppendArgs.put("Invoke_Crypto_GetOperationInfoMultiple", uint8buf_4k);
 		opAppendArgs.put("Check_0_OperationInfoMultiple", uint8buf_4k);
 		opAppendArgs.put("Check_1_OperationInfoKey", uint8buf_4k);
 
-		opAppendArgs.put("Invoke_GetObjectInfo1", uint8buf_32);
-		opAppendArgs.put("Invoke_GetObjectInfo", uint8buf_32);
-		opAppendArgs.put("Check_ObjectInfo", uint8buf_32);
+		opAppendArgs.put("Invoke_GetObjectInfo1", uint8buf_4k);
+		opAppendArgs.put("Invoke_GetObjectInfo", uint8buf_4k);
+		opAppendArgs.put("Check_ObjectInfo", uint8buf_4k);
 
-		opAppendArgs.put("Invoke_GetObjectBufferAttribute", uint8buf_32);
-		opAppendArgs.put("Check_ObjectBufferAttribute", uint8buf_32);
+		opAppendArgs.put("Invoke_GetObjectBufferAttribute", uint8buf_4k);
+		opAppendArgs.put("Check_ObjectBufferAttribute", uint8buf_4k);
 
-		opAppendArgs.put("Invoke_GetObjectValueAttribute", uint8buf_32);
-		opAppendArgs.put("Check_ObjectValueAttribute", uint8buf_32);
+		opAppendArgs.put("Invoke_GetObjectValueAttribute", uint8buf_4k);
+		opAppendArgs.put("Check_ObjectValueAttribute", uint8buf_4k);
 
 		opAppendArgs.put("Macro_GetRSAAttributes", uint8buf_4k);
 		opAppendArgs.put("Macro_GetDHAttributes", uint8buf_4k);
 		opAppendArgs.put("Check_GeneratedRSAAttributes", uint8buf_4k);
 
+		opAppendArgs.put("Invoke_ReadObjectData", uint8buf_4k);
 		opAppendArgs.put("Invoke_GetNextPersistentObject_All", uint8buf_4k);
 		opAppendArgs.put("Check_ReadObjectData_DataRead", uint8buf_4k);
 		opAppendArgs.put("Check_ReadObjectData_AfterWrite", uint8buf_4k);
@@ -235,6 +200,12 @@ public class GenFromXml {
 			else if (type.equals("ALL_TTA_STORED_OBJECT_ENUMERATORS")) {
 				if (value.equals("NULL")) return "STORED_OBJECT_NULL";
 			}
+			else if (type.equals("ALL_STORED_VALUES_ROLES")) {
+				if (value.equals("NULL")) return "STORED_VALUE_NULL";
+			}
+			else if (type.equals("ALL_ENUMERATORS")) {
+				if (parameter.startsWith("OUT_")) return "&"+value;
+			}
 			if (parameter.endsWith("instance")) {
 				return "&"+value;
 			}
@@ -250,6 +221,9 @@ public class GenFromXml {
 			else if (p.startsWith("OUT_")) p = p.substring(4);
 			if (p.equals("case")) p = "a_case";
 			if (argPtr.contains(type) || parameter.endsWith("instance")) {
+				return String.format("%s* %s,", type, p);
+			}
+			if (type.equals("ALL_ENUMERATORS") && parameter.startsWith("OUT_")) {
 				return String.format("%s* %s,", type, p);
 			}
 			return String.format("%s %s,", type, p);
@@ -303,9 +277,9 @@ public class GenFromXml {
 
 				pr.printf(INDENT+"res = %s(%s);\n", mapname, Text.join(sep, args));
 
-				if (name.equals("InitializeContext"))
-					pr.printf(INDENT+"if (res != TEEC_SUCCESS) return res;\n\n");
-				else
+				//if (name.equals("InitializeContext"))
+				//	pr.printf(INDENT+"if (res != TEEC_SUCCESS) goto out;\n\n");
+				//else
 					pr.printf(INDENT+"if (res != TEEC_SUCCESS) goto postamble;\n\n");
 			}
 			else {
@@ -404,12 +378,13 @@ public class GenFromXml {
 				if (si == postambleStep) postamble = true;
 			}
 
-			pr.printf(INDENT+"return res;\n}\n");
+			//pr.printf(INDENT+"out:\n");
+			pr.printf(INDENT+"return res == TEEC_SUCCESS ? TEST_PASS : TEST_FAIL;\n}\n");
 		}
 		public void addTestMacro(String sect, PrintStream pr) {
 			String desc = name.replace("_", " ");
-			if (desc.length() > 40) desc = desc.substring(0,40-3)+"...";
-			pr.printf("CREATE_TEST_CUSTOM(test_%s,\"%s\",\"%s\", adaptation_test_prepare, tc_%s, adaptation_test_fin);\n", name, sect, desc, name);
+			//if (desc.length() > 39) desc = desc.substring(0,39-3)+"...";
+			pr.printf("CREATE_TEST_CUSTOM(test_%s, \"%s\", \"%s%s\", adaptation_test_prepare, tc_%s, adaptation_test_fin);\n", name, sect, id, desc, name);
 		}
 		public void tableEntry(PrintStream pr) {
 			pr.println(INDENT+"{");
@@ -469,20 +444,16 @@ public class GenFromXml {
 
 		//Log.info("    operation %s", op.name);
 		op.args = new ArrayList<>(args.getLength());
-		/*
-		if (opAddContext.contains(op.name)) {
-			ArgInfo arg = new ArgInfo();
-			arg.parameter = "IN_context";
-			arg.type = "ALL_CONTEXTS";
-			arg.value = tc.lastContext;
-			op.args.add(arg);
-		}*/
 		for (int i = 0; i < args.getLength(); ++i) {
 			Node a = args.item(i);
 			ArgInfo arg = parseArgument(a);
 			if (arg == null) throw new RuntimeException("cannot parse Argument");
 
-			if (arg.type.equals("ALL_CONTEXTS")) {
+			if (arg.type.equals("ALL_THREADS")) {
+				if (!arg.value.equals("THREAD01_DEFAULT"))
+					tc.addLocalVar(String.format("%s %s = {0,}",arg.type,arg.value));
+			}
+			else if (arg.type.equals("ALL_CONTEXTS")) {
 				if (!arg.value.equals("NULL"))
 					tc.addLocalVar(String.format("%s %s = {0,}",arg.type,arg.value));
 			}
@@ -499,12 +470,16 @@ public class GenFromXml {
 					tc.addLocalVar(String.format("%s %s = {0,}",arg.type,arg.value));
 			}
 			else if (arg.type.equals("ALL_TEMPORARY_MEMORIES")) {
-				if (!arg.value.equals("NULL"))
+				if (!arg.value.equals("NULL") && !arg.value.equals("IGNORE"))
 					tc.addLocalVar(String.format("%s %s = {0,}",arg.type,arg.value));
 			}
 			else if (arg.type.equals("ALL_SHARED_MEMORIES")) {
 				if (!arg.value.equals("NULL") && !arg.value.equals("IGNORE"))
 					tc.addLocalVar(String.format("%s %s = {0,}",arg.type,arg.value));
+			}
+			else if (arg.type.equals("ALL_ENUMERATORS")) {
+				if (!arg.value.equals("INVALID_ENUMERATOR"))
+					tc.addLocalVar(String.format("%s %s = 0",arg.type,arg.value));
 			}
 			else if (arg.type.equals("HandleFlags") || arg.type.equals("DataFlags")) {
 				if (!arg.value.endsWith("None"))
@@ -565,7 +540,7 @@ public class GenFromXml {
 		String nm = n.getAttributes().getNamedItem("name").getTextContent();
 		int idx = nm.indexOf(' ');
 		if (idx == -1) return null;
-		tc.name = nm.substring(0, idx);
+		tc.name = nm.substring(0, idx).replace('=', '_');
 		tc.id = nm.substring(idx + 1);
 		Log.info("node: %s", tc.name);
 
@@ -589,9 +564,13 @@ public class GenFromXml {
 	private static List<TestCaseInfo> parseTestCaseXML(String name) throws Exception {
 		String fn = null;
 		if (name.equals("ClientAPI"))
-			fn = String.format("%s/%s/xmlstable/TEE.xml", xmlBasePath, name);
+			fn = String.format("%s/%s/xmlstable/TEE.xml", xmlPackagesPath, name);
+		else if (name.equals("Time_Arithmetical"))
+			fn = String.format("%s/%s/xmlstable/TEE_TimeArithm_API.xml", xmlPackagesPath, name);
+		else if (name.equals("TrustedCoreFw"))
+			fn = String.format("%s/%s/xmlstable/TEE_Internal_API.xml", xmlPackagesPath, name);
 		else
-			fn = String.format("%s/%s/xmlstable/TEE_%s_API.xml", xmlBasePath, name, name);
+			fn = String.format("%s/%s/xmlstable/TEE_%s_API.xml", xmlPackagesPath, name, name);
 
 		File f = new File(fn);
 		if (!f.exists())
@@ -615,15 +594,50 @@ public class GenFromXml {
 		return tcs;
 	}
 
+	static class EnumEntry {
+		String name;
+		String value;
+	}
+	static class EnumInfo {
+		String name;
+		List<EnumEntry> entry = new ArrayList<>();
+	}
+
+	private static EnumEntry parseEnumEntry(Node n) {
+		EnumEntry e = new EnumEntry();
+		e.name = n.getAttributes().getNamedItem("name").getTextContent();
+		NodeList attr = n.getChildNodes();
+		for (int i = 0; i < attr.getLength(); ++i) {
+			Node a = attr.item(i);
+			if (a.getNodeType() != Node.ELEMENT_NODE) continue;
+			String tag = a.getNodeName();
+			if (tag.equals("description")) {
+				e.value = a.getTextContent();
+			}
+		}
+		return e;
+	}
+	private static EnumInfo parseValuesXML(File f) throws Exception {
+		Document document = documentBuilder.parse(f);
+		NodeList enlist = document.getElementsByTagName("Literal");
+		String name = f.getName().substring(0, f.getName().length() - 4);
+		Log.info("%s literals %d", name, enlist.getLength());
+
+		EnumInfo enumdef = new EnumInfo();
+		enumdef.name = name;
+		for (int i = 0; i < enlist.getLength(); ++i) {
+			Node n = enlist.item(i);
+			EnumEntry e = parseEnumEntry(n);
+			if (e == null) throw new RuntimeException("cannot parse enum entry");
+			Log.info("entry %s, value=%s", e.name, e.value);
+			enumdef.entry.add(e);
+		}
+		return null;
+	}
+
 	private static void genAdaptationHeader() {
 		String name = "gp_adaptation_api";
 		String fn = String.format("%s/%s.h", repoTestCodePath, name);
-		/*
-		if (name.equals("ClientAPI"))
-			fn = String.format("%s/include/tta_test_%s_auto.h", repoTestCodePath, name);
-		else
-			fn = String.format("%s/include/tta_test_API_%s_auto.h", repoTestCodePath, name);
-		*/
 
 		Log.info("generating file %s", fn);
 		PrintStream pr;
@@ -634,7 +648,6 @@ public class GenFromXml {
 		}
 
 		pr.println(boilerPlate);
-		//String def = String.format("__TTA_TEST_%s_H__", name.toUpperCase());
 		String def = String.format("__%s_H__", name.toUpperCase());
 		pr.println("#ifndef " + def);
 		pr.println("#define " + def);
@@ -667,6 +680,7 @@ public class GenFromXml {
 		pr.println(boilerPlate);
 
 		pr.println("#include \"gp_adaptation_api.h\"");
+		pr.println("#include \"tf.h\"");
 		pr.println();
 
 		int n = 0;
@@ -731,6 +745,16 @@ public class GenFromXml {
 
 	static class Text {
 
+		public static Object join(String sep, Object[] args) {
+			if (args.length == 0) return "";
+			StringBuilder b=new StringBuilder();
+			b.append(args[0].toString());
+			for (int i = 1; i < args.length; ++i) {
+				b.append(sep);
+				b.append(args[i].toString());
+			}
+			return b.toString();
+		}
 		public static Object join(String sep, List<?> args) {
 			if (args.isEmpty()) return "";
 			StringBuilder b=new StringBuilder();
@@ -767,6 +791,26 @@ public class GenFromXml {
 		}
 	}
 
+	static void generateValues(String name) {
+	}
+	static void generateValues() {
+
+		File[] xmls = new File(xmlValuesPath).listFiles(new FileFilter() {
+			@Override
+			public boolean accept(File pathname) {
+				return pathname.getName().endsWith(".xml");
+			}
+		});
+		Log.info("Files to scan: %d", xmls.length);
+		for (File f : xmls) {
+			try {
+				parseValuesXML(f);
+			} catch (Exception e) {
+				Log.error(e);
+			}
+		}
+	}
+
 	static void usage() {
 		Log.info("gentool [cmd] parts\n"
 				+ "where parts is one or more from:\n"
@@ -774,7 +818,8 @@ public class GenFromXml {
 
 	}
 
-	private static final int CMD_TC = 0;
+	private static final int CMD_X = 0;
+	private static final int CMD_TC = 1;
 	public static void main(String[] args) {
 		try {
 			//documentBuilderFactory.setNamespaceAware(true);
@@ -788,8 +833,14 @@ public class GenFromXml {
 
 		int cmd = CMD_TC;
 		for (int i = 0; i < args.length; ++i) {
-			if (args[i].equals("tc")) {
+			if (args[i].equals("x")) {
+				cmd = CMD_X;
+			}
+			else if (args[i].equals("tc")) {
 				cmd = CMD_TC;
+			}
+			else if (args[i].equals("val")) {
+				generateValues();
 			}
 			else {
 				if (cmd == CMD_TC) generateTC(args[i]);

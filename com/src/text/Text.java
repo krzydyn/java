@@ -234,12 +234,13 @@ public class Text {
 		byte bt=0;
 		int bc=0;
 		for (int i=0; i<s.length(); ++i) {
-			bt<<=4;
 			char c = s.charAt(i);
-			if (c >= '0' && c <= '9') bt|=c-'0';
-			else if (c >= 'a' && c <= 'f') bt|=c-'a'+10;
-			else if (c >= 'A' && c <= 'F') bt|=c-'A'+10;
+			int bx;
+			if (c >= '0' && c <= '9') bx=c-'0';
+			else if (c >= 'a' && c <= 'f') bx=c-'a'+10;
+			else if (c >= 'A' && c <= 'F') bx=c-'A'+10;
 			else {continue;}
+			bt <<= 4; bt |= bx;
 			++bc;
 			if (bc==2) {
 				ba.write(bt);
@@ -291,7 +292,7 @@ public class Text {
 		return i;
 	}
 
-	//Simple alg O(n^2*m)
+	//Longest Common Subsequence, Simple alg O(n^2*m)
 	public static List<String> lcsub_simple(String s1, String s2) {
 		int n=s1.length(), m=s2.length();
 		int z=0;
@@ -316,7 +317,7 @@ public class Text {
 		return ret;
 	}
 
-	//Dynamic programming O(n*m) (suffix array would be more efficient)
+	//Longest Common Subsequence, Dynamic programming O(n*m) (suffix array would be more efficient)
 	public static List<String> lcsub(String s1, String s2) {
 		int n=s1.length(), m=s2.length();
 		if (m > n) {
@@ -350,6 +351,35 @@ public class Text {
 		}
 
 		return ret;
+	}
+
+	public static int levenshteinDistance(String s1, String s2) {
+		int l1=s1.length(), l2=s2.length();
+		if (l2 > l1) {
+			String t=s1; s1=s2; s2=t;
+			l1=s1.length(); l2=s2.length();
+		}
+		if (l2 == 0) return l1;
+
+		int[] prev = new int[l2+1];
+		int[] curr = new int[l2+1];
+		for (int i=0; i <= l2; ++i) prev[i]=i;
+
+		for (int i=0; i < l1; ++i) {
+			curr[0]=i+1;
+			for (int j=0; j < l2; ++j) {
+				int c = s1.charAt(i)==s2.charAt(j) ? 0 : 1;
+				curr[j+1] = Maths.min(
+						curr[j]+1,     // cost delete
+						prev[j+1]+1,   // cost insert
+						prev[j] + c    // cost replace
+				);
+			}
+			int[] t = curr;
+			curr = prev;
+			prev = t;
+		}
+		return prev[l2];
 	}
 
 	public static String diff(String s1, String s2) {
@@ -392,35 +422,6 @@ public class Text {
 		return b.toString();
 	}
 
-
-	public static int levenshteinDistance(String s1, String s2) {
-		int l1=s1.length(), l2=s2.length();
-		if (l2 > l1) {
-			String t=s1; s1=s2; s2=t;
-			l1=s1.length(); l2=s2.length();
-		}
-		if (l2 == 0) return l1;
-
-		int[] prev = new int[l2+1];
-		int[] curr = new int[l2+1];
-		for (int i=0; i <= l2; ++i) prev[i]=i;
-
-		for (int i=0; i < l1; ++i) {
-			curr[0]=i+1;
-			for (int j=0; j < l2; ++j) {
-				int c = s1.charAt(i)==s2.charAt(j) ? 0 : 1;
-				curr[j+1] = Maths.min(
-						curr[j]+1,     // cost delete
-						prev[j+1]+1,   // cost insert
-						prev[j] + c    // cost replace
-				);
-			}
-			int[] t = curr;
-			curr = prev;
-			prev = t;
-		}
-		return prev[l2];
-	}
 }
 /*
  >>>>60281

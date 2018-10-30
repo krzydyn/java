@@ -44,7 +44,8 @@ public interface TEF_Types {
 		TEF_CFB8,
 		TEF_OFB,
 		TEF_CTR,
-		TEF_GCM, //(not supported in Java7)
+		TEF_GCM, //not supported in Java7
+		TEF_CCM, //not supported in Java8
 		;
 		private String name;
 		String getName() {
@@ -73,7 +74,7 @@ public interface TEF_Types {
 	static class tef_algorithm {
 		final tef_chaining_mode_e chaining;
 		final tef_padding_mode_e padding;
-		final Map<tef_algorithm_param_e, Object> map = new HashMap<tef_algorithm_param_e, Object>();
+		final Map<tef_algorithm_param_e, Object> map = new HashMap<>();
 		public tef_algorithm(tef_chaining_mode_e chain, tef_padding_mode_e pad) {
 			this.chaining = chain; this.padding = pad;
 		}
@@ -106,6 +107,7 @@ public interface TEF_Types {
 
 	static enum tef_algorithm_param_e {
 		TEF_IV,
+		TEF_NONCE,
 		TEF_AAD,
 		TEF_AUTHTAG_LEN,
 		TEF_AUTHTAG

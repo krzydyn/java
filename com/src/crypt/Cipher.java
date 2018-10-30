@@ -38,6 +38,8 @@ package crypt;
  * <li><b>ISO/IEC 9797/M1</b> DATA,0x00,0x00,... (same as ZeroPading)
  * <li><b>ISO/IEC 9797/M2</b> DATA,0x80,0x00,....(same as ISO/IEC 7816-4)
  * <li><b>ISO/IEC 9797/M3</b> pad 0, des CBC, des3 on last block
+ * <li><b>CTS</b> pad last block with tail of encrypted prev block, encrypt last, and swap
+ *
  * </ul>
  * <h3>Block Cipher Modes (of chaining blocks)</h3>
  * <b>NOTE:</b> CFB, OFB, CTR does not require padding and return same length as input
