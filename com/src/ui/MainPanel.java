@@ -184,7 +184,7 @@ public class MainPanel extends JPanel implements WindowListener,WindowFocusListe
 		}
 		else {
 			try {return mainclass.getDeclaredConstructor().newInstance();}
-			catch (InstantiationException e) {}
+			catch (NoSuchMethodException e) {}
 			return mainclass.getConstructor(String[].class).newInstance(new Object[]{args});
 		}
 	}

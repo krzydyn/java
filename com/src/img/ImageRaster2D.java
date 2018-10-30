@@ -1,5 +1,6 @@
 package img;
 
+import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics2D;
 import java.awt.Image;
@@ -51,9 +52,9 @@ public class ImageRaster2D extends Raster2D {
 
 	@Override
 	public void drawHline(int x1, int x2, int y, int v) {
-		//if (g2 == null) g2 = img.createGraphics();
-		//g2.setColor(new Color(v));g2.drawLine(x1, y, x2-1, y);
-		for (int x=x1; x < x2; ++x) img.setRGB(x, y, v);
+		if (g2 == null) g2 = img.createGraphics();
+		g2.setColor(new Color(v));g2.drawLine(x1, y, x2-1, y);
+		//for (int x=x1; x < x2; ++x) img.setRGB(x, y, v);
 	}
 	public Image getImage() {
 		return img;

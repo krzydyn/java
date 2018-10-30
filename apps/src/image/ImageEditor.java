@@ -42,6 +42,17 @@ import ui.Dialogs;
 import ui.ImagePanel;
 import ui.MainPanel;
 
+/*
+ * SAD (Sum of absolute differences) 
+ * 
+ * crosscoleration
+ * http://werner.yellowcouch.org/Papers/subimg/index.html
+ * KMP
+ * https://en.wikipedia.org/wiki/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm
+ * 
+ * Where is Waldo
+ * https://stackoverflow.com/questions/8479058/how-do-i-find-waldo-with-mathematica?rq=1
+ */
 @SuppressWarnings("serial")
 public class ImageEditor extends MainPanel {
 
@@ -72,7 +83,7 @@ public class ImageEditor extends MainPanel {
 						|| path.getName().endsWith(".gif")
 						|| path.getName().endsWith(".png");
 			}
-		}, "jpg");
+		}, "picture");
 
 		if (args.length > 0) {
 			try {
