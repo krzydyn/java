@@ -5,36 +5,38 @@ import img.ImageRaster2D;
 import img.Raster2D;
 import img.Tools2D;
 
-public class Tool {
+public abstract class Tool {
+	abstract void transform(Raster2D src, Raster2D dst);
+	
 	static public class LumaTool extends Tool {
-		void filter(Raster2D r) {
-			Tools2D.luminance(r);
+		void transform(Raster2D src, Raster2D dst) {
+			Tools2D.luminance(src);
 		}
 	}
 	static public class EdgeTool extends Tool {
-		void filter(Raster2D r) {
-			Tools2D.edgeSobel(r);
+		void transform(Raster2D src, Raster2D dst) {
+			Tools2D.edgeSobel(src);
 		}
 	}
 	static public class GaussTool extends Tool {
-		void filter(Raster2D r) {
-			Tools2D.smoothGauss(r);
+		void transform(Raster2D src, Raster2D dst) {
+			Tools2D.smoothGauss(src);
 		}
 	}
 
 	static public class GradientTool extends Tool {
-		void filter(Raster2D r) {
-			ImageRaster2D ir = new ImageRaster2D(r);
-			Tools2D.edgeSobel(ir, r);
+		void transform(Raster2D src, Raster2D dst) {
+			ImageRaster2D ir = new ImageRaster2D(src);
+			Tools2D.edgeSobel(ir, src);
 			ir.dispose();
 		}
 	}
 
 	static public class HoughTool extends Tool {
-		Raster2D transform(Raster2D r) {
-			HoughLines h = new HoughLines(r);
+		void transform(Raster2D src, Raster2D dst) {
+			HoughLines h = new HoughLines(src);
 			h.transform();
-			return h.toImage();
+			dst.assign(h.toImage());
 		}
 	}
 }

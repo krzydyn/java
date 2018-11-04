@@ -86,6 +86,7 @@ public class ImagePanel extends JPanel {
 				imgSize.height = img.getHeight(null) ;
 			}
 			else {
+				Log.warn("Setting image to null");
 				imgSize.width = imgSize.height = 0;
 			}
 		}
@@ -96,7 +97,7 @@ public class ImagePanel extends JPanel {
 		rois.clear();
 		repaint(20);
 	}
-	public void addRois(Shape s) {
+	public void addRoi(Shape s) {
 		rois.add(new Roi(s, 0));
 		repaint(20);
 	}

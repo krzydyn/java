@@ -63,4 +63,11 @@ public class ColorTool extends Tool {
 		for (x1=x+1; x1<d.width && Colors.rgbErrorSq(r.getPixel(x1,y),c) < err; ++x1) ;
 		return new Segment(y, x0, x1);
 	}
+
+	@Override
+	void transform(Raster2D src, Raster2D dst) {
+		// TODO Auto-generated method stub
+		
+	}
+
 }

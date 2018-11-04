@@ -157,28 +157,28 @@ public class ImageEditor extends MainPanel {
 	Action filter_luma = new AbstractAction("GrayScale") {
 		@Override
 		public void actionPerformed(ActionEvent ev) {
-			lumaTool.filter(imgPanel.getRaster());
+			lumaTool.transform(imgPanel.getRaster(), null);
 			imgPanel.repaint();
 		}
 	};
 	Action filter_gauss = new AbstractAction("Gauss") {
 		@Override
 		public void actionPerformed(ActionEvent ev) {
-			gaussTool.filter(imgPanel.getRaster());
+			gaussTool.transform(imgPanel.getRaster(), null);
 			imgPanel.repaint();
 		}
 	};
 	Action filter_edge = new AbstractAction("Edge detect") {
 		@Override
 		public void actionPerformed(ActionEvent ev) {
-			edgeTool.filter(imgPanel.getRaster());
+			edgeTool.transform(imgPanel.getRaster(), null);
 			imgPanel.repaint();
 		}
 	};
 	Action filter_grad = new AbstractAction("Gradient") {
 		@Override
 		public void actionPerformed(ActionEvent ev) {
-			gradTool.filter(imgPanel.getRaster());
+			gradTool.transform(imgPanel.getRaster(), null);
 			imgPanel.repaint();
 		}
 	};
@@ -189,8 +189,9 @@ public class ImageEditor extends MainPanel {
 			f.setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
 			ImagePanel i = new ImagePanel();
 			i.setScale(2);
-			Raster2D r = houghTool.transform(imgPanel.getRaster());
-			i.setImage(((ImageRaster2D)r).getImage());
+			ImageRaster2D r = new ImageRaster2D(1,1);
+			houghTool.transform(imgPanel.getRaster(), r);
+			i.setImage(r.getImage());
 			f.setContentPane(createScrolledPanel(i));
 			f.setSize(i.getPreferredSize());
 			f.setVisible(true);

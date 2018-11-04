@@ -16,4 +16,5 @@ public abstract class Raster2D implements Closeable {
 		drawHline(x, x+1, y, v);
 	}
 	abstract public void drawHline(int x1, int x2, int y, int v);
+	abstract public void assign(Raster2D r);
 }

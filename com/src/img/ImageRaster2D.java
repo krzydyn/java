@@ -8,7 +8,7 @@ import java.awt.image.BufferedImage;
 
 public class ImageRaster2D extends Raster2D {
 	private BufferedImage img;
-	private final Dimension size;
+	private Dimension size;
 	private Graphics2D g2;
 
 	public ImageRaster2D(BufferedImage img) {
@@ -58,6 +58,18 @@ public class ImageRaster2D extends Raster2D {
 	}
 	public Image getImage() {
 		return img;
+	}
+	public void assign(Raster2D r) {
+		if (r instanceof ImageRaster2D) {
+			ImageRaster2D ir = (ImageRaster2D)r;
+			img = ir.img;
+			size = ir.size;  
+			ir.img = null;
+			ir.size = null;
+		}
+		else {
+			assign(new ImageRaster2D(r));
+		}
 	}
 
 }
