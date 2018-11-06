@@ -7,6 +7,7 @@ import java.util.Random;
 import sys.Log;
 
 public class DSA {
+	static BigInteger TWO = BigInteger.valueOf(2);
 	private BigInteger p,q,g;
 	private BigInteger x,y;
 
@@ -14,7 +15,7 @@ public class DSA {
 		Random rnd = new Random();
 		p = BigInteger.probablePrime(bits/2, rnd);
 		q = BigInteger.probablePrime(bits/2, rnd);
-		g = BigInteger.TWO;
+		g = TWO;
 
 
 	}
