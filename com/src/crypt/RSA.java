@@ -110,8 +110,8 @@ public class RSA {
 
 	public RSA(int bits) {
 		Random rnd = new Random();
-		p = BigInteger.probablePrime(bits, rnd);
-		q = BigInteger.probablePrime(bits, rnd);
+		p = BigInteger.probablePrime(bits/2, rnd);
+		q = BigInteger.probablePrime(bits/2, rnd);
 		N = p.multiply(q);
 
 		/* phi = (p-1)*(q-1);
@@ -232,7 +232,7 @@ public class RSA {
 		Take private key (n, d) to compute the signature s = m^d mod n.
 		Sends this signature s to the recipient.
 		*/
-		return null;
+		return encrypt(data);
 	}
 
 	boolean verify(byte[] data, byte[] sign) {
@@ -259,4 +259,5 @@ public class RSA {
 	 *   m = m2 + hq
 
 	 */
+
 }

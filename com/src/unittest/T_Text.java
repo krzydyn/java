@@ -31,11 +31,11 @@ public class T_Text extends UnitTest {
 		check("not anagram", !Text.isAnagram("abbd", "cbaa"));
 	}
 	static void diff() {
-		Log.info(Text.diff("ala ma kota", "ala da kota"));
-		Log.info(Text.join(",", Text.lcsub_simple("ala ma kota", "ala kota")));
-		Log.info(Text.join(",", Text.lcsub("ala ma kota", "ala kota")));
+		Log.info(Text.join(",", Text.lcsub_simple("ala ma kota", "ala da kota")));
+		Log.info(Text.join(",", Text.lcsub("ala ma kota", "ala da kota")));
 		Log.info(Text.join(",", Text.lcsub_simple("ABCDEG","BCDGK")));
 		Log.info(Text.join(",", Text.lcsub("ABCDEG","BCDGK")));
+		Log.info(Text.diff("ala ma kota", "ala da kota"));
 	}
 	static void lev() {
 		check("levenshtein",Text.levenshteinDistance("",""),0);
@@ -43,6 +43,6 @@ public class T_Text extends UnitTest {
 		check("levenshtein",Text.levenshteinDistance("frog","fog"),1);
 	}
 	static void emoticonsUTF() {
-		System.out.println("\uD83D\uDE0A \uD83D\uDE22 \uD83C\uDF82");
+		Log.info("\uD83D\uDE0A \uD83D\uDE22 \uD83C\uDF82");
 	}
 }

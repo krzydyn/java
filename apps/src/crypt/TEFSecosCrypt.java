@@ -1,5 +1,6 @@
 package crypt;
 
+import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.Provider;
@@ -120,26 +121,59 @@ public class TEFSecosCrypt extends UnitTest implements TEF_Types {
 		//GCM-AES  from http://csrc.nist.gov/groups/STM/cavp/documents/mac/gcmtestvectors.zip
 		new TEF.tef_algorithm(tef_chaining_mode_e.TEF_GCM, tef_padding_mode_e.TEF_PADDING_NONE)
 				.set(tef_algorithm_param_e.TEF_IV, Text.bin("3c819d9a9bed087615030b65"))
-				.set(tef_algorithm_param_e.TEF_AUTHTAG_LEN, 128),
+				.set(tef_algorithm_param_e.TEF_TAGLEN, 128),
 		new TEF.tef_algorithm(tef_chaining_mode_e.TEF_GCM, tef_padding_mode_e.TEF_PADDING_NONE)
 				.set(tef_algorithm_param_e.TEF_IV, Text.bin("794ec588176c703d3d2a7a07"))
-				.set(tef_algorithm_param_e.TEF_AUTHTAG_LEN, 120),
+				.set(tef_algorithm_param_e.TEF_TAGLEN, 120),
 		new TEF.tef_algorithm(tef_chaining_mode_e.TEF_GCM, tef_padding_mode_e.TEF_PADDING_NONE)
 				.set(tef_algorithm_param_e.TEF_IV, Text.bin("e0e00f19fed7ba0136a797f3"))
 				.set(tef_algorithm_param_e.TEF_AAD, Text.bin("7a43ec1d9c0a5a78a0b16533a6213cab"))
-				.set(tef_algorithm_param_e.TEF_AUTHTAG_LEN, 128),
+				.set(tef_algorithm_param_e.TEF_TAGLEN, 128),
 		new TEF.tef_algorithm(tef_chaining_mode_e.TEF_GCM, tef_padding_mode_e.TEF_PADDING_NONE)
 				.set(tef_algorithm_param_e.TEF_IV, Text.bin("bed48d86e1ff4bff37286a5c428c719130200dce04011edb967f5aaff6a9fb4ad0fcf0dd474e12dcfbcca7fa1ff9bb66b2624aaf1a90f33ed2bab0ee5b465174a722eaa3353bcb354165a1a852468ece974a31429c6e1de7a34e6392f24225d539eaa6b8c1183bfb37627eb16dcd81bba9d65051ff84bd63ee814bea0e1c34d2"))
 				.set(tef_algorithm_param_e.TEF_AAD, Text.bin("a481e81c70e65eeb94cdf4e25b0a225a4f48b58b12cde148a3a9aa4db0d2988da27591d65827eed39ad6933f267e486c31dc586c36ebaa0c349b9c12ed33221a463737695743cebb456f0705a9895a5aac720f8a53981a231fde"))
-				.set(tef_algorithm_param_e.TEF_AUTHTAG_LEN, 96),
-
-		new TEF.tef_algorithm(tef_chaining_mode_e.TEF_CCM, tef_padding_mode_e.TEF_PADDING_NONE)
-				.set(tef_algorithm_param_e.TEF_NONCE, Text.bin("00:8d:49:3b:30:ae:8b:3c:96:96:76:6c:fa"))
-				.set(tef_algorithm_param_e.TEF_AUTHTAG_LEN, 112),
+				.set(tef_algorithm_param_e.TEF_TAGLEN, 96),
 
 		new TEF.tef_algorithm(tef_chaining_mode_e.TEF_PCBC, tef_padding_mode_e.TEF_PADDING_NONE),
 
 	};
+
+	static byte[] TEE_ATTR_DSA_PRIME_768_VALUE01 = Text.bin("f6ad2071e15a4b9c2b7e5326da439dc1474c1ad16f2f85e92cea89fcdc746611cf30ddc85e33f583c19d10bc1ac3932226246fa7b9e0dd2577b5f427594c39faebfc598a32e174cb8a680357f862f20b6e8432a530652f1c2139ae1faf768b83");
+	static byte[] TEE_ATTR_DSA_SUBPRIME_160_VALUE01 = Text.bin("8744e4ddc6d019a5eac2b15a15d7e1c7f66335f7");
+	static byte[] TEE_ATTR_DSA_BASE_768_VALUE01  = Text.bin("9a0932b38cb2105b9300dcb866c066d9cec643192fcb2834a1239dba28bd09fe01001e0451f9d6351f6e564afbc8f8c39b1059863ebd0985090bd55c828e9fc157ac7da3cfc2892a0ed9b932390582f2971e4a0c483e0622d73166bf62a59f26");
+	static byte[] TEE_ATTR_DSA_PRIVATE_VALUE_160_VALUE01 = Text.bin("704a46c6252a95a39b40e0435a691badae52a5c0");
+	static byte[] TEE_ATTR_DSA_PUBLIC_VALUE_768_VALUE01 = Text.bin("529ded98a2320985fc84b65a9dc8d4fe41ada6e3593d704f0898c14ec24634ddf5f1db47cc4915fce1e2674d2ecd98d58b598e8ddfaff30e8826f50aab4027b5aab887c19ad96d7e57de5390ad8e5557b41a8019c90d80607179b54eb0ad4d23");
+
+	static byte[] NONCE1_VALUE_AES_GCM = Text.bin("00:8d:49:3b:30:ae:8b:3c:96:96:76:6c:fa"); //len=13
+	static byte[] NONCE2_VALUE_AES_GCM = Text.bin("ca:fe:ba:be:fa:ce:db:ad:de:ca:f8:88"); //len=12
+	static byte[] AAD1_VALUE = Text.bin("00:01:02:03:04:05:06:07");
+	static byte[] DATA_FOR_CRYPTO1 = Text.bin("00:01:02:03:04:05:06:07:08:09:0a:0b:0c:0d:0e:0f:\n" +
+			"0a:0b:0c:0d:0e:0f:00:01:02:03:04:05:06:07:08:09:\n" +
+			"0f:0e:0d:0c:0b:0a:09:08:07:06:05:04:03:02:01:00:\n" +
+			"00:01:02:03:04:05:06:07:08:09:0a:0b:0c:0d:0e:0f:\n" +
+			"0a:0b:0c:0d:0e:0f:00:01:02:03:04:05:06:07:08:09:\n" +
+			"0f:0e:0d:0c:0b:0a:09:08:07:06:05:04:03:02:01:00");
+
+	static EncryptKey[] keys_gpapi = {
+		new EncryptKey(tef_key_type_e.TEF_AES, Text.bin("60:3d:eb:10:15:ca:71:be:2b:73:ae:f0:85:7d:77:81:" +
+					"1f:35:2c:07:3b:61:08:d7:2d:98:10:a3:09:14:df:f4"))
+	};
+	static TEF.tef_algorithm[] algos_gpapi = {
+		new TEF.tef_algorithm(tef_chaining_mode_e.TEF_GCM, tef_padding_mode_e.TEF_PADDING_NONE)
+			.set(tef_algorithm_param_e.TEF_IV, NONCE2_VALUE_AES_GCM)
+			.set(tef_algorithm_param_e.TEF_AAD, AAD1_VALUE)
+			.set(tef_algorithm_param_e.TEF_TAGLEN, 104),
+	};
+
+	static class DigestTC {
+		DigestTC(TEF.tef_digest_e digest, byte[] datain, byte[] dataout) {
+			this.digest = digest;
+			this.datain=datain; this.dataout=dataout;
+		}
+		TEF.tef_digest_e digest;
+		byte[] datain;
+		byte[] dataout;
+	}
 
 	static class EncryptTC {
 		EncryptTC(EncryptKey key, TEF.tef_algorithm algo, byte[] datain, byte[] dataout) {
@@ -196,18 +230,38 @@ public class TEFSecosCrypt extends UnitTest implements TEF_Types {
 				Text.bin("6081f9455583c4a35ed9400799e209fb7e75a7887868aa4bb0c9f7b78f67125678e03c618e615bfad03ab077315b7787418f50"),
 				Text.bin("18eca8d7ec92b6209c8d3c82d10c876047b470e22b74346ad609f44cc338b38c881103636fd056634907c28e32efb32dcddb23 de01691b9b99851636c7c8d5")),
 
-		//CCM-AES
-		new EncryptTC(keys_nist[3],algos_nist[9],"".getBytes(),Text.bin("250327c674aaf477aef2675748cf6971")),
 	};
+
+	static EncryptTC gpapiTC[] = {
+		new EncryptTC(keys_gpapi[0],algos_gpapi[0],DATA_FOR_CRYPTO1,Text.bin("A726EA73EB43D77C9E977070")),
+
+	};
+
+	static DigestTC gpapi_digest_TC[] = {
+		new DigestTC(tef_digest_e.TEF_SHA1,DATA_FOR_CRYPTO1,null),
+	};
+
+	static void digest() throws Exception {
+		for (DigestTC tc : gpapi_digest_TC) {
+			Log.debug("MessageDigest %s on %s", tc.digest.toString(), Text.hex(tc.datain));
+			MessageDigest md = MessageDigest.getInstance(tc.digest.toString());
+			md.update(tc.datain);
+			byte[] digest = md.digest();
+			Log.debug("digest: %s", Text.hex(digest));
+			if (tc.dataout != null) {
+				check(digest,tc.dataout,tc.dataout.length);
+			}
+		}
+	}
 
 	static void encrypt() throws Exception {
 		TEF t = new TEF();
 		byte[] edata = new byte[1000];
 
-		for (EncryptTC tc : encryptTC) {
+		for (EncryptTC tc : gpapiTC) {
 			tef_cipher_token keyid = t.tef_key_import_raw(tc.key.kt, tc.key.key, tc.key.key.length);
 			int r=t.tef_encrypt(keyid, tc.algo, tc.datain, tc.datain.length, edata);
-			Log.debug("%s/%s:  r[%d]=%s", tc.key.kt, tc.algo, r, Text.hex(edata, 0, r));
+			Log.debug("%s/%s  r[%d]=%s", tc.key.kt, tc.algo, r, Text.hex(edata, 0, r));
 			if (tc.dataout != null) {
 				check(edata,tc.dataout,tc.dataout.length);
 			}
@@ -218,17 +272,38 @@ public class TEFSecosCrypt extends UnitTest implements TEF_Types {
 
 	}
 
+	static void dsa() throws Exception {
+		//byte[] hash = Text.bin("C1A0104D625B8E378A96130514AA1BEAA7BE2E04");
+		DSA dsa = new DSA(
+				new BigInteger(1, TEE_ATTR_DSA_PRIME_768_VALUE01),
+				new BigInteger(1, TEE_ATTR_DSA_SUBPRIME_160_VALUE01),
+				new BigInteger(1, TEE_ATTR_DSA_BASE_768_VALUE01),
+				new BigInteger(1, TEE_ATTR_DSA_PRIVATE_VALUE_160_VALUE01),
+				new BigInteger(1, TEE_ATTR_DSA_PUBLIC_VALUE_768_VALUE01)
+				);
+
+		MessageDigest md = MessageDigest.getInstance("SHA1");
+		md.update(DATA_FOR_CRYPTO1);
+		byte[] hash = md.digest();
+
+		byte[] sign = dsa.signDigest(hash);
+		//byte[] sign = Text.bin("39260379165BAF89BE9C53CEDBEC97EDFA111119712B524423552903EEAF668149A7FA184F79F7D9");
+		dsa.verifyDigest(sign, hash);
+	}
+
 	public static void main(String[] args) {
 		//CryptX_Provider.register();
 		//listProviders();
 		//try { generate(); } catch (Exception e) { Log.error(e); }
 		try { encrypt(); } catch (Exception e) { Log.error(e); }
 		try { decrypt(); } catch (Exception e) { Log.error(e); }
+		try { digest(); } catch (Exception e) { Log.error(e); }
+		try { dsa(); } catch (Exception e) { Log.error(e); }
 
 		try {
 			MessageDigest m = MessageDigest.getInstance("MD5");
 			m.update("passwd".getBytes());
-			System.out.println(Text.hex(m.digest()));
+			//System.out.println(Text.hex(m.digest()));
 		} catch (NoSuchAlgorithmException e) {
 			e.printStackTrace();
 		}

@@ -88,9 +88,12 @@ public interface TEF_Types {
 			for (tef_algorithm_param_e p : tef_algorithm_param_e.values()) {
 				Object v = map.get(p);
 				if (v==null) continue;
-				b.append(" "+p.getName()+"=");
-				if (v instanceof byte[]) b.append(Text.hex((byte[])v));
-				else b.append(v.toString());
+				b.append(" "+p.getName());
+				if (v instanceof byte[]) {
+					byte[] bv = ((byte[])v);
+					b.append(String.format("[%d]=%s", bv.length, Text.hex(bv)));
+				}
+				else b.append("="+v.toString());
 				b.append(";");
 			}
 			return b.toString();
@@ -109,8 +112,8 @@ public interface TEF_Types {
 		TEF_IV,
 		TEF_NONCE,
 		TEF_AAD,
-		TEF_AUTHTAG_LEN,
-		TEF_AUTHTAG
+		TEF_TAGLEN,
+		TEF_TAG,
 		;
 		private String name;
 		String getName() {
@@ -129,6 +132,16 @@ public interface TEF_Types {
 		TEF_SHA1, //Theoretically weak
 		TEF_SHA2, //strong
 		TEF_SHA3, //very strong
+		;
+		private String name;
+		String getName() {
+			if (name==null) {
+				if (this == TEF_SHA1) name = name().substring(4);
+			}
+			return name;
+		}
+		@Override
+		public String toString() {return getName();}
 	}
 
 }

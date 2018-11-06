@@ -216,9 +216,8 @@ public class Base64App {
 		Log.prn("%s", Text.hex(bin));
 		parseTLV(0,bin,0,bin.length);
 
-		Log.prn("%s", Base64.encode(bin));
+		Log.prn("%s\n", Base64.encode(bin));
 
-		Log.prn("%s", Base64.encode("Krzysztof".getBytes()));
 	}
 
 }

@@ -88,24 +88,18 @@ public class TEF implements TEF_Types {
 		}
 		AlgorithmParameterSpec pspec = null;
 		if (algorithm.chaining == tef_chaining_mode_e.TEF_GCM) {
-			int taglen = (Integer)algorithm.map.get(tef_algorithm_param_e.TEF_AUTHTAG_LEN);
+			int taglen = (Integer)algorithm.map.get(tef_algorithm_param_e.TEF_TAGLEN);
 			pspec = new GCMParameterSpec(taglen, iv);
 		}
 		else if (iv != null){
 			pspec = new IvParameterSpec(iv, 0, cipher.getBlockSize());
 		}
 		if (pspec!=null) {
-			//AlgorithmParameters param = null;
-			//param=AlgorithmParameters.getInstance(keyid.key.getAlgorithm());
-			//param.init(pspec);
 			cipher.init(javax.crypto.Cipher.ENCRYPT_MODE, keyid.key, pspec);
 		}
 		else {
 			cipher.init(javax.crypto.Cipher.ENCRYPT_MODE, keyid.key);
 		}
-
-		//cipher.init(javax.crypto.Cipher.ENCRYPT_MODE, keyid.key, pspec);
-		//cipher.init(javax.crypto.Cipher.ENCRYPT_MODE, keyid.key, param);
 
 		if (algorithm.map.containsKey(tef_algorithm_param_e.TEF_AAD)) {
 			cipher.updateAAD((byte[])algorithm.map.get(tef_algorithm_param_e.TEF_AAD));
@@ -113,12 +107,13 @@ public class TEF implements TEF_Types {
 
 		int r = cipher.doFinal(data, 0, dataLen, edata);
 		if (algorithm.chaining == tef_chaining_mode_e.TEF_GCM) {
-			int tl = (Integer)algorithm.map.get(tef_algorithm_param_e.TEF_AUTHTAG_LEN)/8;
+			int tl = (Integer)algorithm.map.get(tef_algorithm_param_e.TEF_TAGLEN)/8;
 			if (r >= tl) {
 				byte[] tag = new byte[tl];
 				//for (int i=0; i < tl; ++i)tag[i]=edata
 				System.arraycopy(edata, r-tl, tag, 0, tl);
-				algorithm.map.put(tef_algorithm_param_e.TEF_AUTHTAG, tag);
+				algorithm.map.put(tef_algorithm_param_e.TEF_TAG, tag);
+				r -= tl;
 			}
 		}
 		return r;
@@ -141,7 +136,7 @@ public class TEF implements TEF_Types {
 		}
 		AlgorithmParameterSpec pspec = null;
 		if (algorithm.chaining == tef_chaining_mode_e.TEF_GCM) {
-			int taglen = (Integer)algorithm.map.get(tef_algorithm_param_e.TEF_AUTHTAG_LEN);
+			int taglen = (Integer)algorithm.map.get(tef_algorithm_param_e.TEF_TAGLEN);
 			pspec = new GCMParameterSpec(taglen, iv); // iv = nonce
 		}
 		else if (iv != null){
@@ -166,12 +161,12 @@ public class TEF implements TEF_Types {
 		return 0;
 	}
 
-	//keyid can by symmetric or asymetric
+	//keyid can be symmetric or asymmetric
 	int tef_sign_calc(tef_cipher_token keyid, tef_digest_e digest,
 			byte[] data, int dataLen, byte[] sign) {
 		return 0;
 	}
-	//keyid can by symmetric or asymetric
+	//keyid can be symmetric or asymmetric
 	int tef_sign_verify(tef_cipher_token keyid, tef_digest_e digest,
 			byte[] data, int dataLen, byte[] sign) {
 		return 0;

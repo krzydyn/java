@@ -3,6 +3,7 @@ package crypt;
 import java.security.Key;
 import java.security.NoSuchAlgorithmException;
 
+import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.IvParameterSpec;
 
 public class GenSecosCrypt {
@@ -58,6 +59,7 @@ public class GenSecosCrypt {
 				new CryptoKey("1234567812345678".getBytes(),"1234567812345678".getBytes()),
 				new CryptoKey("123456781234567812345670".getBytes(),"12345678".getBytes()),
 				new CryptoKey("12345678123456781234567812345678".getBytes(),"1234567812345678".getBytes()),
+				new CryptoKey("1234567812345678".getBytes(),"1234567812345".getBytes()),
 		};
 		final CryptoTest[] tests = {
 				new CryptoTest("AES/ECB/NoPadding", keys[1]),
@@ -97,6 +99,8 @@ public class GenSecosCrypt {
 
 				new CryptoTest("AES/CTS/PKCS5Padding", keys[1]),
 				new CryptoTest("AES/CTS/NoPadding", keys[1]),
+
+				new CryptoTest("AES/GCM/PKCS5Padding", keys[4]),
 		};
 		final String message = "111111112222222233333333444444445555555566666666777777778888888899999999"
 				+ "0000000011111111222222223333333344444444555555556666666677777777888888880";
@@ -126,6 +130,8 @@ public class GenSecosCrypt {
 				javax.crypto.Cipher cipher = javax.crypto.Cipher.getInstance(algo);
 				if (algo.indexOf("ECB")>=0)
 					cipher.init(javax.crypto.Cipher.ENCRYPT_MODE, ks);
+				else if (algo.indexOf("GCM")>=0)
+					cipher.init(javax.crypto.Cipher.ENCRYPT_MODE, ks, new GCMParameterSpec(16*Byte.SIZE, t.key.iv));
 				else
 					cipher.init(javax.crypto.Cipher.ENCRYPT_MODE, ks, new IvParameterSpec(t.key.iv));
 
