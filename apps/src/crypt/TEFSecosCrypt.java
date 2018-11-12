@@ -285,7 +285,7 @@ public class TEFSecosCrypt extends UnitTest implements TEF_Types {
 		MessageDigest md = MessageDigest.getInstance("SHA1");
 		md.update(DATA_FOR_CRYPTO1);
 		byte[] hash = md.digest();
-
+		Log.info("bits(hash) = %d", hash.length*8);
 		byte[] sign = dsa.signDigest(hash);
 		//byte[] sign = Text.bin("39260379165BAF89BE9C53CEDBEC97EDFA111119712B524423552903EEAF668149A7FA184F79F7D9");
 		dsa.verifyDigest(sign, hash);
@@ -299,6 +299,14 @@ public class TEFSecosCrypt extends UnitTest implements TEF_Types {
 		try { decrypt(); } catch (Exception e) { Log.error(e); }
 		try { digest(); } catch (Exception e) { Log.error(e); }
 		try { dsa(); } catch (Exception e) { Log.error(e); }
+
+		try {
+			byte[] b;
+			b = RSA.mgf("hello".getBytes(), 10, MessageDigest.getInstance("SHA-256"));
+			Log.info("mgf = %s", Text.hex(b));
+			b = RSA.mgf("hello".getBytes(), 15, MessageDigest.getInstance("SHA-256"));
+			Log.info("mgf = %s", Text.hex(b));
+		} catch (Exception e) {Log.error(e);}
 
 		try {
 			MessageDigest m = MessageDigest.getInstance("MD5");

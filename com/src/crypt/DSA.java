@@ -6,18 +6,34 @@ import java.util.Random;
 
 import sys.Log;
 
-public class DSA {
-	static BigInteger TWO = BigInteger.valueOf(2);
+public class DSA extends Asymmetric {
 	private BigInteger p,q,g;
 	private BigInteger x,y;
 
-	public DSA(int bits) {
+	/*
+	 * Parameter generation (can be shared among users)
+	 * q = generate prime of length N-bits
+	 * p = choose prime of length L-bits such that p − 1 is a multiple of q
+	 * g = a number whose multiplicative order modulo p is q
+	 *
+	 * Per-user keys
+	 * x = generate private key (0 < x < q)
+	 * y = g^x mod p
+	 *
+	 * (L,N) : (1,024, 160), (2,048, 224), (2,048, 256), and (3,072, 256)
+	 * N must be <= hashbits
+	 */
+	public DSA(int p_bits, int q_bits) {
 		Random rnd = new Random();
-		p = BigInteger.probablePrime(bits/2, rnd);
-		q = BigInteger.probablePrime(bits/2, rnd);
-		g = TWO;
+		p = BigInteger.probablePrime(p_bits, rnd);
+		do {
+			q = BigInteger.probablePrime(q_bits, rnd);
+		} while (q.subtract(ONE).gcd(p).compareTo(ONE) != 0);
 
+		g = TWO.modPow(p.subtract(ONE).divide(q), p);
 
+		x = new BigInteger(q.bitLength(), rnd);
+		y = g.modPow(x, p);
 	}
 	public DSA(BigInteger p, BigInteger q, BigInteger g, BigInteger x, BigInteger y) {
 		this.p = p;
@@ -34,12 +50,16 @@ public class DSA {
 	}
 
 	/*
-	1. generate random k
+	1. k = generated random
 	2. r = g^k mod q (if r == 0, generate new k)
 	3. s = k^-1(H(m)+x*r) mod q (if s == 0, generate new k)
 	4. The signature is (r,s)
 	 */
 	public byte[] signDigest(byte[] hash) {
+		if (q.bitLength() > hash.length*8) {
+			throw new RuntimeException("bits(q) > bits(hash)");
+		}
+
 		Random rnd = new Random();
 		BigInteger H = new BigInteger(1, hash);
 
@@ -54,8 +74,7 @@ public class DSA {
 			break;
 		}
 
-		BigInteger rs = r.shiftLeft(q.bitLength()).or(s);
-		return rs.toByteArray();
+		return r.shiftLeft(q.bitLength()).or(s).toByteArray();
 	}
 
 	/*
@@ -80,6 +99,4 @@ public class DSA {
 		Log.error("not equal:  v=%s  r=%s", v.toString(16), r.toString(16));
 		return false;
 	}
-
-
 }
