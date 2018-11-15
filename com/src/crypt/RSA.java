@@ -51,7 +51,35 @@ public class RSA extends Asymmetric {
 	private BigInteger p,q;
 	private BigInteger e,d,N;
 
-	public RSA(BigInteger e, BigInteger d, BigInteger N) {
+	public RSA(BigInteger p, BigInteger q, BigInteger e) {
+		this.p = p;
+		this.q = q;
+		N = p.multiply(q);
+		BigInteger phi = p.subtract(ONE).multiply(q.subtract(ONE));
+		d = e.modInverse(phi);
+		Log.debug("modulus[%d] = %s", N.toByteArray().length, Text.hex(N.toByteArray()));
+		Log.debug("e[%d] %s", e.toByteArray().length, Text.hex(e.toByteArray()));
+		Log.debug("d[%d] %s", d.toByteArray().length, Text.hex(d.toByteArray()));
+	}
+	public RSA(int bits) {
+		Random rnd = new Random();
+		p = BigInteger.probablePrime(bits/2, rnd);
+		q = BigInteger.probablePrime(bits/2, rnd);
+		N = p.multiply(q);
+
+		BigInteger phi = p.subtract(ONE).multiply(q.subtract(ONE));
+		for (int i=0; i < pubExpCandidates.length; ++i) {
+			e = pubExpCandidates[pubExpCandidates.length-1-i];
+			if (e.compareTo(N) < 0) break;
+		}
+		d = e.modInverse(phi);
+		Log.notice("Input: bits=%d",bits);
+		Log.debug("modulus[%d] = %s", N.toByteArray().length, Text.hex(N.toByteArray()));
+		Log.debug("e[%d] %s", e.toByteArray().length, Text.hex(e.toByteArray()));
+		Log.debug("d[%d] %s", d.toByteArray().length, Text.hex(d.toByteArray()));
+	}
+
+	public void fromEDN(BigInteger e, BigInteger d, BigInteger N) {
 		this.e = e; // public exponent
 		this.d = d; // private exponent
 		this.N = N; // modulus
@@ -116,32 +144,6 @@ public class RSA extends Asymmetric {
 		//5.
 		p = y.subtract(ONE).gcd(N);
 		q = N.divide(p);
-	}
-
-	public RSA(int bits) {
-		Random rnd = new Random();
-		p = BigInteger.probablePrime(bits/2, rnd);
-		q = BigInteger.probablePrime(bits/2, rnd);
-		N = p.multiply(q);
-
-		/* phi = (p-1)*(q-1);
-		 * while (gdc(e,phi)==1 && e < phi) e+=2;
-		 */
-		BigInteger phi = p.subtract(ONE).multiply(q.subtract(ONE));
-		/*if (bits > 8) e = BigInteger.probablePrime(bits/4+1, r);
-		else e = BigInteger.valueOf(3);
-		while (phi.gcd(e).compareTo(ONE) > 0 && e.compareTo(phi) < 0) {
-			e.add(TWO);
-		}*/
-		for (int i=0; i < pubExpCandidates.length; ++i) {
-			e = pubExpCandidates[pubExpCandidates.length-1-i];
-			if (e.compareTo(N) < 0) break;
-		}
-		d = e.modInverse(phi);
-		Log.notice("Input: bits=%d",bits);
-		Log.debug("modulus[%d] = %s", N.toByteArray().length, Text.hex(N.toByteArray()));
-		Log.debug("e[%d] %s", e.toByteArray().length, Text.hex(e.toByteArray()));
-		Log.debug("d[%d] %s", d.toByteArray().length, Text.hex(d.toByteArray()));
 	}
 
 	BigInteger genBigInteger(BigInteger max, Random rnd) {
@@ -247,6 +249,10 @@ public class RSA extends Asymmetric {
 	 */
 
 	/*
+	 * https://csrc.nist.gov/projects/cryptographic-algorithm-validation-program/component-testing
+	 * https://csrc.nist.gov/projects/cryptographic-algorithm-validation-program/digital-signatures
+	 * https://github.com/pyca/cryptography/blob/master/vectors/cryptography_vectors/asymmetric/RSA/pkcs-1v2-1d2-vec/pss-vect.txt
+	 *
 	 * Padding OAEP (optimal asymmetric encryption padding)
 	 * r = random nonce
 	 * X = (m || 00...0) XOR H(r) // pad m with zeros
