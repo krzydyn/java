@@ -1,10 +1,12 @@
 package crypt.tef;
 
 import java.security.GeneralSecurityException;
+import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.AlgorithmParameterSpec;
 
 import javax.crypto.KeyGenerator;
+import javax.crypto.ShortBufferException;
 import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.IvParameterSpec;
 
@@ -79,8 +81,8 @@ public class TEF implements TEF_Types {
 		String algoName = keyid.transformName()+"/"+algorithm.getName();
 		cipher = javax.crypto.Cipher.getInstance(algoName);
 		byte[] iv=null;
-		if (algorithm.map.containsKey(tef_algorithm_param_e.TEF_IV)) {
-			iv = (byte[])algorithm.map.get(tef_algorithm_param_e.TEF_IV);
+		if (algorithm.params.containsKey(tef_algorithm_param_e.TEF_IV)) {
+			iv = (byte[])algorithm.params.get(tef_algorithm_param_e.TEF_IV);
 		}
 		else if (algorithm.chaining != tef_chaining_mode_e.TEF_ECB) {
 			Log.warn("setting IV=ZERO");
@@ -88,7 +90,7 @@ public class TEF implements TEF_Types {
 		}
 		AlgorithmParameterSpec pspec = null;
 		if (algorithm.chaining == tef_chaining_mode_e.TEF_GCM) {
-			int taglen = (Integer)algorithm.map.get(tef_algorithm_param_e.TEF_TAGLEN);
+			int taglen = (Integer)algorithm.params.get(tef_algorithm_param_e.TEF_TAGLEN);
 			pspec = new GCMParameterSpec(taglen, iv);
 		}
 		else if (iv != null){
@@ -101,18 +103,18 @@ public class TEF implements TEF_Types {
 			cipher.init(javax.crypto.Cipher.ENCRYPT_MODE, keyid.key);
 		}
 
-		if (algorithm.map.containsKey(tef_algorithm_param_e.TEF_AAD)) {
-			cipher.updateAAD((byte[])algorithm.map.get(tef_algorithm_param_e.TEF_AAD));
+		if (algorithm.params.containsKey(tef_algorithm_param_e.TEF_AAD)) {
+			cipher.updateAAD((byte[])algorithm.params.get(tef_algorithm_param_e.TEF_AAD));
 		}
 
 		int r = cipher.doFinal(data, 0, dataLen, edata);
 		if (algorithm.chaining == tef_chaining_mode_e.TEF_GCM) {
-			int tl = (Integer)algorithm.map.get(tef_algorithm_param_e.TEF_TAGLEN)/8;
+			int tl = (Integer)algorithm.params.get(tef_algorithm_param_e.TEF_TAGLEN)/8;
 			if (r >= tl) {
 				byte[] tag = new byte[tl];
 				//for (int i=0; i < tl; ++i)tag[i]=edata
 				System.arraycopy(edata, r-tl, tag, 0, tl);
-				algorithm.map.put(tef_algorithm_param_e.TEF_TAG, tag);
+				algorithm.params.put(tef_algorithm_param_e.TEF_TAG, tag);
 				r -= tl;
 			}
 		}
@@ -127,8 +129,8 @@ public class TEF implements TEF_Types {
 		cipher.init(javax.crypto.Cipher.DECRYPT_MODE, keyid.key);
 
 		byte[] iv=null;
-		if (algorithm.map.containsKey(tef_algorithm_param_e.TEF_IV)) {
-			iv = (byte[])algorithm.map.get(tef_algorithm_param_e.TEF_IV);
+		if (algorithm.params.containsKey(tef_algorithm_param_e.TEF_IV)) {
+			iv = (byte[])algorithm.params.get(tef_algorithm_param_e.TEF_IV);
 		}
 		else if (algorithm.chaining != tef_chaining_mode_e.TEF_ECB) {
 			Log.warn("setting IV=ZERO");
@@ -136,7 +138,7 @@ public class TEF implements TEF_Types {
 		}
 		AlgorithmParameterSpec pspec = null;
 		if (algorithm.chaining == tef_chaining_mode_e.TEF_GCM) {
-			int taglen = (Integer)algorithm.map.get(tef_algorithm_param_e.TEF_TAGLEN);
+			int taglen = (Integer)algorithm.params.get(tef_algorithm_param_e.TEF_TAGLEN);
 			pspec = new GCMParameterSpec(taglen, iv); // iv = nonce
 		}
 		else if (iv != null){
@@ -149,26 +151,27 @@ public class TEF implements TEF_Types {
 			cipher.init(javax.crypto.Cipher.DECRYPT_MODE, keyid.key);
 		}
 
-		if (algorithm.map.containsKey(tef_algorithm_param_e.TEF_AAD)) {
-			cipher.updateAAD((byte[])algorithm.map.get(tef_algorithm_param_e.TEF_AAD));
+		if (algorithm.params.containsKey(tef_algorithm_param_e.TEF_AAD)) {
+			cipher.updateAAD((byte[])algorithm.params.get(tef_algorithm_param_e.TEF_AAD));
 		}
 
 		return cipher.doFinal(edata, 0, edataLen, data);
 	}
 
-	int tef_digest(tef_cipher_token keyid, tef_digest_e digest,
-			byte[] data, int dataLen, byte[] dig) {
-		return 0;
+	public int tef_digest(tef_digest_e digest, byte[] data, int dataLen, byte[] dig) throws GeneralSecurityException {
+		MessageDigest md = MessageDigest.getInstance(digest.getName());
+		byte[] d = md.digest(data);
+		if (d.length > dig.length) throw new ShortBufferException();
+		System.arraycopy(d, 0, dig, 0, d.length);
+		return d.length;
 	}
 
 	//keyid can be symmetric or asymmetric
-	int tef_sign_calc(tef_cipher_token keyid, tef_digest_e digest,
-			byte[] data, int dataLen, byte[] sign) {
+	int tef_sign_calc(tef_cipher_token keyid, tef_digest_e digest, byte[] data, int dataLen, byte[] sign) {
 		return 0;
 	}
 	//keyid can be symmetric or asymmetric
-	int tef_sign_verify(tef_cipher_token keyid, tef_digest_e digest,
-			byte[] data, int dataLen, byte[] sign) {
+	int tef_sign_verify(tef_cipher_token keyid, tef_digest_e digest, byte[] data, int dataLen, byte[] sign) {
 		return 0;
 	}
 }

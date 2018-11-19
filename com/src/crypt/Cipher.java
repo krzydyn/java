@@ -18,6 +18,8 @@
 
 package crypt;
 
+// https://docs.oracle.com/javase/7/docs/technotes/guides/security/crypto/HowToImplAProvider.html
+
 /**
  * <h2>Theory</h2>
  * <b>Block Ciphers</b>

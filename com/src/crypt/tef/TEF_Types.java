@@ -74,7 +74,7 @@ public interface TEF_Types {
 	static class tef_algorithm {
 		final tef_chaining_mode_e chaining;
 		final tef_padding_mode_e padding;
-		final Map<tef_algorithm_param_e, Object> map = new HashMap<>();
+		final Map<tef_algorithm_param_e, Object> params = new HashMap<>();
 		public tef_algorithm(tef_chaining_mode_e chain, tef_padding_mode_e pad) {
 			this.chaining = chain; this.padding = pad;
 		}
@@ -86,7 +86,7 @@ public interface TEF_Types {
 			StringBuilder b = new StringBuilder();
 			b.append(getName());
 			for (tef_algorithm_param_e p : tef_algorithm_param_e.values()) {
-				Object v = map.get(p);
+				Object v = params.get(p);
 				if (v==null) continue;
 				b.append(" "+p.getName());
 				if (v instanceof byte[]) {
@@ -100,11 +100,11 @@ public interface TEF_Types {
 		}
 
 		public tef_algorithm set(tef_algorithm_param_e p, Object v) {
-			map.put(p, v);
+			params.put(p, v);
 			return this;
 		}
 		public Object get(tef_algorithm_param_e p) {
-			return map.get(p);
+			return params.get(p);
 		}
 	}
 
@@ -125,23 +125,38 @@ public interface TEF_Types {
 	}
 
 	static enum tef_digest_e {
+		TEF_CRC16,
+		TEF_CRC32,
 		TEF_MD2,  //weak
 		TEF_MD4,  //weak
 		TEF_MD5,  //weak since 2008
 		TEF_SHA0, //weak
 		TEF_SHA1, //Theoretically weak
-		TEF_SHA2, //strong
-		TEF_SHA3, //very strong
+
+		//SHA-2 (strong)
+		TEF_SHA224,
+		TEF_SHA256,
+		TEF_SHA384,
+		TEF_SHA512,
+
+		//SHA-3 (very strong)
+		TEF_SHA3_224,
+		TEF_SHA3_256,
+		TEF_SHA3_384,
+		TEF_SHA3_512,
 		;
 		private String name;
 		String getName() {
 			if (name==null) {
-				if (this == TEF_SHA1) name = name().substring(4);
+				if (this == TEF_SHA224) name = "SHA-224";
+				else if (this == TEF_SHA256) name = "SHA-256";
+				else if (this == TEF_SHA384) name = "SHA-384";
+				else if (this == TEF_SHA512) name = "SHA-512";
+				else name = name().substring(4);
 			}
 			return name;
 		}
 		@Override
 		public String toString() {return getName();}
 	}
-
 }
