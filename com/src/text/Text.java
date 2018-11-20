@@ -382,6 +382,20 @@ public class Text {
 		return seq.get(seq.size()-1);
 	}
 
+	public static String utf2uc(String s) {
+		StringBuilder b = new StringBuilder(s.length());
+		for (int i = 0; i < s.length(); ++i) {
+			int c = s.charAt(i);
+			if (c == 0xc2) { ++i; b.append(s.charAt(i)); }
+			else if (c == 0xc3) { ++i; b.append((char)(s.charAt(i)+0x40));}
+			else if (c == 0xc4) { ++i; b.append((char)(s.charAt(i)+0x40*2));}
+			else if (c == 0xc5) { ++i; b.append((char)(s.charAt(i)+0x40*3));}
+			else if (c == 0xc6) { ++i; b.append((char)(s.charAt(i)+0x40*4));}
+			else if (c == 0xc7) { ++i; b.append((char)(s.charAt(i)+0x40*5));}
+			else b.append((char)c);
+		}
+		return b.toString();
+	}
 }
 /*
  >>>>60281
