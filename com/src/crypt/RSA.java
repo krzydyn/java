@@ -61,31 +61,14 @@ public class RSA extends Asymmetric {
 		Log.debug("e[%d] %s", e.toByteArray().length, Text.hex(e.toByteArray()));
 		Log.debug("d[%d] %s", d.toByteArray().length, Text.hex(d.toByteArray()));
 	}
-	public RSA(int bits) {
-		Random rnd = new Random();
-		p = BigInteger.probablePrime(bits/2, rnd);
-		q = BigInteger.probablePrime(bits/2, rnd);
-		N = p.multiply(q);
 
-		BigInteger phi = p.subtract(ONE).multiply(q.subtract(ONE));
-		for (int i=0; i < pubExpCandidates.length; ++i) {
-			e = pubExpCandidates[pubExpCandidates.length-1-i];
-			if (e.compareTo(N) < 0) break;
-		}
-		d = e.modInverse(phi);
-		Log.notice("Input: bits=%d",bits);
-		Log.debug("modulus[%d] = %s", N.toByteArray().length, Text.hex(N.toByteArray()));
-		Log.debug("e[%d] %s", e.toByteArray().length, Text.hex(e.toByteArray()));
-		Log.debug("d[%d] %s", d.toByteArray().length, Text.hex(d.toByteArray()));
-	}
-
-	public void fromEDN(BigInteger e, BigInteger d, BigInteger N) {
+	public RSA(BigInteger e, BigInteger d, BigInteger N, boolean pq) {
 		this.e = e; // public exponent
 		this.d = d; // private exponent
 		this.N = N; // modulus
 
+		if (!pq) return ;
 		//recover p,q
-
 		// http://csrc.nist.gov/publications/nistpubs/800-56B/sp800-56B.pdf (Appendix C)
 		//1. k=d*e-1
 		BigInteger k = d.multiply(e).subtract(ONE);
@@ -144,6 +127,24 @@ public class RSA extends Asymmetric {
 		//5.
 		p = y.subtract(ONE).gcd(N);
 		q = N.divide(p);
+	}
+
+	public RSA(int bits) {
+		Random rnd = new Random();
+		p = BigInteger.probablePrime(bits/2, rnd);
+		q = BigInteger.probablePrime(bits/2, rnd);
+		N = p.multiply(q);
+
+		BigInteger phi = p.subtract(ONE).multiply(q.subtract(ONE));
+		for (int i=0; i < pubExpCandidates.length; ++i) {
+			e = pubExpCandidates[pubExpCandidates.length-1-i];
+			if (e.compareTo(N) < 0) break;
+		}
+		d = e.modInverse(phi);
+		Log.notice("Input: bits=%d",bits);
+		Log.debug("modulus[%d] = %s", N.toByteArray().length, Text.hex(N.toByteArray()));
+		Log.debug("e[%d] %s", e.toByteArray().length, Text.hex(e.toByteArray()));
+		Log.debug("d[%d] %s", d.toByteArray().length, Text.hex(d.toByteArray()));
 	}
 
 	BigInteger genBigInteger(BigInteger max, Random rnd) {
