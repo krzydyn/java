@@ -385,14 +385,44 @@ public class Text {
 	public static String utf2uc(String s) {
 		StringBuilder b = new StringBuilder(s.length());
 		for (int i = 0; i < s.length(); ++i) {
-			int c = s.charAt(i);
-			if (c == 0xc2) { ++i; b.append(s.charAt(i)); }
-			else if (c == 0xc3) { ++i; b.append((char)(s.charAt(i)+0x40));}
-			else if (c == 0xc4) { ++i; b.append((char)(s.charAt(i)+0x40*2));}
-			else if (c == 0xc5) { ++i; b.append((char)(s.charAt(i)+0x40*3));}
-			else if (c == 0xc6) { ++i; b.append((char)(s.charAt(i)+0x40*4));}
-			else if (c == 0xc7) { ++i; b.append((char)(s.charAt(i)+0x40*5));}
-			else b.append((char)c);
+			int c0 = s.charAt(i);
+			if (c0 > 0x100) b.append((char)c0); // already unicode
+			else if ((c0&0x80) == 0) b.append((char)c0); // ASCII
+			else if ((c0&0xe0) == 0xc0) {  // UTF-8 (2-byte)
+				int c1 = s.charAt(i+1);
+				b.append((char)(((c0&0x1f)<<6)|(c1&0x3f)));
+				i += 1;
+			}
+			else if ((c0&0xf0) == 0xe0) {  // UTF-8 (3-byte)
+				int c = c0&0xf;
+				for (int j=1; j < 3; ++j) {
+					c <<= 6;
+					c |= s.charAt(i+j)&0x3f;
+				}
+				b.append((char)c);
+				i += 2;
+			}
+			else if ((c0&0xf8) == 0xf0) {  // UTF-8 (4-byte)
+				//UTF-16 surrogate pairs
+				//U+D800-U+DBFF (1,024 code points): high surrogates
+				//U+DC00-U+DFFF (1,024 code points): low surrogates
+				int c = c0&7;
+				for (int j=1; j < 4; ++j) {
+					c <<= 6;
+					c |= s.charAt(i+j)&0x3f;
+				}
+				b.append((char)(0xD800 | ((c >> 10)&0xbbf))); //10bits
+				b.append((char)(0xDC00 | (c & 0x3FF)));       //10bits
+				i += 3;
+			}
+			else if ((c0&0xfc) == 0xf8) {  // UTF-8 (5-byte) [removed]
+				b.append("<5?>");
+				i += 4;
+			}
+			else if ((c0&0xfe) == 0xfc) {  // UTF-8 (6-byte) [removed]
+				b.append("<6?>");
+				i += 5;
+			}
 		}
 		return b.toString();
 	}
