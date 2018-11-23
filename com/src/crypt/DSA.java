@@ -36,11 +36,11 @@ public class DSA extends Asymmetric {
 		y = g.modPow(x, p);
 	}
 	public DSA(BigInteger p, BigInteger q, BigInteger g, BigInteger x, BigInteger y) {
-		this.p = p;
-		this.q = q;
-		this.g = g;
-		this.x = x;
-		this.y = y;
+		this.p = p; //prime
+		this.q = q; //subprime
+		this.g = g; //base
+		this.x = x; //priv
+		this.y = y; //pub
 
 		Log.debug("p=%s", p.toString(16));
 		Log.debug("q=%s", q.toString(16));
