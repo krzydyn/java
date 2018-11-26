@@ -382,6 +382,9 @@ public class Text {
 		return seq.get(seq.size()-1);
 	}
 
+	/*
+	 * equivalent of new String(content.getBytes(StandardCharsets.ISO_8859_1), StandardCharsets.UTF_8);
+	 */
 	public static String utf2uc(String s) {
 		StringBuilder b = new StringBuilder(s.length());
 		for (int i = 0; i < s.length(); ++i) {

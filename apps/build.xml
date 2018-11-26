@@ -60,7 +60,11 @@
 			includes="rgui/RServer*"
 			classpath="${comdir}/${build}"
 		/>
-		<jar destfile="bin/rserver.jar" basedir="${build}">
+		<delete file="bin/rserver.jar"/>
+		<jar destfile="bin/rserver.jar">
+			<fileset dir="${build}">
+				<include name="rgui/RServer*"/>
+			</fileset>	
 			<fileset dir="${comdir}/${build}">
 				<include name="sys/*"/>
 				<include name="io/IO*"/>
@@ -69,9 +73,6 @@
 				<include name="text/Text*"/>
 				<exclude name="sys/UnitTest*"/>
 			</fileset>
-			<fileset dir=".">
-				<include name="rgui/RServer*"/>
-			</fileset>	
 
 			<manifest>
 			<attribute name="Main-Class" value="rgui.RServer"/>
@@ -83,8 +84,37 @@
 		<ant antfile="build.xml" target="rserver" />
 	</target>
 
+	<target name="messages" depends="common">
+		<echo>Building fb messages reader</echo>
+		<mkdir dir="${build}"/>
+
+		<javac srcdir="src" destdir="${build}" debug="true" listfiles="true"
+			encoding="UTF-8" source="${JAVA_VERSION}" target="${JAVA_VERSION}"
+			includeantruntime="false"
+			includes="fb/Messages*"
+			classpath="${comdir}/${build}:lib/gson-2.6.2.jar"
+		/>
+		<delete file="bin/fbmsg.jar"/>
+		<jar destfile="bin/fbmsg.jar" duplicate="fail">
+			<fileset dir="${build}">
+				<include name="fb/"/>
+			</fileset>
+			<fileset dir="${comdir}/${build}">
+				<include name="sys/"/>
+				<include name="text/Text*"/>
+				<include name="ui/"/>
+				<exclude name="sys/UnitTest*"/>
+			</fileset>
+
+			<manifest>
+				<attribute name="Main-Class" value="fb.Messages"/>
+				<attribute name="Class-Path" value="../lib/gson-2.6.2.jar"/>
+			</manifest>
+		</jar>
+	</target>
+
 	<target name="mserial" depends="common">
-		<echo>Building Remote Server app</echo>
+		<echo>Building Serial Terminal app</echo>
 		<mkdir dir="${build}"/>
 
 		<javac srcdir="src" destdir="${build}" debug="true" listfiles="true"
@@ -93,7 +123,11 @@
 			includes="serial/*"
 			classpath="${comdir}/${build}"
 		/>
-		<jar destfile="bin/mserial.jar" basedir="${build}">
+		<delete file="bin/mserial.jar"/>
+		<jar destfile="bin/mserial.jar">
+			<fileset dir="${build}">
+				<include name="serial/*"/>
+			</fileset>	
 			<fileset dir="${comdir}/${build}">
 				<include name="sys/*"/>
 				<include name="net/**"/>
@@ -101,12 +135,9 @@
 				<include name="text/Ansi*"/>
 				<exclude name="sys/UnitTest*"/>
 			</fileset>
-			<fileset dir=".">
-				<include name="rgui/RServer*"/>
-			</fileset>	
 
 			<manifest>
-			<attribute name="Main-Class" value="rgui.RServer"/>
+				<attribute name="Main-Class" value="serial.SerialMain"/>
 			</manifest>
 		</jar>
 	</target>

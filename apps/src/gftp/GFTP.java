@@ -1,7 +1,5 @@
 package gftp;
 
-import git.GitRepo;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -13,6 +11,7 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 
+import git.GitRepo;
 import net.ftp.FtpClient;
 import net.ftp.FtpDirEntry;
 import sys.Env;
@@ -57,13 +56,13 @@ public class GFTP {
 
 		if (jobs.size() == 0) {
 			exclude.add(Env.expandEnv("~/Work/www/cms/ckeditor"));
-			//jobs.add(new CopyJob("~/www/cms/lib", "/www/cms/lib"));
-			jobs.add(new CopyJob("~/Work/www", "/www"));
+			//jobs.add(new CopyJob("~/Work/www/cms/lib", "/www/cms/lib"));
+			//jobs.add(new CopyJob("~/Work/www", "/www"));
 			//jobs.add(new CopyJob("~/Work/www/templates", "/www/templates"));
-			//jobs.add(new CopyJob("~/www/espdb", "/www/espdb"));
-			//jobs.add(new CopyJob("~/www/bridge", "/www/bridge"));
-			//jobs.add(new CopyJob("~/www/przepisy", "/www/przepisy"));
-			//jobs.add(new CopyJob("~/www/ankieta.php", "/www/"));
+			//jobs.add(new CopyJob("~/Work/www/espdb", "/www/espdb"));
+			jobs.add(new CopyJob("~/Work/www/bridge", "/www/bridge"));
+			//jobs.add(new CopyJob("~/Work/www/przepisy", "/www/przepisy"));
+			//jobs.add(new CopyJob("~/Work/www/ankieta.php", "/www/"));
 		}
 
 		filesSent=0;
@@ -95,7 +94,7 @@ public class GFTP {
 	public static void synchronizeDirs(File src, File dst) throws Exception {
 		syncDirs(src, dst);
 	}
-	
+
 	private static String linuxPath(File f) {
 		return f.getPath().replace('\\', '/');
 	}
