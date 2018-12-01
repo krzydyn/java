@@ -332,8 +332,26 @@ public class TEFSecosCrypt extends UnitTest implements TEF_Types {
 			"ed:ca:8e:f8:8d:87:5f:d4:b4:1a:2c:c9:a7:67:7e:\n" +
 			"b2:1b:c1:ce:b6:83:7c:ce:b4:3d:85:c7:53:30:7c:\n" +
 			"fe:85");
-	static byte[] TEE_ATTR_RSA_PUBLIC_EXPONENT_VALUE01 = Text.bin("");
-	static byte[] TEE_ATTR_RSA_PRIVATE_EXPONENT_VALUE01 = Text.bin("");
+	static byte[] TEE_ATTR_RSA_PUBLIC_EXPONENT_VALUE01 = Text.bin("010001");
+	static byte[] TEE_ATTR_RSA_PRIVATE_EXPONENT_VALUE01 = Text.bin(
+			"a5:0d:e1:84:f9:02:ec:42:20:2c:98:98:70:a3:\n" +
+			"1a:04:21:a7:a0:59:5d:87:80:9b:09:57:91:b4:50:\n" +
+			"51:62:bf:22:d7:db:17:25:b0:9c:91:29:5f:10:9c:\n" +
+			"ac:44:48:b2:43:8d:6b:36:84:a7:df:b8:1b:9f:73:\n" +
+			"ac:2c:53:a5:39:d9:a2:e2:7e:f2:07:2d:80:a4:7b:\n" +
+			"7b:66:1a:2f:b7:66:64:66:a8:c3:8d:7e:8a:7f:c6:\n" +
+			"d7:52:e7:38:30:59:74:88:8e:8a:52:79:30:77:c9:\n" +
+			"e5:7a:3e:65:5d:89:a9:b7:0b:c6:62:72:9e:a4:72:\n" +
+			"ae:4b:b3:f2:89:47:15:e0:5b:45:4d:99:5b:13:6c:\n" +
+			"90:be:e5:b5:98:ad:87:99:1a:57:d4:1f:f1:52:71:\n" +
+			"5b:51:40:dc:51:35:f6:6c:ae:a3:f9:0f:3a:ed:28:\n" +
+			"fc:a5:60:2f:4b:4f:31:ac:48:3e:5b:ba:e4:2b:58:\n" +
+			"79:e6:b4:6b:5e:56:0a:b2:db:68:ed:24:d8:5e:6f:\n" +
+			"30:59:8d:8c:a3:00:68:f5:42:95:1a:0b:a8:1c:fb:\n" +
+			"df:29:81:10:32:02:cc:51:a4:17:14:3e:ef:89:41:\n" +
+			"de:f8:2d:64:69:30:e8:8a:ad:96:f6:f4:82:83:9a:\n" +
+			"77:e7:de:12:31:f7:15:ec:ce:ed:83:68:88:84:e5:\n" +
+			"64:81");
 
 	static byte[] NONCE1_VALUE_AES_GCM = Text.bin("00:8d:49:3b:30:ae:8b:3c:96:96:76:6c:fa"); //len=13
 	static byte[] NONCE2_VALUE_AES_GCM = Text.bin("ca:fe:ba:be:fa:ce:db:ad:de:ca:f8:88"); //len=12
@@ -409,6 +427,34 @@ public class TEFSecosCrypt extends UnitTest implements TEF_Types {
 		dsa.verifyDigest(sign, hash);
 	}
 
+	static void mgf_test() throws Exception {
+		byte[] seed = "hello".getBytes();
+		byte[] t1 = RSA.mgf(seed, 10, MessageDigest.getInstance("SHA-256"));
+		check(t1, Text.bin("DA75447E22F9F99E1BE0"));
+
+		t1 = RSA.mgf(seed, 15, MessageDigest.getInstance("SHA-256"));
+		check(t1, Text.bin("DA75447E22F9F99E1BE09A00CF1A07"));
+
+		seed = "foo".getBytes();
+		t1 = RSA.mgf(seed, 3, MessageDigest.getInstance("SHA-1"));
+		check(t1, Text.bin("1AC907"));
+		t1 = RSA.mgf(seed, 5, MessageDigest.getInstance("SHA-1"));
+		check(t1, Text.bin("1AC9075CD4"));
+
+		seed = "bar".getBytes();
+		t1 = RSA.mgf(seed, 5, MessageDigest.getInstance("SHA-1"));
+		check(t1, Text.bin("BC0C655E01"));
+		t1 = RSA.mgf(seed, 50, MessageDigest.getInstance("SHA-1"));
+		check(t1, Text.bin("BC0C655E016BC2931D85A2E675181ADCEF7F581F76DF2739DA74FAAC41627BE2F7F415C89E983FD0CE80CED9878641CB4876"));
+		t1 = RSA.mgf(seed, 50, MessageDigest.getInstance("SHA-256"));
+		check(t1, Text.bin("382576A7841021CC28FC4C0948753FB8312090CEA942EA4C4E735D10DC724B155F9F6069F289D61DACA0CB814502EF04EAE1"));
+}
+
+	static byte[] empa = Text.bin("017c5c1b 2b369af7 a8cb9de0 133f1d09 56042c69 c0198187 cfa2b307 31fe6e6e 450a2bfc c9574830 1e3e786a 770487ae c9e08e94 0d2d05c7 df840f36 15bce7a4 56c64272 7de409ef cf9c5\n" +
+			"8c5 5f76de4c 895370fe ce8c155a 13a6f934 bc4176bb eae90f37 4289242f 317d3d2b 177923f7 0b4a2638 0b1ce215 19db2968 ca0a1e50 d781d4fd 2a89a1e0 19dd509f ad209696 0f6260db b8392e30 4b46e7a3 a1485\n" +
+			"149 5ca68291 67492a69 bb86457b 59932cc9 5bbbb0a7 5588ddcf 017d0fc9 e2edfaf1 0bd5ac34 f3b693a6 088a0f2d aa7dd102 8480f458 176c5b74 a83642f2 8383d61d e83b2ed9 f724b8dd 29c16717 b4c1f4e0 6c7c9\n" +
+			"a9a bef453ca 6a9f5eac b4548dbc");
+
 	static void rsa_sign() throws Exception {
 		RSA rsa = new RSA(
 				new BigInteger(1, TEE_ATTR_RSA_PUBLIC_EXPONENT_VALUE01),
@@ -416,6 +462,22 @@ public class TEFSecosCrypt extends UnitTest implements TEF_Types {
 				new BigInteger(1, TEE_ATTR_RSA_MODULUS_VALUE01),
 				false
 				);
+
+		byte[] sign;
+
+		MessageDigest md = MessageDigest.getInstance("SHA1");
+		byte[] hash = md.digest(DATA_FOR_CRYPTO1);
+		int nBits = TEE_ATTR_RSA_MODULUS_VALUE01.length*8;
+
+		byte[] padEMSA_PSS = RSA.padEMSA_PSS(hash, nBits-1, md);
+		Log.info("padEMSA_PSS[%d] = %s", padEMSA_PSS.length, Text.hex(padEMSA_PSS));
+		check(padEMSA_PSS, empa);
+
+		Log.info("");
+		//sign = rsa.sign(padEMSA_PSS);
+		//Log.info("sign[%d] = %s\n", sign.length, Text.hex(sign));
+
+		check("unpad", RSA.unpadEMSA_PSS(padEMSA_PSS, hash, nBits-1, md));
 	}
 
 	static void dh_test() throws Exception {
@@ -446,9 +508,10 @@ public class TEFSecosCrypt extends UnitTest implements TEF_Types {
 
 		//Log.info("");
 		//try { gp_digest(); } catch (Exception e) { Log.error(e); }
+		try { mgf_test(); } catch (Exception e) { Log.error(e); }
 		//try { gp_dsa(); } catch (Exception e) { Log.error(e); }
 
-		//try { rsa_sign(); } catch (Exception e) { Log.error(e); }
-		try { dh_test(); } catch (Exception e) { Log.error(e); }
+		try { rsa_sign(); } catch (Exception e) { Log.error(e); }
+		//try { dh_test(); } catch (Exception e) { Log.error(e); }
 	}
 }

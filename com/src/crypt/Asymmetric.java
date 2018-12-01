@@ -27,6 +27,9 @@ abstract public class Asymmetric {
 		return r;
 	}
 
+	static BigInteger op2ip(byte[] x) {
+		return new BigInteger(1, x);
+	}
 	static byte[] i2osp(BigInteger x, int len) {
 		byte[] r = x.toByteArray();
 		return padZeroL(r, len);
@@ -34,14 +37,14 @@ abstract public class Asymmetric {
 	static byte[] i2osp(int x, int len) {
 		byte[] r = new byte[len];
 		for (int i = 0; i < len; ++i) {
-			r[i] = (byte)x;
+			r[len - i - 1] = (byte)x;
 			x >>>= 8;
 		}
 		return r;
 	}
 	static byte[] i2osp(int x, byte[] r) {
 		for (int i = 0; i < r.length; ++i) {
-			r[i] = (byte)x;
+			r[r.length - i - 1] = (byte)x;
 			x >>>= 8;
 		}
 		return r;
@@ -59,6 +62,12 @@ abstract public class Asymmetric {
 		return r;
 	}
 
+	static void xor(byte[] a, byte[] b) {
+		int l = Math.min(a.length, b.length);
+		for (int i = 0; i < l; ++i)
+			a[a.length - i -1] ^= b[b.length - i -1];
+	}
+
 	/**
 	 * Mask Generation Function (Full domain hashing)
 	 * @param seed seed from which mask is generated
@@ -71,6 +80,7 @@ abstract public class Asymmetric {
 		int n = (masklen + hLen - 1)/hLen;
 		byte[] T = new byte[masklen];
 		byte[] C = new byte[4];
+		md.reset();
 		for (int counter = 0; counter < n; ++counter) {
 			md.update(seed);
 			byte[] d = md.digest(i2osp(counter, C));

@@ -30,7 +30,7 @@ import org.w3c.dom.NodeList;
 
 public class GenFromXml {
 	static String repoPath = "/home/k.dynowski/Secos/Trustware";
-	static String xmlBasePath = "/home/k.dynowski/Secos/TEE-Initial-Configuration/TEE_Initial_Configuration-Test_Suite_v2_0_0_2-2017_06_09";
+	static String xmlBasePath = repoPath + "/trustzone-application/test_suite_v2.0.0";
 	static String xmlPackagesPath = xmlBasePath + "/packages";
 	static String xmlValuesPath = xmlBasePath + "/Values";
 
@@ -266,15 +266,6 @@ public class GenFromXml {
 					sep = ",\n"+openIndent.replaceAll(".", " ");
 				}
 
-				if (name.equals("Invoke_GetNextPersistentObject_All")) {
-					tc.checkEnumObjectIndex = 0;
-				}
-				else if (name.equals("Check_EnumeratedPersistentObject")) {
-					ArgInfo a = args.get(args.size()-1);
-					a.value = String.valueOf(tc.checkEnumObjectIndex);
-					++tc.checkEnumObjectIndex;
-				}
-
 				pr.printf(INDENT+"res = %s(%s);\n", mapname, Text.join(sep, args));
 
 				//if (name.equals("InitializeContext"))
@@ -340,7 +331,6 @@ public class GenFromXml {
 		}
 	}
 	static class TestCaseInfo {
-		int checkEnumObjectIndex = -1;
 		boolean postamble = false;
 		String name;
 		String id;
@@ -495,9 +485,6 @@ public class GenFromXml {
 			ArgInfo a = opAppendArgs.get(op.name);
 			tc.addLocalVar(String.format("%s %s[%s]", a.type, a.value, a.parameter));
 			op.args.add(a);
-		}
-		if (op.name.equals("Check_EnumeratedPersistentObject")) {
-			op.args.add(new ArgInfo("idx", "uint32_t", "-1"));
 		}
 		return op;
 	}
