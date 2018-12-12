@@ -1,7 +1,7 @@
 /*
  *  Copyright (c) 2016 Krzysztof Dynowski All Rights Reserved
  *
- *  Contact: krzydyn@gmail.com)
+ *  Contact: krzydyn@gmail.com
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -22,6 +22,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import sys.Log;
 import text.tokenize.BasicTokenizer;
 
 public class Expression {
@@ -37,98 +38,111 @@ public class Expression {
 
 	//operator type
 	static enum OpType {
-		OP_ASGN{    // a = b
-			@Override
-			public Object calc(Object ...a) { return (long)a[1]; }
+		OP_NOT(1,0){    // !
 		},
-		OP_ADD{    // +
-			@Override
-			public Object calc(Object ...a) { return (long)a[0]+(long)a[1]; }
+		OP_AND(2,0){    // &&
 		},
-		OP_SUB{    // -
-			@Override
-			public Object calc(Object ...a) { return (long)a[0]-(long)a[1]; }
+		OP_OR(2,0){     // ||
 		},
-		OP_MUL{    // *
-			@Override
-			public Object calc(Object ...a) { return (long)a[0]*(long)a[1]; }
-		},
-		OP_DIV{    // /
-			@Override
-			public Object calc(Object ...a) { return (long)a[0]/(long)a[1]; }
-		},
-		OP_REM{    // %
-			@Override
-			public Object calc(Object ...a) { return (long)a[0]%(long)a[1]; }
-		},
-		OP_INC(1){    // ++
-			@Override
-			public Object calc(Object ...a) { return (long)a[0]+1; }
-		},
-		OP_DEC(1){    // --
-			@Override
-			public Object calc(Object ...a) { return (long)a[0]-1; }
-		},
-		OP_INCN{   // +=
-			@Override
-			public Object calc(Object ...a) { return (long)a[0]+(long)a[1]; }
-		},
-		OP_DECN{   // -=
-			@Override
-			public Object calc(Object ...a) { return (long)a[0]-(long)a[1]; }
-		},
-		OP_EQ{     // ==
-			@Override
-			public Object calc(Object ...a) { return a[0].equals(a[1]) ? 1l : 0l; }
-		},
-		OP_NEQ{    // !=
-			@Override
-			public Object calc(Object ...a) { return a[0].equals(a[1]) ? 0l : 1l; }
-		},
-		OP_GT{     // >
-		},
-		OP_GE{     // >=
-		},
-		OP_LT{     // <
-		},
-		OP_LE{     // <=
+		OP_XOR(2,0){    // ^^
 		},
 
-		OP_NOT(1){    // !
+		OP_ASGN(1,0){    // a = b
+			@Override
+			public Object calc(Object[] a) { return a[1]; }
 		},
-		OP_AND{    // &&
+		OP_ADD(2,1){    // +
+			@Override
+			public Object calc(Object[] a) {
+				if (a[0] instanceof Long && a[1] instanceof Long)
+					return (long)a[0]+(long)a[1];
+				if (a[0] instanceof String && a[1] instanceof String)
+					return (String)a[0]+(String)a[1];
+				return null;
+			}
 		},
-		OP_OR{     // ||
+		OP_SUB(2,1){    // -
+			@Override
+			public Object calc(Object[] a) {
+				if (a[0] instanceof Long && a[1] instanceof Long)
+					return (long)a[0]-(long)a[1];
+				return null;
+			}
 		},
-		OP_XOR{    // ^^
+		OP_MUL(2,2){    // *
+			@Override
+			public Object calc(Object[] a) { return (long)a[0]*(long)a[1]; }
+		},
+		OP_DIV(2,2){    // /
+			@Override
+			public Object calc(Object[] a) {
+				return (long)a[0]/(long)a[1];
+			}
+		},
+		OP_REM(2,2){    // %
+			@Override
+			public Object calc(Object[] a) { return (long)a[0]%(long)a[1]; }
+		},
+		OP_INC(1,3){    // ++
+			@Override
+			public Object calc(Object[] a) { return (long)a[0]+1; }
+		},
+		OP_DEC(1,3){    // --
+			@Override
+			public Object calc(Object[] a) { return (long)a[0]-1; }
+		},
+		OP_INCN(2,4){   // +=
+			@Override
+			public Object calc(Object[] a) { return (long)a[0]+(long)a[1]; }
+		},
+		OP_DECN(2,4){   // -=
+			@Override
+			public Object calc(Object[] a) { return (long)a[0]-(long)a[1]; }
+		},
+		OP_EQ(2,0){     // ==
+			@Override
+			public Object calc(Object[] a) { return a[0].equals(a[1]) ? 1l : 0l; }
+		},
+		OP_NEQ(2,0){    // !=
+			@Override
+			public Object calc(Object[] a) { return a[0].equals(a[1]) ? 0l : 1l; }
+		},
+		OP_GT(2,0){     // >
+		},
+		OP_GE(2,0){     // >=
+		},
+		OP_LT(2,0){     // <
+		},
+		OP_LE(2,0){     // <=
 		},
 
-		OP_BNOT(1){   // ~
+		OP_BNOT(1,0){   // ~
 		},
-		OP_BAND{   // &
+		OP_BAND(2,0){   // &
 		},
-		OP_BOR{    // |
+		OP_BOR(2,0){    // |
 		},
-		OP_BXOR{   // ^
+		OP_BXOR(2,0){   // ^
 		},
-		OP_LSH{    // <<
+		OP_LSH(2,0){    // <<
 		},
-		OP_RSH{    // >>
+		OP_RSH(2,0){    // >>
 		},
-		OP_RSHU{   // >>>
+		OP_RSHU(2,0){   // >>>
 		},
 
-		OP_POW;    // power
+		OP_POW(2,0);    // power
 
 		final int args;
-		private OpType() {args=2;}
-		private OpType(int a) {args=a;}
-		public Object calc(Object ...args) {
+		final int prio;
+		private OpType(int a, int p) {args=a;prio=p;}
+		public Object calc(Object[] args) {
 			throw new RuntimeException("not implemented");
 		}
-
 	}
-	private static Map<String,OpType> opMap = new HashMap<String, Expression.OpType>();
+
+	// Operands
+	private static Map<String,OpType> opMap = new HashMap<>();
 	static {
 		opMap.put("=", OpType.OP_ASGN);
 		opMap.put("+", OpType.OP_ADD);
@@ -147,8 +161,9 @@ public class Expression {
 		Object rep;
 	}
 	private SymbolMapper symbols = null;
-	//RPN (postfix) representation
-	private final List<Token> rpn = new ArrayList<Token>();
+	/** RPN (postfix) representation
+	 */
+	private final List<Token> rpn = new ArrayList<>();
 
 	public Expression(String expr, SymbolMapper symmap) {
 		this.symbols = symmap;
@@ -161,19 +176,15 @@ public class Expression {
 		this(expr,null);
 	}
 
-	private int priority(char ch) {
-		if (ch == '/' || ch == '*' || ch == '%') return 2;
-		if (ch == '+' || ch == '-') return 1;
-		return 0;
-	}
 	private boolean isOperand(char c) {
 		return c=='=' || c=='+' || c=='-' || c=='|' || c=='&';
 	}
+
 	private void fromInfix(String expr) throws Exception {
 		BasicTokenizer tok = new BasicTokenizer(expr);
 		StringBuilder s=new StringBuilder();
 		rpn.clear();
-		List<String> op = new ArrayList<String>();
+		List<String> op = new ArrayList<>();
 		while (tok.next(s)) {
 			char c = s.charAt(0);
 			if (Character.isWhitespace(c)) continue;
@@ -219,16 +230,24 @@ public class Expression {
 						if (!isOperand(c)) break;
 						s.append(s2);
 					}
-					tok.unread(s2);
+					tok.unread(s2); // return S2 to tokenizer
 				}
 
 				while (op.size() > 0) {
 					String x = op.get(op.size()-1);
 					if (x.charAt(0) == '(') break;
-					if (priority(c) > priority(x.charAt(0))) break;
+					//Log.debug("operand: prev='%s'   curr='%s'", x, s);
+					OpType curr_op = opMap.get(s.toString());
+					if (curr_op == null) {
+						Log.error("no op for '%s'", s);
+						break;
+					}
+					OpType prev_op = opMap.get(x);
+					if (curr_op.prio > prev_op.prio) break;
+					op.remove(op.size()-1);
 					Token t = new Token();
 					t.type = TYPE_OP;
-					t.rep = opMap.get(op.remove(op.size()-1));
+					t.rep = prev_op;
 					rpn.add(t);
 				}
 				op.add(s.toString());
@@ -257,22 +276,15 @@ public class Expression {
 
 	public long evaluate() {
 		//Log.prn("eval rpn %s", toString());
-		List<Object> stack = new ArrayList<Object>();
+		List<Object> stack = new ArrayList<>();
 		for (Token t : rpn) {
 			if (t.type == TYPE_OP) {
 				OpType op = (OpType)t.rep;
-				Object a;
-				if (op.args==1) {
-					a = stack.remove(stack.size()-1);
-					a = op.calc(a);
-				}
-				else if (op.args==2){
-					Object b = stack.remove(stack.size()-1);
-					a = stack.remove(stack.size()-1);
-					a = op.calc(a,b);
-				}
-				else throw new RuntimeException("Usuported operand "+op);
-				stack.add(a);
+				Object[] a = new Object[op.args];
+				for (int i = 0; i < op.args; ++i)
+					a[op.args - i -1] = stack.remove(stack.size()-1);
+				Object r = op.calc(a);
+				if (r != null) stack.add(r);
 			}
 			else if (t.type == TYPE_CONST) {
 				stack.add(t.rep);

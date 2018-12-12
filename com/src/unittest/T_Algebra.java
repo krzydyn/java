@@ -53,7 +53,7 @@ public class T_Algebra extends UnitTest {
 		//System.out.println(r.toString());
 	}
 	static void permutation() {
-		List<Integer> l = new ArrayList<Integer>();
+		List<Integer> l = new ArrayList<>();
 		l.add(2);
 		l.add(4);
 		l.add(7);
@@ -74,7 +74,7 @@ public class T_Algebra extends UnitTest {
 	}
 
 	static void combinatory() {
-		List<Character> l = new ArrayList<Character>();
+		List<Character> l = new ArrayList<>();
 		for (int i=0; i < 5; ++i) l.add((char)('a'+i));
 		Combination comb = new Combination(l,3, false);
 		int n=0;
@@ -96,7 +96,7 @@ public class T_Algebra extends UnitTest {
 	}
 
 	static void nCr() {
-		List<Long> list = new ArrayList<Long>(50);
+		List<Long> list = new ArrayList<>(50);
 		for (int n=0; n < 60; ++n) {
 			list.add(1L);
 			for (int k=0; k <= n; ++k) {
@@ -193,7 +193,7 @@ public class T_Algebra extends UnitTest {
 	}
 	static void sortedArray() {
 		int[] inp = {4,2,6,1,3,5,7};
-		SortedArray<Integer> a = new SortedArray<Integer>();
+		SortedArray<Integer> a = new SortedArray<>();
 		for (int i=0; i < inp.length; ++i) {
 			a.add(inp[i]);
 		}
@@ -267,7 +267,7 @@ public class T_Algebra extends UnitTest {
 		0,3,  1,1,  2,2,  4,4,  0,0,  1,2,  3,1,  3,3
 	};
 	static void convex_hull() {
-		List<Point2D> pnts = new ArrayList<Point2D>();
+		List<Point2D> pnts = new ArrayList<>();
 		for (int i=0; i < input_pnts.length; i+=2)
 			pnts.add(new Point2D.Double(input_pnts[i],input_pnts[i+1]));
 		List<Point2D> ha = Tools2D.hullAndrew(pnts);

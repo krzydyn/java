@@ -425,6 +425,29 @@ public class TEFSecosCrypt extends UnitTest implements TEF_Types {
 		byte[] sign = dsa.signDigest(hash);
 		//byte[] sign = Text.bin("39260379165BAF89BE9C53CEDBEC97EDFA111119712B524423552903EEAF668149A7FA184F79F7D9");
 		dsa.verifyDigest(sign, hash);
+
+		byte[] p = Text.bin("86F5CA03DCFEB225063FF830A0C769B9DD9D6153AD91D7CE27F787C43278B447E6533B86B18BED6E8A48B784A14C252C5BE0DBF60B86D6385BD2F12FB763ED8873ABFD3F5BA2E0A8C0A59082EAC056935E529DAF7C610467899C77ADEDFC846C881870B7B19B2B58F9BE0521A17002E3BDD6B86685EE90B3D9A1B02B782B1779");
+		byte[] q = Text.bin("996F967F6C8E388D9E28D01E205FBA957A5698B1");
+		byte[] g = Text.bin("07B0F92546150B62514BB771E2A0C0CE387F03BDA6C56B505209FF25FD3C133D89BBCD97E904E09114D9A7DEFDEADFC9078EA544D2E401AEECC40BB9FBBF78FD87995A10A1C27CB7789B594BA7EFB5C4326A9FE59A070E136DB77175464ADCA417BE5DCE2F40D10A46A3A3943F26AB7FD9C0398FF8C76EE0A56826A8A88F1DBD");
+		byte[] y = Text.bin("4B5E43C17DF5692C56B57566CF35C8C3D9A41CC55D01A15B5956B1A2EC669EDE"
+                +"8FC45E59C852CD586788468C6B7719FD1B3CFC57A765152529CFB6EEEB7142EE"
+                +"2A9B1CD661458E4362EE1C0CA973EBFE6EFC23C99F26E9E185CB98A3D90E46C4"
+                +"47C126BFDCA5524692D6945520C71FDA8F668189A09A9C4AA242981AEAAD6BAD");
+		byte[] x = Text.bin("58D0FD3469AD7A39708D1B47858B82953B9D3991");
+
+		dsa = new DSA(
+				new BigInteger(1, p),
+				new BigInteger(1, q),
+				new BigInteger(1, g),
+				new BigInteger(1, x),
+				new BigInteger(1, y)
+				);
+		md = MessageDigest.getInstance("SHA-224");
+		hash = md.digest("DSA SHA1".getBytes());
+		Log.info("hash = %s", Text.hex(hash));
+		sign = dsa.signDigest(hash);
+		Log.info("sign = %s", Text.hex(sign));
+		dsa.verifyDigest(sign, hash);
 	}
 
 	static void mgf_test() throws Exception {
@@ -508,10 +531,10 @@ public class TEFSecosCrypt extends UnitTest implements TEF_Types {
 
 		//Log.info("");
 		//try { gp_digest(); } catch (Exception e) { Log.error(e); }
-		try { mgf_test(); } catch (Exception e) { Log.error(e); }
-		//try { gp_dsa(); } catch (Exception e) { Log.error(e); }
+		//try { mgf_test(); } catch (Exception e) { Log.error(e); }
+		try { gp_dsa(); } catch (Exception e) { Log.error(e); }
 
-		try { rsa_sign(); } catch (Exception e) { Log.error(e); }
+		//try { rsa_sign(); } catch (Exception e) { Log.error(e); }
 		//try { dh_test(); } catch (Exception e) { Log.error(e); }
 	}
 }

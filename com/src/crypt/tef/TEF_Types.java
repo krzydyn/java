@@ -44,8 +44,8 @@ public interface TEF_Types {
 		TEF_CFB8,
 		TEF_OFB,
 		TEF_CTR,
-		TEF_GCM, //not supported in Java7
-		TEF_CCM, //not supported in Java8
+		TEF_GCM, //above Java7
+		TEF_CCM, //above Java8
 		;
 		private String name;
 		String getName() {
@@ -60,10 +60,11 @@ public interface TEF_Types {
 		TEF_PADDING_NONE("NoPadding"),
 		TEF_PADDING_X931("X931Padding"),
 		TEF_PADDING_PKCS5("PKCS5Padding"),
-		TEF_PADDING_PKCS7("PKCS5Padding"),
 		//TEF_PADDING_ISO9797_1("ISO97971Padding"),
 		//TEF_PADDING_ISO9797_2("ISO97972Padding"),
 		;
+		public static tef_padding_mode_e TEF_PADDING_PKCS7 = TEF_PADDING_PKCS5;
+
 		private String name;
 		tef_padding_mode_e(String n) {name=n;}
 		String getName() {return name;}

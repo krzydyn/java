@@ -56,10 +56,6 @@ public class DSA extends Asymmetric {
 	4. The signature is (r,s)
 	 */
 	public byte[] signDigest(byte[] hash) {
-		if (q.bitLength() > hash.length*8) {
-			throw new RuntimeException("bits(q) > bits(hash)");
-		}
-
 		Random rnd = new Random();
 		BigInteger H = new BigInteger(1, hash);
 
@@ -89,6 +85,8 @@ public class DSA extends Asymmetric {
 		BigInteger r = new BigInteger(1, Arrays.copyOfRange(sign, 0, sign.length - q.bitLength()/8));
 		BigInteger s = new BigInteger(1, Arrays.copyOfRange(sign, sign.length - q.bitLength()/8, sign.length));
 		BigInteger H = new BigInteger(1, hash);
+
+		if (s.bitLength() > q.bitLength()) throw new RuntimeException("signature too long");
 
 		BigInteger w = s.modInverse(q);
 		BigInteger u1 = H.multiply(w).mod(q);

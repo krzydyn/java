@@ -1,7 +1,7 @@
 /*
  *  Copyright (c) 2016 Krzysztof Dynowski All Rights Reserved
  *
- *  Contact: krzydyn@gmail.com)
+ *  Contact: krzydyn@gmail.com
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -34,7 +34,7 @@ public class Combination {
 
 	public Combination(List<?> l, int k, boolean rep) {
 		pos = new int[k];
-		set = new ArrayList<Object>(l);
+		set = new ArrayList<>(l);
 		this.rep = rep;
 		reset();
 	}
