@@ -516,7 +516,7 @@ public class TEFSecosCrypt extends UnitTest implements TEF_Types {
 
 		DH dh = new DH();
 		dh.setParams(prime, base);
-		BigInteger sA = dh.deriveKey(priv, pub);
+		BigInteger sA = dh.deriveSharedKey(priv, pub);
 
 		Log.info("shared[%d] = %s", (sA.bitLength()+7)/8, sA.toString(16));
 	}
