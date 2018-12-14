@@ -61,6 +61,11 @@ public class T_Crypt extends UnitTest {
 		check(Base64.decode("Nzg5MEFC"), new byte[] {'7','8','9','0', 'A', 'B'});
 	}
 
+	static void encodeUU() throws Exception {
+		Base64 uue = new Base64(Base64.Mode.UU64);
+		check(uue.bencode("Cats".getBytes()), "0V%T<P``");
+	}
+
 	static void rsa() {
 		checkNoThrow(new RunThrowable() {
 			@Override
