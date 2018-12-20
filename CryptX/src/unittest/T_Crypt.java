@@ -32,6 +32,7 @@ import crypt.AES3;
 import crypt.Base64;
 import crypt.CryptX_AES;
 import crypt.CryptX_Provider;
+import crypt.Encoder64;
 import crypt.Prime;
 import crypt.RSA;
 import crypt.SuperHash;
@@ -62,8 +63,8 @@ public class T_Crypt extends UnitTest {
 	}
 
 	static void encodeUU() throws Exception {
-		Base64 uue = new Base64(Base64.Mode.UU64);
-		check(uue.bencode("Cats".getBytes()), "0V%T<P``");
+		Encoder64 uue = new Encoder64(Encoder64.Mode.UU64);
+		check(uue.encode("Cats".getBytes()), "0V%T<P``");
 	}
 
 	static void rsa() {

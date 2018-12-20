@@ -110,10 +110,10 @@ public class TEFSecosCrypt extends UnitTest implements TEF_Types {
 	static TEF.tef_algorithm[] algos_simp = {
 		new TEF.tef_algorithm(tef_chaining_mode_e.TEF_ECB, tef_padding_mode_e.TEF_PADDING_NONE),
 		new TEF.tef_algorithm(tef_chaining_mode_e.TEF_CBC, tef_padding_mode_e.TEF_PADDING_NONE)
-		//.set(tef_algorithm_param_e.TEF_IV, Text.bin("0000000000000000"))
+			.set(tef_algorithm_param_e.TEF_IV, Text.bin("0000000000000000"))
 		,
 		new TEF.tef_algorithm(tef_chaining_mode_e.TEF_CBC, tef_padding_mode_e.TEF_PADDING_NONE)
-				.set(tef_algorithm_param_e.TEF_IV, Text.bin("00000000000000000000000000000000")),
+			.set(tef_algorithm_param_e.TEF_IV, Text.bin("00000000000000000000000000000000")),
 	};
 
 	//AES key vectors from http://nvlpubs.nist.gov/nistpubs/Legacy/SP/nistspecialpublication800-38a.pdf
@@ -131,31 +131,31 @@ public class TEFSecosCrypt extends UnitTest implements TEF_Types {
 	static TEF.tef_algorithm[] nist_algos = {
 		new TEF.tef_algorithm(tef_chaining_mode_e.TEF_ECB, tef_padding_mode_e.TEF_PADDING_NONE),
 		new TEF.tef_algorithm(tef_chaining_mode_e.TEF_CBC, tef_padding_mode_e.TEF_PADDING_NONE)
-				.set(tef_algorithm_param_e.TEF_IV, Text.bin("000102030405060708090a0b0c0d0e0f")),
+			.set(tef_algorithm_param_e.TEF_IV, Text.bin("000102030405060708090a0b0c0d0e0f")),
 		new TEF.tef_algorithm(tef_chaining_mode_e.TEF_CFB, tef_padding_mode_e.TEF_PADDING_NONE)
-				.set(tef_algorithm_param_e.TEF_IV, Text.bin("000102030405060708090a0b0c0d0e0f")),
+			.set(tef_algorithm_param_e.TEF_IV, Text.bin("000102030405060708090a0b0c0d0e0f")),
 		new TEF.tef_algorithm(tef_chaining_mode_e.TEF_OFB, tef_padding_mode_e.TEF_PADDING_NONE)
-				.set(tef_algorithm_param_e.TEF_IV, Text.bin("000102030405060708090a0b0c0d0e0f")),
+			.set(tef_algorithm_param_e.TEF_IV, Text.bin("000102030405060708090a0b0c0d0e0f")),
 		new TEF.tef_algorithm(tef_chaining_mode_e.TEF_CTR, tef_padding_mode_e.TEF_PADDING_NONE)
-				.set(tef_algorithm_param_e.TEF_IV, Text.bin("f0f1f2f3f4f5f6f7f8f9fafbfcfdfeff")),
+			.set(tef_algorithm_param_e.TEF_IV, Text.bin("f0f1f2f3f4f5f6f7f8f9fafbfcfdfeff")),
 
 		//GCM-AES  from http://csrc.nist.gov/groups/STM/cavp/documents/mac/gcmtestvectors.zip
 		new TEF.tef_algorithm(tef_chaining_mode_e.TEF_GCM, tef_padding_mode_e.TEF_PADDING_NONE)
-				.set(tef_algorithm_param_e.TEF_IV, Text.bin("3c819d9a9bed087615030b65"))
-				.set(tef_algorithm_param_e.TEF_TAGLEN, 128),
+			.set(tef_algorithm_param_e.TEF_IV, Text.bin("3c819d9a9bed087615030b65"))
+			.set(tef_algorithm_param_e.TEF_TAGLEN, 128),
 		new TEF.tef_algorithm(tef_chaining_mode_e.TEF_GCM, tef_padding_mode_e.TEF_PADDING_NONE)
-				.set(tef_algorithm_param_e.TEF_IV, Text.bin("794ec588176c703d3d2a7a07"))
-				.set(tef_algorithm_param_e.TEF_TAGLEN, 120),
+			.set(tef_algorithm_param_e.TEF_IV, Text.bin("794ec588176c703d3d2a7a07"))
+			.set(tef_algorithm_param_e.TEF_TAGLEN, 120),
 		new TEF.tef_algorithm(tef_chaining_mode_e.TEF_GCM, tef_padding_mode_e.TEF_PADDING_NONE)
-				.set(tef_algorithm_param_e.TEF_IV, Text.bin("e0e00f19fed7ba0136a797f3"))
-				.set(tef_algorithm_param_e.TEF_AAD, Text.bin("7a43ec1d9c0a5a78a0b16533a6213cab"))
-				.set(tef_algorithm_param_e.TEF_TAGLEN, 128),
+			.set(tef_algorithm_param_e.TEF_IV, Text.bin("e0e00f19fed7ba0136a797f3"))
+			.set(tef_algorithm_param_e.TEF_AAD, Text.bin("7a43ec1d9c0a5a78a0b16533a6213cab"))
+			.set(tef_algorithm_param_e.TEF_TAGLEN, 128),
 		new TEF.tef_algorithm(tef_chaining_mode_e.TEF_GCM, tef_padding_mode_e.TEF_PADDING_NONE)
-				.set(tef_algorithm_param_e.TEF_IV,
-						Text.bin("bed48d86e1ff4bff37286a5c428c719130200dce04011edb967f5aaff6a9fb4ad0fcf0dd474e12dcfbcca7fa1ff9bb66b2624aaf1a90f33ed2bab0ee5b465174a722eaa3353bcb354165a1a852468ece974a31429c6e1de7a34e6392f24225d539eaa6b8c1183bfb37627eb16dcd81bba9d65051ff84bd63ee814bea0e1c34d2"))
-				.set(tef_algorithm_param_e.TEF_AAD,
-						Text.bin("a481e81c70e65eeb94cdf4e25b0a225a4f48b58b12cde148a3a9aa4db0d2988da27591d65827eed39ad6933f267e486c31dc586c36ebaa0c349b9c12ed33221a463737695743cebb456f0705a9895a5aac720f8a53981a231fde"))
-				.set(tef_algorithm_param_e.TEF_TAGLEN, 96),
+			.set(tef_algorithm_param_e.TEF_IV,
+					Text.bin("bed48d86e1ff4bff37286a5c428c719130200dce04011edb967f5aaff6a9fb4ad0fcf0dd474e12dcfbcca7fa1ff9bb66b2624aaf1a90f33ed2bab0ee5b465174a722eaa3353bcb354165a1a852468ece974a31429c6e1de7a34e6392f24225d539eaa6b8c1183bfb37627eb16dcd81bba9d65051ff84bd63ee814bea0e1c34d2"))
+			.set(tef_algorithm_param_e.TEF_AAD,
+					Text.bin("a481e81c70e65eeb94cdf4e25b0a225a4f48b58b12cde148a3a9aa4db0d2988da27591d65827eed39ad6933f267e486c31dc586c36ebaa0c349b9c12ed33221a463737695743cebb456f0705a9895a5aac720f8a53981a231fde"))
+			.set(tef_algorithm_param_e.TEF_TAGLEN, 96),
 
 		new TEF.tef_algorithm(tef_chaining_mode_e.TEF_PCBC, tef_padding_mode_e.TEF_PADDING_NONE),
 	};
@@ -396,7 +396,6 @@ public class TEFSecosCrypt extends UnitTest implements TEF_Types {
 			new EncryptTC(gpapi_keys[0],gpapi_algos[0],DATA_FOR_CRYPTO1,Text.bin("A726EA73EB43D77C9E977070")),
 		};
 
-
 	static void gp_digest() throws Exception {
 		TEF t = new TEF();
 		byte[] dig = new byte[64];
@@ -449,6 +448,22 @@ public class TEFSecosCrypt extends UnitTest implements TEF_Types {
 		Log.info("sign = %s", Text.hex(sign));
 		dsa.verifyDigest(sign, hash);
 	}
+	static void gp_dh() throws Exception {
+		BigInteger prime = new BigInteger(1, TEE_ATTR_DH_PRIME_VALUE01);  // p (prime number)
+		BigInteger base = new BigInteger(1, TEE_ATTR_DH_BASE_VALUE01);    // g (generator)
+		BigInteger priv = new BigInteger(1, TEE_ATTR_DH_PRIVATE_VALUE_VALUE01);//xA (private exponent of user A)
+		BigInteger pub = new BigInteger(1, TEE_ATTR_DH_PUBLIC_VALUE_VALUE02);  //yB (public exponent of user B)
+
+		Log.info("Prime = %s", prime.toString(16));
+		Log.info("Base = %s", base.toString(16));
+		Log.info("Priv = %s", priv.toString(16));
+		Log.info("Pub = %s", pub.toString(16));
+
+		DH dh = new DH(prime, base);
+		BigInteger sA = dh.deriveSharedKey(priv, pub);
+
+		Log.info("shared[%d] = %s", (sA.bitLength()+7)/8, sA.toString(16));
+	}
 
 	static void mgf_test() throws Exception {
 		byte[] seed = "hello".getBytes();
@@ -471,14 +486,17 @@ public class TEFSecosCrypt extends UnitTest implements TEF_Types {
 		check(t1, Text.bin("BC0C655E016BC2931D85A2E675181ADCEF7F581F76DF2739DA74FAAC41627BE2F7F415C89E983FD0CE80CED9878641CB4876"));
 		t1 = RSA.mgf(seed, 50, MessageDigest.getInstance("SHA-256"));
 		check(t1, Text.bin("382576A7841021CC28FC4C0948753FB8312090CEA942EA4C4E735D10DC724B155F9F6069F289D61DACA0CB814502EF04EAE1"));
-}
-
-	static byte[] empa = Text.bin("017c5c1b 2b369af7 a8cb9de0 133f1d09 56042c69 c0198187 cfa2b307 31fe6e6e 450a2bfc c9574830 1e3e786a 770487ae c9e08e94 0d2d05c7 df840f36 15bce7a4 56c64272 7de409ef cf9c5\n" +
-			"8c5 5f76de4c 895370fe ce8c155a 13a6f934 bc4176bb eae90f37 4289242f 317d3d2b 177923f7 0b4a2638 0b1ce215 19db2968 ca0a1e50 d781d4fd 2a89a1e0 19dd509f ad209696 0f6260db b8392e30 4b46e7a3 a1485\n" +
-			"149 5ca68291 67492a69 bb86457b 59932cc9 5bbbb0a7 5588ddcf 017d0fc9 e2edfaf1 0bd5ac34 f3b693a6 088a0f2d aa7dd102 8480f458 176c5b74 a83642f2 8383d61d e83b2ed9 f724b8dd 29c16717 b4c1f4e0 6c7c9\n" +
-			"a9a bef453ca 6a9f5eac b4548dbc");
+	}
 
 	static void rsa_sign() throws Exception {
+		byte[] empa = Text.bin(
+				  " 017c5c1b 2b369af7 a8cb9de0 133f1d09 56042c69 c0198187 cfa2b307 31fe6e6e 450a2bfc c9574830 1e3e786a 770487ae"
+				+ " c9e08e94 0d2d05c7 df840f36 15bce7a4 56c64272 7de409ef cf9c58c5 5f76de4c 895370fe ce8c155a 13a6f934 bc4176bb"
+				+ " eae90f37 4289242f 317d3d2b 177923f7 0b4a2638 0b1ce215 19db2968 ca0a1e50 d781d4fd 2a89a1e0 19dd509f ad209696"
+				+ " 0f6260db b8392e30 4b46e7a3 a1485149 5ca68291 67492a69 bb86457b 59932cc9 5bbbb0a7 5588ddcf 017d0fc9 e2edfaf1"
+				+ " 0bd5ac34 f3b693a6 088a0f2d aa7dd102 8480f458 176c5b74 a83642f2 8383d61d e83b2ed9 f724b8dd 29c16717 b4c1f4e0"
+				+ " 6c7c9a9a bef453ca 6a9f5eac b4548dbc");
+
 		RSA rsa = new RSA(
 				new BigInteger(1, TEE_ATTR_RSA_PUBLIC_EXPONENT_VALUE01),
 				new BigInteger(1, TEE_ATTR_RSA_PRIVATE_EXPONENT_VALUE01),
@@ -503,38 +521,19 @@ public class TEFSecosCrypt extends UnitTest implements TEF_Types {
 		check("unpad", RSA.unpadEMSA_PSS(padEMSA_PSS, hash, nBits-1, md));
 	}
 
-	static void dh_test() throws Exception {
-		BigInteger prime = new BigInteger(1, TEE_ATTR_DH_PRIME_VALUE01);  // p (prime number)
-		BigInteger base = new BigInteger(1, TEE_ATTR_DH_BASE_VALUE01);    // g (generator)
-		BigInteger priv = new BigInteger(1, TEE_ATTR_DH_PRIVATE_VALUE_VALUE01);//xA (private exponent of user A)
-		BigInteger pub = new BigInteger(1, TEE_ATTR_DH_PUBLIC_VALUE_VALUE02);  //yB (public exponent of user B)
-
-		Log.info("Prime = %s", prime.toString(16));
-		Log.info("Base = %s", base.toString(16));
-		Log.info("Priv = %s", priv.toString(16));
-		Log.info("Pub = %s", pub.toString(16));
-
-		DH dh = new DH();
-		dh.setParams(prime, base);
-		BigInteger sA = dh.deriveSharedKey(priv, pub);
-
-		Log.info("shared[%d] = %s", (sA.bitLength()+7)/8, sA.toString(16));
-	}
-
 	public static void main(String[] args) {
 		//CryptX_Provider.register();
 		//listProviders();
 		//try { generate(); } catch (Exception e) { Log.error(e); }
-		//try { encrypt(); } catch (Exception e) { Log.error(e); }
+		try { encrypt(); } catch (Exception e) { Log.error(e); }
 		//try { decrypt(); } catch (Exception e) { Log.error(e); }
 		//try { digest(); } catch (Exception e) { Log.error(e); }
 
 		//Log.info("");
 		//try { gp_digest(); } catch (Exception e) { Log.error(e); }
-		//try { mgf_test(); } catch (Exception e) { Log.error(e); }
 		try { gp_dsa(); } catch (Exception e) { Log.error(e); }
-
-		//try { rsa_sign(); } catch (Exception e) { Log.error(e); }
-		//try { dh_test(); } catch (Exception e) { Log.error(e); }
+		try { gp_dh(); } catch (Exception e) { Log.error(e); }
+		//try { mgf_test(); } catch (Exception e) { Log.error(e); }
+		try { rsa_sign(); } catch (Exception e) { Log.error(e); }
 	}
 }

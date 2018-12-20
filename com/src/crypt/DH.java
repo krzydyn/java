@@ -16,16 +16,16 @@ public class DH extends Asymmetric {
 	private BigInteger p; //prime
 	private BigInteger g; //generator
 
-	void setParams(BigInteger p, BigInteger g) {
+	public DH(BigInteger p, BigInteger g) {
 		this.p = p;
 		this.g = g;
 	}
 
-	BigInteger derivePublicKey(BigInteger xA) {
+	public BigInteger derivePublicKey(BigInteger xA) {
 		return g.modPow(xA, this.p);
 	}
 
-	BigInteger deriveSharedKey(BigInteger xA, BigInteger yB) {
+	public BigInteger deriveSharedKey(BigInteger xA, BigInteger yB) {
 		return yB.modPow(xA, this.p);
 	}
 }

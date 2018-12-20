@@ -70,10 +70,10 @@ public class Ansi {
 		"SP"
 	};
 	public final static String toString(int code) {
-		if (code < 0) return String.format("<#%02X>", code&0xffff);
+		if (code < 0) return String.format("<%02X>", code&0xffff);
 		if (code < CODENAME.length) return String.format("<%s>", CODENAME[code]);
-		if (code < 0x7f) return String.format("%c", code);
-		return String.format("<#%02X>", code&0xffff);
+		if (code < 0x7f && code != '<' && code != '>') return String.format("%c", code);
+		return String.format("<%02X>", code&0xffff);
 	}
 
 	public final static String DEC_SCP = Code.ESC+"7";

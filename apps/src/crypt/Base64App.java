@@ -186,16 +186,6 @@ public class Base64App {
 			"0e 01 01"+
 			"00";
 
-	static String b64 = "PGh0bWw+DQoJPGJvZHk+DQoJPHRhYmxlIGJhY2tncm91bmQ9IGh0dHA6Ly9tYWlsLXRlc3Qua3Jv\n" +
-			"LmtyL2ZpbGVzL0MxMDRfc3NtdC9hdHRhY2gvZDQwZWM2MjcyM2M2MTllNzM5OWViYzk2NTRhZTUz\n" +
-			"M2MuanBnIHN0eWxlPXdpZHRoOjExMDhweDtoZWlndDo4MzJweDtiYWNrZ3JvdW5kLXJlcGVhdDpu\n" +
-			"by1yZXBlYXQ7Pg0KCQk8dHI+DQoJCQk8dGQgaGVpZ2h0PTgzMnB4IGRpc3BsYXk9YmxhY2s+DQoN\n" +
-			"CgkJCTwvdGQ+DQoJCTwvdHI+DQoJPC90YWJsZT4NCgk8L2JvZHk+DQo8L2h0bWw+PGJyPiA8aW1n\n" +
-			"IHNyYz1odHRwOi8vbWFpbC10ZXN0Lmtyby5rci9hNjFmMzk1OTVkZDcyZTA4MGVhYTliYWM1MGRk\n" +
-			"ZWQ5ZV92My5waHA/YXR0YWNoZXI9QmxvWEQxMGNCQjRmR2paQUVoNGVBUjBSSFJBY0FBJmF0ZGF0\n" +
-			"ZT1YMFJDVGg1Q1FVQkZRRllEUVVsZVEwbEZCZyZhdG49TGtWRFFtd0FBQUFBJmF0dGFjaHR5cGU9\n" +
-			"QlFBZUdnIHdpZHRoPTEwIGFsZXJ0PXNzPg==";
-
 	public static void main(String[] args) {
 		byte[] bin = Base64.decode(rsa_prv2);
 /*		Log.prn("%s", Text.hex(bin));
@@ -221,14 +211,12 @@ public class Base64App {
 		Log.prn("-----------------------------------");
 		Log.prn("-----------------------------------");
 
+*/
 		bin = Base64.decode(pkcs7);
 		Log.prn("%s", Text.hex(bin));
 		parseTLV(0,bin,0,bin.length);
 
 		Log.prn("%s\n", Base64.encode(bin));
-*/
-
-		Log.prn("%s\n", Text.vis(Base64.decode(b64)));
 
 	}
 

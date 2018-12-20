@@ -23,10 +23,10 @@ public class Base64 {
 	private static Encoder64 base64 = new Encoder64(Encoder64.Mode.BASE64);
 
 	public static String encode(byte[] b) {
-		return base64.bencode(b);
+		return base64.encode(b, 0, b.length);
 	}
 
 	public static byte[] decode(String s) {
-		return base64.bdecode(s);
+		return base64.decode(s);
 	}
 }

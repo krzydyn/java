@@ -46,7 +46,7 @@ public class Encoder64 {
 			break;
 		case BINHEX:
 			x = Encoder64.BINHEX;
-			p = '-';
+			p = ':';
 			break;
 		case RADIX64:
 			x = Encoder64.RADIX64;
@@ -57,16 +57,21 @@ public class Encoder64 {
 		}
 		alphabet = x;
 		pad = p;
+	}
+
+	private void buildinv() {
+		if (!invalphabet.isEmpty()) return ;
+		String x = alphabet;
 		for (int i = 0; i < x.length(); ++i)
 			invalphabet.put(x.charAt(i), i);
 	}
 
-	public String bencode(byte[] b) {
+	public String encode(byte[] b, int offs, int len) {
 		StringBuilder s = new StringBuilder(b.length*8/6);
 		int c = 0, cbits =0;
 		//process input bits
-		for (int i = 0; i < b.length; ++i) {
-			c = (c<<8) | (b[i]&0xff); // 8 bits read
+		for (int i = 0; i < len; ++i) {
+			c = (c<<8) | (b[offs+i]&0xff); // 8 bits read
 			cbits += 8;
 			while (cbits >= 6) {
 				cbits -= 6;
@@ -89,18 +94,22 @@ public class Encoder64 {
 		}
 		return s.toString();
 	}
+	public String encode(byte[] b) {
+		return encode(b, 0, b.length);
+	}
 
-	public byte[] bdecode(String s) {
+	public byte[] decode(String s) {
+		buildinv();
 		int c = 0, cbits =0;
 		ByteArrayOutputStream b = new ByteArrayOutputStream(s.length()*6/8);
 		//process input bits
 		for (int i = 0; i < s.length(); ++i) {
 			char ch = s.charAt(i);
+			if (ch == pad) break;
 			Integer x = invalphabet.get(ch);
 			if (x == null) {
-				if (ch == pad) break;
-				if (!Character.isSpaceChar(ch))
-					Log.error("invalid input char <#%02X>", (int)ch);
+				if (!Character.isWhitespace(ch) || ch > 0x7f)
+					Log.error("invalid input char <%02X>", (int)ch);
 				continue;
 			}
 			c = (c<<6) | x.intValue(); // 6 bits read
