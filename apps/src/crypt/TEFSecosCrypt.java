@@ -247,7 +247,7 @@ public class TEFSecosCrypt extends UnitTest implements TEF_Types {
 		TEF t = new TEF();
 		byte[] edata = new byte[1000];
 
-		for (EncryptTC tc : gpapi_encryptTC) {
+		for (EncryptTC tc : encryptTC) {
 			tef_cipher_token keyid = t.tef_key_import_raw(tc.key.kt, tc.key.key, tc.key.key.length);
 			int r=t.tef_encrypt(keyid, tc.algo, tc.datain, tc.datain.length, edata);
 			Log.debug("%s/%s  r[%d]=%s", tc.key.kt, tc.algo, r, Text.hex(edata, 0, r));
@@ -353,6 +353,13 @@ public class TEFSecosCrypt extends UnitTest implements TEF_Types {
 			"77:e7:de:12:31:f7:15:ec:ce:ed:83:68:88:84:e5:\n" +
 			"64:81");
 
+	static byte[] TEE_ATTR_DES_64_VALUE01 = Text.bin("cd:fe:57:b6:b6:2f:ae:6b");
+	static byte[] TEE_ATTR_DES3_192_VALUE01 = Text.bin("cd:fe:57:b6:b6:2f:ae:6b:" +
+			"04:73:40:f1:02:d6:a4:8c:89:5d:ad:f2:9d:62:ef:25");
+	static byte[] TEE_ATTR_AES_128_VALUE01 =  Text.bin("60:3d:eb:10:15:ca:71:be:2b:73:ae:f0:85:7d:77:81");
+	static byte[] TEE_ATTR_AES_256_VALUE01 =  Text.bin("60:3d:eb:10:15:ca:71:be:2b:73:ae:f0:85:7d:77:81:"+
+			"1f:35:2c:07:3b:61:08:d7:2d:98:10:a3:09:14:df:f4");
+
 	static byte[] NONCE1_VALUE_AES_GCM = Text.bin("00:8d:49:3b:30:ae:8b:3c:96:96:76:6c:fa"); //len=13
 	static byte[] NONCE2_VALUE_AES_GCM = Text.bin("ca:fe:ba:be:fa:ce:db:ad:de:ca:f8:88"); //len=12
 	static byte[] AAD1_VALUE = Text.bin("00:01:02:03:04:05:06:07");
@@ -374,14 +381,18 @@ public class TEFSecosCrypt extends UnitTest implements TEF_Types {
 	static byte[] DATA_FOR_CRYPTO1_PART3 = Arrays.copyOfRange(DATA_FOR_CRYPTO1, 64, 96);
 
 	static EncryptKey[] gpapi_keys = {
-		new EncryptKey(tef_key_type_e.TEF_AES, Text.bin("60:3d:eb:10:15:ca:71:be:2b:73:ae:f0:85:7d:77:81:" +
-					"1f:35:2c:07:3b:61:08:d7:2d:98:10:a3:09:14:df:f4"))
+		new EncryptKey(tef_key_type_e.TEF_AES, TEE_ATTR_AES_128_VALUE01),
+		new EncryptKey(tef_key_type_e.TEF_AES, TEE_ATTR_AES_256_VALUE01),
+		new EncryptKey(tef_key_type_e.TEF_DES, TEE_ATTR_DES_64_VALUE01),
+		new EncryptKey(tef_key_type_e.TEF_DES, TEE_ATTR_DES3_192_VALUE01),
 	};
 	static TEF.tef_algorithm[] gpapi_algos = {
 		new TEF.tef_algorithm(tef_chaining_mode_e.TEF_GCM, tef_padding_mode_e.TEF_PADDING_NONE)
 			.set(tef_algorithm_param_e.TEF_IV, NONCE2_VALUE_AES_GCM)
 			.set(tef_algorithm_param_e.TEF_AAD, AAD1_VALUE)
 			.set(tef_algorithm_param_e.TEF_TAGLEN, 104),
+		new TEF.tef_algorithm(tef_chaining_mode_e.TEF_CBC, tef_padding_mode_e.TEF_PADDING_NONE),
+		new TEF.tef_algorithm(tef_chaining_mode_e.TEF_CBC, tef_padding_mode_e.TEF_PADDING_PKCS5),
 	};
 
 	static DigestTC gpapi_digestTC[] = {
@@ -393,8 +404,18 @@ public class TEFSecosCrypt extends UnitTest implements TEF_Types {
 		new DigestTC(tef_digest_e.TEF_SHA512,DATA_FOR_CRYPTO1,null),
 	};
 	static EncryptTC gpapi_encryptTC[] = {
-			new EncryptTC(gpapi_keys[0],gpapi_algos[0],DATA_FOR_CRYPTO1,Text.bin("A726EA73EB43D77C9E977070")),
-		};
+		new EncryptTC(gpapi_keys[1],gpapi_algos[0],DATA_FOR_CRYPTO1,Text.bin("A726EA73EB43D77C9E977070")),
+	};
+	static EncryptTC gpapi_macTC[] = {
+		new EncryptTC(gpapi_keys[0],gpapi_algos[1],DATA_FOR_CRYPTO1,null),
+		new EncryptTC(gpapi_keys[0],gpapi_algos[2],DATA_FOR_CRYPTO1,null),
+		new EncryptTC(gpapi_keys[1],gpapi_algos[1],DATA_FOR_CRYPTO1,null),
+		new EncryptTC(gpapi_keys[1],gpapi_algos[2],DATA_FOR_CRYPTO1,null),
+		new EncryptTC(gpapi_keys[2],gpapi_algos[1],DATA_FOR_CRYPTO1,null),
+		new EncryptTC(gpapi_keys[2],gpapi_algos[2],DATA_FOR_CRYPTO1,null),
+		new EncryptTC(gpapi_keys[3],gpapi_algos[1],DATA_FOR_CRYPTO1,null),
+		new EncryptTC(gpapi_keys[3],gpapi_algos[2],DATA_FOR_CRYPTO1,null),
+	};
 
 	static void gp_digest() throws Exception {
 		TEF t = new TEF();
@@ -404,6 +425,38 @@ public class TEFSecosCrypt extends UnitTest implements TEF_Types {
 			Log.debug("digest %s[%d]: %s", tc.digest.toString(), l, Text.hex(dig, 0, l));
 			if (tc.dataout != null) {
 				check(dig,tc.dataout,tc.dataout.length);
+			}
+		}
+	}
+
+	static void gp_encrypt() throws Exception {
+		TEF t = new TEF();
+		byte[] edata = new byte[1000];
+
+		Log.debug("*** gp_encrypt ***");
+		for (EncryptTC tc : gpapi_encryptTC) {
+			tef_cipher_token keyid = t.tef_key_import_raw(tc.key.kt, tc.key.key, tc.key.key.length);
+			int r=t.tef_encrypt(keyid, tc.algo, tc.datain, tc.datain.length, edata);
+			Log.debug("%s/%s  r[%d]=%s", tc.key.kt, tc.algo, r, Text.hex(edata, 0, r));
+			if (tc.dataout != null) {
+				check(edata,tc.dataout,tc.dataout.length);
+			}
+		}
+	}
+
+	static void gp_mac() throws Exception {
+		TEF t = new TEF();
+		byte[] edata = new byte[1000];
+
+		Log.debug("*** gp_mac ***");
+		for (EncryptTC tc : gpapi_macTC) {
+			tef_cipher_token keyid = t.tef_key_import_raw(tc.key.kt, tc.key.key, tc.key.key.length);
+			Log.debug("%s/%s: data[%d]=%s", tc.key.kt, tc.algo, tc.datain.length, Text.hex(tc.datain, 0, tc.datain.length));
+			int r=t.tef_mac_calc(keyid, tc.algo, tc.datain, tc.datain.length, edata);
+			Log.debug("r[%d]=%s", r, Text.hex(edata, 0, r));
+
+			if (tc.dataout != null) {
+				check(edata,tc.dataout,tc.dataout.length);
 			}
 		}
 	}
@@ -514,9 +567,8 @@ public class TEFSecosCrypt extends UnitTest implements TEF_Types {
 		Log.info("padEMSA_PSS[%d] = %s", padEMSA_PSS.length, Text.hex(padEMSA_PSS));
 		check(padEMSA_PSS, empa);
 
-		Log.info("");
-		//sign = rsa.sign(padEMSA_PSS);
-		//Log.info("sign[%d] = %s\n", sign.length, Text.hex(sign));
+		sign = rsa.sign(padEMSA_PSS);
+		Log.info("sign[%d] = %s\n", sign.length, Text.hex(sign));
 
 		check("unpad", RSA.unpadEMSA_PSS(padEMSA_PSS, hash, nBits-1, md));
 	}
@@ -524,16 +576,18 @@ public class TEFSecosCrypt extends UnitTest implements TEF_Types {
 	public static void main(String[] args) {
 		//CryptX_Provider.register();
 		//listProviders();
-		//try { generate(); } catch (Exception e) { Log.error(e); }
-		try { encrypt(); } catch (Exception e) { Log.error(e); }
+		//try { keygenerate(); } catch (Exception e) { Log.error(e); }
+		//try { encrypt(); } catch (Exception e) { Log.error(e); }
 		//try { decrypt(); } catch (Exception e) { Log.error(e); }
 		//try { digest(); } catch (Exception e) { Log.error(e); }
 
 		//Log.info("");
 		//try { gp_digest(); } catch (Exception e) { Log.error(e); }
-		try { gp_dsa(); } catch (Exception e) { Log.error(e); }
-		try { gp_dh(); } catch (Exception e) { Log.error(e); }
+		try { gp_encrypt(); } catch (Exception e) { Log.error(e); }
+		try { gp_mac(); } catch (Exception e) { Log.error(e); }
+		//try { gp_dsa(); } catch (Exception e) { Log.error(e); }
+		//try { gp_dh(); } catch (Exception e) { Log.error(e); }
 		//try { mgf_test(); } catch (Exception e) { Log.error(e); }
-		try { rsa_sign(); } catch (Exception e) { Log.error(e); }
+		//try { rsa_sign(); } catch (Exception e) { Log.error(e); }
 	}
 }

@@ -203,19 +203,7 @@ public class SelectorThread {
 			dst.flip();
 			synchronized (qchn) {
 				if (qchn.writeq == null) qchn.writeq = new ArrayList<>();
-				/*if (qchn.writeq.size() > 0) {
-					ByteBuffer lst = qchn.writeq.get(qchn.writeq.size()-1);
-					if (lst.capacity() - lst.limit() >= dst.remaining()) {
-						int oldp = lst.position();
-						lst.position(lst.limit());
-						lst.limit(lst.capacity());
-						lst.put(dst);
-						lst.limit(lst.position());
-						lst.position(oldp);
-					}
-				}*/
-				if (dst!=null)
-					qchn.writeq.add(dst);
+				qchn.writeq.add(dst);
 			}
 		}
 		synchronized (writeFlag) {

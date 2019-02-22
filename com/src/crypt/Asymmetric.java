@@ -62,7 +62,7 @@ abstract public class Asymmetric {
 		return r;
 	}
 
-	static void xor(byte[] a, byte[] b) {
+	public static void xor(byte[] a, byte[] b) {
 		int l = Math.min(a.length, b.length);
 		for (int i = 0; i < l; ++i)
 			a[a.length - i -1] ^= b[b.length - i -1];

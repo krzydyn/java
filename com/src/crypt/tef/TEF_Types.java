@@ -9,11 +9,23 @@ import text.Text;
 
 public interface TEF_Types {
 	static class tef_cipher_token {
-		SecretKey key;
+		final private tef_key_type_e type;
+		final private SecretKey key;
+
+		public tef_cipher_token(tef_key_type_e type, SecretKey key) {
+			this.type = type;
+			this.key = key;
+		}
 
 		@Override
 		public String toString() {
 			return transformName();
+		}
+		public SecretKey getKey() {
+			return key;
+		}
+		public tef_key_type_e getType() {
+			return type;
 		}
 		public String transformName() {
 			return key.getAlgorithm();

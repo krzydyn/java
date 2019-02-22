@@ -60,9 +60,7 @@ public class RingArray<T> extends RingCollection {
 		push(o);
 	}
 	synchronized public T popw(long t) throws InterruptedException {
-		while (len == 0) {
-			canpop.wait(t);
-		}
+		if (len == 0) canpop.wait(t);
 		return poll();
 	}
 }

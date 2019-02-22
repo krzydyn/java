@@ -35,9 +35,7 @@ public class TEF implements TEF_Types {
 			gen.init(key_bit_len);
 		}
 
-		tef_cipher_token token = new tef_cipher_token();
-		token.key = gen.generateKey();
-		return token;
+		return new tef_cipher_token(key_type, gen.generateKey());
 	}
 
 	public tef_cipher_token tef_key_import_raw(tef_key_type_e key_type, byte[] data, int dataLen) {
@@ -59,10 +57,8 @@ public class TEF implements TEF_Types {
 		else {
 			keyAlgo = key_type.getName();
 		}
-		tef_cipher_token token = new tef_cipher_token();
-		Log.debug("import key %s/%d from %s",keyAlgo,dataLen*8,Text.hex(data));
-		token.key = new javax.crypto.spec.SecretKeySpec(data,0,dataLen,keyAlgo);
-		return token;
+		Log.debug("import key %s/%d from %s",keyAlgo, dataLen*8, Text.hex(data));
+		return new tef_cipher_token(key_type, new javax.crypto.spec.SecretKeySpec(data,0,dataLen,keyAlgo));
 	}
 
 
@@ -77,15 +73,14 @@ public class TEF implements TEF_Types {
 	public int tef_encrypt(tef_cipher_token keyid, tef_algorithm algorithm,
 			byte[] data, int dataLen, byte[] edata) throws GeneralSecurityException {
 		javax.crypto.Cipher cipher;
-
 		String algoName = keyid.transformName()+"/"+algorithm.getName();
 		cipher = javax.crypto.Cipher.getInstance(algoName);
+
 		byte[] iv=null;
 		if (algorithm.params.containsKey(tef_algorithm_param_e.TEF_IV)) {
 			iv = (byte[])algorithm.params.get(tef_algorithm_param_e.TEF_IV);
 		}
 		else if (algorithm.chaining != tef_chaining_mode_e.TEF_ECB) {
-			Log.warn("setting IV=ZERO");
 			iv = ZERO_IV;
 		}
 		AlgorithmParameterSpec pspec = null;
@@ -97,10 +92,10 @@ public class TEF implements TEF_Types {
 			pspec = new IvParameterSpec(iv, 0, cipher.getBlockSize());
 		}
 		if (pspec!=null) {
-			cipher.init(javax.crypto.Cipher.ENCRYPT_MODE, keyid.key, pspec);
+			cipher.init(javax.crypto.Cipher.ENCRYPT_MODE, keyid.getKey(), pspec);
 		}
 		else {
-			cipher.init(javax.crypto.Cipher.ENCRYPT_MODE, keyid.key);
+			cipher.init(javax.crypto.Cipher.ENCRYPT_MODE, keyid.getKey());
 		}
 
 		if (algorithm.params.containsKey(tef_algorithm_param_e.TEF_AAD)) {
@@ -126,14 +121,12 @@ public class TEF implements TEF_Types {
 		javax.crypto.Cipher cipher;
 		String algoName = keyid.transformName()+"/"+algorithm.getName();
 		cipher = javax.crypto.Cipher.getInstance(algoName);
-		cipher.init(javax.crypto.Cipher.DECRYPT_MODE, keyid.key);
 
 		byte[] iv=null;
 		if (algorithm.params.containsKey(tef_algorithm_param_e.TEF_IV)) {
 			iv = (byte[])algorithm.params.get(tef_algorithm_param_e.TEF_IV);
 		}
 		else if (algorithm.chaining != tef_chaining_mode_e.TEF_ECB) {
-			Log.warn("setting IV=ZERO");
 			iv = ZERO_IV;
 		}
 		AlgorithmParameterSpec pspec = null;
@@ -145,10 +138,10 @@ public class TEF implements TEF_Types {
 			pspec = new IvParameterSpec(iv, 0, cipher.getBlockSize());
 		}
 		if (pspec!=null) {
-			cipher.init(javax.crypto.Cipher.DECRYPT_MODE, keyid.key, pspec);
+			cipher.init(javax.crypto.Cipher.DECRYPT_MODE, keyid.getKey(), pspec);
 		}
 		else {
-			cipher.init(javax.crypto.Cipher.DECRYPT_MODE, keyid.key);
+			cipher.init(javax.crypto.Cipher.DECRYPT_MODE, keyid.getKey());
 		}
 
 		if (algorithm.params.containsKey(tef_algorithm_param_e.TEF_AAD)) {
@@ -160,14 +153,54 @@ public class TEF implements TEF_Types {
 
 	public int tef_digest(tef_digest_e digest, byte[] data, int dataLen, byte[] dig) throws GeneralSecurityException {
 		MessageDigest md = MessageDigest.getInstance(digest.getName());
-		byte[] d = md.digest(data);
+		md.update(data, 0, dataLen);
+		byte[] d = md.digest();
 		if (d.length > dig.length) throw new ShortBufferException();
 		System.arraycopy(d, 0, dig, 0, d.length);
 		return d.length;
 	}
 
+	//keyid can be symmetric only
+	public int tef_mac_calc(tef_cipher_token keyid, tef_algorithm algorithm,
+			byte[] data, int dataLen, byte[] mac) throws GeneralSecurityException {
+		javax.crypto.Cipher cipher;
+		String algoName = keyid.transformName()+"/"+algorithm.getName();
+		cipher = javax.crypto.Cipher.getInstance(algoName);
+		int bs = cipher.getBlockSize();
+
+		byte[] iv=null;
+		if (algorithm.params.containsKey(tef_algorithm_param_e.TEF_IV)) {
+			iv = (byte[])algorithm.params.get(tef_algorithm_param_e.TEF_IV);
+		}
+		else if (algorithm.chaining != tef_chaining_mode_e.TEF_ECB) {
+			iv = ZERO_IV;
+		}
+		AlgorithmParameterSpec pspec = null;
+		if (algorithm.chaining == tef_chaining_mode_e.TEF_GCM) {
+			int taglen = (Integer)algorithm.params.get(tef_algorithm_param_e.TEF_TAGLEN);
+			pspec = new GCMParameterSpec(taglen, iv); // iv = nonce
+		}
+		else if (iv != null){
+			pspec = new IvParameterSpec(iv, 0, cipher.getBlockSize());
+		}
+		if (pspec!=null) {
+			cipher.init(javax.crypto.Cipher.ENCRYPT_MODE, keyid.getKey(), pspec);
+		}
+		else {
+			cipher.init(javax.crypto.Cipher.ENCRYPT_MODE, keyid.getKey());
+		}
+
+		if (bs > mac.length) throw new ShortBufferException();
+		for (int i=0; i < mac.length; ++i) mac[i]=0;
+		for (int i=0; i < dataLen; i += bs) {
+			cipher.update(data, i, bs, mac);
+		}
+		cipher.doFinal(mac, 0);
+		return bs;
+	}
+
 	//keyid can be symmetric or asymmetric
-	int tef_sign_calc(tef_cipher_token keyid, tef_digest_e digest, byte[] data, int dataLen, byte[] sign) {
+	public int tef_sign_calc(tef_cipher_token keyid, tef_digest_e digest, byte[] data, int dataLen, byte[] sign) {
 		return 0;
 	}
 	//keyid can be symmetric or asymmetric
@@ -175,3 +208,4 @@ public class TEF implements TEF_Types {
 		return 0;
 	}
 }
+

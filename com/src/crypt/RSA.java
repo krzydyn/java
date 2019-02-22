@@ -317,6 +317,7 @@ public class RSA extends Asymmetric {
 	}
 
 
+	// https://www.javatips.net/api/junrar-android-master/src/gnu/crypto/sig/rsa/EMSA_PSS.java
 	static public byte[] padEMSA_PSS(byte[] mHash, int emBits, MessageDigest md) {
 		md.reset();
 		int emLen = (emBits + 7)/8;

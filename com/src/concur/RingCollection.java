@@ -6,7 +6,4 @@ public abstract class RingCollection {
 	final synchronized public void clear() {
 		idx=len=0;
 	}
-	final synchronized public int length() {
-		return len;
-	}
 }
