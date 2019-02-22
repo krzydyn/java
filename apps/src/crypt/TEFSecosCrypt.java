@@ -409,8 +409,8 @@ public class TEFSecosCrypt extends UnitTest implements TEF_Types {
 	static EncryptTC gpapi_macTC[] = {
 		new EncryptTC(gpapi_keys[0],gpapi_algos[1],DATA_FOR_CRYPTO1,null),
 		new EncryptTC(gpapi_keys[0],gpapi_algos[2],DATA_FOR_CRYPTO1,null),
-		new EncryptTC(gpapi_keys[1],gpapi_algos[1],DATA_FOR_CRYPTO1,null),
-		new EncryptTC(gpapi_keys[1],gpapi_algos[2],DATA_FOR_CRYPTO1,null),
+		new EncryptTC(gpapi_keys[1],gpapi_algos[1],DATA_FOR_CRYPTO1,Text.bin("301B757D738D498D")),
+		new EncryptTC(gpapi_keys[1],gpapi_algos[2],DATA_FOR_CRYPTO1,Text.bin("415CF662D4B5B5B5")),
 		new EncryptTC(gpapi_keys[2],gpapi_algos[1],DATA_FOR_CRYPTO1,null),
 		new EncryptTC(gpapi_keys[2],gpapi_algos[2],DATA_FOR_CRYPTO1,null),
 		new EncryptTC(gpapi_keys[3],gpapi_algos[1],DATA_FOR_CRYPTO1,null),

@@ -160,7 +160,9 @@ public class TEF implements TEF_Types {
 		return d.length;
 	}
 
-	//keyid can be symmetric only
+	/*
+	 * CBC-MAC https://en.wikipedia.org/wiki/ISO/IEC_9797-1
+	 */
 	public int tef_mac_calc(tef_cipher_token keyid, tef_algorithm algorithm,
 			byte[] data, int dataLen, byte[] mac) throws GeneralSecurityException {
 		javax.crypto.Cipher cipher;
@@ -197,6 +199,16 @@ public class TEF implements TEF_Types {
 		}
 		cipher.doFinal(mac, 0);
 		return bs;
+	}
+
+	/*
+	 * CMAC rfc4493
+	 */
+	public int tef_cmac_calc(tef_cipher_token keyid, tef_algorithm algorithm,
+			byte[] data, int dataLen, byte[] mac) throws GeneralSecurityException {
+		// 1. Generate_Subkey
+		// 2. AES-CMAC
+		return 0;
 	}
 
 	//keyid can be symmetric or asymmetric
