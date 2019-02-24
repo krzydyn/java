@@ -2,7 +2,6 @@ package crypt;
 
 import java.math.BigInteger;
 import java.util.Arrays;
-import java.util.Random;
 
 import sys.Log;
 
@@ -24,7 +23,6 @@ public class DSA extends Asymmetric {
 	 * N must be <= hashbits
 	 */
 	public DSA(int p_bits, int q_bits) {
-		Random rnd = new Random();
 		p = BigInteger.probablePrime(p_bits, rnd);
 		do {
 			q = BigInteger.probablePrime(q_bits, rnd);
@@ -56,7 +54,10 @@ public class DSA extends Asymmetric {
 	4. The signature is (r,s)
 	 */
 	public byte[] signDigest(byte[] hash) {
-		Random rnd = new Random();
+		if (q.bitLength() > hash.length*8) {
+			throw new RuntimeException("bits(q) > bits(hash)");
+		}
+
 		BigInteger H = new BigInteger(1, hash);
 
 		BigInteger r,s;

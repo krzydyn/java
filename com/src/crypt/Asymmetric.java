@@ -2,11 +2,14 @@ package crypt;
 
 import java.math.BigInteger;
 import java.security.MessageDigest;
+import java.util.Random;
 
 abstract public class Asymmetric {
-	final static BigInteger ZERO = BigInteger.ZERO;
-	final static BigInteger ONE = BigInteger.ONE;
-	final static BigInteger TWO = BigInteger.valueOf(2);
+	final public static BigInteger ZERO = BigInteger.ZERO;
+	final public static BigInteger ONE = BigInteger.ONE;
+	final public static BigInteger TWO = BigInteger.valueOf(2);
+
+	final protected static Random rnd = new Random();
 
 	static byte[] padZeroL(byte[] msg, int len) {
 		if (msg.length == len) return msg;
@@ -31,8 +34,7 @@ abstract public class Asymmetric {
 		return new BigInteger(1, x);
 	}
 	static byte[] i2osp(BigInteger x, int len) {
-		byte[] r = x.toByteArray();
-		return padZeroL(r, len);
+		return padZeroL(x.toByteArray(), len);
 	}
 	static byte[] i2osp(int x, int len) {
 		byte[] r = new byte[len];

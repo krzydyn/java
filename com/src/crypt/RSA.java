@@ -21,7 +21,6 @@ package crypt;
 import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.util.Arrays;
-import java.util.Random;
 
 import sys.Log;
 import text.Text;
@@ -75,7 +74,6 @@ public class RSA extends Asymmetric {
 		if (k.testBit(0)) { //prime factors not found
 			throw new RuntimeException("no factors found");
 		}
-		Random rnd = new Random();
 		//2. write k as k = 2^t * r (divide k by 2 until get odd number)
 		BigInteger r = k;
 		BigInteger t = ZERO;
@@ -88,7 +86,7 @@ public class RSA extends Asymmetric {
 		boolean found=false;
 		for (int i=0; i < 100; ++i) {
 			//3.a
-			BigInteger g = genBigInteger(N, rnd);
+			BigInteger g = genBigInteger(N);
 			//3.b
 			y = g.modPow(r, N);
 			//3.c
@@ -130,7 +128,6 @@ public class RSA extends Asymmetric {
 	}
 
 	public RSA(int bits) {
-		Random rnd = new Random();
 		p = BigInteger.probablePrime(bits/2, rnd);
 		q = BigInteger.probablePrime(bits/2, rnd);
 		N = p.multiply(q);
@@ -147,7 +144,7 @@ public class RSA extends Asymmetric {
 		Log.debug("d[%d] %s", d.toByteArray().length, Text.hex(d.toByteArray()));
 	}
 
-	static BigInteger genBigInteger(BigInteger max, Random rnd) {
+	static BigInteger genBigInteger(BigInteger max) {
 		BigInteger r = new BigInteger(max.bitLength(), rnd);
 		if (r.compareTo(max) >= 0) {
 			for (int bit=max.bitLength()-1; bit > 0; --bit) {
@@ -157,6 +154,7 @@ public class RSA extends Asymmetric {
 				}
 			}
 		}
+		else r.setBit(max.bitLength()-2);
 		return r;
 	}
 
@@ -174,8 +172,6 @@ public class RSA extends Asymmetric {
 	return (N, e, d)
 	*/
 	public RSA(int bits, BigInteger e) {
-		Random rnd = new Random();
-
 		do {
 			p = BigInteger.probablePrime(bits/2, rnd);
 		} while (p.subtract(ONE).gcd(e).compareTo(ONE) != 0);
@@ -203,44 +199,41 @@ public class RSA extends Asymmetric {
 	 * Error: “message representative out of range”
 	 */
 	public byte[] encrypt(byte[] msg) {
-		if (msg.length*8 > N.bitLength()) throw new RuntimeException("message too long");
-		return new BigInteger(1, msg).modPow(e, N).toByteArray();
+		int keylen = (N.bitLength()+7)/8;
+		if (msg.length > keylen) throw new RuntimeException("message too long");
+		int m = 0xff << (N.bitLength()&7);
+		if (msg.length == keylen && (msg[0]&m) != 0) throw new RuntimeException("message too long");
+		return i2osp(new BigInteger(1, msg).modPow(e, N), keylen);
 	}
 
 	public byte[] decrypt(byte[] cmsg) {
 		int keylen = (N.bitLength()+7)/8;
-		if (cmsg.length > keylen) throw new RuntimeException("message wrong length");
+		if (cmsg.length > keylen) throw new RuntimeException("message too long");
+		int m = 0xff << (N.bitLength()&7);
+		if (cmsg.length == keylen && (cmsg[0]&m) != 0) throw new RuntimeException("message too long");
 		// First form (n,d) is used
-		return padZeroL(new BigInteger(1, cmsg).modPow(d, N).toByteArray(), keylen);
+		return i2osp(new BigInteger(1, cmsg).modPow(d, N), keylen);
 		//TODO Second form (p,q,dP,dQ,qInv) and (rb,db,ti) is used
 	}
 
-	/*
-	 * Use private RSA key to sign (call decrypt!)
-	 * TODO add padding mode as parameter
-	 */
+	/**
+	 * Sign a message digest of the information to be sent.
+	 * Represents this digest as an integer m between 1 and n-1..
+	 * Take private key (n, d) to compute the signature s = m^d mod n.
+	 * Send this signature s to the recipient.
+	*/
 	byte[] sign(byte[] hash) {
-		/*
-		Creates a message digest of the information to be sent.
-		Represents this digest as an integer m between 1 and n-1..
-		Take private key (n, d) to compute the signature s = m^d mod n.
-		Sends this signature s to the recipient.
-		*/
-		return decrypt(hash); //use private key
+		return decrypt(hash);
 	}
 
-	/*
-	 * Use public RSA key to sign (call encrypt!)
-	 * TODO add padding mode as parameter
+	/**
+	 * Verify a message digest of the information received.
+	 * Take sender public key (n, e) to compute integer v = m^e mod n.
+	 * Extract the message digest from this integer and compare to given value.
+	 * If both message digests are identical, the signature is valid.
 	 */
 	boolean verify(byte[] hash, byte[] signature) {
-		/*
-		Creates a message digest of the information received.
-		Take sender public key (n, e) to compute inteer v = m^e mod n.
-		Extracts the message digest from this integer.
-		If both message digests are identical, the signature is valid.
-		*/
-		return Arrays.equals(hash, encrypt(signature)); //use public key
+		return Arrays.equals(hash, encrypt(signature));
 	}
 
 	/*
@@ -263,7 +256,7 @@ public class RSA extends Asymmetric {
 	 * https://csrc.nist.gov/projects/cryptographic-algorithm-validation-program/component-testing
 	 * https://csrc.nist.gov/projects/cryptographic-algorithm-validation-program/digital-signatures
 	 * https://github.com/pyca/cryptography/blob/master/vectors/cryptography_vectors/asymmetric/RSA/pkcs-1v2-1d2-vec/pss-vect.txt
-	 * pkcs1v2-1cryptographystandardincluded24-0908240005.pdf (https://www.slideshare.net/gueste9eb7fb/pkcs1-v2)
+	 * pkcs1v2-1.pdf (https://www.slideshare.net/gueste9eb7fb/pkcs1-v2)
 	 *
 	 * Padding OAEP (optimal asymmetric encryption padding)
 	 */
@@ -271,7 +264,6 @@ public class RSA extends Asymmetric {
 		int hLen = md.getDigestLength();
 		if (msg.length >= keylen - 2*hLen - 2)
 			throw new RuntimeException("message too long");
-		//Random rnd = new Random();
 		byte[] pad0 = {0x00};
 		byte[] pad1 = {0x01};
 		byte[] lHash = {};
@@ -280,28 +272,28 @@ public class RSA extends Asymmetric {
 		byte[] ps = new byte[keylen - msg.length - 2*hLen - 2];
 		byte[] db = concat(lHash, ps, pad1, msg);
 		byte[] seed = new byte[hLen];
-		//rnd.nextBytes(seed);
+		rnd.nextBytes(seed);
 		byte[] dbMask = mgf(seed, keylen - hLen - 1, md);
-		byte[] maskedDB = padZeroL(new BigInteger(1, db).xor(new BigInteger(1, dbMask)).toByteArray(), keylen - hLen - 1);
+		byte[] maskedDB = i2osp(new BigInteger(1, db).xor(new BigInteger(1, dbMask)), keylen - hLen - 1);
 		byte[] seedMask = mgf(maskedDB, hLen, md);
-		byte[] maskedSeed = padZeroL(new BigInteger(1, seed).xor(new BigInteger(1, seedMask)).toByteArray(), hLen);
+		byte[] maskedSeed = i2osp(new BigInteger(1, seed).xor(new BigInteger(1, seedMask)), hLen);
 		return concat(pad0, maskedSeed, maskedDB);
 	}
 
+	private static byte[] ZERO8 =new byte[8];
+	private static byte[] PAD0 = {0x00};
+	private static byte[] PAD1 = {0x01};
+	private static byte[] PAD12 = {0x01, 0x02};
 	static public byte[] padPKCS1v15(byte[] msg, int keylen) {
-		if (msg.length >= keylen - 11)
+		if (msg.length >= keylen - 3)
 			throw new RuntimeException("message too long");
-		byte[] pad0 = {0x00};
-		byte[] pad1 = {0x01, 0x02};
-		byte[] ps = new byte[keylen - msg.length - 1];
-		return concat(pad1, ps, pad0, msg);
+		byte[] ps = new byte[keylen - msg.length - 3];
+		return concat(PAD12, ps, PAD0, msg);
 	}
 
 	static public byte[] padEMSA_PKCS1v15(byte[] msg, int keylen, MessageDigest md) {
 		if (msg.length >= keylen - 11)
 			throw new RuntimeException("message too long");
-		byte[] pad0 = {0x00};
-		byte[] pad1 = {0x01, 0x02};
 		byte[] H = md.digest(msg);
 		/* T coding:
 		 * MD2: (0x)30 20 30 0c 06 08 2a 86 48 86 f7 0d 02 02 05 00 04 10 || H
@@ -311,11 +303,9 @@ public class RSA extends Asymmetric {
 		 * SHA-384: (0x)30 51 30 0d 06 09 60 86 48 01 65 03 04 02 03 05 00 04 30 || H
 		 * SHA-512: (0x)30 51 30 0d 06 09 60 86 48 01 65 03 04 02 03 05 00 04 40 || H
 		 */
-		byte[] T = {};
-		byte[] ps = new byte[keylen - T.length - 3];
-		return concat(pad1, ps, pad0, T);
+		byte[] T = H; //TODO add hash algorithm code
+		return padPKCS1v15(T, keylen);
 	}
-
 
 	// https://www.javatips.net/api/junrar-android-master/src/gnu/crypto/sig/rsa/EMSA_PSS.java
 	static public byte[] padEMSA_PSS(byte[] mHash, int emBits, MessageDigest md) {
@@ -324,25 +314,18 @@ public class RSA extends Asymmetric {
 		int hLen = md.getDigestLength();
 		int sLen = hLen;
 		if (emLen < hLen + sLen + 2) throw new RuntimeException("Encoding error");
-		byte[] pad8 = new byte[8];
-		byte[] pad1 = {0x01};
 		byte[] padBC = {(byte)0xbc};
-		//Random rnd = new Random();
 		byte[] seed = new byte[sLen];
-		//if (sLen > 0) rnd.nextBytes(seed);
-		md.update(pad8); md.update(mHash); md.update(seed);
+		if (sLen > 0) rnd.nextBytes(seed);
+		md.update(ZERO8); md.update(mHash); md.update(seed);
 		byte[] H = md.digest();
-		//Log.info("H[%d] %s", H.length, Text.hex(H));
 		byte[] ps = new byte[emLen - sLen - hLen - 2];
-		byte[] db = concat(ps, pad1, seed);
-		//Log.info("DB[%d] %s", db.length, Text.hex(db));
+		byte[] db = concat(ps, PAD1, seed);
 		byte[] dbMask = mgf(H, emLen - hLen - 1, md);
-		//Log.info("dbMask[%d] %s", dbMask.length, Text.hex(dbMask));
 		xor(db, dbMask);
 		if (8*emLen > emBits) {
 			db[0] &= 0xff >> (8*emLen - emBits);
 		}
-		//Log.info("maskedDB[%d] %s", db.length, Text.hex(db));
 		return concat(db, H, padBC);
 	}
 	static public boolean unpadEMSA_PSS(byte[] em, byte[] mHash, int emBits, MessageDigest md) {
@@ -354,7 +337,6 @@ public class RSA extends Asymmetric {
 		if (em[em.length-1] != (byte)0xbc) throw new RuntimeException("inconsistent");
 		if ((em[0] & (0xff << (emBits&7))) != 0) throw new RuntimeException("inconsistent");
 
-		byte[] pad8 = new byte[8];
 		byte[] db = Arrays.copyOf(em, emLen - hLen - 1);
 		//Log.info("maskedDB[%d] %s", db.length, Text.hex(db));
 		byte[] H = Arrays.copyOfRange(em, emLen - hLen - 1, emLen - 1);
@@ -363,14 +345,14 @@ public class RSA extends Asymmetric {
 		db[0] &= 0xff >> (emBits&7); // db = concat(ps, pad1, seed);
 		//Log.info("DB[%d] %s", db.length, Text.hex(db));
 		for (int i = 0; i < db.length - sLen - 1; ++i) {
-			if (db[i] != 0) throw new RuntimeException("inconsistent at "+i);
+			if (db[i] != 0x00) throw new RuntimeException("inconsistent");
 		}
-		if (db[db.length - sLen - 1] != 1) throw new RuntimeException("inconsistent");
+		if (db[db.length - sLen - 1] != 0x01) throw new RuntimeException("inconsistent");
 
 		byte[] seed = Arrays.copyOfRange(db, db.length - sLen, db.length);
-		md.update(pad8); md.update(mHash); md.update(seed);
+		md.update(ZERO8); md.update(mHash); md.update(seed);
 		byte[] mH = md.digest();
-		return Arrays.compare(mH, H) == 0;
+		return Arrays.equals(mH, H);
 	}
 
 
@@ -382,16 +364,16 @@ public class RSA extends Asymmetric {
 	 * 4. result = H || maskDB
 	 */
 	static public byte[] padPSS_orig96(byte[] msg, int keylen, MessageDigest md) {
-		int wLen = 20, seedLen = 20;
-		if (keylen < wLen+seedLen) throw new RuntimeException();
-		Random rnd = new Random();
-		byte[] seed = new byte[seedLen];
-		rnd.nextBytes(seed);
-		byte[] w = mgf(concat(seed, msg), wLen, md);
-		byte[] expw = mgf(w, keylen - wLen, md);
-		byte[] smask = Arrays.copyOf(expw, seedLen);
-		byte[] rmask = Arrays.copyOfRange(expw, seedLen, expw.length);
-		byte[] mask = new BigInteger(1,seed).xor(new BigInteger(1,smask)).toByteArray();
+		int hLen = md.getDigestLength();
+		int sLen = hLen;
+		if (keylen < hLen+sLen) throw new RuntimeException();
+		byte[] seed = new byte[sLen];
+		if (sLen > 0) rnd.nextBytes(seed);
+		byte[] w = mgf(concat(seed, msg), hLen, md);
+		byte[] expw = mgf(w, keylen - hLen, md);
+		byte[] smask = Arrays.copyOf(expw, sLen);
+		byte[] rmask = Arrays.copyOfRange(expw, sLen, expw.length);
+		byte[] mask = i2osp(new BigInteger(1,seed).xor(new BigInteger(1,smask)), keylen);
 		return concat(w, mask, rmask);
 	}
 
@@ -405,8 +387,7 @@ public class RSA extends Asymmetric {
 	 * decrypt cyphered text c:
 	 *   m1 = c^dP mod p
 	 *   m2 = c^dQ mod q
-	 *   h = qInv(m1 - m2) mod p
+	 *   hq = qInv(m1 - m2) mod p
 	 *   m = m2 + hq
-
 	 */
 }
