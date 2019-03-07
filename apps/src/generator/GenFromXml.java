@@ -35,7 +35,7 @@ public class GenFromXml {
 	static String xmlValuesPath = xmlBasePath + "/Values";
 
 	static String repoTestCodePath = repoPath + "/trustzone-application/test_usability";
-	static String repoGPSuitePath = repoTestCodePath + "/ca_tests/gp_suite";
+	static String repoGPSuitePath = repoTestCodePath + "/ca/gp_suite";
 
 	static String boilerPlate = "/*\n" +
 					" *\n" +
@@ -177,7 +177,7 @@ public class GenFromXml {
 		@Override
 		public String toString() {
 			if (argPtr.contains(type) ) {
-				if (value.equals("NULL")) return value;
+				if (value.equals("NULL")) return "NULL";
 				if (value.equals("IGNORE")) return "NULL";
 				return "&"+value;
 			}
@@ -441,31 +441,31 @@ public class GenFromXml {
 
 			if (arg.type.equals("ALL_THREADS")) {
 				if (!arg.value.equals("THREAD01_DEFAULT"))
-					tc.addLocalVar(String.format("%s %s = {0,}",arg.type,arg.value));
+					tc.addLocalVar(String.format("%s %s = {}",arg.type,arg.value));
 			}
 			else if (arg.type.equals("ALL_CONTEXTS")) {
 				if (!arg.value.equals("NULL"))
-					tc.addLocalVar(String.format("%s %s = {0,}",arg.type,arg.value));
+					tc.addLocalVar(String.format("%s %s = {}",arg.type,arg.value));
 			}
 			else if (arg.type.equals("ALL_SESSIONS")) {
 				if (!arg.value.equals("NULL"))
-					tc.addLocalVar(String.format("%s %s = {0,}",arg.type,arg.value));
+					tc.addLocalVar(String.format("%s %s = {}",arg.type,arg.value));
 			}
 			else if (arg.type.equals("AttributeList")) {
 				if (!arg.value.endsWith("Empty"))
-					tc.addLocalVar(String.format("%s %s = {0,}",arg.type,arg.value));
+					tc.addLocalVar(String.format("%s %s = {}",arg.type,arg.value));
 			}
 			if (arg.type.equals("ALL_OPERATIONS")) {
 				if (!arg.value.equals("NULL"))
-					tc.addLocalVar(String.format("%s %s = {0,}",arg.type,arg.value));
+					tc.addLocalVar(String.format("%s %s = {}",arg.type,arg.value));
 			}
 			else if (arg.type.equals("ALL_TEMPORARY_MEMORIES")) {
 				if (!arg.value.equals("NULL") && !arg.value.equals("IGNORE"))
-					tc.addLocalVar(String.format("%s %s = {0,}",arg.type,arg.value));
+					tc.addLocalVar(String.format("%s %s = {}",arg.type,arg.value));
 			}
 			else if (arg.type.equals("ALL_SHARED_MEMORIES")) {
 				if (!arg.value.equals("NULL") && !arg.value.equals("IGNORE"))
-					tc.addLocalVar(String.format("%s %s = {0,}",arg.type,arg.value));
+					tc.addLocalVar(String.format("%s %s = {}",arg.type,arg.value));
 			}
 			else if (arg.type.equals("ALL_ENUMERATORS")) {
 				if (!arg.value.equals("INVALID_ENUMERATOR"))
@@ -624,7 +624,7 @@ public class GenFromXml {
 
 	private static void genAdaptationHeader() {
 		String name = "gp_adaptation_api";
-		String fn = String.format("%s/%s.h", repoTestCodePath, name);
+		String fn = String.format("%s/include/%s.h", repoTestCodePath, name);
 
 		Log.info("generating file %s", fn);
 		PrintStream pr;
