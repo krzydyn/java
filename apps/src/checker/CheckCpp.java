@@ -22,31 +22,26 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 
 import sys.Env;
+import text.tokenize.Cpp;
 import text.tokenize.CppBuilder;
 import text.tokenize.CppParser;
 import time.LapTime;
 
 public class CheckCpp {
 	static String[] files={
-			//"~/sec-os/key-manager/src/manager/crypto/tz-backend/internals.cpp",
-			"~/csapi/tct/api/tct-suite-vs/Tizen.Security.TEEC.Tests/testcase/TSContext.cs"
+			"~/Secos/Trustware-Jaca/Trustware/trustzone-ree/source/libteec/dataio.cpp",
+			//"~/csapi/tct/api/tct-suite-vs/Tizen.Security.TEEC.Tests/testcase/TSContext.cs"
 	};
-	static String pfx="~/security-containers/";
 	public static void main(String[] args) throws Exception {
-		String p=Env.expandEnv(pfx);
 		for (String f : files) {
-			f=Env.expandEnv(f);
-			if (f.startsWith("/"))
-				dofile(f);
-			else
-				dofile(p+f);
+			dofile(Env.expandEnv(f));
 		}
 	}
 	static void dofile(String f) throws Exception {
 		CppParser p=new CppParser();
 		LapTime tm=new LapTime("ln");
 		try {
-			CppParser.CppNode n=p.parse(f);
+			Cpp.Node n=p.parse(f);
 			tm.updateAbs(p.getLineNo());
 			System.out.println(tm.toString());
 			CppBuilder.write(n, new OutputStreamWriter(System.out));

@@ -4,13 +4,6 @@ import java.io.FileWriter;
 import java.io.PrintWriter;
 import java.io.Writer;
 
-import text.tokenize.CppParser.CodeBlock;
-import text.tokenize.CppParser.Comment;
-import text.tokenize.CppParser.CppNode;
-import text.tokenize.CppParser.Namespace;
-import text.tokenize.CppParser.SourceFragment;
-import text.tokenize.CppParser.TopNode;
-
 public class CppBuilder {
 
 	static class FWriter extends PrintWriter {
@@ -58,29 +51,29 @@ public class CppBuilder {
 	public CppBuilder(Writer wr) {
 		this.wr=new FWriter(wr);
 	}
-	private void writeNode(CppNode n) {
-		if (n instanceof TopNode) {
+	private void writeNode(Cpp.Node n) {
+		if (n instanceof Cpp.TopNode) {
 			for (int i=0; i < n.nodes.size(); ++i) {
-				CppNode nn=n.nodes.get(i);
+				Cpp.Node nn=n.nodes.get(i);
 				writeNode(nn);
 			}
 		}
-		else if (n instanceof CodeBlock) {
+		else if (n instanceof Cpp.CodeBlock) {
 			n.write(wr);
 			wr.writeif(' ');
 			wr.write("{\n");
-			if (!(n instanceof Namespace)) wr.indent(1);
+			if (!(n instanceof Cpp.Namespace)) wr.indent(1);
 			for (int i=0; i < n.nodes.size(); ++i) {
-				CppNode nn=n.nodes.get(i);
+				Cpp.Node nn=n.nodes.get(i);
 				writeNode(nn);
 			}
 			wr.writeif('\n');
-			if (!(n instanceof Namespace)) wr.indent(-1);
+			if (!(n instanceof Cpp.Namespace)) wr.indent(-1);
 			wr.write("}");
 		}
 		else {
-			SourceFragment f = (SourceFragment)n;
-			if ((f instanceof Comment)) wr.writeif(' ');
+			Cpp.SourceFragment f = (Cpp.SourceFragment)n;
+			if ((f instanceof Cpp.Comment)) wr.writeif(' ');
 			else if (wr.lastc=='}') {
 				if (f.str.length()>1) {
 					wr.writeif('\n');
@@ -88,7 +81,7 @@ public class CppBuilder {
 				}
 			}
 			n.write(wr);
-			if ((f instanceof Comment)) ;
+			if ((f instanceof Cpp.Comment)) ;
 			else {
 				if (f.str.endsWith(";") || f.str.endsWith(","))
 					wr.writeif('\n');
@@ -96,12 +89,12 @@ public class CppBuilder {
 		}
 	}
 
-	static public void write(CppNode n, String f) throws Exception {
+	static public void write(Cpp.Node n, String f) throws Exception {
 		Writer wr=new FileWriter(f);
 		try {write(n,wr);}
 		finally {wr.close();}
 	}
-	static public void write(CppNode n, Writer wr) throws Exception {
+	static public void write(Cpp.Node n, Writer wr) throws Exception {
 		CppBuilder build = new CppBuilder(wr);
 		build.writeNode(n);
 		wr.flush();

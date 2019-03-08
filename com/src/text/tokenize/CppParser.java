@@ -22,110 +22,36 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.Reader;
-import java.util.ArrayList;
-import java.util.List;
-
 import sys.Log;
 import text.Text;
 
 public class CppParser {
-	public static abstract class CppNode {
-		final List<CppNode> nodes=new ArrayList<CppParser.CppNode>();
-		void write(PrintWriter wr) {}
-	}
-	static class SourceFragment extends CppNode {
-		public SourceFragment(String s) {str=s;}
-		public String str;
-		@Override
-		void write(PrintWriter wr) {
-			//wr.print("[F:]"+str+"[:F]");
-			wr.print(str);
-		}
-	}
-	static class CodeBlock extends CppNode {
-		CodeBlock() {}
-	}
-	static class TopNode extends CppNode {
-		TopNode() {}
-	}
-
-	static class Preproc extends SourceFragment {
-		Preproc(String c){super(c);}
-		@Override
-		void write(PrintWriter wr) {
-			//wr.printf("/*%s: '%s'*/", getClass().getSimpleName(), str);
-			wr.printf("%s\n",str.replace("\n", "\\\n"));
-		}
-	}
-	static class Comment extends SourceFragment {
-		Comment(String c, boolean oneln){
-			super(c.replaceAll("(?m)^ *\\* {0,1}", "").trim());
-			this.oneln=oneln;
-		}
-		boolean oneln;
-		@Override
-		void write(PrintWriter wr) {
-			if (oneln) wr.printf("// %s\n", str);
-			else {
-				if (!str.contains("\n")) wr.printf("/* %s */ ", str);
-				else {
-					wr.printf("/*%s\n */\n", ("\n"+str).replace("\n", "\n * "));
-				}
-			}
-		}
-	}
-	static class Namespace extends CodeBlock {
-		Namespace() {}
-		String name;
-		@Override
-		void write(PrintWriter wr) {
-			wr.printf("namespace %s", name);
-		}
-	}
-	static class StringLiteral extends SourceFragment {
-		public StringLiteral(String s) {super(s);}
-	}
-	static class CharLiteral extends SourceFragment {
-		public CharLiteral(char c) {super(new String(new char[]{c}));}
-	}
-	static class CppClass extends CodeBlock {
-		String name;
-		final List<String> bases=new ArrayList<String>(); //base classes
-		@Override
-		void write(PrintWriter wr) {
-			wr.printf("class %s : %s", name, Text.join(",", bases));
-		}
-	}
-	static class CppMethod extends CodeBlock {
-		String retType;
-		String name;
-		List<String> modiers;  //{public,final,static}
-		List<String> exception;//declared exceptions
-	}
-
 	CppTokenizer ct=null;
 	int line;
 	public int getLineNo() {return line; }
 
-	public CppNode parse(String f) throws Exception {
+	public Cpp.Node parse(String f) throws Exception {
 		System.out.printf("parsing file \"%s\"\n",f);
 		FileReader rd=new FileReader(f);
 		try {return parse(rd);}
-		finally {rd.close();}
+		finally {
+			rd.close();
+			System.out.printf("parsing done\n");
+		}
 	}
-	public CppNode parse(Reader rd) throws Exception {
+	public Cpp.Node parse(Reader rd) throws Exception {
 		BasicTokenizer t=new BasicTokenizer(rd);
 
 		ct = new CppTokenizer(t);
-		CppNode node=new TopNode();
+		Cpp.Node node=new Cpp.TopNode();
 		readNode(node);
 
-		System.out.printf("parsing done\n");
 		return node;
 	}
-	static private void printNode(CppNode n, int l) {
+
+	static private void printNode(Cpp.Node n, int l) {
 		String indent = Text.repeat("    ", l);
-		if (n instanceof SourceFragment) {
+		if (n instanceof Cpp.SourceFragment) {
 			System.out.printf("%s: '",n.getClass().getSimpleName());
 			PrintWriter p=new PrintWriter(System.out);
 			n.write(p);
@@ -133,18 +59,18 @@ public class CppParser {
 			System.out.println("'");
 		}
 		else {
-			boolean cb = n instanceof CodeBlock;
+			boolean cb = n instanceof Cpp.CodeBlock;
 			int l1 = cb ? l+1 : l;
-			if (n instanceof Namespace) {
+			if (n instanceof Cpp.Namespace) {
 				l1=l;
 				System.out.println();
-				System.out.printf("namespace %s ", ((Namespace) n).name);
+				System.out.printf("namespace %s ", ((Cpp.Namespace) n).name);
 			}
 			if (cb) System.out.println("{");
 			boolean lcb=true;
 			for (int i=0; i < n.nodes.size(); ++i) {
-				CppNode nn=n.nodes.get(i);
-				boolean iscb = nn instanceof CodeBlock;
+				Cpp.Node nn=n.nodes.get(i);
+				boolean iscb = nn instanceof Cpp.CodeBlock;
 				if (!iscb && !lcb) System.out.println();
 				printNode(nn,l1);
 				lcb=iscb;
@@ -152,7 +78,7 @@ public class CppParser {
 			if (cb) System.out.print("\n"+indent+"}");
 		}
 	}
-	static public void printNode(CppNode n) {
+	static public void printNode(Cpp.Node n) {
 		printNode(n,0);
 		System.out.println();
 	}
@@ -162,7 +88,7 @@ public class CppParser {
 		line = ct.getLineNo();
 		return t;
 	}
-	void readNode(CppNode node) throws Exception {
+	void readNode(Cpp.Node node) throws Exception {
 		Token tok;
 		StringBuilder b=new StringBuilder();
 		while ((tok=ct.next(b))!=null) {
@@ -170,34 +96,34 @@ public class CppParser {
 			if (tok.cla==CppTokenizer.TOKEN_WHILESPACE) continue;
 
 			if (tok.cla==CppTokenizer.TOKEN_PREPROC) {
-				node.nodes.add(new Preproc(tok.rep));
+				node.nodes.add(new Cpp.Preproc(tok.rep));
 			}
 			else if (tok.cla==CppTokenizer.TOKEN_COMMENT || tok.cla==CppTokenizer.TOKEN_COMMENT_LN) {
-				node.nodes.add(new Comment(tok.rep,tok.cla==CppTokenizer.TOKEN_COMMENT_LN));
+				node.nodes.add(new Cpp.Comment(tok.rep,tok.cla==CppTokenizer.TOKEN_COMMENT_LN));
 			}
 			else if (tok.cla==CppTokenizer.TOKEN_QUOTE) {
-				node.nodes.add(new CharLiteral(tok.rep.charAt(1)));
+				node.nodes.add(new Cpp.CharQuote(tok.rep.substring(1, tok.rep.length()-1)));
 			}
 			else if (tok.cla==CppTokenizer.TOKEN_DBLQUOTE) {
-				node.nodes.add(new StringLiteral(tok.rep.substring(1, tok.rep.length()-1)));
+				node.nodes.add(new Cpp.StringQuote(tok.rep.substring(1, tok.rep.length()-1)));
 			}
 			else if (tok.cla==CppTokenizer.TOKEN_NAME) {
 				if (tok.rep.equals("namespace")) {
-					node.nodes.add(readNamespace(new Namespace()));
+					node.nodes.add(readNamespace(new Cpp.Namespace()));
 				}
-				else node.nodes.add(readFragment(new SourceFragment(tok.rep)));
+				else node.nodes.add(readFragment(new Cpp.SourceFragment(tok.rep)));
 			}
 			else if (tok.cla==CppTokenizer.TOKEN_BLKSTART) {
-				node.nodes.add(readBlock(new CodeBlock()));
+				node.nodes.add(readBlock(new Cpp.CodeBlock()));
 			}
 			else if (tok.cla==CppTokenizer.TOKEN_NUMBER) {
-				node.nodes.add(readFragment(new SourceFragment(tok.rep)));
+				node.nodes.add(readFragment(new Cpp.SourceFragment(tok.rep)));
 			}
 			else throw new Token.TokenException(tok);
 		}
 	}
 
-	CppNode readNamespace(Namespace node) throws Exception {
+	Cpp.Node readNamespace(Cpp.Namespace node) throws Exception {
 		Token tok;
 		StringBuilder b=new StringBuilder();
 
@@ -205,10 +131,10 @@ public class CppParser {
 			if (tok.cla==CppTokenizer.TOKEN_WHILESPACE) continue;
 
 			if (tok.cla==CppTokenizer.TOKEN_PREPROC) {
-				node.nodes.add(new Preproc(tok.rep));
+				node.nodes.add(new Cpp.Preproc(tok.rep));
 			}
 			else if (tok.cla==CppTokenizer.TOKEN_COMMENT || tok.cla==CppTokenizer.TOKEN_COMMENT_LN) {
-				node.nodes.add(new Comment(tok.rep,tok.cla==CppTokenizer.TOKEN_COMMENT_LN));
+				node.nodes.add(new Cpp.Comment(tok.rep,tok.cla==CppTokenizer.TOKEN_COMMENT_LN));
 			}
 			else if (tok.cla==CppTokenizer.TOKEN_BLKSTART) {
 				return readBlock(node);
@@ -219,14 +145,14 @@ public class CppParser {
 			}
 			else if (tok.cla==CppTokenizer.TOKEN_SPECIAL) {
 				if (node.name==null) throw new Token.TokenException(tok, "namespace name expected");
-				if (tok.rep.equals("=")) node.nodes.add(new SourceFragment(tok.rep));
+				if (tok.rep.equals("=")) node.nodes.add(new Cpp.SourceFragment(tok.rep));
 				else node.name+=tok.rep;
 			}
 			else throw new Token.TokenException(tok);
 		}
 		return node;
 	}
-	CppNode readFragment(SourceFragment node) throws Exception {
+	Cpp.Node readFragment(Cpp.SourceFragment node) throws Exception {
 		Token tok;
 		StringBuilder b=new StringBuilder();
 		StringBuilder blk=new StringBuilder();
@@ -255,7 +181,7 @@ public class CppParser {
 		}
 		return node;
 	}
-	CppNode readBlock(CodeBlock node) throws Exception {
+	Cpp.Node readBlock(Cpp.CodeBlock node) throws Exception {
 		Token tok;
 		StringBuilder b=new StringBuilder();
 		StringBuilder blk=new StringBuilder();
@@ -264,52 +190,52 @@ public class CppParser {
 			if (tok.cla==CppTokenizer.TOKEN_WHILESPACE) continue;
 
 			if (tok.cla==CppTokenizer.TOKEN_PREPROC) {
-				node.nodes.add(new Preproc(tok.rep));
+				node.nodes.add(new Cpp.Preproc(tok.rep));
 			}
 			else if (tok.cla==CppTokenizer.TOKEN_COMMENT || tok.cla==CppTokenizer.TOKEN_COMMENT_LN) {
 				if (blk.length()>0) {
-					node.nodes.add(new SourceFragment(blk.toString()));
+					node.nodes.add(new Cpp.SourceFragment(blk.toString()));
 					blk.setLength(0); lcla=CppTokenizer.TOKEN_NONE;
 				}
-				node.nodes.add(new Comment(tok.rep,tok.cla==CppTokenizer.TOKEN_COMMENT_LN));
+				node.nodes.add(new Cpp.Comment(tok.rep,tok.cla==CppTokenizer.TOKEN_COMMENT_LN));
 			}
 			else if (tok.cla==CppTokenizer.TOKEN_COMMENT) {
-				node.nodes.add(new Comment(tok.rep,false));
+				node.nodes.add(new Cpp.Comment(tok.rep,false));
 			}
 			else if (tok.cla==CppTokenizer.TOKEN_BLKEND) {
 				if (blk.length()>0) {
-					node.nodes.add(new SourceFragment(blk.toString()));
+					node.nodes.add(new Cpp.SourceFragment(blk.toString()));
 					blk.setLength(0); lcla=CppTokenizer.TOKEN_NONE;
 				}
 				break;
 			}
 			else if (tok.cla==CppTokenizer.TOKEN_BLKSTART) {
 				if (blk.length()>0) {
-					node.nodes.add(new SourceFragment(blk.toString()));
+					node.nodes.add(new Cpp.SourceFragment(blk.toString()));
 					blk.setLength(0); lcla=CppTokenizer.TOKEN_NONE;
 				}
-				node.nodes.add(readBlock(new CodeBlock()));
+				node.nodes.add(readBlock(new Cpp.CodeBlock()));
 			}
 			else if (tok.cla==CppTokenizer.TOKEN_NAME && tok.rep.equals("namespace")) {
 				if (blk.length()>0) {
-					node.nodes.add(new SourceFragment(blk.toString()));
+					node.nodes.add(new Cpp.SourceFragment(blk.toString()));
 					blk.setLength(0); lcla=CppTokenizer.TOKEN_NONE;
 				}
-				node.nodes.add(readNamespace(new Namespace()));
+				node.nodes.add(readNamespace(new Cpp.Namespace()));
 			}
 			else if (tok.cla==CppTokenizer.TOKEN_NAME && tok.rep.equals("using")) {
 				if (blk.length()>0) {
-					node.nodes.add(new SourceFragment(blk.toString()));
+					node.nodes.add(new Cpp.SourceFragment(blk.toString()));
 					blk.setLength(0); lcla=CppTokenizer.TOKEN_NONE;
 				}
-				node.nodes.add(readFragment(new SourceFragment(tok.rep)));
+				node.nodes.add(readFragment(new Cpp.SourceFragment(tok.rep)));
 			}
 			else {
 				if (lcla!=CppTokenizer.TOKEN_SPECIAL && lcla==tok.cla) blk.append(' ');
 				lcla=tok.cla;
 				blk.append(tok.rep);
 				if (lcla==CppTokenizer.TOKEN_SPECIAL && tok.rep.equals(";")) {
-					node.nodes.add(new SourceFragment(blk.toString()));
+					node.nodes.add(new Cpp.SourceFragment(blk.toString()));
 					blk.setLength(0); lcla=CppTokenizer.TOKEN_NONE;
 				}
 			}
@@ -319,5 +245,6 @@ public class CppParser {
 }
 /*
  * 103/18 ln/ms, 5.722 kln/s [5.722 kln/s]
+ * 577/40 ln/ms, 14.425 kln/s [14.425 kln/s]
  *
  */

@@ -113,8 +113,9 @@ public class ImgScrap {
 			len=resp.body().length();
 		}
 
-		List<ImgInfo> images = new ArrayList<ImgInfo>();
-		long t=lap.update(len);
+		lap.update(len);
+		List<ImgInfo> images = new ArrayList<>();
+		long t = System.currentTimeMillis();
 		if (tmPrn < t) {
 			System.out.printf("recv: %s, images=%d\n", lap, images.size());
 			tmPrn += 5000;

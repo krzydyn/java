@@ -31,8 +31,8 @@ public class LapTime {
 		t0=t1=t=System.currentTimeMillis();
 		v0=v1=this.v=v;
 	}
-	public long update(double v) { t=System.currentTimeMillis(); this.v+=v; return t;}
-	public long updateAbs(double v) { t=System.currentTimeMillis(); this.v=v; return t;}
+	public void update(double v) { t=System.currentTimeMillis(); this.v+=v; }
+	public void updateAbs(double v) { t=System.currentTimeMillis(); this.v=v; }
 	public void nextLap() { t1=t; v1=v; }
 
 	public long getTotalTime() { return t-t0; }

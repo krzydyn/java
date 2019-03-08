@@ -43,7 +43,7 @@ public class Wgrep {
 
 	static String basePath;
 	static Connection conn;
-	static List<String> visitedDirs = new ArrayList<String>();
+	static List<String> visitedDirs = new ArrayList<>();
 
 	static LapTime lap=new LapTime("B");
 	static long tmPrn;
@@ -106,7 +106,8 @@ public class Wgrep {
 			len=resp.body().length();
 		}
 
-		long t=lap.update(len);
+		lap.update(len);
+		long t = System.currentTimeMillis();
 		if (tmPrn < t) {
 			System.out.printf("recv: %s, dirs=%d\n", lap, visitedDirs.size());
 			tmPrn += 5000;
