@@ -122,8 +122,7 @@ public interface TEF_Types {
 	}
 
 	static enum tef_algorithm_param_e {
-		TEF_IV,
-		TEF_NONCE,
+		TEF_IV, //=TEF_NONCE,
 		TEF_AAD,
 		TEF_TAGLEN,
 		TEF_TAG,

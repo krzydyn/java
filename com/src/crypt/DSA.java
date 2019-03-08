@@ -60,6 +60,8 @@ public class DSA extends Asymmetric {
 
 		BigInteger H = new BigInteger(1, hash);
 
+		if (H.bitLength() > q.bitLength()) throw new RuntimeException();
+
 		BigInteger r,s;
 		for (;;) {
 			BigInteger k = new BigInteger(q.bitLength(), rnd);

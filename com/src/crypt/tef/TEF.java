@@ -1,5 +1,6 @@
 package crypt.tef;
 
+import java.math.BigInteger;
 import java.security.GeneralSecurityException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -72,35 +73,7 @@ public class TEF implements TEF_Types {
 
 	public int tef_encrypt(tef_cipher_token keyid, tef_algorithm algorithm,
 			byte[] data, int dataLen, byte[] edata) throws GeneralSecurityException {
-		javax.crypto.Cipher cipher;
-		String algoName = keyid.transformName()+"/"+algorithm.getName();
-		cipher = javax.crypto.Cipher.getInstance(algoName);
-
-		byte[] iv=null;
-		if (algorithm.params.containsKey(tef_algorithm_param_e.TEF_IV)) {
-			iv = (byte[])algorithm.params.get(tef_algorithm_param_e.TEF_IV);
-		}
-		else if (algorithm.chaining != tef_chaining_mode_e.TEF_ECB) {
-			iv = ZERO_IV;
-		}
-		AlgorithmParameterSpec pspec = null;
-		if (algorithm.chaining == tef_chaining_mode_e.TEF_GCM) {
-			int taglen = (Integer)algorithm.params.get(tef_algorithm_param_e.TEF_TAGLEN);
-			pspec = new GCMParameterSpec(taglen, iv);
-		}
-		else if (iv != null){
-			pspec = new IvParameterSpec(iv, 0, cipher.getBlockSize());
-		}
-		if (pspec!=null) {
-			cipher.init(javax.crypto.Cipher.ENCRYPT_MODE, keyid.getKey(), pspec);
-		}
-		else {
-			cipher.init(javax.crypto.Cipher.ENCRYPT_MODE, keyid.getKey());
-		}
-
-		if (algorithm.params.containsKey(tef_algorithm_param_e.TEF_AAD)) {
-			cipher.updateAAD((byte[])algorithm.params.get(tef_algorithm_param_e.TEF_AAD));
-		}
+		javax.crypto.Cipher cipher = createCipher(keyid, algorithm);
 
 		int r = cipher.doFinal(data, 0, dataLen, edata);
 		if (algorithm.chaining == tef_chaining_mode_e.TEF_GCM) {
@@ -118,31 +91,7 @@ public class TEF implements TEF_Types {
 
 	int tef_decrypt(tef_cipher_token keyid, tef_algorithm algorithm,
 			byte[] edata, int edataLen, byte[] data) throws GeneralSecurityException {
-		javax.crypto.Cipher cipher;
-		String algoName = keyid.transformName()+"/"+algorithm.getName();
-		cipher = javax.crypto.Cipher.getInstance(algoName);
-
-		byte[] iv=null;
-		if (algorithm.params.containsKey(tef_algorithm_param_e.TEF_IV)) {
-			iv = (byte[])algorithm.params.get(tef_algorithm_param_e.TEF_IV);
-		}
-		else if (algorithm.chaining != tef_chaining_mode_e.TEF_ECB) {
-			iv = ZERO_IV;
-		}
-		AlgorithmParameterSpec pspec = null;
-		if (algorithm.chaining == tef_chaining_mode_e.TEF_GCM) {
-			int taglen = (Integer)algorithm.params.get(tef_algorithm_param_e.TEF_TAGLEN);
-			pspec = new GCMParameterSpec(taglen, iv); // iv = nonce
-		}
-		else if (iv != null){
-			pspec = new IvParameterSpec(iv, 0, cipher.getBlockSize());
-		}
-		if (pspec!=null) {
-			cipher.init(javax.crypto.Cipher.DECRYPT_MODE, keyid.getKey(), pspec);
-		}
-		else {
-			cipher.init(javax.crypto.Cipher.DECRYPT_MODE, keyid.getKey());
-		}
+		javax.crypto.Cipher cipher = createCipher(keyid, algorithm);
 
 		if (algorithm.params.containsKey(tef_algorithm_param_e.TEF_AAD)) {
 			cipher.updateAAD((byte[])algorithm.params.get(tef_algorithm_param_e.TEF_AAD));
@@ -165,6 +114,55 @@ public class TEF implements TEF_Types {
 	 */
 	public int tef_mac_calc(tef_cipher_token keyid, tef_algorithm algorithm,
 			byte[] data, int dataLen, byte[] mac) throws GeneralSecurityException {
+		javax.crypto.Cipher cipher = createCipher(keyid, algorithm);
+		int bs = cipher.getBlockSize();
+		if (bs > mac.length) throw new ShortBufferException();
+
+		for (int i=0; i < mac.length; ++i) mac[i]=0;
+		for (int i=0; i < dataLen; i += bs) {
+			cipher.update(data, i, bs, mac);
+		}
+		cipher.doFinal(mac, 0);
+		return bs;
+	}
+
+	/*
+	 * CMAC rfc4493
+	 */
+	public int tef_cmac_calc(tef_cipher_token keyid, tef_algorithm algorithm,
+			byte[] data, int dataLen, byte[] mac) throws GeneralSecurityException {
+		javax.crypto.Cipher cipher = createCipher(keyid, algorithm);
+		int bs = cipher.getBlockSize();
+		if (bs > mac.length) throw new ShortBufferException();
+
+		// 1. Generate_Subkey
+		byte[] L = new byte[bs*2];
+		cipher.doFinal(ZERO_IV, 0, bs, L);
+		BigInteger K1 = new BigInteger(1, L, 0, bs).multiply(BigInteger.TWO);
+		BigInteger K2 = K1.multiply(BigInteger.TWO);
+
+		// 2. AES-CMAC
+		for (int i=0; i < mac.length; ++i) mac[i]=0;
+		for (int i=0; i < dataLen; i += bs) {
+			cipher.update(data, i, bs, mac);
+		}
+		cipher.doFinal(mac, 0);
+
+		cipher.doFinal(mac, 0, bs, mac);
+
+		return 0;
+	}
+
+	//keyid can be symmetric or asymmetric
+	public int tef_sign_calc(tef_cipher_token keyid, tef_digest_e digest, byte[] data, int dataLen, byte[] sign) {
+		return 0;
+	}
+	//keyid can be symmetric or asymmetric
+	int tef_sign_verify(tef_cipher_token keyid, tef_digest_e digest, byte[] data, int dataLen, byte[] sign) {
+		return 0;
+	}
+
+	private javax.crypto.Cipher createCipher(tef_cipher_token keyid, tef_algorithm algorithm) throws GeneralSecurityException {
 		javax.crypto.Cipher cipher;
 		String algoName = keyid.transformName()+"/"+algorithm.getName();
 		cipher = javax.crypto.Cipher.getInstance(algoName);
@@ -192,32 +190,11 @@ public class TEF implements TEF_Types {
 			cipher.init(javax.crypto.Cipher.ENCRYPT_MODE, keyid.getKey());
 		}
 
-		if (bs > mac.length) throw new ShortBufferException();
-		for (int i=0; i < mac.length; ++i) mac[i]=0;
-		for (int i=0; i < dataLen; i += bs) {
-			cipher.update(data, i, bs, mac);
+		if (algorithm.params.containsKey(tef_algorithm_param_e.TEF_AAD)) {
+			cipher.updateAAD((byte[])algorithm.params.get(tef_algorithm_param_e.TEF_AAD));
 		}
-		cipher.doFinal(mac, 0);
-		return bs;
-	}
 
-	/*
-	 * CMAC rfc4493
-	 */
-	public int tef_cmac_calc(tef_cipher_token keyid, tef_algorithm algorithm,
-			byte[] data, int dataLen, byte[] mac) throws GeneralSecurityException {
-		// 1. Generate_Subkey
-		// 2. AES-CMAC
-		return 0;
-	}
-
-	//keyid can be symmetric or asymmetric
-	public int tef_sign_calc(tef_cipher_token keyid, tef_digest_e digest, byte[] data, int dataLen, byte[] sign) {
-		return 0;
-	}
-	//keyid can be symmetric or asymmetric
-	int tef_sign_verify(tef_cipher_token keyid, tef_digest_e digest, byte[] data, int dataLen, byte[] sign) {
-		return 0;
+		return cipher;
 	}
 }
 

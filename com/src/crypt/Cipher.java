@@ -30,7 +30,7 @@ package crypt;
  * </ul><br><br>
  * <b>Padding modes</b>
  * <ul>
- * <li><b>No padding</b> (message length = k*block_size)
+ * <li><b>No padding</b> (message length = k*block_size, otherwise input error)
  * <li><b>Zero padding</b> DATA,0x00...
  * <li><b>ANSI X.923</b> DATA,0x00,0x00,...NUM_OF_PAD_BYTES
  * <li><b>ISO 10126</b> DATA,RND,RND,...NUM_OF_PAD_BYTES
@@ -40,7 +40,9 @@ package crypt;
  * <li><b>ISO/IEC 9797/M1</b> DATA,0x00,0x00,... (same as ZeroPading)
  * <li><b>ISO/IEC 9797/M2</b> DATA,0x80,0x00,....(same as ISO/IEC 7816-4)
  * <li><b>ISO/IEC 9797/M3</b> pad 0, des CBC, des3 on last block
- * <li><b>CTS</b> pad last block with tail of encrypted prev block, encrypt last, and swap
+ * <li><b>CTS</b>(ciphertext stealing) pad last block with tail of encrypted prev block, encrypt last, and swap
+ * <p><small>To implement CTS encryption or decryption for data of unknown length, the implementation must delay processing (and buffer) the two most recent blocks of data, so that they can be properly processed at the end of the data stream.<br/>
+ * https://en.wikipedia.org/wiki/Ciphertext_stealing</small></p>
  *
  * </ul>
  * <h3>Block Cipher Modes (of chaining blocks)</h3>
@@ -95,6 +97,7 @@ package crypt;
  */
 
 public interface Cipher extends CipherBlock {
+	public void reset();
 	public int update(byte[] data, int offs, int len, byte[] out, int outoffs);
 	public int finish(byte[] out, int outoffs);
 }

@@ -461,6 +461,23 @@ public class TEFSecosCrypt extends UnitTest implements TEF_Types {
 		}
 	}
 
+	static void gp_cmac() throws Exception {
+		TEF t = new TEF();
+		byte[] edata = new byte[1000];
+
+		Log.debug("*** gp_mac ***");
+		for (EncryptTC tc : gpapi_macTC) {
+			tef_cipher_token keyid = t.tef_key_import_raw(tc.key.kt, tc.key.key, tc.key.key.length);
+			Log.debug("%s/%s: data[%d]=%s", tc.key.kt, tc.algo, tc.datain.length, Text.hex(tc.datain, 0, tc.datain.length));
+			int r=t.tef_cmac_calc(keyid, tc.algo, tc.datain, tc.datain.length, edata);
+			Log.debug("r[%d]=%s", r, Text.hex(edata, 0, r));
+
+			if (tc.dataout != null) {
+				check(edata,tc.dataout,tc.dataout.length);
+			}
+		}
+	}
+
 	static void gp_dsa() throws Exception {
 		//byte[] hash = Text.bin("C1A0104D625B8E378A96130514AA1BEAA7BE2E04");
 		DSA dsa = new DSA(
@@ -583,8 +600,9 @@ public class TEFSecosCrypt extends UnitTest implements TEF_Types {
 
 		//Log.info("");
 		//try { gp_digest(); } catch (Exception e) { Log.error(e); }
-		try { gp_encrypt(); } catch (Exception e) { Log.error(e); }
+		//try { gp_encrypt(); } catch (Exception e) { Log.error(e); }
 		try { gp_mac(); } catch (Exception e) { Log.error(e); }
+		try { gp_cmac(); } catch (Exception e) { Log.error(e); }
 		//try { gp_dsa(); } catch (Exception e) { Log.error(e); }
 		//try { gp_dh(); } catch (Exception e) { Log.error(e); }
 		//try { mgf_test(); } catch (Exception e) { Log.error(e); }
