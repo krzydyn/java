@@ -38,7 +38,7 @@ public class UnitTest {
 	final static private String classExt = ".class";
 	final static private Object[] empty = null;
 	final static private LapTime time=new LapTime("s");
-	final static private List<TestSummary> summary = new ArrayList<UnitTest.TestSummary>();
+	final static private List<TestSummary> summary = new ArrayList<>();
 
 	private static class TestSummary {
 		String testunit;
@@ -56,7 +56,7 @@ public class UnitTest {
 	}
 
 	static public List<String> getClasses(String pkg) throws IOException {
-		ArrayList<String> a = new ArrayList<String>();
+		ArrayList<String> a = new ArrayList<>();
 
 		ClassLoader cl = getClassLoader();
 		URL url = cl.getResource(pkg.replace(".", "/"));
@@ -72,7 +72,7 @@ public class UnitTest {
 	}
 
 	static public List<String> getTestUnits(String prefix) throws IOException {
-		ArrayList<String> a = new ArrayList<String>();
+		ArrayList<String> a = new ArrayList<>();
 
 		String pkg = "";
 		if (prefix.lastIndexOf('.')>0) pkg=prefix.substring(0, prefix.lastIndexOf('.'));
@@ -267,7 +267,7 @@ public class UnitTest {
 		}
 		for (int i=0; i < n; ++i) {
 			if (t1[i] != t2[i]) {
-				Log.error(2, "check failed: byte[%d] #%x!=#%x", i, t1[i]&0xff, t2[i]&0xff);
+				Log.error(2, "check failed: byte[%d] %X!=%X", i, t1[i]&0xff, t2[i]&0xff);
 				++current.errors;
 				return ;
 			}

@@ -59,7 +59,7 @@ public class TEF implements TEF_Types {
 			keyAlgo = key_type.getName();
 		}
 		Log.debug("import key %s/%d from %s",keyAlgo, dataLen*8, Text.hex(data));
-		return new tef_cipher_token(key_type, new javax.crypto.spec.SecretKeySpec(data,0,dataLen,keyAlgo));
+		return new tef_cipher_token(key_type, new javax.crypto.spec.SecretKeySpec(data, 0, dataLen, keyAlgo));
 	}
 
 
@@ -118,16 +118,21 @@ public class TEF implements TEF_Types {
 		int bs = cipher.getBlockSize();
 		if (bs > mac.length) throw new ShortBufferException();
 
-		for (int i=0; i < mac.length; ++i) mac[i]=0;
+		for (int i=0; i < bs; ++i) mac[i]=0;
 		for (int i=0; i < dataLen; i += bs) {
-			cipher.update(data, i, bs, mac);
+			if (i + bs < dataLen)
+				cipher.update(data, i, bs, mac);
+			else
+				cipher.update(data, i, dataLen - i, mac);
 		}
 		cipher.doFinal(mac, 0);
+
 		return bs;
 	}
 
 	/*
 	 * CMAC rfc4493
+	 * https://tools.ietf.org/html/rfc4493#ref-NIST-CMAC
 	 */
 	public int tef_cmac_calc(tef_cipher_token keyid, tef_algorithm algorithm,
 			byte[] data, int dataLen, byte[] mac) throws GeneralSecurityException {
@@ -135,22 +140,59 @@ public class TEF implements TEF_Types {
 		int bs = cipher.getBlockSize();
 		if (bs > mac.length) throw new ShortBufferException();
 
-		// 1. Generate_Subkey
-		byte[] L = new byte[bs*2];
-		cipher.doFinal(ZERO_IV, 0, bs, L);
-		BigInteger K1 = new BigInteger(1, L, 0, bs).multiply(BigInteger.TWO);
-		BigInteger K2 = K1.multiply(BigInteger.TWO);
+		BigInteger Rb = BigInteger.ZERO;
+		if (bs == 8) {
+			Rb = BigInteger.valueOf(0x1B);
+		}
+		else if (bs == 16) {
+			Rb = BigInteger.valueOf(0x87);
+		}
+		else if (bs == 32) {
+			Rb = BigInteger.valueOf(0x425);
+		}
+		Rb = Rb.setBit(bs*8);
+		//Log.debug("Rb = %s", Text.hex(Rb.toByteArray()));
 
-		// 2. AES-CMAC
-		for (int i=0; i < mac.length; ++i) mac[i]=0;
-		for (int i=0; i < dataLen; i += bs) {
+		// 1. Generate_Subkey
+		byte[] L = new byte[bs];
+		cipher.update(ZERO_IV, 0, bs, L);
+		cipher.doFinal(L, 0);
+		BigInteger K0 = new BigInteger(1, L, 0, bs);
+		BigInteger K1, K2;
+
+		if (K0.testBit(bs-1) == false)
+			K1 = K0.shiftLeft(1);
+		else
+			K1 = K0.shiftLeft(1).xor(Rb);
+		if (K1.testBit(bs-1) == false)
+			K2 = K1.shiftLeft(1);
+		else
+			K2 = K1.shiftLeft(1).xor(Rb);
+
+		//Log.debug("K0 = %s", Text.hex(K0.toByteArray()));
+		//Log.debug("K1 = %s", Text.hex(K1.toByteArray()));
+		//Log.debug("K2 = %s", Text.hex(K2.toByteArray()));
+
+		// 2. CMAC
+		for (int i=0; i < bs; ++i) mac[i]=0;
+		for (int i=0; i + bs < dataLen; i += bs) {
 			cipher.update(data, i, bs, mac);
 		}
+
+		BigInteger mp;
+		if (dataLen > 0 && dataLen%bs == 0) {
+			mp = new BigInteger(1, data, dataLen-bs, bs).xor(K1);
+		}
+		else {
+			int r = dataLen%bs;
+			mp = new BigInteger(1, data, dataLen-r, r).shiftLeft(1).or(BigInteger.ONE).shiftLeft((bs-r)*8-1).xor(K2);
+		}
+		L = mp.toByteArray();
+		//Log.debug("mp = %s", Text.hex(L));
+		cipher.update(L, L.length-bs, bs, mac);
 		cipher.doFinal(mac, 0);
 
-		cipher.doFinal(mac, 0, bs, mac);
-
-		return 0;
+		return bs;
 	}
 
 	//keyid can be symmetric or asymmetric

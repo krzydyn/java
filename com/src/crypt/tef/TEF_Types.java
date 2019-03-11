@@ -39,7 +39,7 @@ public interface TEF_Types {
 		TEF_DSA,
 		TEF_ECDSA;
 		private String name;
-		String getName() {
+		public String getName() {
 			if (name==null) name=name().substring(4);
 			return name;
 		}
@@ -60,7 +60,7 @@ public interface TEF_Types {
 		TEF_CCM, //above Java8
 		;
 		private String name;
-		String getName() {
+		public String getName() {
 			if (name==null) name=name().substring(4);
 			return name;
 		}
