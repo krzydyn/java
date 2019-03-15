@@ -106,7 +106,6 @@ public class TEFSecosCrypt extends UnitTest implements TEF_Types {
 		new EncryptKey(tef_key_type_e.TEF_DES, Text.bin("0123456789ABCDEF")),
 		new EncryptKey(tef_key_type_e.TEF_DES, Text.bin("0123456789ABCDEF FEDCBA9876543210")),
 		new EncryptKey(tef_key_type_e.TEF_DES, Text.bin("0123456789ABCDEF FEDCBA9876543210 1032547698badcfe")),
-		new EncryptKey(tef_key_type_e.TEF_AES, Text.bin("2b7e151628aed2a6abf7158809cf4f3c")),
 	};
 	static TEF.tef_algorithm[] algos_simp = {
 		new TEF.tef_algorithm(tef_chaining_mode_e.TEF_ECB, tef_padding_mode_e.TEF_PADDING_NONE),
@@ -122,6 +121,9 @@ public class TEFSecosCrypt extends UnitTest implements TEF_Types {
 		new EncryptKey(tef_key_type_e.TEF_AES, Text.bin("2b7e151628aed2a6abf7158809cf4f3c")),
 		new EncryptKey(tef_key_type_e.TEF_AES, Text.bin("8e73b0f7da0e6452c810f32b809079e562f8ead2522c6b7b")),
 		new EncryptKey(tef_key_type_e.TEF_AES, Text.bin("603deb1015ca71be2b73aef0857d7781 1f352c073b6108d72d9810a30914dff4")),
+
+		new EncryptKey(tef_key_type_e.TEF_DES, Text.bin("8aa83bf8 cbda1062 0bc1bf19 fbb6cd58 bc313d4a 371ca8b5")),
+		new EncryptKey(tef_key_type_e.TEF_DES, Text.bin("4cf15134 a2850dd5 8a3d10ba 80570d38")),
 
 		//GCM-AES  from http://csrc.nist.gov/groups/STM/cavp/documents/mac/gcmtestvectors.zip
 		new EncryptKey(tef_key_type_e.TEF_AES, Text.bin("11754cd72aec309bf52f7687212e8957")),
@@ -168,8 +170,9 @@ public class TEFSecosCrypt extends UnitTest implements TEF_Types {
 		new EncryptTC(keys_simp[1],algos_simp[1],ZERO8,Text.bin("08D7B4FB629D0885")),
 		new EncryptTC(keys_simp[2],algos_simp[0],ZERO8,Text.bin("5802BA5F7916D120")),
 		new EncryptTC(keys_simp[2],algos_simp[1],ZERO8,Text.bin("5802BA5F7916D120")),
-		new EncryptTC(keys_simp[3],algos_simp[0],ZERO16,Text.bin("7DF76B0C1AB899B33E42F047B91B546F")),
-		new EncryptTC(keys_simp[3],algos_simp[2],ZERO16,Text.bin("7DF76B0C1AB899B33E42F047B91B546F")),
+
+		new EncryptTC(nist_keys[0],algos_simp[0],ZERO16,Text.bin("7DF76B0C1AB899B33E42F047B91B546F")),
+		new EncryptTC(nist_keys[0],algos_simp[2],ZERO16,Text.bin("7DF76B0C1AB899B33E42F047B91B546F")),
 
 		//AES key vectors from http://nvlpubs.nist.gov/nistpubs/Legacy/SP/nistspecialpublication800-38a.pdf
 		//EBC-AES
@@ -194,23 +197,38 @@ public class TEFSecosCrypt extends UnitTest implements TEF_Types {
 		new EncryptTC(nist_keys[2],nist_algos[4],AES_PLAINTEXT,Text.bin("601ec313775789a5b7a7f504bbf3d228f443e3ca4d62b59aca84e990cacaf5c5")),
 
 		//GCM-AES  from http://csrc.nist.gov/groups/STM/cavp/documents/mac/gcmtestvectors.zip
-		new EncryptTC(nist_keys[3],nist_algos[5],EmptyMsg,Text.bin("250327c674aaf477aef2675748cf6971")),
-		new EncryptTC(nist_keys[4],nist_algos[6],EmptyMsg,Text.bin("b6e6f197168f5049aeda32dafbdaeb")),
-		new EncryptTC(nist_keys[5],nist_algos[7],EmptyMsg,Text.bin("209fcc8d3675ed938e9c7166709dd946")),
-		new EncryptTC(nist_keys[6],nist_algos[8],
+		new EncryptTC(nist_keys[5],nist_algos[5],EmptyMsg,Text.bin("250327c674aaf477aef2675748cf6971")),
+		new EncryptTC(nist_keys[6],nist_algos[6],EmptyMsg,Text.bin("b6e6f197168f5049aeda32dafbdaeb")),
+		new EncryptTC(nist_keys[7],nist_algos[7],EmptyMsg,Text.bin("209fcc8d3675ed938e9c7166709dd946")),
+		new EncryptTC(nist_keys[8],nist_algos[8],
 				Text.bin("6081f9455583c4a35ed9400799e209fb7e75a7887868aa4bb0c9f7b78f67125678e03c618e615bfad03ab077315b7787418f50"),
 				Text.bin("18eca8d7ec92b6209c8d3c82d10c876047b470e22b74346ad609f44cc338b38c881103636fd056634907c28e32efb32dcddb23 de01691b9b99851636c7c8d5")),
 
 	};
 
+	//https://nvlpubs.nist.gov/nistpubs/Legacy/SP/nistspecialpublication800-38b.pdf
 	static EncryptTC nist_macTC[] = {
-		new EncryptTC(keys_simp[3],algos_simp[3],EmptyMsg,Text.bin("bb1d6929 e9593728 7fa37d12 9b756746")),
-		new EncryptTC(keys_simp[3],algos_simp[3],Text.bin("6bc1bee2 2e409f96 e93d7e11 7393172a"),Text.bin("070a16b4 6b4d4144 f79bdd9d d04a287c")),
-		new EncryptTC(keys_simp[3],algos_simp[3],Text.bin("6bc1bee2 2e409f96 e93d7e11 7393172a"
+		//AES 128
+		new EncryptTC(nist_keys[0],algos_simp[3],EmptyMsg,Text.bin("bb1d6929 e9593728 7fa37d12 9b756746")),
+		new EncryptTC(nist_keys[0],algos_simp[3],Text.bin("6bc1bee2 2e409f96 e93d7e11 7393172a"),Text.bin("070a16b4 6b4d4144 f79bdd9d d04a287c")),
+		new EncryptTC(nist_keys[0],algos_simp[3],Text.bin("6bc1bee2 2e409f96 e93d7e11 7393172a"
 			+ "ae2d8a57 1e03ac9c 9eb76fac 45af8e51 30c81c46 a35ce411"), Text.bin("dfa66747 de9ae630 30ca3261 1497c827")),
-		new EncryptTC(keys_simp[3],algos_simp[3],Text.bin("6bc1bee2 2e409f96 e93d7e11 7393172a"
+		new EncryptTC(nist_keys[0],algos_simp[3],Text.bin("6bc1bee2 2e409f96 e93d7e11 7393172a"
 			+ "ae2d8a57 1e03ac9c 9eb76fac 45af8e5130c81c46 a35ce411 e5fbc119 1a0a52ef"
 			+ "f69f2445 df4f9b17 ad2b417b e66c3710"), Text.bin("51f0bebf 7e3b9d92 fc497417 79363cfe")),
+
+		//AES 192
+		new EncryptTC(nist_keys[1],algos_simp[3],EmptyMsg,Text.bin("d17ddf46 adaacde5 31cac483 de7a9367")),
+		new EncryptTC(nist_keys[1],algos_simp[3],Text.bin("6bc1bee2 2e409f96 e93d7e11 7393172a"),Text.bin("9e99a7bf 31e71090 0662f65e 617c5184")),
+		new EncryptTC(nist_keys[1],algos_simp[3],Text.bin("6bc1bee2 2e409f96 e93d7e11 7393172a ae2d8a57"
+				+ " 1e03ac9c 9eb76fac 45af8e51 30c81c46 a35ce411"), Text.bin("8a1de5be 2eb31aad 089a82e6 ee908b0e")),
+
+		//AES 256
+		new EncryptTC(nist_keys[2],algos_simp[3],EmptyMsg,Text.bin("028962f6 1b7bf89e fc6b551f 4667d983")),
+		//TDES 192
+		new EncryptTC(nist_keys[3],algos_simp[3],EmptyMsg,Text.bin("b7a688e1 22ffaf95")),
+		//TDES 128
+		new EncryptTC(nist_keys[4],algos_simp[3],EmptyMsg,Text.bin("bd2ebf9a 3ba00361")),
 	};
 
 	static void digest() throws Exception {
@@ -290,159 +308,172 @@ public class TEFSecosCrypt extends UnitTest implements TEF_Types {
 	}
 
 
-	static byte[] TEE_ATTR_DH_BASE_VALUE01 = Text.bin(
-			"1c:e0:f6:69:26:46:11:97:ef:45:c4:65:8b:83:b8:ab:\n" +
-			"04:a9:22:42:68:50:4d:05:b8:19:83:99:dd:71:37:18:\n" +
-			"cc:1f:24:5d:47:6c:cf:61:a2:f9:34:93:f4:1f:55:52:\n" +
-			"48:65:57:e6:d4:ca:a8:00:d6:d0:db:3c:bf:5a:95:4b:\n" +
-			"20:8a:4e:ba:f7:e6:49:fb:61:24:d8:a2:1e:f2:f2:2b:\n" +
-			"aa:ae:29:21:10:19:10:51:46:47:31:b6:cc:3c:93:dc:\n" +
-			"6e:80:ba:16:0b:66:64:a5:6c:fa:96:ea:f1:b2:83:39:\n" +
-			"8e:b4:61:64:e5:e9:43:84:ee:02:24:e7:1f:03:7c:23");
-	static byte[] TEE_ATTR_DH_PRIME_VALUE01 = Text.bin(
-			"e0:01:e8:96:7d:b4:93:53:e1:6f:8e:89:22:0c:ce:fc:\n" +
-			"5c:5f:12:e3:df:f8:f1:d1:49:90:12:e6:ef:53:e3:1f:\n" +
-			"02:ea:cc:5a:dd:f3:37:89:35:c9:5b:21:ea:3d:6f:1c:\n" +
-			"d7:ce:63:75:52:ec:38:6c:0e:34:f7:36:ad:95:17:ef:\n" +
-			"fe:5e:4d:a7:a8:6a:f9:0e:2c:22:8f:e4:b9:e6:d8:f8:\n" +
-			"f0:2d:20:af:78:ab:b6:92:ac:bc:4b:23:fa:f2:c5:cc:\n" +
-			"d4:9a:0c:9a:8b:cd:91:ac:0c:55:92:01:e6:c2:fd:1f:\n" +
-			"47:c2:cb:2a:88:a8:3c:21:0f:c0:54:db:29:2d:bc:45");
-	static byte[] TEE_ATTR_DH_PRIVATE_VALUE_VALUE01 = Text.bin(
-			"53:8d:3d:64:27:4a:40:05:\n" +
-			"9b:9c:26:e9:13:e6:91:53:\n" +
-			"23:7b:55:83 ");
-	static byte[] TEE_ATTR_DH_PUBLIC_VALUE_VALUE01 = Text.bin(
-			"bb:e9:18:dd:4b:2b:94:1b:10:0e:88:35:28:68:fc:62:\n" +
-			"04:38:a6:db:32:a6:9e:ee:6c:6f:45:1c:a3:a6:d5:37:\n" +
-			"77:75:5b:c1:37:0a:ce:fe:2b:8f:13:a9:14:2c:5b:44:\n" +
-			"15:78:86:30:d6:95:b1:92:20:63:a3:cf:9d:ef:65:61:\n" +
-			"27:4d:24:01:e7:a1:45:f2:d8:b9:3a:45:17:f4:19:d0:\n" +
-			"5e:f8:cb:35:59:37:9d:04:20:a3:bf:02:ad:fe:a8:60:\n" +
-			"b2:c3:ee:85:58:90:f3:b5:57:2b:b4:ef:d7:8f:37:68:\n" +
-			"78:7c:71:52:9d:5e:0a:61:4f:09:89:92:39:f7:4b:01 ");
-	static byte[] TEE_ATTR_DH_PUBLIC_VALUE_VALUE02 = Text.bin(
-			"a3:f5:7d:be:9e:2f:0a:da:a9:4e:4e:6a:f0:e0:71:47:\n" +
-			"0e:2e:41:2e:de:73:2a:62:14:c3:7c:26:d4:e9:9a:54:\n" +
-			"ba:3d:e7:49:85:95:0e:e9:14:b2:90:22:91:dc:ff:61:\n" +
-			"b2:fc:d1:d0:1b:11:14:b6:02:64:2b:26:5d:88:ea:8d:\n" +
-			"bb:e2:07:0b:48:fb:01:53:55:1e:59:51:36:f2:f9:d1:\n" +
-			"97:fb:66:12:84:5d:ed:b8:9b:2d:3e:2b:8c:eb:2a:72:\n" +
-			"40:9d:55:4c:ed:eb:55:02:ff:8c:b0:2e:03:65:3f:41:\n" +
-			"b1:ac:a3:30:6b:ff:6d:f4:6d:e6:e1:0f:86:7c:43:64");
-	static byte[] TEE_ATTR_SECRET_VALUE_1024_SHARED_SECRET_DH_VALUE01 = Text.bin(
-			"4e:6a:cf:fd:7d:14:27:65:eb:f4:c7:12:41:4f:e4:b6:\n" +
-			"ab:95:7f:4c:b4:66:b4:66:01:28:9b:b8:20:60:42:82:\n" +
-			"72:84:2e:e2:8f:11:3c:d1:1f:39:43:1c:bf:fd:82:32:\n" +
-			"54:ce:47:2e:21:05:e4:9b:3d:7f:11:3b:82:50:76:e6:\n" +
-			"26:45:85:80:7b:c4:64:54:66:5f:27:c5:e4:e1:a4:bd:\n" +
-			"03:47:04:86:32:29:81:fd:c8:94:cc:a1:e2:93:09:87:\n" +
-			"c9:2c:15:a3:8b:c4:2e:b3:88:10:e8:67:c4:43:2f:07:\n" +
-			"25:9e:c0:0c:db:bb:0f:b9:9e:17:27:c7:06:da:58:dd"
-			);
+	static class GP {
+		static byte[] TEE_ATTR_DH_BASE_VALUE01 = Text.bin(
+				"1c:e0:f6:69:26:46:11:97:ef:45:c4:65:8b:83:b8:ab:\n" +
+				"04:a9:22:42:68:50:4d:05:b8:19:83:99:dd:71:37:18:\n" +
+				"cc:1f:24:5d:47:6c:cf:61:a2:f9:34:93:f4:1f:55:52:\n" +
+				"48:65:57:e6:d4:ca:a8:00:d6:d0:db:3c:bf:5a:95:4b:\n" +
+				"20:8a:4e:ba:f7:e6:49:fb:61:24:d8:a2:1e:f2:f2:2b:\n" +
+				"aa:ae:29:21:10:19:10:51:46:47:31:b6:cc:3c:93:dc:\n" +
+				"6e:80:ba:16:0b:66:64:a5:6c:fa:96:ea:f1:b2:83:39:\n" +
+				"8e:b4:61:64:e5:e9:43:84:ee:02:24:e7:1f:03:7c:23");
+		static byte[] TEE_ATTR_DH_PRIME_VALUE01 = Text.bin(
+				"e0:01:e8:96:7d:b4:93:53:e1:6f:8e:89:22:0c:ce:fc:\n" +
+				"5c:5f:12:e3:df:f8:f1:d1:49:90:12:e6:ef:53:e3:1f:\n" +
+				"02:ea:cc:5a:dd:f3:37:89:35:c9:5b:21:ea:3d:6f:1c:\n" +
+				"d7:ce:63:75:52:ec:38:6c:0e:34:f7:36:ad:95:17:ef:\n" +
+				"fe:5e:4d:a7:a8:6a:f9:0e:2c:22:8f:e4:b9:e6:d8:f8:\n" +
+				"f0:2d:20:af:78:ab:b6:92:ac:bc:4b:23:fa:f2:c5:cc:\n" +
+				"d4:9a:0c:9a:8b:cd:91:ac:0c:55:92:01:e6:c2:fd:1f:\n" +
+				"47:c2:cb:2a:88:a8:3c:21:0f:c0:54:db:29:2d:bc:45");
+		static byte[] TEE_ATTR_DH_PRIVATE_VALUE_VALUE01 = Text.bin(
+				"53:8d:3d:64:27:4a:40:05:\n" +
+				"9b:9c:26:e9:13:e6:91:53:\n" +
+				"23:7b:55:83 ");
+		static byte[] TEE_ATTR_DH_PUBLIC_VALUE_VALUE01 = Text.bin(
+				"bb:e9:18:dd:4b:2b:94:1b:10:0e:88:35:28:68:fc:62:\n" +
+				"04:38:a6:db:32:a6:9e:ee:6c:6f:45:1c:a3:a6:d5:37:\n" +
+				"77:75:5b:c1:37:0a:ce:fe:2b:8f:13:a9:14:2c:5b:44:\n" +
+				"15:78:86:30:d6:95:b1:92:20:63:a3:cf:9d:ef:65:61:\n" +
+				"27:4d:24:01:e7:a1:45:f2:d8:b9:3a:45:17:f4:19:d0:\n" +
+				"5e:f8:cb:35:59:37:9d:04:20:a3:bf:02:ad:fe:a8:60:\n" +
+				"b2:c3:ee:85:58:90:f3:b5:57:2b:b4:ef:d7:8f:37:68:\n" +
+				"78:7c:71:52:9d:5e:0a:61:4f:09:89:92:39:f7:4b:01 ");
+		static byte[] TEE_ATTR_DH_PUBLIC_VALUE_VALUE02 = Text.bin(
+				"a3:f5:7d:be:9e:2f:0a:da:a9:4e:4e:6a:f0:e0:71:47:\n" +
+				"0e:2e:41:2e:de:73:2a:62:14:c3:7c:26:d4:e9:9a:54:\n" +
+				"ba:3d:e7:49:85:95:0e:e9:14:b2:90:22:91:dc:ff:61:\n" +
+				"b2:fc:d1:d0:1b:11:14:b6:02:64:2b:26:5d:88:ea:8d:\n" +
+				"bb:e2:07:0b:48:fb:01:53:55:1e:59:51:36:f2:f9:d1:\n" +
+				"97:fb:66:12:84:5d:ed:b8:9b:2d:3e:2b:8c:eb:2a:72:\n" +
+				"40:9d:55:4c:ed:eb:55:02:ff:8c:b0:2e:03:65:3f:41:\n" +
+				"b1:ac:a3:30:6b:ff:6d:f4:6d:e6:e1:0f:86:7c:43:64");
+		static byte[] TEE_ATTR_SECRET_VALUE_1024_SHARED_SECRET_DH_VALUE01 = Text.bin(
+				"4e:6a:cf:fd:7d:14:27:65:eb:f4:c7:12:41:4f:e4:b6:\n" +
+				"ab:95:7f:4c:b4:66:b4:66:01:28:9b:b8:20:60:42:82:\n" +
+				"72:84:2e:e2:8f:11:3c:d1:1f:39:43:1c:bf:fd:82:32:\n" +
+				"54:ce:47:2e:21:05:e4:9b:3d:7f:11:3b:82:50:76:e6:\n" +
+				"26:45:85:80:7b:c4:64:54:66:5f:27:c5:e4:e1:a4:bd:\n" +
+				"03:47:04:86:32:29:81:fd:c8:94:cc:a1:e2:93:09:87:\n" +
+				"c9:2c:15:a3:8b:c4:2e:b3:88:10:e8:67:c4:43:2f:07:\n" +
+				"25:9e:c0:0c:db:bb:0f:b9:9e:17:27:c7:06:da:58:dd"
+				);
 
-	static byte[] TEE_ATTR_RSA_MODULUS_VALUE01 = Text.bin(
-			"f0:1a:95:cd:5f:9f:1c:bc:5c:2e:c8:00:3b:fa:\n" +
-			"e0:d5:72:ea:fc:9e:74:e1:02:66:a8:13:3f:0c:e6:\n" +
-			"24:cb:1c:a5:df:64:fb:06:d7:13:ce:aa:6c:ee:16:\n" +
-			"7b:f8:92:af:c4:5b:46:18:c6:30:b6:04:1c:3a:2e:\n" +
-			"d7:ca:b8:b5:00:78:89:a0:69:37:84:59:99:0c:2f:\n" +
-			"00:e5:3b:e1:18:e0:b9:2e:77:1d:32:7e:5f:f4:18:\n" +
-			"f3:9f:58:c6:83:e2:7a:cb:89:18:c2:09:84:7e:9d:\n" +
-			"96:e0:b9:49:75:ef:cf:ff:f0:b6:18:d3:7a:c1:6f:\n" +
-			"0c:55:33:be:9d:63:06:d6:9f:c1:a5:e9:bd:b1:b2:\n" +
-			"5d:5c:f9:ab:a9:b5:6a:4e:a4:fa:44:32:d6:71:2e:\n" +
-			"5f:a6:25:f8:40:24:c4:5b:61:55:1b:ac:a3:0a:11:\n" +
-			"8e:65:20:da:2c:0d:df:db:47:6b:61:18:4d:fe:fd:\n" +
-			"2a:7e:77:40:44:43:c6:33:6c:e5:1b:8d:80:f9:97:\n" +
-			"a2:e4:b9:34:3e:28:94:9f:bd:a8:2b:0a:4d:1a:a8:\n" +
-			"06:e5:99:4e:b9:13:45:c8:f6:0f:d0:4d:bf:e7:8f:\n" +
-			"ed:ca:8e:f8:8d:87:5f:d4:b4:1a:2c:c9:a7:67:7e:\n" +
-			"b2:1b:c1:ce:b6:83:7c:ce:b4:3d:85:c7:53:30:7c:\n" +
-			"fe:85");
-	static byte[] TEE_ATTR_RSA_PUBLIC_EXPONENT_VALUE01 = Text.bin("010001");
-	static byte[] TEE_ATTR_RSA_PRIVATE_EXPONENT_VALUE01 = Text.bin(
-			"a5:0d:e1:84:f9:02:ec:42:20:2c:98:98:70:a3:\n" +
-			"1a:04:21:a7:a0:59:5d:87:80:9b:09:57:91:b4:50:\n" +
-			"51:62:bf:22:d7:db:17:25:b0:9c:91:29:5f:10:9c:\n" +
-			"ac:44:48:b2:43:8d:6b:36:84:a7:df:b8:1b:9f:73:\n" +
-			"ac:2c:53:a5:39:d9:a2:e2:7e:f2:07:2d:80:a4:7b:\n" +
-			"7b:66:1a:2f:b7:66:64:66:a8:c3:8d:7e:8a:7f:c6:\n" +
-			"d7:52:e7:38:30:59:74:88:8e:8a:52:79:30:77:c9:\n" +
-			"e5:7a:3e:65:5d:89:a9:b7:0b:c6:62:72:9e:a4:72:\n" +
-			"ae:4b:b3:f2:89:47:15:e0:5b:45:4d:99:5b:13:6c:\n" +
-			"90:be:e5:b5:98:ad:87:99:1a:57:d4:1f:f1:52:71:\n" +
-			"5b:51:40:dc:51:35:f6:6c:ae:a3:f9:0f:3a:ed:28:\n" +
-			"fc:a5:60:2f:4b:4f:31:ac:48:3e:5b:ba:e4:2b:58:\n" +
-			"79:e6:b4:6b:5e:56:0a:b2:db:68:ed:24:d8:5e:6f:\n" +
-			"30:59:8d:8c:a3:00:68:f5:42:95:1a:0b:a8:1c:fb:\n" +
-			"df:29:81:10:32:02:cc:51:a4:17:14:3e:ef:89:41:\n" +
-			"de:f8:2d:64:69:30:e8:8a:ad:96:f6:f4:82:83:9a:\n" +
-			"77:e7:de:12:31:f7:15:ec:ce:ed:83:68:88:84:e5:\n" +
-			"64:81");
+		static byte[] TEE_ATTR_RSA_MODULUS_VALUE01 = Text.bin(
+				"f0:1a:95:cd:5f:9f:1c:bc:5c:2e:c8:00:3b:fa:\n" +
+				"e0:d5:72:ea:fc:9e:74:e1:02:66:a8:13:3f:0c:e6:\n" +
+				"24:cb:1c:a5:df:64:fb:06:d7:13:ce:aa:6c:ee:16:\n" +
+				"7b:f8:92:af:c4:5b:46:18:c6:30:b6:04:1c:3a:2e:\n" +
+				"d7:ca:b8:b5:00:78:89:a0:69:37:84:59:99:0c:2f:\n" +
+				"00:e5:3b:e1:18:e0:b9:2e:77:1d:32:7e:5f:f4:18:\n" +
+				"f3:9f:58:c6:83:e2:7a:cb:89:18:c2:09:84:7e:9d:\n" +
+				"96:e0:b9:49:75:ef:cf:ff:f0:b6:18:d3:7a:c1:6f:\n" +
+				"0c:55:33:be:9d:63:06:d6:9f:c1:a5:e9:bd:b1:b2:\n" +
+				"5d:5c:f9:ab:a9:b5:6a:4e:a4:fa:44:32:d6:71:2e:\n" +
+				"5f:a6:25:f8:40:24:c4:5b:61:55:1b:ac:a3:0a:11:\n" +
+				"8e:65:20:da:2c:0d:df:db:47:6b:61:18:4d:fe:fd:\n" +
+				"2a:7e:77:40:44:43:c6:33:6c:e5:1b:8d:80:f9:97:\n" +
+				"a2:e4:b9:34:3e:28:94:9f:bd:a8:2b:0a:4d:1a:a8:\n" +
+				"06:e5:99:4e:b9:13:45:c8:f6:0f:d0:4d:bf:e7:8f:\n" +
+				"ed:ca:8e:f8:8d:87:5f:d4:b4:1a:2c:c9:a7:67:7e:\n" +
+				"b2:1b:c1:ce:b6:83:7c:ce:b4:3d:85:c7:53:30:7c:\n" +
+				"fe:85");
+		static byte[] TEE_ATTR_RSA_PUBLIC_EXPONENT_VALUE01 = Text.bin("010001");
+		static byte[] TEE_ATTR_RSA_PRIVATE_EXPONENT_VALUE01 = Text.bin(
+				"a5:0d:e1:84:f9:02:ec:42:20:2c:98:98:70:a3:\n" +
+				"1a:04:21:a7:a0:59:5d:87:80:9b:09:57:91:b4:50:\n" +
+				"51:62:bf:22:d7:db:17:25:b0:9c:91:29:5f:10:9c:\n" +
+				"ac:44:48:b2:43:8d:6b:36:84:a7:df:b8:1b:9f:73:\n" +
+				"ac:2c:53:a5:39:d9:a2:e2:7e:f2:07:2d:80:a4:7b:\n" +
+				"7b:66:1a:2f:b7:66:64:66:a8:c3:8d:7e:8a:7f:c6:\n" +
+				"d7:52:e7:38:30:59:74:88:8e:8a:52:79:30:77:c9:\n" +
+				"e5:7a:3e:65:5d:89:a9:b7:0b:c6:62:72:9e:a4:72:\n" +
+				"ae:4b:b3:f2:89:47:15:e0:5b:45:4d:99:5b:13:6c:\n" +
+				"90:be:e5:b5:98:ad:87:99:1a:57:d4:1f:f1:52:71:\n" +
+				"5b:51:40:dc:51:35:f6:6c:ae:a3:f9:0f:3a:ed:28:\n" +
+				"fc:a5:60:2f:4b:4f:31:ac:48:3e:5b:ba:e4:2b:58:\n" +
+				"79:e6:b4:6b:5e:56:0a:b2:db:68:ed:24:d8:5e:6f:\n" +
+				"30:59:8d:8c:a3:00:68:f5:42:95:1a:0b:a8:1c:fb:\n" +
+				"df:29:81:10:32:02:cc:51:a4:17:14:3e:ef:89:41:\n" +
+				"de:f8:2d:64:69:30:e8:8a:ad:96:f6:f4:82:83:9a:\n" +
+				"77:e7:de:12:31:f7:15:ec:ce:ed:83:68:88:84:e5:\n" +
+				"64:81");
 
-	static byte[] TEE_ATTR_DES_64_VALUE01 = Text.bin("cd:fe:57:b6:b6:2f:ae:6b");
-	static byte[] TEE_ATTR_DES3_192_VALUE01 = Text.bin("cd:fe:57:b6:b6:2f:ae:6b:" +
-			"04:73:40:f1:02:d6:a4:8c:89:5d:ad:f2:9d:62:ef:25");
-	static byte[] TEE_ATTR_AES_128_VALUE01 =  Text.bin("60:3d:eb:10:15:ca:71:be:2b:73:ae:f0:85:7d:77:81");
-	static byte[] TEE_ATTR_AES_256_VALUE01 =  Text.bin("60:3d:eb:10:15:ca:71:be:2b:73:ae:f0:85:7d:77:81:"+
-			"1f:35:2c:07:3b:61:08:d7:2d:98:10:a3:09:14:df:f4");
+		static byte[] TEE_ATTR_DES_64_VALUE01 = Text.bin("cd:fe:57:b6:b6:2f:ae:6b");
+		static byte[] TEE_ATTR_DES3_192_VALUE01 = Text.bin("cd:fe:57:b6:b6:2f:ae:6b:" +
+				"04:73:40:f1:02:d6:a4:8c:89:5d:ad:f2:9d:62:ef:25");
+		static byte[] TEE_ATTR_AES_128_VALUE01 =  Text.bin("60:3d:eb:10:15:ca:71:be:2b:73:ae:f0:85:7d:77:81");
+		static byte[] TEE_ATTR_AES_256_VALUE01 =  Text.bin("60:3d:eb:10:15:ca:71:be:2b:73:ae:f0:85:7d:77:81:"+
+				"1f:35:2c:07:3b:61:08:d7:2d:98:10:a3:09:14:df:f4");
 
-	static byte[] NONCE1_VALUE_AES_GCM = Text.bin("00:8d:49:3b:30:ae:8b:3c:96:96:76:6c:fa"); //len=13
-	static byte[] NONCE2_VALUE_AES_GCM = Text.bin("ca:fe:ba:be:fa:ce:db:ad:de:ca:f8:88"); //len=12
-	static byte[] AAD1_VALUE = Text.bin("00:01:02:03:04:05:06:07");
+		static byte[] NONCE1_VALUE_AES_GCM = Text.bin("00:8d:49:3b:30:ae:8b:3c:96:96:76:6c:fa"); //len=13
+		static byte[] NONCE2_VALUE_AES_GCM = Text.bin("ca:fe:ba:be:fa:ce:db:ad:de:ca:f8:88"); //len=12
+		static byte[] AAD1_VALUE = Text.bin("00:01:02:03:04:05:06:07");
 
-	static byte[] TEE_ATTR_DSA_PRIME_768_VALUE01 = Text.bin("f6ad2071e15a4b9c2b7e5326da439dc1474c1ad16f2f85e92cea89fcdc746611cf30ddc85e33f583c19d10bc1ac3932226246fa7b9e0dd2577b5f427594c39faebfc598a32e174cb8a680357f862f20b6e8432a530652f1c2139ae1faf768b83");
-	static byte[] TEE_ATTR_DSA_SUBPRIME_160_VALUE01 = Text.bin("8744e4ddc6d019a5eac2b15a15d7e1c7f66335f7");
-	static byte[] TEE_ATTR_DSA_BASE_768_VALUE01  = Text.bin("9a0932b38cb2105b9300dcb866c066d9cec643192fcb2834a1239dba28bd09fe01001e0451f9d6351f6e564afbc8f8c39b1059863ebd0985090bd55c828e9fc157ac7da3cfc2892a0ed9b932390582f2971e4a0c483e0622d73166bf62a59f26");
-	static byte[] TEE_ATTR_DSA_PRIVATE_VALUE_160_VALUE01 = Text.bin("704a46c6252a95a39b40e0435a691badae52a5c0");
-	static byte[] TEE_ATTR_DSA_PUBLIC_VALUE_768_VALUE01 = Text.bin("529ded98a2320985fc84b65a9dc8d4fe41ada6e3593d704f0898c14ec24634ddf5f1db47cc4915fce1e2674d2ecd98d58b598e8ddfaff30e8826f50aab4027b5aab887c19ad96d7e57de5390ad8e5557b41a8019c90d80607179b54eb0ad4d23");
+		static byte[] IV1_VALUE_64bits_DES_DES3 = Text.bin("12:34:56:78:90:ab:cd:ef");
+		static byte[] IV2_VALUE_128bits_AES = Text.bin("12:34:56:78:90:ab:cd:ef:12:34:56:78:90:ab:cd:ef");
 
-	static byte[] DATA_FOR_CRYPTO1 = Text.bin("00:01:02:03:04:05:06:07:08:09:0a:0b:0c:0d:0e:0f:\n" +
-			"0a:0b:0c:0d:0e:0f:00:01:02:03:04:05:06:07:08:09:\n" +
-			"0f:0e:0d:0c:0b:0a:09:08:07:06:05:04:03:02:01:00:\n" +
-			"00:01:02:03:04:05:06:07:08:09:0a:0b:0c:0d:0e:0f:\n" +
-			"0a:0b:0c:0d:0e:0f:00:01:02:03:04:05:06:07:08:09:\n" +
-			"0f:0e:0d:0c:0b:0a:09:08:07:06:05:04:03:02:01:00");
-	static byte[] DATA_FOR_CRYPTO1_PART1 = Arrays.copyOfRange(DATA_FOR_CRYPTO1, 0, 32);
-	static byte[] DATA_FOR_CRYPTO1_PART2 = Arrays.copyOfRange(DATA_FOR_CRYPTO1, 32, 64);
-	static byte[] DATA_FOR_CRYPTO1_PART3 = Arrays.copyOfRange(DATA_FOR_CRYPTO1, 64, 96);
+		static byte[] TEE_ATTR_DSA_PRIME_768_VALUE01 = Text.bin("f6ad2071e15a4b9c2b7e5326da439dc1474c1ad16f2f85e92cea89fcdc746611cf30ddc85e33f583c19d10bc1ac3932226246fa7b9e0dd2577b5f427594c39faebfc598a32e174cb8a680357f862f20b6e8432a530652f1c2139ae1faf768b83");
+		static byte[] TEE_ATTR_DSA_SUBPRIME_160_VALUE01 = Text.bin("8744e4ddc6d019a5eac2b15a15d7e1c7f66335f7");
+		static byte[] TEE_ATTR_DSA_BASE_768_VALUE01  = Text.bin("9a0932b38cb2105b9300dcb866c066d9cec643192fcb2834a1239dba28bd09fe01001e0451f9d6351f6e564afbc8f8c39b1059863ebd0985090bd55c828e9fc157ac7da3cfc2892a0ed9b932390582f2971e4a0c483e0622d73166bf62a59f26");
+		static byte[] TEE_ATTR_DSA_PRIVATE_VALUE_160_VALUE01 = Text.bin("704a46c6252a95a39b40e0435a691badae52a5c0");
+		static byte[] TEE_ATTR_DSA_PUBLIC_VALUE_768_VALUE01 = Text.bin("529ded98a2320985fc84b65a9dc8d4fe41ada6e3593d704f0898c14ec24634ddf5f1db47cc4915fce1e2674d2ecd98d58b598e8ddfaff30e8826f50aab4027b5aab887c19ad96d7e57de5390ad8e5557b41a8019c90d80607179b54eb0ad4d23");
 
-	static EncryptKey[] gpapi_keys = {
-		new EncryptKey(tef_key_type_e.TEF_AES, TEE_ATTR_AES_128_VALUE01),
-		new EncryptKey(tef_key_type_e.TEF_AES, TEE_ATTR_AES_256_VALUE01),
-		new EncryptKey(tef_key_type_e.TEF_DES, TEE_ATTR_DES_64_VALUE01),
-		new EncryptKey(tef_key_type_e.TEF_DES, TEE_ATTR_DES3_192_VALUE01),
-	};
-	static TEF.tef_algorithm[] gpapi_algos = {
-		new TEF.tef_algorithm(tef_chaining_mode_e.TEF_GCM, tef_padding_mode_e.TEF_PADDING_NONE)
-			.set(tef_algorithm_param_e.TEF_IV, NONCE2_VALUE_AES_GCM)
-			.set(tef_algorithm_param_e.TEF_AAD, AAD1_VALUE)
-			.set(tef_algorithm_param_e.TEF_TAGLEN, 104),
-		new TEF.tef_algorithm(tef_chaining_mode_e.TEF_CBC, tef_padding_mode_e.TEF_PADDING_NONE),
-		new TEF.tef_algorithm(tef_chaining_mode_e.TEF_CBC, tef_padding_mode_e.TEF_PADDING_PKCS5),
-	};
+		static byte[] DATA_FOR_CRYPTO1 = Text.bin("00:01:02:03:04:05:06:07:08:09:0a:0b:0c:0d:0e:0f:\n" +
+				"0a:0b:0c:0d:0e:0f:00:01:02:03:04:05:06:07:08:09:\n" +
+				"0f:0e:0d:0c:0b:0a:09:08:07:06:05:04:03:02:01:00:\n" +
+				"00:01:02:03:04:05:06:07:08:09:0a:0b:0c:0d:0e:0f:\n" +
+				"0a:0b:0c:0d:0e:0f:00:01:02:03:04:05:06:07:08:09:\n" +
+				"0f:0e:0d:0c:0b:0a:09:08:07:06:05:04:03:02:01:00");
+		static byte[] DATA_FOR_CRYPTO1_PART1 = Arrays.copyOfRange(DATA_FOR_CRYPTO1, 0, 32);
+		static byte[] DATA_FOR_CRYPTO1_PART2 = Arrays.copyOfRange(DATA_FOR_CRYPTO1, 32, 64);
+		static byte[] DATA_FOR_CRYPTO1_PART3 = Arrays.copyOfRange(DATA_FOR_CRYPTO1, 64, 96);
+
+		static EncryptKey key_AES256 = new EncryptKey(tef_key_type_e.TEF_AES, TEE_ATTR_AES_256_VALUE01);
+		static EncryptKey key_AES192 = new EncryptKey(tef_key_type_e.TEF_DES, TEE_ATTR_DES3_192_VALUE01);
+		static EncryptKey key_AES128 = new EncryptKey(tef_key_type_e.TEF_AES, TEE_ATTR_AES_128_VALUE01);
+		static EncryptKey key_DES64 = new EncryptKey(tef_key_type_e.TEF_DES, TEE_ATTR_DES_64_VALUE01);
+		//static EncryptKey key_DES128 = new EncryptKey(tef_key_type_e.TEF_DES, TEE_ATTR_DES3_128_VALUE01);
+		static EncryptKey key_DES192 = new EncryptKey(tef_key_type_e.TEF_DES, TEE_ATTR_DES3_192_VALUE01);
+
+		static TEF.tef_algorithm alg_AES_GCM = new TEF.tef_algorithm(tef_chaining_mode_e.TEF_GCM, tef_padding_mode_e.TEF_PADDING_NONE)
+											.set(tef_algorithm_param_e.TEF_IV, NONCE2_VALUE_AES_GCM)
+											.set(tef_algorithm_param_e.TEF_AAD, AAD1_VALUE)
+											.set(tef_algorithm_param_e.TEF_TAGLEN, 104);
+		static TEF.tef_algorithm alg_ECB = new TEF.tef_algorithm(tef_chaining_mode_e.TEF_ECB, tef_padding_mode_e.TEF_PADDING_NONE);
+		static TEF.tef_algorithm alg_CBC_IV1 = new TEF.tef_algorithm(tef_chaining_mode_e.TEF_CBC, tef_padding_mode_e.TEF_PADDING_NONE)
+											.set(tef_algorithm_param_e.TEF_IV, IV1_VALUE_64bits_DES_DES3);
+		static TEF.tef_algorithm alg_CBC_IV2 = new TEF.tef_algorithm(tef_chaining_mode_e.TEF_CBC, tef_padding_mode_e.TEF_PADDING_NONE)
+											.set(tef_algorithm_param_e.TEF_IV, IV2_VALUE_128bits_AES);
+
+		static TEF.tef_algorithm alg_CBC = new TEF.tef_algorithm(tef_chaining_mode_e.TEF_CBC, tef_padding_mode_e.TEF_PADDING_NONE);
+		static TEF.tef_algorithm alg_CBC_PKCS5 = new TEF.tef_algorithm(tef_chaining_mode_e.TEF_CBC, tef_padding_mode_e.TEF_PADDING_PKCS5);
+	}
 
 	static DigestTC gpapi_digestTC[] = {
-		new DigestTC(tef_digest_e.TEF_MD5,DATA_FOR_CRYPTO1,null),
-		new DigestTC(tef_digest_e.TEF_SHA1,DATA_FOR_CRYPTO1,null),
-		new DigestTC(tef_digest_e.TEF_SHA224,DATA_FOR_CRYPTO1,null),
-		new DigestTC(tef_digest_e.TEF_SHA256,DATA_FOR_CRYPTO1,null),
-		new DigestTC(tef_digest_e.TEF_SHA384,DATA_FOR_CRYPTO1,null),
-		new DigestTC(tef_digest_e.TEF_SHA512,DATA_FOR_CRYPTO1,null),
+		new DigestTC(tef_digest_e.TEF_MD5,GP.DATA_FOR_CRYPTO1,null),
+		new DigestTC(tef_digest_e.TEF_SHA1,GP.DATA_FOR_CRYPTO1,null),
+		new DigestTC(tef_digest_e.TEF_SHA224,GP.DATA_FOR_CRYPTO1,null),
+		new DigestTC(tef_digest_e.TEF_SHA256,GP.DATA_FOR_CRYPTO1,null),
+		new DigestTC(tef_digest_e.TEF_SHA384,GP.DATA_FOR_CRYPTO1,null),
+		new DigestTC(tef_digest_e.TEF_SHA512,GP.DATA_FOR_CRYPTO1,null),
 	};
 	static EncryptTC gpapi_encryptTC[] = {
-		new EncryptTC(gpapi_keys[1],gpapi_algos[0],DATA_FOR_CRYPTO1,Text.bin("A726EA73EB43D77C9E977070")),
+		new EncryptTC(GP.key_DES192,GP.alg_ECB,GP.DATA_FOR_CRYPTO1,null),//DES3,ECB
+		new EncryptTC(GP.key_DES192,GP.alg_CBC_IV2,GP.DATA_FOR_CRYPTO1,null),//DES3,CBC,IV2
+		new EncryptTC(GP.key_DES64,GP.alg_ECB,GP.DATA_FOR_CRYPTO1,null),//DES,ECB
+		new EncryptTC(GP.key_DES64,GP.alg_CBC_IV1,GP.DATA_FOR_CRYPTO1,null),//DES,CBC,IV1
 	};
 	static EncryptTC gpapi_macTC[] = {
-		new EncryptTC(gpapi_keys[0],gpapi_algos[1],DATA_FOR_CRYPTO1,null),
-		new EncryptTC(gpapi_keys[0],gpapi_algos[2],DATA_FOR_CRYPTO1,null),
-		new EncryptTC(gpapi_keys[1],gpapi_algos[1],DATA_FOR_CRYPTO1,null),
-		new EncryptTC(gpapi_keys[1],gpapi_algos[2],DATA_FOR_CRYPTO1,null),
-		new EncryptTC(gpapi_keys[2],gpapi_algos[1],DATA_FOR_CRYPTO1,Text.bin("301B757D738D498D")),
-		new EncryptTC(gpapi_keys[2],gpapi_algos[2],DATA_FOR_CRYPTO1,Text.bin("415CF662D4B5B5B5")),
-		new EncryptTC(gpapi_keys[3],gpapi_algos[1],DATA_FOR_CRYPTO1,null),
-		new EncryptTC(gpapi_keys[3],gpapi_algos[2],DATA_FOR_CRYPTO1,null),
+		new EncryptTC(GP.key_AES256,GP.alg_CBC,GP.DATA_FOR_CRYPTO1,Text.bin("2B10E34C1090FCA4D41FB65D73BD1251")),//AES256,NoPAdding
+		new EncryptTC(GP.key_AES256,GP.alg_CBC_PKCS5,GP.DATA_FOR_CRYPTO1,Text.bin("1871FD46A975370EFBA956A409428972")),//AES256,PKCS5
+		new EncryptTC(GP.key_AES128,GP.alg_CBC,GP.DATA_FOR_CRYPTO1,Text.bin("A549438FB8E7288879F0CB547368250F")),//AES128,NoPAdding
+		new EncryptTC(GP.key_AES128,GP.alg_CBC_PKCS5,GP.DATA_FOR_CRYPTO1,Text.bin("7F604811FC65F95353939C7C8AD088CA")),//AES128,PKCS5
+		new EncryptTC(GP.key_DES192,GP.alg_CBC,GP.DATA_FOR_CRYPTO1,Text.bin("47C55394872C9590")), //DES3,NoPadding
+		new EncryptTC(GP.key_DES192,GP.alg_CBC_PKCS5,GP.DATA_FOR_CRYPTO1,Text.bin("60FA6706F98CDFB5")), //DES3,PKCS5
+		new EncryptTC(GP.key_DES64,GP.alg_CBC,GP.DATA_FOR_CRYPTO1,Text.bin("896776ABB29C7A61")), //DES,NoPadding
+		new EncryptTC(GP.key_DES64,GP.alg_CBC_PKCS5,GP.DATA_FOR_CRYPTO1,Text.bin("EFF100951D266923")), //DES,PKCS5
 	};
 
 	static void gp_digest() throws Exception {
@@ -482,14 +513,14 @@ public class TEFSecosCrypt extends UnitTest implements TEF_Types {
 		for (EncryptTC tc : gpapi_macTC) {
 			tef_cipher_token keyid = t.tef_key_import_raw(tc.key.kt, tc.key.key, tc.key.key.length);
 			mac.init(keyid.getKey());
-			edata = mac.doFinal(DATA_FOR_CRYPTO1);
+			edata = mac.doFinal(GP.DATA_FOR_CRYPTO1);
 			int r = edata.length;
 			Log.debug("r[%d]=%s", r, Text.hex(edata, 0, r));
 		}
 
 		//mac.update(DATA_FOR_CRYPTO1);
 		//mac.doFinal(edata,  0);
-		edata = mac.doFinal(DATA_FOR_CRYPTO1);
+		edata = mac.doFinal(GP.DATA_FOR_CRYPTO1);
 		int r = edata.length;
 		Log.debug("r[%d]=%s", r, Text.hex(edata, 0, r));
 	}
@@ -513,14 +544,16 @@ public class TEFSecosCrypt extends UnitTest implements TEF_Types {
 
 	static void gp_cmac() throws Exception {
 		TEF t = new TEF();
-		byte[] edata = new byte[1000];
+		byte[] edata = new byte[100];
+		byte[] data = new byte[100];
 
 		Log.debug("*** gp_cmac ***");
 		for (EncryptTC tc : gpapi_macTC) {
 			tef_cipher_token keyid = t.tef_key_import_raw(tc.key.kt, tc.key.key, tc.key.key.length);
 			Log.debug("%s/%s: data[%d]=%s", tc.key.kt, tc.algo, tc.datain.length, Text.hex(tc.datain, 0, tc.datain.length));
 			int r=t.tef_cmac_calc(keyid, tc.algo, tc.datain, tc.datain.length, edata);
-			Log.debug("r[%d]=%s", r, Text.hex(edata, 0, r));
+			Log.debug("MAC[%d] = %s", r, Text.hex(edata, 0, r));
+			r = t.tef_decrypt(keyid, new tef_algorithm(tef_chaining_mode_e.TEF_ECB, tef_padding_mode_e.TEF_PADDING_NONE), edata, r, data);
 
 			if (tc.dataout != null) {
 				check(edata,tc.dataout,tc.dataout.length);
@@ -531,15 +564,15 @@ public class TEFSecosCrypt extends UnitTest implements TEF_Types {
 	static void gp_dsa() throws Exception {
 		//byte[] hash = Text.bin("C1A0104D625B8E378A96130514AA1BEAA7BE2E04");
 		DSA dsa = new DSA(
-				new BigInteger(1, TEE_ATTR_DSA_PRIME_768_VALUE01),
-				new BigInteger(1, TEE_ATTR_DSA_SUBPRIME_160_VALUE01),
-				new BigInteger(1, TEE_ATTR_DSA_BASE_768_VALUE01),
-				new BigInteger(1, TEE_ATTR_DSA_PRIVATE_VALUE_160_VALUE01),
-				new BigInteger(1, TEE_ATTR_DSA_PUBLIC_VALUE_768_VALUE01)
+				new BigInteger(1, GP.TEE_ATTR_DSA_PRIME_768_VALUE01),
+				new BigInteger(1, GP.TEE_ATTR_DSA_SUBPRIME_160_VALUE01),
+				new BigInteger(1, GP.TEE_ATTR_DSA_BASE_768_VALUE01),
+				new BigInteger(1, GP.TEE_ATTR_DSA_PRIVATE_VALUE_160_VALUE01),
+				new BigInteger(1, GP.TEE_ATTR_DSA_PUBLIC_VALUE_768_VALUE01)
 				);
 
 		MessageDigest md = MessageDigest.getInstance("SHA1");
-		byte[] hash = md.digest(DATA_FOR_CRYPTO1);
+		byte[] hash = md.digest(GP.DATA_FOR_CRYPTO1);
 		Log.info("bits(hash) = %d", hash.length*8);
 		byte[] sign = dsa.signDigest(hash);
 		//byte[] sign = Text.bin("39260379165BAF89BE9C53CEDBEC97EDFA111119712B524423552903EEAF668149A7FA184F79F7D9");
@@ -569,10 +602,10 @@ public class TEFSecosCrypt extends UnitTest implements TEF_Types {
 		dsa.verifyDigest(sign, hash);
 	}
 	static void gp_dh() throws Exception {
-		BigInteger prime = new BigInteger(1, TEE_ATTR_DH_PRIME_VALUE01);  // p (prime number)
-		BigInteger base = new BigInteger(1, TEE_ATTR_DH_BASE_VALUE01);    // g (generator)
-		BigInteger priv = new BigInteger(1, TEE_ATTR_DH_PRIVATE_VALUE_VALUE01);//xA (private exponent of user A)
-		BigInteger pub = new BigInteger(1, TEE_ATTR_DH_PUBLIC_VALUE_VALUE02);  //yB (public exponent of user B)
+		BigInteger prime = new BigInteger(1, GP.TEE_ATTR_DH_PRIME_VALUE01);  // p (prime number)
+		BigInteger base = new BigInteger(1, GP.TEE_ATTR_DH_BASE_VALUE01);    // g (generator)
+		BigInteger priv = new BigInteger(1, GP.TEE_ATTR_DH_PRIVATE_VALUE_VALUE01);//xA (private exponent of user A)
+		BigInteger pub = new BigInteger(1, GP.TEE_ATTR_DH_PUBLIC_VALUE_VALUE02);  //yB (public exponent of user B)
 
 		Log.info("Prime = %s", prime.toString(16));
 		Log.info("Base = %s", base.toString(16));
@@ -618,17 +651,17 @@ public class TEFSecosCrypt extends UnitTest implements TEF_Types {
 				+ " 6c7c9a9a bef453ca 6a9f5eac b4548dbc");
 
 		RSA rsa = new RSA(
-				new BigInteger(1, TEE_ATTR_RSA_PUBLIC_EXPONENT_VALUE01),
-				new BigInteger(1, TEE_ATTR_RSA_PRIVATE_EXPONENT_VALUE01),
-				new BigInteger(1, TEE_ATTR_RSA_MODULUS_VALUE01),
+				new BigInteger(1, GP.TEE_ATTR_RSA_PUBLIC_EXPONENT_VALUE01),
+				new BigInteger(1, GP.TEE_ATTR_RSA_PRIVATE_EXPONENT_VALUE01),
+				new BigInteger(1, GP.TEE_ATTR_RSA_MODULUS_VALUE01),
 				false
 				);
 
 		byte[] sign;
 
 		MessageDigest md = MessageDigest.getInstance("SHA1");
-		byte[] hash = md.digest(DATA_FOR_CRYPTO1);
-		int nBits = TEE_ATTR_RSA_MODULUS_VALUE01.length*8;
+		byte[] hash = md.digest(GP.DATA_FOR_CRYPTO1);
+		int nBits = GP.TEE_ATTR_RSA_MODULUS_VALUE01.length*8;
 
 		byte[] padEMSA_PSS = RSA.padEMSA_PSS(hash, nBits-1, md);
 		Log.info("padEMSA_PSS[%d] = %s", padEMSA_PSS.length, Text.hex(padEMSA_PSS));
@@ -652,12 +685,13 @@ public class TEFSecosCrypt extends UnitTest implements TEF_Types {
 		//Log.info("");
 		//try { gp_digest(); } catch (Exception e) { Log.error(e); }
 		//try { gp_encrypt(); } catch (Exception e) { Log.error(e); }
-		try { gp_mac(); } catch (Exception e) { Log.error(e); }
+		//try { gp_mac(); } catch (Exception e) { Log.error(e); }
 		try { gp_cmac(); } catch (Exception e) { Log.error(e); }
 		//try { java_mac(); } catch (Exception e) { Log.error(e); }
 		//try { gp_dsa(); } catch (Exception e) { Log.error(e); }
 		//try { gp_dh(); } catch (Exception e) { Log.error(e); }
 		//try { mgf_test(); } catch (Exception e) { Log.error(e); }
 		//try { rsa_sign(); } catch (Exception e) { Log.error(e); }
+
 	}
 }

@@ -89,13 +89,9 @@ public class TEF implements TEF_Types {
 		return r;
 	}
 
-	int tef_decrypt(tef_cipher_token keyid, tef_algorithm algorithm,
+	public int tef_decrypt(tef_cipher_token keyid, tef_algorithm algorithm,
 			byte[] edata, int edataLen, byte[] data) throws GeneralSecurityException {
 		javax.crypto.Cipher cipher = createCipher(keyid, algorithm);
-
-		if (algorithm.params.containsKey(tef_algorithm_param_e.TEF_AAD)) {
-			cipher.updateAAD((byte[])algorithm.params.get(tef_algorithm_param_e.TEF_AAD));
-		}
 
 		return cipher.doFinal(edata, 0, edataLen, data);
 	}
@@ -110,7 +106,19 @@ public class TEF implements TEF_Types {
 	}
 
 	/*
-	 * CBC-MAC https://en.wikipedia.org/wiki/ISO/IEC_9797-1
+	 * Raw CBC-MAC
+	 * https://en.wikipedia.org/wiki/ISO/IEC_9797-1
+	 * http://www.crypto-it.net/eng/theory/mac.html
+	 *
+	 * TEE_MACInit(operaion *op, *iv, ivlen);
+	 *    MacInitW(op->wrapper_operation, &key)
+	 *       inf->MacInit(operation, key);
+	 *          CeCcImpl::MacInit(operation, key);
+	 *             CryptoCoreContainer instance;
+	 *             instance->MAC_init(instance, key->secret.value.buffer, key->secret.value.size);
+	 *
+	 *             crt->MAC_init = SDRM_CMAC_init;
+	 *             crt->MAC_init = SDRM_HMAC_init;
 	 */
 	public int tef_mac_calc(tef_cipher_token keyid, tef_algorithm algorithm,
 			byte[] data, int dataLen, byte[] mac) throws GeneralSecurityException {
@@ -133,6 +141,10 @@ public class TEF implements TEF_Types {
 	/*
 	 * CMAC rfc4493
 	 * https://tools.ietf.org/html/rfc4493#ref-NIST-CMAC
+	 *
+	 * SDRM_rijndaelKeySetupEnc(RoundKey, UserKey, 256);
+	 * SDRM_rijndaelEncrypt(RoundKey, 14, plainText, cipherText);
+
 	 */
 	public int tef_cmac_calc(tef_cipher_token keyid, tef_algorithm algorithm,
 			byte[] data, int dataLen, byte[] mac) throws GeneralSecurityException {
@@ -155,28 +167,37 @@ public class TEF implements TEF_Types {
 
 		// 1. Generate_Subkey
 		byte[] L = new byte[bs];
-		cipher.update(ZERO_IV, 0, bs, L);
-		cipher.doFinal(L, 0);
+		javax.crypto.Cipher cph = createCipher(keyid, new tef_algorithm(tef_chaining_mode_e.TEF_ECB, tef_padding_mode_e.TEF_PADDING_NONE));
+		cph.update(ZERO_IV, 0, bs, L);
+		cph.doFinal(L, 0);
 		BigInteger K0 = new BigInteger(1, L, 0, bs);
 		BigInteger K1, K2;
 
-		if (K0.testBit(bs-1) == false)
+		//Log.debug("L = %s", Text.hex(L));
+		if (K0.testBit(bs*8-1) == false) {
+			//Log.debug("K0 shiftL");
 			K1 = K0.shiftLeft(1);
-		else
+		}
+		else {
+			//Log.debug("K0 shiftL.xor");
 			K1 = K0.shiftLeft(1).xor(Rb);
-		if (K1.testBit(bs-1) == false)
-			K2 = K1.shiftLeft(1);
-		else
-			K2 = K1.shiftLeft(1).xor(Rb);
-
-		//Log.debug("K0 = %s", Text.hex(K0.toByteArray()));
+		}
 		//Log.debug("K1 = %s", Text.hex(K1.toByteArray()));
+		if (K1.testBit(bs*8-1) == false) {
+			//Log.debug("K2 = K1 shiftL");
+			K2 = K1.shiftLeft(1);
+		}
+		else {
+			//Log.debug("K2 = K1 shiftL.xor");
+			K2 = K1.shiftLeft(1).xor(Rb);
+		}
 		//Log.debug("K2 = %s", Text.hex(K2.toByteArray()));
 
 		// 2. CMAC
 		for (int i=0; i < bs; ++i) mac[i]=0;
 		for (int i=0; i + bs < dataLen; i += bs) {
 			cipher.update(data, i, bs, mac);
+			//Log.debug("IV = %s", Text.hex(mac, 0, bs));
 		}
 
 		BigInteger mp;
@@ -190,7 +211,9 @@ public class TEF implements TEF_Types {
 		L = mp.toByteArray();
 		//Log.debug("mp = %s", Text.hex(L));
 		cipher.update(L, L.length-bs, bs, mac);
+		//Log.debug("IV = %s", Text.hex(mac, 0, bs));
 		cipher.doFinal(mac, 0);
+		//Log.debug("Final MAC = %s", Text.hex(mac, 0, bs));
 
 		return bs;
 	}
