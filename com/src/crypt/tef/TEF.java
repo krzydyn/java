@@ -5,6 +5,7 @@ import java.security.GeneralSecurityException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.AlgorithmParameterSpec;
+import java.util.Arrays;
 
 import javax.crypto.KeyGenerator;
 import javax.crypto.ShortBufferException;
@@ -110,15 +111,6 @@ public class TEF implements TEF_Types {
 	 * https://en.wikipedia.org/wiki/ISO/IEC_9797-1
 	 * http://www.crypto-it.net/eng/theory/mac.html
 	 *
-	 * TEE_MACInit(operaion *op, *iv, ivlen);
-	 *    MacInitW(op->wrapper_operation, &key)
-	 *       inf->MacInit(operation, key);
-	 *          CeCcImpl::MacInit(operation, key);
-	 *             CryptoCoreContainer instance;
-	 *             instance->MAC_init(instance, key->secret.value.buffer, key->secret.value.size);
-	 *
-	 *             crt->MAC_init = SDRM_CMAC_init;
-	 *             crt->MAC_init = SDRM_HMAC_init;
 	 */
 	public int tef_mac_calc(tef_cipher_token keyid, tef_algorithm algorithm,
 			byte[] data, int dataLen, byte[] mac) throws GeneralSecurityException {
@@ -144,7 +136,17 @@ public class TEF implements TEF_Types {
 	 *
 	 * SDRM_rijndaelKeySetupEnc(RoundKey, UserKey, 256);
 	 * SDRM_rijndaelEncrypt(RoundKey, 14, plainText, cipherText);
-
+	 * https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-38b.pdf
+	 *
+	 * TEE_MACInit(operaion *op, *iv, ivlen);
+	 *    MacInitW(op->wrapper_operation, &key)
+	 *       inf->MacInit(operation, key);
+	 *          CeCcImpl::MacInit(operation, key);
+	 *             CryptoCoreContainer instance;
+	 *             instance->MAC_init(instance, key->secret.value.buffer, key->secret.value.size);
+	 *
+	 *             crt->MAC_init = SDRM_CMAC_init;
+	 *             crt->MAC_init = SDRM_HMAC_init;
 	 */
 	public int tef_cmac_calc(tef_cipher_token keyid, tef_algorithm algorithm,
 			byte[] data, int dataLen, byte[] mac) throws GeneralSecurityException {
@@ -170,7 +172,7 @@ public class TEF implements TEF_Types {
 		javax.crypto.Cipher cph = createCipher(keyid, new tef_algorithm(tef_chaining_mode_e.TEF_ECB, tef_padding_mode_e.TEF_PADDING_NONE));
 		cph.update(ZERO_IV, 0, bs, L);
 		cph.doFinal(L, 0);
-		BigInteger K0 = new BigInteger(1, L, 0, bs);
+		BigInteger K0 = new BigInteger(1, L);
 		BigInteger K1, K2;
 
 		//Log.debug("L = %s", Text.hex(L));
@@ -202,11 +204,11 @@ public class TEF implements TEF_Types {
 
 		BigInteger mp;
 		if (dataLen > 0 && dataLen%bs == 0) {
-			mp = new BigInteger(1, data, dataLen-bs, bs).xor(K1);
+			mp = new BigInteger(1, Arrays.copyOfRange(data, dataLen-bs, dataLen)).xor(K1);
 		}
 		else {
 			int r = dataLen%bs;
-			mp = new BigInteger(1, data, dataLen-r, r).shiftLeft(1).or(BigInteger.ONE).shiftLeft((bs-r)*8-1).xor(K2);
+			mp = new BigInteger(1, Arrays.copyOfRange(data, dataLen-r, dataLen)).shiftLeft(1).or(BigInteger.ONE).shiftLeft((bs-r)*8-1).xor(K2);
 		}
 		L = mp.toByteArray();
 		//Log.debug("mp = %s", Text.hex(L));
@@ -216,6 +218,11 @@ public class TEF implements TEF_Types {
 		//Log.debug("Final MAC = %s", Text.hex(mac, 0, bs));
 
 		return bs;
+	}
+
+	//https://csrc.nist.gov/CSRC/media/Projects/Block-Cipher-Techniques/documents/BCM/proposed-modes/omac/omac-ad.pdf
+	public int tef_omac_calc() {
+		return 0;
 	}
 
 	//keyid can be symmetric or asymmetric
