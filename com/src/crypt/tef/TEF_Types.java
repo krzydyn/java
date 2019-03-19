@@ -72,8 +72,8 @@ public interface TEF_Types {
 		TEF_PADDING_NONE("NoPadding"),
 		TEF_PADDING_X931("X931Padding"),
 		TEF_PADDING_PKCS5("PKCS5Padding"),
-		//TEF_PADDING_ISO9797_1("ISO97971Padding"),
-		//TEF_PADDING_ISO9797_2("ISO97972Padding"),
+		TEF_PADDING_ISO9797_M1("ISO9797_M1"),
+		TEF_PADDING_ISO9797_M2("ISO9797_M2"),
 		;
 		public static tef_padding_mode_e TEF_PADDING_PKCS7 = TEF_PADDING_PKCS5;
 

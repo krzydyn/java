@@ -449,6 +449,9 @@ public class TEFSecosCrypt extends UnitTest implements TEF_Types {
 
 		static TEF.tef_algorithm alg_CBC = new TEF.tef_algorithm(tef_chaining_mode_e.TEF_CBC, tef_padding_mode_e.TEF_PADDING_NONE);
 		static TEF.tef_algorithm alg_CBC_PKCS5 = new TEF.tef_algorithm(tef_chaining_mode_e.TEF_CBC, tef_padding_mode_e.TEF_PADDING_PKCS5);
+
+		static TEF.tef_algorithm alg_CTR = new TEF.tef_algorithm(tef_chaining_mode_e.TEF_CTR, tef_padding_mode_e.TEF_PADDING_NONE)
+											.set(tef_algorithm_param_e.TEF_IV, IV2_VALUE_128bits_AES);;
 	}
 
 	static DigestTC gpapi_digestTC[] = {
@@ -460,6 +463,7 @@ public class TEFSecosCrypt extends UnitTest implements TEF_Types {
 		new DigestTC(tef_digest_e.TEF_SHA512,GP.DATA_FOR_CRYPTO1,null),
 	};
 	static EncryptTC gpapi_encryptTC[] = {
+		new EncryptTC(GP.key_AES256,GP.alg_CTR,GP.DATA_FOR_CRYPTO1,null),//AES256,CTR
 		new EncryptTC(GP.key_DES192,GP.alg_ECB,GP.DATA_FOR_CRYPTO1,null),//DES3,ECB
 		new EncryptTC(GP.key_DES192,GP.alg_CBC_IV2,GP.DATA_FOR_CRYPTO1,null),//DES3,CBC,IV2
 		new EncryptTC(GP.key_DES64,GP.alg_ECB,GP.DATA_FOR_CRYPTO1,null),//DES,ECB
@@ -684,9 +688,9 @@ public class TEFSecosCrypt extends UnitTest implements TEF_Types {
 
 		//Log.info("");
 		//try { gp_digest(); } catch (Exception e) { Log.error(e); }
-		//try { gp_encrypt(); } catch (Exception e) { Log.error(e); }
+		try { gp_encrypt(); } catch (Exception e) { Log.error(e); }
 		//try { gp_mac(); } catch (Exception e) { Log.error(e); }
-		try { gp_cmac(); } catch (Exception e) { Log.error(e); }
+		//try { gp_cmac(); } catch (Exception e) { Log.error(e); }
 		//try { java_mac(); } catch (Exception e) { Log.error(e); }
 		//try { gp_dsa(); } catch (Exception e) { Log.error(e); }
 		//try { gp_dh(); } catch (Exception e) { Log.error(e); }
