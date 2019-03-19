@@ -39,7 +39,7 @@ public class CppBuilder {
 		public void write(char[] buf, int off, int len) {
 			for (int i=0; i < len; ++i) write(buf[off+i]);
 		}
-		public void writeif(int c) {
+		public void writesp(int c) {
 			if (lastc==-1) return ;
 			if (lastc ==' ' || lastc == '\n') return ;
 			write(c);
@@ -52,7 +52,7 @@ public class CppBuilder {
 		this.wr=new FWriter(wr);
 	}
 	private void writeNode(Cpp.Node n) {
-		if (n instanceof Cpp.TopNode) {
+		if (n instanceof Cpp.RootNode) {
 			for (int i=0; i < n.nodes.size(); ++i) {
 				Cpp.Node nn=n.nodes.get(i);
 				writeNode(nn);
@@ -60,23 +60,23 @@ public class CppBuilder {
 		}
 		else if (n instanceof Cpp.CodeBlock) {
 			n.write(wr);
-			wr.writeif(' ');
+			wr.writesp(' ');
 			wr.write("{\n");
 			if (!(n instanceof Cpp.Namespace)) wr.indent(1);
 			for (int i=0; i < n.nodes.size(); ++i) {
 				Cpp.Node nn=n.nodes.get(i);
 				writeNode(nn);
 			}
-			wr.writeif('\n');
+			wr.writesp('\n');
 			if (!(n instanceof Cpp.Namespace)) wr.indent(-1);
 			wr.write("}");
 		}
 		else {
 			Cpp.SourceFragment f = (Cpp.SourceFragment)n;
-			if ((f instanceof Cpp.Comment)) wr.writeif(' ');
+			if ((f instanceof Cpp.Comment)) wr.writesp(' ');
 			else if (wr.lastc=='}') {
 				if (f.str.length()>1) {
-					wr.writeif('\n');
+					wr.writesp('\n');
 					if (wr.indent==0) wr.write('\n');
 				}
 			}
@@ -84,7 +84,7 @@ public class CppBuilder {
 			if ((f instanceof Cpp.Comment)) ;
 			else {
 				if (f.str.endsWith(";") || f.str.endsWith(","))
-					wr.writeif('\n');
+					wr.writesp('\n');
 			}
 		}
 	}

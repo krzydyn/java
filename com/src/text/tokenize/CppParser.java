@@ -20,10 +20,8 @@ package text.tokenize;
 
 import java.io.FileReader;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.io.Reader;
 import sys.Log;
-import text.Text;
 
 public class CppParser {
 	CppTokenizer ct=null;
@@ -43,56 +41,20 @@ public class CppParser {
 		BasicTokenizer t=new BasicTokenizer(rd);
 
 		ct = new CppTokenizer(t);
-		Cpp.Node node=new Cpp.TopNode();
-		readNode(node);
 
-		return node;
+		return readRootNode(new Cpp.RootNode());
 	}
 
-	static private void printNode(Cpp.Node n, int l) {
-		String indent = Text.repeat("    ", l);
-		if (n instanceof Cpp.SourceFragment) {
-			System.out.printf("%s: '",n.getClass().getSimpleName());
-			PrintWriter p=new PrintWriter(System.out);
-			n.write(p);
-			p.flush();
-			System.out.println("'");
-		}
-		else {
-			boolean cb = n instanceof Cpp.CodeBlock;
-			int l1 = cb ? l+1 : l;
-			if (n instanceof Cpp.Namespace) {
-				l1=l;
-				System.out.println();
-				System.out.printf("namespace %s ", ((Cpp.Namespace) n).name);
-			}
-			if (cb) System.out.println("{");
-			boolean lcb=true;
-			for (int i=0; i < n.nodes.size(); ++i) {
-				Cpp.Node nn=n.nodes.get(i);
-				boolean iscb = nn instanceof Cpp.CodeBlock;
-				if (!iscb && !lcb) System.out.println();
-				printNode(nn,l1);
-				lcb=iscb;
-			}
-			if (cb) System.out.print("\n"+indent+"}");
-		}
-	}
-	static public void printNode(Cpp.Node n) {
-		printNode(n,0);
-		System.out.println();
-	}
-
-	Token next(StringBuilder b) throws IOException {
+	private Token next(StringBuilder b) throws IOException {
 		Token t = ct.next(b);
 		line = ct.getLineNo();
 		return t;
 	}
-	void readNode(Cpp.Node node) throws Exception {
+
+	private Cpp.Node readRootNode(Cpp.RootNode node) throws Exception {
 		Token tok;
 		StringBuilder b=new StringBuilder();
-		while ((tok=ct.next(b))!=null) {
-			line = ct.getLineNo();
+		while ((tok=next(b))!=null) {
 			if (tok.cla==CppTokenizer.TOKEN_WHILESPACE) continue;
 
 			if (tok.cla==CppTokenizer.TOKEN_PREPROC) {
@@ -121,72 +83,15 @@ public class CppParser {
 			}
 			else throw new Token.TokenException(tok);
 		}
-	}
-
-	Cpp.Node readNamespace(Cpp.Namespace node) throws Exception {
-		Token tok;
-		StringBuilder b=new StringBuilder();
-
-		while ((tok=ct.next(b))!=null) {
-			if (tok.cla==CppTokenizer.TOKEN_WHILESPACE) continue;
-
-			if (tok.cla==CppTokenizer.TOKEN_PREPROC) {
-				node.nodes.add(new Cpp.Preproc(tok.rep));
-			}
-			else if (tok.cla==CppTokenizer.TOKEN_COMMENT || tok.cla==CppTokenizer.TOKEN_COMMENT_LN) {
-				node.nodes.add(new Cpp.Comment(tok.rep,tok.cla==CppTokenizer.TOKEN_COMMENT_LN));
-			}
-			else if (tok.cla==CppTokenizer.TOKEN_BLKSTART) {
-				return readBlock(node);
-			}
-			else if (tok.cla==CppTokenizer.TOKEN_NAME) {
-				if (node.name==null) node.name=tok.rep;
-				else node.name+=tok.rep;
-			}
-			else if (tok.cla==CppTokenizer.TOKEN_SPECIAL) {
-				if (node.name==null) throw new Token.TokenException(tok, "namespace name expected");
-				if (tok.rep.equals("=")) node.nodes.add(new Cpp.SourceFragment(tok.rep));
-				else node.name+=tok.rep;
-			}
-			else throw new Token.TokenException(tok);
-		}
 		return node;
 	}
-	Cpp.Node readFragment(Cpp.SourceFragment node) throws Exception {
+
+	private Cpp.Node readBlock(Cpp.CodeBlock node) throws Exception {
 		Token tok;
 		StringBuilder b=new StringBuilder();
 		StringBuilder blk=new StringBuilder();
 		int lcla=CppTokenizer.TOKEN_NONE;
-		if (node.str!=null && !node.str.isEmpty()) {
-			lcla=CppTokenizer.TOKEN_NAME;
-			blk.append(node.str);
-		}
-		while ((tok=ct.next(b))!=null) {
-			if (tok.cla==CppTokenizer.TOKEN_WHILESPACE) continue;
-
-			if (tok.cla==CppTokenizer.TOKEN_NAME || tok.cla==CppTokenizer.TOKEN_SPECIAL || tok.cla==CppTokenizer.TOKEN_DBLQUOTE) {
-				if (lcla!=CppTokenizer.TOKEN_SPECIAL && lcla==tok.cla) blk.append(' ');
-				lcla=tok.cla;
-				blk.append(tok.rep);
-				if (lcla==CppTokenizer.TOKEN_SPECIAL && tok.rep.equals(";")) {
-					node.str=blk.toString();
-					break;
-				}
-			}
-			else {
-				Log.debug("unread %s",tok.toString());
-				ct.unread(tok.rep);
-				break;
-			}
-		}
-		return node;
-	}
-	Cpp.Node readBlock(Cpp.CodeBlock node) throws Exception {
-		Token tok;
-		StringBuilder b=new StringBuilder();
-		StringBuilder blk=new StringBuilder();
-		int lcla=CppTokenizer.TOKEN_NONE;
-		while ((tok=ct.next(b))!=null) {
+		while ((tok=next(b))!=null) {
 			if (tok.cla==CppTokenizer.TOKEN_WHILESPACE) continue;
 
 			if (tok.cla==CppTokenizer.TOKEN_PREPROC) {
@@ -238,6 +143,65 @@ public class CppParser {
 					node.nodes.add(new Cpp.SourceFragment(blk.toString()));
 					blk.setLength(0); lcla=CppTokenizer.TOKEN_NONE;
 				}
+			}
+		}
+		return node;
+	}
+
+	Cpp.Node readNamespace(Cpp.Namespace node) throws Exception {
+		Token tok;
+		StringBuilder b=new StringBuilder();
+
+		while ((tok=next(b))!=null) {
+			if (tok.cla==CppTokenizer.TOKEN_WHILESPACE) continue;
+
+			if (tok.cla==CppTokenizer.TOKEN_PREPROC) {
+				node.nodes.add(new Cpp.Preproc(tok.rep));
+			}
+			else if (tok.cla==CppTokenizer.TOKEN_COMMENT || tok.cla==CppTokenizer.TOKEN_COMMENT_LN) {
+				node.nodes.add(new Cpp.Comment(tok.rep,tok.cla==CppTokenizer.TOKEN_COMMENT_LN));
+			}
+			else if (tok.cla==CppTokenizer.TOKEN_BLKSTART) {
+				return readBlock(node);
+			}
+			else if (tok.cla==CppTokenizer.TOKEN_NAME) {
+				if (node.name==null) node.name=tok.rep;
+				else node.name+=tok.rep;
+			}
+			else if (tok.cla==CppTokenizer.TOKEN_SPECIAL) {
+				if (node.name==null) throw new Token.TokenException(tok, "namespace name expected");
+				if (tok.rep.equals("=")) node.nodes.add(new Cpp.SourceFragment(tok.rep));
+				else node.name+=tok.rep;
+			}
+			else throw new Token.TokenException(tok);
+		}
+		return node;
+	}
+	Cpp.Node readFragment(Cpp.SourceFragment node) throws Exception {
+		Token tok;
+		StringBuilder b=new StringBuilder();
+		StringBuilder blk=new StringBuilder();
+		int lcla=CppTokenizer.TOKEN_NONE;
+		if (node.str!=null && !node.str.isEmpty()) {
+			lcla=CppTokenizer.TOKEN_NAME;
+			blk.append(node.str);
+		}
+		while ((tok=next(b))!=null) {
+			if (tok.cla==CppTokenizer.TOKEN_WHILESPACE) continue;
+
+			if (tok.cla==CppTokenizer.TOKEN_NAME || tok.cla==CppTokenizer.TOKEN_SPECIAL || tok.cla==CppTokenizer.TOKEN_DBLQUOTE) {
+				if (lcla!=CppTokenizer.TOKEN_SPECIAL && lcla==tok.cla) blk.append(' ');
+				lcla=tok.cla;
+				blk.append(tok.rep);
+				if (lcla==CppTokenizer.TOKEN_SPECIAL && tok.rep.equals(";")) {
+					node.str=blk.toString();
+					break;
+				}
+			}
+			else {
+				Log.debug("unread %s",tok.toString());
+				ct.unread(tok.rep);
+				break;
 			}
 		}
 		return node;

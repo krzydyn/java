@@ -12,9 +12,13 @@ public class Cpp {
 		public void write(PrintWriter wr) {}
 	}
 
-	static class TopNode extends Node {
-		TopNode() {}
+	static class RootNode extends Node {
+		RootNode() {}
 	}
+	/**
+	 * Already formated code fragment
+	 *
+	 */
 	static class SourceFragment extends Node {
 		protected String str;
 
@@ -24,6 +28,10 @@ public class Cpp {
 			wr.print(str);
 		}
 	}
+	/**
+	 * CodeBlock content from block-begin to block-end sentinel
+	 *
+	 */
 	static class CodeBlock extends Node {
 		CodeBlock() {}
 	}
@@ -101,6 +109,40 @@ public class Cpp {
 		public void write(PrintWriter wr) {
 			wr.printf("namespace %s", name);
 		}
+	}
+
+	//print internal structures
+	static private void printNode(Cpp.Node n, int l) {
+		String indent = Text.repeat("    ", l);
+		if (n instanceof Cpp.SourceFragment) {
+			System.out.printf("%s: '",n.getClass().getSimpleName());
+			PrintWriter p=new PrintWriter(System.out);
+			n.write(p);
+			p.flush();
+			System.out.println("'");
+		}
+		else {
+			boolean cb = n instanceof Cpp.CodeBlock;
+			int l1 = cb ? l+1 : l;
+			if (n instanceof Cpp.Namespace) {
+				l1=l;
+				System.out.println();
+				System.out.printf("namespace %s ", ((Cpp.Namespace) n).name);
+			}
+			if (cb) System.out.println("{");
+			boolean lcb=true;
+			for (int i=0; i < n.nodes.size(); ++i) {
+				Cpp.Node nn=n.nodes.get(i);
+				boolean iscb = nn instanceof Cpp.CodeBlock;
+				if (!iscb && !lcb) System.out.println();
+				printNode(nn,l1);
+				lcb=iscb;
+			}
+			if (cb) System.out.print("\n"+indent+"}");
+		}
+	}
+	static public void printNode(Cpp.Node n) {
+		printNode(n,0);
 	}
 
 }
