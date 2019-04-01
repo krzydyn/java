@@ -420,6 +420,65 @@ public class TEFSecosCrypt extends UnitTest implements TEF_Types {
 		static byte[] TEE_ATTR_DSA_PRIVATE_VALUE_160_VALUE01 = Text.bin("704a46c6252a95a39b40e0435a691badae52a5c0");
 		static byte[] TEE_ATTR_DSA_PUBLIC_VALUE_768_VALUE01 = Text.bin("529ded98a2320985fc84b65a9dc8d4fe41ada6e3593d704f0898c14ec24634ddf5f1db47cc4915fce1e2674d2ecd98d58b598e8ddfaff30e8826f50aab4027b5aab887c19ad96d7e57de5390ad8e5557b41a8019c90d80607179b54eb0ad4d23");
 
+		static byte[] TEE_ATTR_DSA_PRIME_2048_VALUE01 = Text.bin(
+				"aa:81:5c:9d:b1:c4:d3:d2:77:3c:7d:0d:4d:1d:a7:5e:\n" +
+				"cf:c4:a3:9e:97:d5:fa:19:1f:fe:c8:b1:49:0a:29:0c:\n" +
+				"e3:35:e5:ce:87:ea:62:0a:8a:17:de:0b:b6:47:14:e2:\n" +
+				"ec:84:0b:f0:0e:6e:bd:b4:ff:b4:e3:24:ca:07:c3:c8:\n" +
+				"71:73:09:af:14:10:36:2a:77:2c:9a:dd:83:8b:2b:0c:\n" +
+				"ae:1e:90:ab:44:8a:da:bd:ac:d2:e5:df:59:c4:18:7a:\n" +
+				"32:a2:37:19:d6:c5:7e:94:00:88:53:83:bf:8f:06:6f:\n" +
+				"23:b9:41:92:0d:54:c3:5b:4f:7c:c5:04:4f:3b:40:f1:\n" +
+				"70:46:95:63:07:b7:48:e8:40:73:28:44:d0:0a:9c:e6:\n" +
+				"ec:57:14:29:3b:62:65:14:7f:15:c6:7f:4b:e3:8b:08:\n" +
+				"2b:55:fd:ea:db:61:24:68:9f:b7:6f:9d:25:cc:28:b8:\n" +
+				"ea:a9:8b:56:2d:5c:10:11:e0:dc:f9:b3:99:23:24:0d:\n" +
+				"33:2d:89:dc:96:03:b7:bd:dd:0c:70:b8:3c:aa:29:05:\n" +
+				"63:1b:1c:83:ca:bb:ae:6c:0c:0c:2e:fe:8f:58:13:1e:\n" +
+				"d8:35:1b:f9:3e:87:5f:6a:73:a9:3c:ba:d4:70:14:1a:\n" +
+				"26:87:fb:ac:f2:d7:1c:8d:de:e9:71:ad:66:07:29:ad");
+		static byte[] TEE_ATTR_DSA_SUBPRIME_224_VALUE01 = Text.bin(
+				"ea:34:7e:90:be:7c:28:75:d1:fe:1d:b6:22:b4:\n" +
+				"76:38:37:c5:e2:7a:60:37:31:03:48:c1:aa:11");
+		static byte[] TEE_ATTR_DSA_BASE_2048_VALUE01 = Text.bin(
+				"20:42:09:4c:cb:c8:b8:72:3f:c9:28:c1:2f:da:67:1b:\n" +
+				"83:29:5e:99:c7:43:57:6f:44:50:4b:e1:18:63:23:31:\n" +
+				"9b:50:02:d2:4f:17:3d:f9:09:ea:24:1d:6e:a5:28:99:\n" +
+				"04:ee:46:36:20:4b:2f:be:94:b0:68:fe:09:3f:79:62:\n" +
+				"57:95:49:55:1d:3a:f2:19:ad:8e:d1:99:39:ef:f8:6b:\n" +
+				"ce:c8:34:de:2f:2f:78:59:6e:89:e7:cb:52:c5:24:e1:\n" +
+				"77:09:8a:56:c2:32:eb:1f:56:3a:a8:4b:c6:b0:26:de:\n" +
+				"ee:6f:f5:1c:b4:41:e0:80:f2:da:fa:ea:1c:ed:86:42:\n" +
+				"7d:1c:34:6b:e5:5c:66:80:3d:4b:76:d1:33:cd:44:5b:\n" +
+				"4c:34:82:fa:41:50:23:46:3c:9b:f3:0f:2f:78:42:23:\n" +
+				"e2:60:57:d3:aa:0d:7f:bb:66:06:30:c5:2e:49:d4:a0:\n" +
+				"32:5c:73:89:e0:72:aa:34:9f:13:c9:66:e1:59:75:2f:\n" +
+				"bb:71:e9:33:68:90:f9:32:43:fa:6e:72:d2:99:36:5e:\n" +
+				"e5:b3:fe:26:6e:bf:11:10:56:8f:ee:44:25:c8:47:b5:\n" +
+				"02:10:bd:48:4b:97:43:1a:42:85:6a:dc:a3:e7:d1:a9:\n" +
+				"c9:c6:75:c7:e2:66:91:83:20:dd:5a:78:a4:8c:48:a9");
+		static byte[] TEE_ATTR_DSA_PRIVATE_VALUE_224_VALUE01 = Text.bin(
+				"7b:48:90:21:57:8e:79:e7:bd:3e:e7:ab:45:6f:\n" +
+				"65:9f:3d:c0:7c:88:f5:c9:a3:9e:4f:8c:ee:81");
+		static byte[] TEE_ATTR_DSA_PUBLIC_VALUE_2048_VALUE01 = Text.bin(
+				"1a:e1:0c:78:6a:d0:90:2c:5c:68:5d:ae:5c:71:21:41:\n" +
+				"8a:37:7b:88:8b:5f:2f:2b:c7:66:23:57:0f:d6:2b:cb:\n" +
+				"19:0b:47:1a:d5:35:9c:5f:06:2f:88:19:28:9e:95:6d:\n" +
+				"8a:a6:f9:0d:1f:8c:f1:ee:72:d3:a1:bd:fd:56:c4:78:\n" +
+				"dc:29:a1:9c:45:69:b5:a6:0e:3a:8f:34:f6:06:56:ea:\n" +
+				"c5:b2:5d:de:55:14:a5:c6:7b:67:54:23:20:4f:6c:ca:\n" +
+				"f0:99:06:17:cc:73:55:b9:d3:ed:86:89:78:a2:52:02:\n" +
+				"0a:76:9e:d5:9a:6e:da:a6:ef:e3:37:7e:ef:45:f3:f6:\n" +
+				"f3:e6:41:79:cc:7d:b8:b1:43:fb:83:5c:5d:71:bf:cf:\n" +
+				"a1:e2:a9:04:9b:cc:f7:fe:9a:b5:75:46:22:0f:e3:f4:\n" +
+				"b7:52:1c:86:17:39:d1:38:50:7e:81:a4:6a:69:93:60:\n" +
+				"54:41:dc:b9:0d:6e:e4:af:bc:42:ca:be:90:a2:54:44:\n" +
+				"49:68:10:9d:7e:dd:96:94:a0:23:23:9f:1d:56:17:5d:\n" +
+				"d1:fa:c1:15:91:5e:24:fa:b5:63:f4:fc:3f:26:9b:ed:\n" +
+				"2f:30:08:32:d1:12:59:64:85:a7:11:41:7a:a7:3b:b4:\n" +
+				"ac:72:a6:51:a1:fa:5b:ae:d3:63:6c:72:0d:39:70:08");
+
+
 		static byte[] DATA_FOR_CRYPTO1 = Text.bin("00:01:02:03:04:05:06:07:08:09:0a:0b:0c:0d:0e:0f:\n" +
 				"0a:0b:0c:0d:0e:0f:00:01:02:03:04:05:06:07:08:09:\n" +
 				"0f:0e:0d:0c:0b:0a:09:08:07:06:05:04:03:02:01:00:\n" +
@@ -465,7 +524,7 @@ public class TEFSecosCrypt extends UnitTest implements TEF_Types {
 	static EncryptTC gpapi_encryptTC[] = {
 		new EncryptTC(GP.key_AES256,GP.alg_CTR,GP.DATA_FOR_CRYPTO1,null),//AES256,CTR
 		new EncryptTC(GP.key_DES192,GP.alg_ECB,GP.DATA_FOR_CRYPTO1,null),//DES3,ECB
-		new EncryptTC(GP.key_DES192,GP.alg_CBC_IV2,GP.DATA_FOR_CRYPTO1,null),//DES3,CBC,IV2
+		new EncryptTC(GP.key_DES192,GP.alg_CBC_IV1,GP.DATA_FOR_CRYPTO1,null),//DES3,CBC,IV1
 		new EncryptTC(GP.key_DES64,GP.alg_ECB,GP.DATA_FOR_CRYPTO1,null),//DES,ECB
 		new EncryptTC(GP.key_DES64,GP.alg_CBC_IV1,GP.DATA_FOR_CRYPTO1,null),//DES,CBC,IV1
 	};
@@ -579,9 +638,26 @@ public class TEFSecosCrypt extends UnitTest implements TEF_Types {
 		byte[] hash = md.digest(GP.DATA_FOR_CRYPTO1);
 		Log.info("bits(hash) = %d", hash.length*8);
 		byte[] sign = dsa.signDigest(hash);
-		//byte[] sign = Text.bin("39260379165BAF89BE9C53CEDBEC97EDFA111119712B524423552903EEAF668149A7FA184F79F7D9");
-		dsa.verifyDigest(sign, hash);
+		Log.info("hash[%d] = %s", hash.length, Text.hex(hash));
+		Log.info("sign[%d] = %s", sign.length, Text.hex(sign));
+		//dsa.verifyDigest(sign, hash);
 
+		dsa = new DSA(
+				new BigInteger(1, GP.TEE_ATTR_DSA_PRIME_2048_VALUE01),
+				new BigInteger(1, GP.TEE_ATTR_DSA_SUBPRIME_224_VALUE01),
+				new BigInteger(1, GP.TEE_ATTR_DSA_BASE_2048_VALUE01),
+				new BigInteger(1, GP.TEE_ATTR_DSA_PRIVATE_VALUE_224_VALUE01),
+				new BigInteger(1, GP.TEE_ATTR_DSA_PUBLIC_VALUE_2048_VALUE01)
+				);
+		md = MessageDigest.getInstance("SHA-224");
+		hash = md.digest(GP.DATA_FOR_CRYPTO1);
+		Log.info("bits(hash) = %d", hash.length*8);
+		sign = dsa.signDigest(hash);
+		Log.info("hash[%d] = %s", hash.length, Text.hex(hash));
+		Log.info("sign[%d] = %s", sign.length, Text.hex(sign));
+		//dsa.verifyDigest(sign, hash);
+
+		/*
 		byte[] p = Text.bin("86F5CA03DCFEB225063FF830A0C769B9DD9D6153AD91D7CE27F787C43278B447E6533B86B18BED6E8A48B784A14C252C5BE0DBF60B86D6385BD2F12FB763ED8873ABFD3F5BA2E0A8C0A59082EAC056935E529DAF7C610467899C77ADEDFC846C881870B7B19B2B58F9BE0521A17002E3BDD6B86685EE90B3D9A1B02B782B1779");
 		byte[] q = Text.bin("996F967F6C8E388D9E28D01E205FBA957A5698B1");
 		byte[] g = Text.bin("07B0F92546150B62514BB771E2A0C0CE387F03BDA6C56B505209FF25FD3C133D89BBCD97E904E09114D9A7DEFDEADFC9078EA544D2E401AEECC40BB9FBBF78FD87995A10A1C27CB7789B594BA7EFB5C4326A9FE59A070E136DB77175464ADCA417BE5DCE2F40D10A46A3A3943F26AB7FD9C0398FF8C76EE0A56826A8A88F1DBD");
@@ -600,10 +676,11 @@ public class TEFSecosCrypt extends UnitTest implements TEF_Types {
 				);
 		md = MessageDigest.getInstance("SHA-224");
 		hash = md.digest("DSA SHA1".getBytes());
-		Log.info("hash = %s", Text.hex(hash));
 		sign = dsa.signDigest(hash);
-		Log.info("sign = %s", Text.hex(sign));
-		dsa.verifyDigest(sign, hash);
+		Log.info("hash[%d] = %s", hash.length, Text.hex(hash));
+		Log.info("sign[%d] = %s", sign.length, Text.hex(sign));
+		//dsa.verifyDigest(sign, hash);
+		 */
 	}
 	static void gp_dh() throws Exception {
 		BigInteger prime = new BigInteger(1, GP.TEE_ATTR_DH_PRIME_VALUE01);  // p (prime number)
@@ -688,9 +765,9 @@ public class TEFSecosCrypt extends UnitTest implements TEF_Types {
 
 		//Log.info("");
 		//try { gp_digest(); } catch (Exception e) { Log.error(e); }
-		try { gp_encrypt(); } catch (Exception e) { Log.error(e); }
+		//try { gp_encrypt(); } catch (Exception e) { Log.error(e); }
 		//try { gp_mac(); } catch (Exception e) { Log.error(e); }
-		//try { gp_cmac(); } catch (Exception e) { Log.error(e); }
+		try { gp_cmac(); } catch (Exception e) { Log.error(e); }
 		//try { java_mac(); } catch (Exception e) { Log.error(e); }
 		//try { gp_dsa(); } catch (Exception e) { Log.error(e); }
 		//try { gp_dh(); } catch (Exception e) { Log.error(e); }

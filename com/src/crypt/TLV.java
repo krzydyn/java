@@ -1,5 +1,7 @@
 package crypt;
 
+import java.util.Arrays;
+
 import sys.Log;
 import text.Text;
 
@@ -90,11 +92,11 @@ Tag Primitive 	Use
 31  Card Service Data
 */
 public class TLV {
-	enum TYPE {
+	public enum TYPE {
 		RFU, BOOLEAN, INTEGER, REAL, BITSTRING, OCTSTRING, STRING, NULL, OBJID, OBJDESCCR, INSTANCE,
 		ENUMERATED, SEQUENCE, SET, EMBEDDED, RELATIVE, TIME
 	}
-	TYPE asnType[] = {
+	private TYPE ASN1_Type[] = {
 			TYPE.RFU,       //0
 			TYPE.BOOLEAN,   //1
 			TYPE.INTEGER,   //2
@@ -134,14 +136,15 @@ public class TLV {
 	final int fixedtag;
 	final int fixedlen;
 	int ti;
-	int l;
+	int tl;
 	int vi;
+	int vl;
 	byte[] buf;
 
-	TLV() {fixedtag=0; fixedlen=0;}
-	TLV(int ft,int fl) {fixedtag=ft; fixedlen=fl;}
+	public TLV() {fixedtag=0; fixedlen=0;}
+	public TLV(int ft,int fl) {fixedtag=ft; fixedlen=fl;}
 
-	long tag() {
+	public long tag() {
 		if (ti < 0) return -1;
 		long t = buf[ti]&0xff;
 		if (fixedtag > 0) {
@@ -159,66 +162,99 @@ public class TLV {
 		}
 		return t;
 	}
-	byte tagByte(int i) {
+	public byte tagByte(int i) {
+		if (i < tl) return buf[ti+i];
+		return -1;
+	}
+
+	private void makeTag(int t) {
 		if (fixedtag > 0) {
-			if (i < fixedtag) return buf[ti+i];
-			return -1;
+			throw new RuntimeException("not suppoted");
 		}
-		else if ((buf[ti]&TAG_SEQ) == TAG_SEQ) {
-			if (i == 0) return buf[ti];
-			int l=1;
-			do {
-				if (i == l) return buf[ti+i];
-			} while ((buf[ti+l]&TAG_NEXT) != 0);
-			return -1;
+		if (t < 0x100) tl = 1;
+		else if (t < 0x10000) tl = 2;
+		else if (t < 0x1000000) tl = 3;
+		else tl = 4;
+		for (int i = 0; i < tl; ++i)
+			buf[ti+i] = (byte)(t >> (8*(tl - i -1)));
+	}
+	private void makeLength(int l) {
+		int li = ti+tl;
+		if (l < 0x80) buf[li++] = (byte)l;
+		else if (l < 0x100) {
+			buf[li++] = (byte)0x81;
+			buf[li++] = (byte)l;
 		}
-		else {
-			if (i == 0) return buf[ti+i];
-			return -1;
+		else if (l < 0x10000) {
+			buf[li++] = (byte)0x82;
+			buf[li++] = (byte)(l>>8);
+			buf[li++] = (byte)(l>>0);
 		}
+		vi = li;
+		vl = l;
+	}
+
+	public void set(int t, byte[] v, int offs, int len) {
+		makeTag(t);
+		makeLength(len);
+		System.arraycopy(v, offs, buf, vi, len);
+
+		Log.debug("tlv = [%d] %s", vi-ti+vl, Text.hex(buf, ti, vi-ti+vl));
+	}
+
+	public void create(int capa) {
+		ti = 0;
+		buf = new byte[capa];
+	}
+	public void set(int t, byte[] v) {
+		set(t, v, 0, v.length);
 	}
 
 	public int read(byte[] b, int offs, int len) {
 		int i=0;
-		ti=-1; vi=-1; l=0;
+		ti=-1; vi=-1; vl=0;
 		while (i < len && b[offs+i]==0) ++i;
 		if (i >= len) return 0;
 		buf = b; ti = offs + i;
 
 		if (fixedtag > 0) {
 			i += fixedtag;
-			Log.debug("fixed tag = %x", tag());
 		}
 		else if ((buf[offs+i]&TAG_SEQ) == TAG_SEQ) {
 			for (++i; (b[offs+i]&TAG_NEXT) != 0; ++i) ;
 			++i;
-			//Log.debug("long tag = %x", tag());
 		}
 		else {
 			++i;
-			//Log.debug("short tag = %x", tag());
 		}
-		l = b[offs+i]&0xff; ++i;
+		tl = i - ti;
+		vl = b[offs+i]&0xff; ++i;
 		if (fixedlen > 0) {
 			for (int ii=1; ii < fixedlen; ++ii) {
-				l <<= 8; l |= b[offs+i]&0xff; ++i;
+				vl <<= 8; vl |= b[offs+i]&0xff; ++i;
 			}
-			Log.debug("fixed len = %d", l);
+			Log.debug("fixed len = %d", vl);
 		}
-		else if ((l&LEN_BYTE) != 0) {
-			int ll = l&0x7f;
-			l=0;
+		else if ((vl&LEN_BYTE) != 0) {
+			int ll = vl&0x7f;
+			vl=0;
 			for (int ii=0; ii < ll; ++ii) {
-				l <<= 8; l |= b[offs+i]&0xff; ++i;
+				vl <<= 8; vl |= b[offs+i]&0xff; ++i;
 			}
-			if (i+l > len) l = len-i;
+			if (i+vl > len) vl = len-i;
 			//Log.debug("long len = %d (ll=%d)", l, ll);
 		}
 		else {
 			//Log.debug("short len = %d", l);
 		}
 		vi = offs+i;
-		return i+l;
+		return i+vl;
+	}
+
+	public int write(byte[] b, int offs) {
+		int n = vi - ti + vl;
+		System.arraycopy(buf, ti, b, offs, n);
+		return n;
 	}
 
 	public boolean isConstructed() {
@@ -232,11 +268,14 @@ public class TLV {
 
 	@Override
 	public String toString() {
-		if ((buf[ti]&TAG_SEQ) < asnType.length) {
-			TYPE type = asnType[buf[ti]&TAG_SEQ];
+		if ((buf[ti]&TAG_SEQ) < ASN1_Type.length) {
+			TYPE type = ASN1_Type[buf[ti]&TAG_SEQ];
 			if (type == TYPE.STRING)
-				return String.format("T=%02x L=%d V=%s",tag(),l,Text.vis(buf,vi,l));
+				return String.format("T=%02x L=%d V=%s",tag(),vl,Text.vis(buf,vi,vl));
 		}
-		return String.format("T=%02x L=%d V=%s",tag(),l,Text.hex(buf,vi,l));
+		return String.format("T=%02x L=%d V=%s",tag(),vl,Text.hex(buf,vi,vl));
+	}
+	public byte[] toByteArray() {
+		return Arrays.copyOfRange(buf, ti, vi+vl);
 	}
 }

@@ -260,10 +260,9 @@ public class RSA extends Asymmetric {
 	 *
 	 * Padding OAEP (optimal asymmetric encryption padding)
 	 */
-	static public byte[] padOEAP(String lbl, byte[] msg, int keylen, MessageDigest md) throws Exception {
+	static public byte[] padOAEP(String lbl, byte[] msg, int keylen, MessageDigest md) throws Exception {
 		int hLen = md.getDigestLength();
-		if (msg.length >= keylen - 2*hLen - 2)
-			throw new RuntimeException("message too long");
+		if (msg.length >= keylen - 2*hLen - 2) throw new RuntimeException("message too long");
 		byte[] pad0 = {0x00};
 		byte[] pad1 = {0x01};
 		byte[] lHash = {};

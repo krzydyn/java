@@ -220,10 +220,16 @@ public class TEF implements TEF_Types {
 		return bs;
 	}
 
+	public int tef_hmac_calc(tef_cipher_token keyid, tef_algorithm algorithm,
+			byte[] data, int dataLen, byte[] mac) throws GeneralSecurityException {
+		return 0;
+	}
+
 	//https://csrc.nist.gov/CSRC/media/Projects/Block-Cipher-Techniques/documents/BCM/proposed-modes/omac/omac-ad.pdf
 	public int tef_omac_calc() {
 		return 0;
 	}
+
 
 	//keyid can be symmetric or asymmetric
 	public int tef_sign_calc(tef_cipher_token keyid, tef_digest_e digest, byte[] data, int dataLen, byte[] sign) {

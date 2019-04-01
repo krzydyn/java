@@ -1,9 +1,8 @@
 package crypt;
 
 import java.math.BigInteger;
-import java.util.Arrays;
-
 import sys.Log;
+import text.Text;
 
 public class DSA extends Asymmetric {
 	private BigInteger p,q,g;
@@ -52,6 +51,7 @@ public class DSA extends Asymmetric {
 	2. r = g^k mod q (if r == 0, generate new k)
 	3. s = k^-1(H(m)+x*r) mod q (if s == 0, generate new k)
 	4. The signature is (r,s)
+	NOTE: (r,s) must be encoded as DER T:30[T:02[r] T:02[s]]
 	 */
 	public byte[] signDigest(byte[] hash) {
 		if (q.bitLength() > hash.length*8) {
@@ -59,8 +59,6 @@ public class DSA extends Asymmetric {
 		}
 
 		BigInteger H = new BigInteger(1, hash);
-
-		if (H.bitLength() > q.bitLength()) throw new RuntimeException();
 
 		BigInteger r,s;
 		for (;;) {
@@ -73,7 +71,21 @@ public class DSA extends Asymmetric {
 			break;
 		}
 
-		return r.shiftLeft(q.bitLength()).or(s).toByteArray();
+		Log.debug("r = %s", Text.hex(r.toByteArray()));
+		Log.debug("s = %s", Text.hex(s.toByteArray()));
+
+		TLV der = new TLV();
+		TLV tlv = new TLV();
+		byte[] rs = new byte[(q.bitLength()+10)*2];
+		tlv.create(q.bitLength()/8+10);
+		tlv.set(0x02, r.toByteArray());
+		int l = 0;
+		l = tlv.write(rs, l);
+		tlv.set(0x02, s.toByteArray());
+		l += tlv.write(rs, l);
+		der.create(l+10);
+		der.set(0x30, rs, 0, l);
+		return der.toByteArray();
 	}
 
 	/*
@@ -85,8 +97,14 @@ public class DSA extends Asymmetric {
 	5. sign is valid if v == r
 	 */
 	public boolean verifyDigest(byte[] sign, byte[] hash) {
-		BigInteger r = new BigInteger(1, Arrays.copyOfRange(sign, 0, sign.length - q.bitLength()/8));
-		BigInteger s = new BigInteger(1, Arrays.copyOfRange(sign, sign.length - q.bitLength()/8, sign.length));
+		TLV der = new TLV();
+		TLV tlv = new TLV();
+		der.read(sign, 0, sign.length);
+		tlv.read(der.buf, 0, der.vl);
+		BigInteger r = new BigInteger(1, tlv.toByteArray());
+		int x = tlv.vi - tlv.ti + tlv.vl;
+		tlv.read(der.buf, x, der.vl-x);
+		BigInteger s = new BigInteger(1, tlv.toByteArray());
 		BigInteger H = new BigInteger(1, hash);
 
 		if (s.bitLength() > q.bitLength()) throw new RuntimeException("signature too long");

@@ -162,8 +162,8 @@ public class Base64App {
 			r = tlv.read(b, offs+i, len-i);
 			if (r == 0) break;
 			if (tlv.isConstructed()) {
-				Log.prn("%sCONSTR (read=%d) T=%x L=%d", indent, r, tlv.tag(), tlv.l);
-				parseTLV(ind+1, b, tlv.getValueOffset(), tlv.l);
+				Log.prn("%sCONSTR (read=%d) T=%x L=%d", indent, r, tlv.tag(), tlv.vl);
+				parseTLV(ind+1, b, tlv.getValueOffset(), tlv.vl);
 			}
 			else {
 				//if (el < elems.length)
@@ -185,6 +185,10 @@ public class Base64App {
 			"1a 00"+
 			"0e 01 01"+
 			"00";
+
+	static String opensslSIG_SHA1 = "302C02144B7DBDF74AAD8DE4945C35BD5EA87955075BBCFE02146CC3573E09766D150FF7D7EE22AC9B55DFD5A5A9";
+	static String opensslSIG_SHA224 = "303D021D00D9C131ED53023AA1040300A3E93E52AC263ED5997509164BFDBAB667021C0DC53494E298E51C718271FE41F6E78926D0E733489F184435D92712";
+	static String dsaSIG_SHA224 = "303D021C645121F72308C6769B49ED9F295DB8DFBCBE6D3C34E74393DAFB5878021D00CEE911F028B854F6E1B7B88C77D09C0E9FE810EF9EF9263755B8B678";
 
 	public static void main(String[] args) {
 		byte[] bin = Base64.decode(rsa_prv2);
@@ -212,12 +216,22 @@ public class Base64App {
 		Log.prn("-----------------------------------");
 
 */
+		/*
 		bin = Base64.decode(pkcs7);
 		Log.prn("%s", Text.hex(bin));
 		parseTLV(0,bin,0,bin.length);
-
 		Log.prn("%s\n", Base64.encode(bin));
+		*/
 
+
+		bin = Text.bin(opensslSIG_SHA1);
+		parseTLV(0,bin,0,bin.length);
+
+		bin = Text.bin(opensslSIG_SHA224);
+		parseTLV(0,bin,0,bin.length);
+
+		bin = Text.bin(dsaSIG_SHA224);
+		parseTLV(0,bin,0,bin.length);
 	}
 
 }
