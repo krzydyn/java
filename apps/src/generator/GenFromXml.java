@@ -37,7 +37,7 @@ public class GenFromXml {
 	static String repoTestCodePath = repoPath + "/trustzone-application/test_usability";
 	static String repoGPSuitePath = repoTestCodePath + "/ca/gp_suite";
 
-	static String boilerPlate = "/*\n" +
+	final static String boilerPlate = "/*\n" +
 					" *\n" +
 					" * This source file is proprietary property of Samsung Electronics Co., Ltd.\n" +
 					" *\n" +
@@ -48,9 +48,9 @@ public class GenFromXml {
 					" */\n";
 
 
-	static int MAX_LINE_LENGHT = 120;
+	final static int MAX_LINE_LENGHT = 120;
 
-	static String INDENT = "    ";
+	final static String INDENT = "    ";
 
 	static DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
 	static DocumentBuilder documentBuilder = null;
@@ -369,7 +369,8 @@ public class GenFromXml {
 			}
 
 			//pr.printf(INDENT+"out:\n");
-			pr.printf(INDENT+"return res == TEEC_SUCCESS ? TEST_PASS : TEST_FAIL;\n}\n");
+			//TEST_NOT_SUPPORT
+			pr.printf(INDENT+"return make_test_result(res);\n}\n");
 		}
 		public void addTestMacro(String sect, PrintStream pr) {
 			String desc = name.replace("_", " ");

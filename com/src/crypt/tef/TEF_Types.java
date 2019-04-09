@@ -71,6 +71,7 @@ public interface TEF_Types {
 	static enum tef_padding_mode_e {
 		TEF_PADDING_NONE("NoPadding"),
 		TEF_PADDING_X931("X931Padding"),
+		TEF_PADDING_PKCS1("PKCS1Padding"),
 		TEF_PADDING_PKCS5("PKCS5Padding"),
 		TEF_PADDING_ISO9797_M1("ISO9797_M1"),
 		TEF_PADDING_ISO9797_M2("ISO9797_M2"),

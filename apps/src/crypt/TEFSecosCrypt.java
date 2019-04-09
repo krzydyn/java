@@ -699,27 +699,83 @@ public class TEFSecosCrypt extends UnitTest implements TEF_Types {
 		Log.info("shared[%d] = %s", (sA.bitLength()+7)/8, sA.toString(16));
 	}
 
-	static void mgf_test() throws Exception {
-		byte[] seed = "hello".getBytes();
-		byte[] t1 = RSA.mgf(seed, 10, MessageDigest.getInstance("SHA-256"));
-		check(t1, Text.bin("DA75447E22F9F99E1BE0"));
+	static void gp_asym_encr() throws Exception {
+		RSA rsa_pub = new RSA(
+				new BigInteger(1, GP.TEE_ATTR_RSA_PUBLIC_EXPONENT_VALUE01),
+				null,
+				new BigInteger(1, GP.TEE_ATTR_RSA_MODULUS_VALUE01),
+				false
+				);
+		RSA rsa_prv = new RSA(
+				new BigInteger(1, GP.TEE_ATTR_RSA_PUBLIC_EXPONENT_VALUE01),
+				new BigInteger(1, GP.TEE_ATTR_RSA_PRIVATE_EXPONENT_VALUE01),
+				new BigInteger(1, GP.TEE_ATTR_RSA_MODULUS_VALUE01),
+				true
+				);
 
-		t1 = RSA.mgf(seed, 15, MessageDigest.getInstance("SHA-256"));
-		check(t1, Text.bin("DA75447E22F9F99E1BE09A00CF1A07"));
+		byte[] data = GP.DATA_FOR_CRYPTO1;
+		MessageDigest md = MessageDigest.getInstance("SHA1");
 
-		seed = "foo".getBytes();
-		t1 = RSA.mgf(seed, 3, MessageDigest.getInstance("SHA-1"));
-		check(t1, Text.bin("1AC907"));
-		t1 = RSA.mgf(seed, 5, MessageDigest.getInstance("SHA-1"));
-		check(t1, Text.bin("1AC9075CD4"));
+		//byte[] em = RSA.padOAEP(null, data, GP.TEE_ATTR_RSA_MODULUS_VALUE01.length, md);
+		//Log.debug("padOAEP(hashPAD) [%d]: %s", emsg.length, Text.hex(emsg));
+		//byte[] edata = rsa_pub.encrypt(em);
+		byte[] edata = Text.bin("B6F108A55A6CD55B6026AA1800EE93D34A04F88572BEAAB9C6A0FCBBB73B3D0EC36723CA3671B54D7E56A7BB42AFE85E498192F95B5480A02D83267B6BE1AD7CDA87E8D08459289E9C8181E61DE9C76FCD36964176EAFA8AAC7E4126D6F8B0E995C144C13493683F4EF3B8B37C6D7CD4ABC2116D7E79A3242E53458A8FCDD7BD0D8A77806993FB8C966A2BA7F10A06EAD4CD001361FB8B416E3E45079E73CCBF489A1A5804820DAF1DB7AA054BEF686E28FCF31636C39D6A41F76270808341E297DFDF24B3B38BB8549986FFB8FC721E62566E8AE171FDDE707B0E96F5415EEB82A42A423012BA350F8AC9C6B28541CDA2BA6F98CEC3A4B8B0133E8D5C16BC55");
+		Log.debug("encr(EM) [%d]: %s", edata.length, Text.hex(edata));
 
-		seed = "bar".getBytes();
-		t1 = RSA.mgf(seed, 5, MessageDigest.getInstance("SHA-1"));
-		check(t1, Text.bin("BC0C655E01"));
-		t1 = RSA.mgf(seed, 50, MessageDigest.getInstance("SHA-1"));
-		check(t1, Text.bin("BC0C655E016BC2931D85A2E675181ADCEF7F581F76DF2739DA74FAAC41627BE2F7F415C89E983FD0CE80CED9878641CB4876"));
-		t1 = RSA.mgf(seed, 50, MessageDigest.getInstance("SHA-256"));
-		check(t1, Text.bin("382576A7841021CC28FC4C0948753FB8312090CEA942EA4C4E735D10DC724B155F9F6069F289D61DACA0CB814502EF04EAE1"));
+		byte[] rdata = rsa_prv.decrypt(edata);
+		Log.debug("EM [%d]: %s", rdata.length, Text.hex(rdata));
+
+		//data = RSA.unpadOAEP(null,rdata, md);
+		data = rdata;
+		Log.debug("m [%d]: %s", data.length, Text.hex(data));
+	}
+
+	static void gp_check_rsa() throws Exception {
+		byte[] pVal = Text.bin("3330374346453835E066C9ACD4F62E00805175130000000000000000C32A900101000000485275130002000000501000C7872C0008F22E004854751300000000F7FFFF7F0802FFFF40547513FFFFFF7F000000000000000000000000000000000000000000000000000000000000000000000000000000000000000032303438E066C9AC00000000D4F62E00B22A900118F92E003C52751348527513745A9001AD2A9001005010009D862C00C8F72E00AC252F00081C1000FCFFFFFFAC252F0017702C003C527513E066C9AC000000000B958C01B22A9001745A900100080000485275134630314139354344354639463143424335433245433830303342464145304435E0527513F85A3100A8527513F85A3100E0527513F900000098527513A85275139453751300C0E201E0537513B133E10141413643454531363742463839324146A4432B000000000000000000423630343143334132454437434142384235303000000000506A31002053751300000000E05275135334E1018C268A01B37C0700117B9C7C0000000001000000F85A3100A4432B004454751343363833E0537513A053751320537513945375139453751340547513AB34E1018C268A01B37C0700117B9C7C0000000001000000F85A3100B0537513A867310078537513A8673100B05375134100000068537513785375136454751300C0E201B0547513");
+		byte[] qVal = Text.bin("B133E1013C54751300C0E201E8537513F85A3100B0537513F85A3100E8537513A0040000A0537513B05375139C54751300C0E201E8547513B133E101F0537513000000002054751328713100147E2B00000000000000000014000000D8537513E85375139C54751300C0E20100000000506A31002854751300000000E85375135334E101A61CBB00B5D8060087F0967C0000000001000000F85A3100147E2B004C5575133416BB00E8547513A8547513285475139C5475139C54751348557513AB34E101A61CBB00B5D8060087F0967C0000000001000000F85A3100147E2B004C557513E8547513E8547513A8547513186F310098547513D936E101C051310058543100C8563100F85A3100085D3100605F31008863310098653100A8673100186F3100287131001455751328713100E8218A01A6000000605475130B00000004000000A61CBB00B5D8060087F0967C000000000100000000000000000000004C557513186F3100E416BB00ED00000000000000A61CBB00FB37E1011055751301000000A61CBB00B5D8060087F0967C0000000001000000F85A3100147E2B004C55751300C22100FC3BBB00C4B2BC00485575134855751329412C001B412C0015182C00C4B2BC00F938E101FC3BBB004C5575137CCC2100186F310000C0E20170050000F85A3100010000005055751300000000E066C9AC01000000C4B2BC00");
+		BigInteger p = new BigInteger(1, pVal);
+		BigInteger q = new BigInteger(1, qVal);
+		BigInteger n = p.multiply(q);
+		Log.debug("N = %s", n.toString(16));
+	}
+
+	/*
+	 * M, the message to be encrypted:
+	 *    d4 36 e9 95 69 fd 32 a7 c8 a0 5b bc 90 d3 2c 49
+	 * P, encoding parameters:
+	 *    NULL
+	 * pHash=Hash(P):
+	 *    da 39 a3 ee 5e 6b 4b 0d 32 55 bf ef 95 60 18 90 af d8 07 09
+	 * DB = pHash‖P S‖01‖M: (107)
+	 *    da 39 a3 ee 5e 6b 4b 0d 32 55 bf ef 95 60 18 90 af d8 07 09 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 0000 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 0000 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 01 d4 36 e9 95 69fd 32 a7 c8 a0 5b bc 90 d3 2c 49
+	 * seed, a random octet string:
+	 *    aa fd 12 f6 59 ca e6 34 89 b4 79 e5 07 6d de c2 f0 6c b5 8f
+	 * dbMask = MGF(seed,107):
+	 *    06 e1 de b2 36 9a a5 a5 c7 07 d8 2c 8e 4e 93 24 8a c7 83 de e0 b2 c0 4626 f5 af f9 3e dc fb 25 c9 c2 b3 ff 8a e1 0e 83 9a 2d db 4c dc fe 4f f477 28 b4 a1 b7 c1 36 2b aa d2 9a b4 8d 28 69 d5 02 41 21 43 58 11 59 1be3 92 f9 82 fb 3e 87 d0 95 ae b4 04 48 db 97 2f 3a c1 4e af f4 9c 8c 3b7c fc 95 1a 51 ec d1 dd e6 12 64
+	 * maskedDB = DB xor dbMask:
+	 *    dc d8 7d 5c 68 f1 ee a8 f5 52 67 c3 1b 2e 8b b4 25 1f 84 d7 e0 b2 c0 4626 f5 af f9 3e dc fb 25 c9 c2 b3 ff 8a e1 0e 83 9a 2d db 4c dc fe 4f f477 28 b4 a1 b7 c1 36 2b aa d2 9a b4 8d 28 69 d5 02 41 21 43 58 11 59 1be3 92 f9 82 fb 3e 87 d0 95 ae b4 04 48 db 97 2f 3a c1 4f 7b c2 75 19 5281 ce 32 d2 f1 b7 6d 4d 35 3e 2d
+	 * seedMask = MGF(maskedDB,20)
+	 *    41 87 0b 5a b0 29 e6 57 d9 57 50 b5 4c 28 3c 08 72 5d be a9
+	 * maskedSeed = seed xor seedMa
+	 *    eb 7a 19 ac e9 e3 00 63 50 e3 29 50 4b 45 e2 ca 82 31 0b 26
+	 * EM=maskedSeed‖maskedDB:
+	 *    eb 7a 19 ac e9 e3 00 63 50 e3 29 50 4b 45 e2 ca 82 31 0b 26 dc d8 7d 5c68 f1 ee a8 f5 52 67 c3 1b 2e 8b b4 25 1f 84 d7 e0 b2 c0 46 26 f5 af f93e dc fb 25 c9 c2 b3 ff 8a e1 0e 83 9a 2d db 4c dc fe 4f f4 77 28 b4 a1b7 c1 36 2b aa d2 9a b4 8d 28 69 d5 02 41 21 43 58 11 59 1b e3 92 f9 82fb 3e 87 d0 95 ae b4 04 48 db 97 2f 3a c1 4f 7b c2 75 19 52 81 ce 32 d2f1 b7 6d 4d 35 3e 2d
+	 *
+	 * DA39A3EE5E6B4B0D3255BFEF95601890AFD80709000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001D436E99569FD32A7C8A05BBC90D32C49
+	 * DA39A3EE5E6B4B0D3255BFEF95601890AFD807090000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001D436E99569FD32A7C8A05BBC90D32C49
+	 */
+	static void oaep_test_vectors() throws Exception {
+		byte[] db = Text.bin("da 39 a3 ee 5e 6b 4b 0d 32 55 bf ef 95 60 18 90 af d8 07 09 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 0000 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 0000 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 01 d4 36 e9 95 69fd 32 a7 c8 a0 5b bc 90 d3 2c 49");
+		byte[] mdb = Text.bin("dc d8 7d 5c 68 f1 ee a8 f5 52 67 c3 1b 2e 8b b4 25 1f 84 d7 e0 b2 c0 4626 f5 af f9 3e dc fb 25 c9 c2 b3 ff 8a e1 0e 83 9a 2d db 4c dc fe 4f f477 28 b4 a1 b7 c1 36 2b aa d2 9a b4 8d 28 69 d5 02 41 21 43 58 11 59 1be3 92 f9 82 fb 3e 87 d0 95 ae b4 04 48 db 97 2f 3a c1 4f 7b c2 75 19 5281 ce 32 d2 f1 b7 6d 4d 35 3e 2d");
+		byte[] msg = Text.bin("d4 36 e9 95 69 fd 32 a7 c8 a0 5b bc 90 d3 2c 49");
+		byte[] em = RSA.padOAEP(null, msg, 128-1, MessageDigest.getInstance("SHA1"),
+				Text.bin("aa fd 12 f6 59 ca e6 34 89 b4 79 e5 07 6d de c2 f0 6c b5 8f"));
+		Log.debug("DB [%d]: %s", db.length, Text.hex(db));
+		Log.debug("MaskedDB [%d]: %s", mdb.length, Text.hex(mdb));
+		Log.debug("EM [%d]: %s", em.length, Text.hex(em));
+
+		//msg = RSA.unpadOAEP(null, em, MessageDigest.getInstance("SHA1"));
+		//Log.debug("M [%d]: %s", msg.length, Text.hex(msg));
 	}
 
 	static void rsa_sign() throws Exception {
@@ -754,6 +810,29 @@ public class TEFSecosCrypt extends UnitTest implements TEF_Types {
 		check("unpad", RSA.unpadEMSA_PSS(padEMSA_PSS, hash, nBits-1, md));
 	}
 
+	static void mgf_test() throws Exception {
+		byte[] seed = "hello".getBytes();
+		byte[] t1 = RSA.mgf1(seed, 10, MessageDigest.getInstance("SHA-256"));
+		check(t1, Text.bin("DA75447E22F9F99E1BE0"));
+
+		t1 = RSA.mgf1(seed, 15, MessageDigest.getInstance("SHA-256"));
+		check(t1, Text.bin("DA75447E22F9F99E1BE09A00CF1A07"));
+
+		seed = "foo".getBytes();
+		t1 = RSA.mgf1(seed, 3, MessageDigest.getInstance("SHA-1"));
+		check(t1, Text.bin("1AC907"));
+		t1 = RSA.mgf1(seed, 5, MessageDigest.getInstance("SHA-1"));
+		check(t1, Text.bin("1AC9075CD4"));
+
+		seed = "bar".getBytes();
+		t1 = RSA.mgf1(seed, 5, MessageDigest.getInstance("SHA-1"));
+		check(t1, Text.bin("BC0C655E01"));
+		t1 = RSA.mgf1(seed, 50, MessageDigest.getInstance("SHA-1"));
+		check(t1, Text.bin("BC0C655E016BC2931D85A2E675181ADCEF7F581F76DF2739DA74FAAC41627BE2F7F415C89E983FD0CE80CED9878641CB4876"));
+		t1 = RSA.mgf1(seed, 50, MessageDigest.getInstance("SHA-256"));
+		check(t1, Text.bin("382576A7841021CC28FC4C0948753FB8312090CEA942EA4C4E735D10DC724B155F9F6069F289D61DACA0CB814502EF04EAE1"));
+	}
+
 	public static void main(String[] args) {
 		//CryptX_Provider.register();
 		//listProviders();
@@ -767,12 +846,14 @@ public class TEFSecosCrypt extends UnitTest implements TEF_Types {
 		//try { gp_digest(); } catch (Exception e) { Log.error(e); }
 		//try { gp_encrypt(); } catch (Exception e) { Log.error(e); }
 		//try { gp_mac(); } catch (Exception e) { Log.error(e); }
-		try { gp_cmac(); } catch (Exception e) { Log.error(e); }
+		//try { gp_cmac(); } catch (Exception e) { Log.error(e); }
 		//try { java_mac(); } catch (Exception e) { Log.error(e); }
 		//try { gp_dsa(); } catch (Exception e) { Log.error(e); }
 		//try { gp_dh(); } catch (Exception e) { Log.error(e); }
 		//try { mgf_test(); } catch (Exception e) { Log.error(e); }
 		//try { rsa_sign(); } catch (Exception e) { Log.error(e); }
-
+		try { gp_asym_encr(); } catch (Exception e) { Log.error(e); }
+		//try { oaep_test_vectors(); } catch (Exception e) { Log.error(e); }
+		//try { gp_check_rsa(); } catch (Exception e) { Log.error(e); }
 	}
 }

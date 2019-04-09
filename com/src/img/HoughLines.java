@@ -11,7 +11,7 @@ import sys.Log;
 //https://www.uio.no/studier/emner/matnat/ifi/INF4300/h09/undervisningsmateriale/hough09.pdf
 //http://www.cs.utah.edu/~vpegorar/courses/cs7966/Assignment4/
 //http://homepages.inf.ed.ac.uk/rbf/HIPR2/hough.htm
-//TODO HoughTransfor for variable number of params
+//TODO HoughTransform for variable number of params
 //TODO Radon Transform
 public class HoughLines {
 	static private final int NUM_PHI = 200;

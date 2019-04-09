@@ -34,6 +34,7 @@ package crypt;
  * <li><b>Zero padding</b> DATA,0x00...
  * <li><b>ANSI X.923</b> DATA,0x00,0x00,...NUM_OF_PAD_BYTES
  * <li><b>ISO 10126</b> DATA,RND,RND,...NUM_OF_PAD_BYTES
+ * <li><b>PKCS1</b> 0x01,0x02,PS,0x00,DATA<br>
  * <li><b>PKCS5/PKCS7</b> DATA,NUM_OF_PAD_BYTES,...NUM_OF_PAD_BYTES<br>
  * 			PKCS5 only block_size 8, PKCS7 for any block_size 1..255
  * <li><b>ISO/IEC 7816-4</b> DATA,0x80,0x00...

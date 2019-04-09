@@ -77,7 +77,7 @@ abstract public class Asymmetric {
 	 * @param md hash function
 	 * @return
 	 */
-	static byte[] mgf(byte[] seed, int masklen, MessageDigest md) {
+	static byte[] mgf1(byte[] seed, int masklen, MessageDigest md) {
 		int hLen = md.getDigestLength();
 		int n = (masklen + hLen - 1)/hLen;
 		byte[] T = new byte[masklen];

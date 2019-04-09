@@ -48,7 +48,8 @@ public class Colors {
 		if (s.length>3) s[3] = ((rgb>>24)&0xff)/255f;
 	}
 	public static int rgb(float r, float g, float b){
-		return (int)(r*255)<<16 + (int)(g*255)<<8 + (int)(b*255);
+		if (r < 0f || r >1f || g < 0f || g >1f || b < 0f || b >1f) throw new RuntimeException("color out of range");
+		return ((int)(r*255))<<16 + ((int)(g*255))<<8 + ((int)(b*255));
 	}
 	public static int rgb(float[] s){
 		int c,r;

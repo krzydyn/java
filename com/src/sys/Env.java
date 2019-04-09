@@ -117,6 +117,7 @@ public class Env {
 		}
 
 		try {
+			out.close();
 			int ec = child.waitFor();
 			if (ec != 0) {
 				Log.error("exec(%s); exitcode=%d", Text.join(" ", args), ec);
@@ -131,7 +132,6 @@ public class Env {
 			Log.debug("exec %s interrupted", Text.join(" ", args));
 			return null;
 		} finally {
-			out.close();
 			in.close();
 			err.close();
 		}
@@ -190,7 +190,7 @@ public class Env {
 	}
 
 	static public List<File> getDirs(File parent, int level){
-		List<File> dirs = new ArrayList<File>();
+		List<File> dirs = new ArrayList<>();
 		File[] files = parent.listFiles();
 		if (files == null) return dirs;
 		for(File f: files){
