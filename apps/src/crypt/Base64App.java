@@ -156,7 +156,7 @@ public class Base64App {
 				"prime1","prime2","exponent1","exponent2","coefficient","otherPrimeInfos",
 		};
 		int r=0,el=0;
-		TLV tlv = new TLV();
+		TLV_BER tlv = new TLV_BER();
 		String indent = Text.repeat("    ", ind);
 		for (int i=0; i < len; i+=r) {
 			r = tlv.read(b, offs+i, len-i);

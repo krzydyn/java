@@ -267,11 +267,7 @@ public class GenFromXml {
 				}
 
 				pr.printf(INDENT+"res = %s(%s);\n", mapname, Text.join(sep, args));
-
-				//if (name.equals("InitializeContext"))
-				//	pr.printf(INDENT+"if (res != TEEC_SUCCESS) goto out;\n\n");
-				//else
-					pr.printf(INDENT+"if (res != TEEC_SUCCESS) goto postamble;\n\n");
+				pr.printf(INDENT+"if (res != TEEC_SUCCESS) goto postamble;\n\n");
 			}
 			else {
 				String oneline = String.format(INDENT+"%s(%s);\n", mapname, Text.join(sep, args));

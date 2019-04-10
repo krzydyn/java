@@ -364,6 +364,9 @@ public class RSA extends Asymmetric {
 		byte[] id_MD5 = Text.bin("2A864886F70D0205");
 		byte[] id_SHA1 = Text.bin("2B0E03021A");
 		byte[] id_SHA2 = Text.bin("608648016503040203");
+		byte[] id_hash = null;
+		if (md.getAlgorithm().equals("md5"))
+			id_hash = id_MD5;
 		/*
 		byte[] id_SHA256 = Text.bin("608648016503040203");
 		byte[] id_SHA384 = Text.bin("608648016503040203");

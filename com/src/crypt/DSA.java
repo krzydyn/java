@@ -74,8 +74,8 @@ public class DSA extends Asymmetric {
 		Log.debug("r = %s", Text.hex(r.toByteArray()));
 		Log.debug("s = %s", Text.hex(s.toByteArray()));
 
-		TLV der = new TLV();
-		TLV tlv = new TLV();
+		TLV_BER der = new TLV_BER();
+		TLV_BER tlv = new TLV_BER();
 		byte[] rs = new byte[(q.bitLength()+10)*2];
 		tlv.create(q.bitLength()/8+10);
 		tlv.set(0x02, r.toByteArray());
@@ -97,12 +97,12 @@ public class DSA extends Asymmetric {
 	5. sign is valid if v == r
 	 */
 	public boolean verifyDigest(byte[] sign, byte[] hash) {
-		TLV der = new TLV();
-		TLV tlv = new TLV();
+		TLV_BER der = new TLV_BER();
+		TLV_BER tlv = new TLV_BER();
 		der.read(sign, 0, sign.length);
 		tlv.read(der.buf, 0, der.vl);
 		BigInteger r = new BigInteger(1, tlv.toByteArray());
-		int x = tlv.vi - tlv.ti + tlv.vl;
+		int x = tlv.vi - tlv.bufOffs + tlv.vl;
 		tlv.read(der.buf, x, der.vl-x);
 		BigInteger s = new BigInteger(1, tlv.toByteArray());
 		BigInteger H = new BigInteger(1, hash);
