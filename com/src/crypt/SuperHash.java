@@ -12,7 +12,7 @@ public class SuperHash implements Digest {
 		if (initval!=null) {
 			for (int i=0; i < initval.length && i < 4; ++i) {
 				hash <<= 8;
-				hash=initval[i];
+				hash|=initval[i];
 			}
 		}
 	}

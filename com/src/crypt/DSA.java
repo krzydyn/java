@@ -76,7 +76,7 @@ public class DSA extends Asymmetric {
 
 		TLV_BER der = new TLV_BER();
 		TLV_BER tlv = new TLV_BER();
-		byte[] rs = new byte[(q.bitLength()+10)*2];
+		byte[] rs = new byte[(q.bitLength()/8+10)*2];
 		tlv.create(q.bitLength()/8+10);
 		tlv.set(0x02, r.toByteArray());
 		int l = 0;

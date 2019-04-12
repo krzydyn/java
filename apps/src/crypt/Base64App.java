@@ -162,7 +162,7 @@ public class Base64App {
 			r = tlv.read(b, offs+i, len-i);
 			if (r == 0) break;
 			if (tlv.isConstructed()) {
-				Log.prn("%sCONSTR (read=%d) T=%x L=%d", indent, r, tlv.tag(), tlv.vl);
+				Log.prn("%sCONSTR (read=%d) T=%x L=%d", indent, r, tlv.tagAsLong(), tlv.vl);
 				parseTLV(ind+1, b, tlv.getValueOffset(), tlv.vl);
 			}
 			else {

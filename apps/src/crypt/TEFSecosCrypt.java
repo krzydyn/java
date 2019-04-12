@@ -848,7 +848,7 @@ public class TEFSecosCrypt extends UnitTest implements TEF_Types {
 		//try { gp_mac(); } catch (Exception e) { Log.error(e); }
 		//try { gp_cmac(); } catch (Exception e) { Log.error(e); }
 		//try { java_mac(); } catch (Exception e) { Log.error(e); }
-		//try { gp_dsa(); } catch (Exception e) { Log.error(e); }
+		try { gp_dsa(); } catch (Exception e) { Log.error(e); }
 		//try { gp_dh(); } catch (Exception e) { Log.error(e); }
 		//try { mgf_test(); } catch (Exception e) { Log.error(e); }
 		//try { rsa_sign(); } catch (Exception e) { Log.error(e); }

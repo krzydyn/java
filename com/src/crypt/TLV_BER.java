@@ -1,5 +1,6 @@
 package crypt;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -132,10 +133,29 @@ public class TLV_BER {
 			TYPE.STRING,    //29
 			TYPE.STRING,    //30
 	};
-	static final int TAG_SEQ   = 0x1f;
-	static final int TAG_NEXT  = 0x80;
+	static final int TAG_SUBSEQ = 0x1f;
 	static final int TAG_CONSTR = 0x20;
+	static final int TAG_NEXT  = 0x80;
 	static final int LEN_BYTE  = 0x80;
+
+	public static int tagBytes(int t) {
+		int l = 0;
+		if (t < 0x100) l = 1;
+		else if (t < 0x10000) l = 2;
+		else if (t < 0x1000000) l = 3;
+		else l = 4;
+		return l;
+	}
+	public static int lengthBytes(int len) {
+		int l = 0;
+		if (len < 0x80) l = 1;
+		else if (len < 0x100) l = 2;
+		else if (len < 0x10000) l = 3;
+		else l = 4;
+		return l;
+	}
+
+
 	final int fixedtag;
 	final int fixedlen;
 
@@ -148,7 +168,7 @@ public class TLV_BER {
 	public TLV_BER() {fixedtag=0; fixedlen=0;}
 	public TLV_BER(int ft,int fl) {fixedtag=ft; fixedlen=fl;}
 
-	public long tag() {
+	public long tagAsLong() {
 		if (bufOffs < 0) return -1;
 		long t = buf[bufOffs]&0xff;
 		if (fixedtag > 0) {
@@ -156,7 +176,7 @@ public class TLV_BER {
 				t <<= 8; t |= buf[bufOffs+i]&0xff;
 			}
 		}
-		else if ((buf[bufOffs]&TAG_SEQ) == TAG_SEQ) {
+		else if ((buf[bufOffs]&TAG_SUBSEQ) == TAG_SUBSEQ) {
 			int l=1;
 			do {
 				t <<= 8; t |= buf[bufOffs+l]&0xff;
@@ -171,67 +191,68 @@ public class TLV_BER {
 		return -1;
 	}
 
-	private void makeTag(int t) {
-		if (fixedtag > 0) {
-			throw new RuntimeException("not suppoted");
-		}
-		if (t < 0x100) tl = 1;
-		else if (t < 0x10000) tl = 2;
-		else if (t < 0x1000000) tl = 3;
-		else tl = 4;
+	private void makeTag(int tag) {
+		if (fixedtag > 0) tl = fixedtag;
+		else tl = tagBytes(tag);
 		for (int i = 0; i < tl; ++i)
-			buf[bufOffs+i] = (byte)(t >> (8*(tl - i -1)));
+			buf[bufOffs+i] = (byte)(tag >> (8*(tl - i -1)));
 	}
 	private void makeLength(int l) {
-		int li = bufOffs+tl;
-		if (l < 0x80) buf[li++] = (byte)l;
-		else if (l < 0x100) {
-			buf[li++] = (byte)0x81;
-			buf[li++] = (byte)l;
+		int lb = lengthBytes(l);
+		int li = bufOffs + tl;
+		if (lb == 1) buf[li++] = (byte)l;
+		else {
+			buf[li++] = (byte)(0x80 | (lb-1));
+			for (int i = 1; i < lb; ++i) {
+				buf[li + lb - i] = (byte)l;
+				l >>>= 8;
+			}
+			li += lb - 1;
 		}
-		else if (l < 0x10000) {
-			buf[li++] = (byte)0x82;
-			buf[li++] = (byte)(l>>8);
-			buf[li++] = (byte)(l>>0);
-		}
-		vi = li;
+
+		vi = li - bufOffs;
 		vl = l;
+	}
+
+	public void create(int capa) {
+		bufOffs = 0; tl = 0; vl = 0;
+		if (buf == null || buf.length < capa)
+			buf = new byte[capa];
 	}
 
 	public void set(int t, byte[] v, int offs, int len) {
 		makeTag(t);
 		makeLength(len);
-		System.arraycopy(v, offs, buf, vi, len);
+		System.arraycopy(v, offs, buf, bufOffs + vi, len);
 
-		Log.debug("tlv = [%d] %s", vi-bufOffs+vl, Text.hex(buf, bufOffs, vi-bufOffs+vl));
+		Log.debug("tlv.set %s", toString());
 	}
 
-	public void create(int capa) {
-		bufOffs = 0;
-		buf = new byte[capa];
-	}
 	public void set(int t, byte[] v) {
 		set(t, v, 0, v.length);
 	}
 
 	public int read(byte[] b, int offs, int len) {
 		int i=0;
-		bufOffs=-1; vi=-1; vl=0;
+		bufOffs = 0; tl = 0; vl = 0;
 		while (i < len && b[offs+i]==0) ++i;
-		if (i >= len) return 0;
+		if (i >= len) return i;
 		buf = b; bufOffs = offs + i;
 
+		// TAG
 		if (fixedtag > 0) {
 			i += fixedtag;
 		}
-		else if ((buf[offs+i]&TAG_SEQ) == TAG_SEQ) {
+		else if ((buf[offs+i]&TAG_SUBSEQ) == TAG_SUBSEQ) {
 			for (++i; (b[offs+i]&TAG_NEXT) != 0; ++i) ;
 			++i;
 		}
 		else {
 			++i;
 		}
-		tl = i - bufOffs;
+		tl = offs + i - bufOffs;
+
+		// LENGTH
 		vl = b[offs+i]&0xff; ++i;
 		if (fixedlen > 0) {
 			for (int ii=1; ii < fixedlen; ++ii) {
@@ -251,22 +272,75 @@ public class TLV_BER {
 		else {
 			//Log.debug("short len = %d", l);
 		}
-		vi = offs+i;
+
+		// VALUE
+		vi = offs+i - bufOffs;
 		return i+vl;
 	}
 
-	public int read(InputStream os) throws IOException {
-		return 0;
+	public int read(InputStream is) throws IOException {
+		ByteArrayOutputStream ba = new ByteArrayOutputStream();
+		bufOffs = 0; tl = 0; vl = 0;
+		int r, rd=0;;
+		while ((r=is.read())==0) ++rd;
+		if (r == -1) return rd;
+
+		// TAG
+		ba.write(r); ++rd;
+		if (fixedtag > 0) {
+			for (int i=1; i < fixedtag && (r=is.read()) >= 0; ++i) {
+				ba.write(r); ++rd;
+			}
+		}
+		else if ((r&TAG_SUBSEQ) == TAG_SUBSEQ){
+			while ((r=is.read()) >= 0) {
+				ba.write(r); ++rd;
+				if ((r&TAG_NEXT) == 0) break;
+			}
+		}
+		tl = ba.size();
+		buf = ba.toByteArray();
+		if (r == -1) return rd;
+
+		// LENGTH
+		r=is.read();
+		if (r == -1) return rd;
+		ba.write(r); ++rd;
+		vl = r;
+		if (fixedlen > 0) {
+			for (int i=1; i < fixedtag && (r=is.read()) >= 0; ++i) {
+				ba.write(r); ++rd;
+				vl <<= 8; vl |= r;
+			}
+		}
+		else if ((vl&LEN_BYTE) != 0) {
+			int ll = vl&0x7f;
+			vl=0;
+			for (int i=0; i < ll && (r=is.read()) >= 0; ++i) {
+				ba.write(r); ++rd;
+				vl <<= 8; vl |= r;
+			}
+		}
+		buf = ba.toByteArray();
+		if (r == -1) return rd;
+
+		// VALUE
+		vi = ba.size();
+		for (int i=0; i < vl && (r=is.read()) >= 0; ++i) {
+			ba.write(r); ++rd;
+		}
+		buf = ba.toByteArray();
+		return rd;
 	}
 
 	public int write(OutputStream os) throws IOException {
-		int len = vi - bufOffs + vl;
+		int len = vi + vl;
 		os.write(buf, bufOffs, len);
 		return len;
 	}
 
 	public int write(byte[] b, int offs) {
-		int n = vi - bufOffs + vl;
+		int n = vi + vl;
 		System.arraycopy(buf, bufOffs, b, offs, n);
 		return n;
 	}
@@ -277,17 +351,17 @@ public class TLV_BER {
 	}
 
 	public int getValueOffset() {
-		return vi;
+		return bufOffs + vi;
 	}
 
 	@Override
 	public String toString() {
-		if ((buf[bufOffs]&TAG_SEQ) < ASN1_Type.length) {
-			TYPE type = ASN1_Type[buf[bufOffs]&TAG_SEQ];
+		if ((buf[bufOffs]&TAG_SUBSEQ) < ASN1_Type.length) {
+			TYPE type = ASN1_Type[buf[bufOffs]&TAG_SUBSEQ];
 			if (type == TYPE.STRING)
-				return String.format("T=%02x L=%d V=%s",tag(),vl,Text.vis(buf,vi,vl));
+				return String.format("T=%s L=%d V=%s",Text.hex(buf,bufOffs,tl),vl,Text.vis(buf,vi,vl));
 		}
-		return String.format("T=%02x L=%d V=%s",tag(),vl,Text.hex(buf,vi,vl));
+		return String.format("T=%s L=%d V=%s",Text.hex(buf,bufOffs,tl),vl,Text.hex(buf,vi,vl));
 	}
 	public byte[] toByteArray() {
 		return Arrays.copyOfRange(buf, bufOffs, vi+vl);
