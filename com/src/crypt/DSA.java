@@ -74,17 +74,9 @@ public class DSA extends Asymmetric {
 		Log.debug("r = %s", Text.hex(r.toByteArray()));
 		Log.debug("s = %s", Text.hex(s.toByteArray()));
 
-		TLV_BER der = new TLV_BER();
-		TLV_BER tlv = new TLV_BER();
-		byte[] rs = new byte[(q.bitLength()/8+10)*2];
-		tlv.create(q.bitLength()/8+10);
-		tlv.set(0x02, r.toByteArray());
-		int l = 0;
-		l = tlv.write(rs, l);
-		tlv.set(0x02, s.toByteArray());
-		l += tlv.write(rs, l);
-		der.create(l+10);
-		der.set(0x30, rs, 0, l);
+		TLV der = TLV.craete(0x30);
+		der.add(TLV.craete(0x02).set(r.toByteArray()));
+		der.add(TLV.craete(0x02).set(s.toByteArray()));
 		return der.toByteArray();
 	}
 
