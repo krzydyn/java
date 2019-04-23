@@ -147,12 +147,24 @@ public class TLV_BER {
 		return l;
 	}
 	public static int lengthBytes(int len) {
-		int l = 0;
-		if (len < 0x80) l = 1;
-		else if (len < 0x100) l = 2;
-		else if (len < 0x10000) l = 3;
-		else l = 4;
+		if (len < 0) throw new RuntimeException();
+		int l = 1;
+		if (len >= 0x80) {
+			while (len > 0) { ++l; len >>>= 8; }
+		}
 		return l;
+	}
+	public static void lengthWrite(OutputStream os, int len) throws IOException {
+		int lb = lengthBytes(len);
+		if (lb == 1) {
+			os.write(len&0x7f);
+		}
+		else {
+			os.write(0x80 | (lb-1));
+			for (int i = 1; i < lb; ++i) {
+				os.write((len >>> ((lb - i)*8))&0xff); // MSB first
+			}
+		}
 	}
 
 

@@ -1,11 +1,11 @@
 package crypt;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-
-import sys.Log;
 
 public abstract class TLV {
 	public static class Tag {
@@ -29,14 +29,21 @@ public abstract class TLV {
 		}
 
 		@Override
+		public void write(OutputStream os) throws IOException {
+			super.write(os);
+			os.write(v);
+		}
+
+		@Override
 		public int length() {return v.length;}
 		@Override
 		public void add(TLV t) {
 			throw new RuntimeException();
 		}
 		@Override
-		public TLV set(byte[] v) {
-			this.v = v;
+		public TLV setValue(byte[] v, int offs, int len) {
+			if (len == -1) this.v = v;
+			else this.v = Arrays.copyOfRange(v, offs, offs + len);
 			return this;
 		}
 	}
@@ -46,6 +53,12 @@ public abstract class TLV {
 
 		protected TLV_Constr(Tag tag) {
 			super(tag);
+		}
+
+		@Override
+		public void write(OutputStream os) throws IOException {
+			super.write(os);
+			for (TLV t : sub) t.write(os);
 		}
 
 		@Override
@@ -60,36 +73,48 @@ public abstract class TLV {
 			sub.add(t);
 		}
 		@Override
-		public TLV set(byte[] v) {
+		public TLV setValue(byte[] v, int offs, int len) {
 			throw new RuntimeException();
 		}
 	}
 
 	protected TLV(Tag t) { this.t = t; }
 
-	static public TLV craete(int tag) {
+	static public TLV create(int tag) {
 		Tag t = new Tag(tag);
 		if ((t.bytes[0]&0x20) != 0) return new TLV_Constr(t);
 		return new TLV_Primary(t);
 	}
-	static public TLV craete(byte[] tag, int offs, int len) {
+	static public TLV create(byte[] tag, int offs, int len) {
 		Tag t = new Tag(tag, offs, len);
 		if ((t.bytes[0]&0x20) != 0) return new TLV_Constr(t);
 		return new TLV_Primary(t);
 	}
+	static public TLV craete(byte[] tag) {
+		return TLV.create(tag, 0, tag.length);
+	}
+
+	public final TLV setValue(byte[] v) { return setValue(v, 0, v.length); }
 
 	public abstract void add(TLV t);
-	public abstract TLV set(byte[] v);
+	public abstract TLV setValue(byte[] v, int offs, int len);
 	public abstract int length();
 
-	void write(OutputStream os) {
-
+	protected void write(OutputStream os) throws IOException {
+		os.write(t.bytes);
+		TLV_BER.lengthWrite(os, length());
 	}
 
 	public byte[] toByteArray() {
 		int len = length();
-		int totlen = t.bytes.length + TLV_BER.lengthBytes(len) + len;
-		Log.debug("buffer len %d", totlen);
-		return null;
+		len = t.bytes.length + TLV_BER.lengthBytes(len) + len;
+		ByteArrayOutputStream ba = new ByteArrayOutputStream(len);
+		try {
+			write(ba);
+			return ba.toByteArray();
+		}
+		catch (IOException e) {
+			return null;
+		}
 	}
 }
