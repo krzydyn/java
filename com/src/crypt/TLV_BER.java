@@ -100,7 +100,7 @@ public class TLV_BER {
 		RFU, BOOLEAN, INTEGER, REAL, BITSTRING, OCTSTRING, STRING, NULL, OBJID, OBJDESCCR, INSTANCE,
 		ENUMERATED, SEQUENCE, SET, EMBEDDED, RELATIVE, TIME
 	}
-	private TYPE ASN1_Type[] = {
+	static final private TYPE ASN1_Type[] = {
 			TYPE.RFU,       //0
 			TYPE.BOOLEAN,   //1
 			TYPE.INTEGER,   //2
@@ -133,10 +133,10 @@ public class TLV_BER {
 			TYPE.STRING,    //29
 			TYPE.STRING,    //30
 	};
-	static final int TAG_SUBSEQ = 0x1f;
-	static final int TAG_CONSTR = 0x20;
-	static final int TAG_NEXT  = 0x80;
-	static final int LEN_BYTE  = 0x80;
+	static final public int TAG_SUBSEQ = 0x1f;
+	static final public int TAG_CONSTR = 0x20;
+	static final public int TAG_NEXT  = 0x80;
+	static final public int LEN_BYTE  = 0x80;
 
 	public static int tagBytes(int t) {
 		int l = 0;
