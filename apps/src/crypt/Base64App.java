@@ -191,6 +191,8 @@ public class Base64App {
 	static String dsaSIG_SHA224 = "303D021C645121F72308C6769B49ED9F295DB8DFBCBE6D3C34E74393DAFB5878021D00CEE911F028B854F6E1B7B88C77D09C0E9FE810EF9EF9263755B8B678";
 	static String pkcs1DER = "30 51 30 0d 06 09 60 86 48 01 65 03 04 02 03 05 00 04 30";
 
+	static String emvData = "84667DD7C0F1F32A02606588789A57A7A9EEE1583544CB8A6B140D071924D35D949ED5ED7A54B69A84667DD7C0F1F32A02606588789A57A7A9EEE1583544CB8A0723DB6DF0FCE6CF0000000000000000";
+
 	public static void main(String[] args) {
 		byte[] bin = Base64.decode(rsa_prv2);
 /*		Log.prn("%s", Text.hex(bin));
@@ -225,7 +227,7 @@ public class Base64App {
 		*/
 
 
-		bin = Text.bin(opensslSIG_SHA1);
+		/*bin = Text.bin(opensslSIG_SHA1);
 		parseTLV(0,bin,0,bin.length);
 
 		bin = Text.bin(opensslSIG_SHA224);
@@ -235,6 +237,9 @@ public class Base64App {
 		parseTLV(0,bin,0,bin.length);
 
 		bin = Text.bin(pkcs1DER);
+		parseTLV(0,bin,0,bin.length);*/
+
+		bin = Text.bin(emvData);
 		parseTLV(0,bin,0,bin.length);
 	}
 

@@ -287,6 +287,10 @@ public class TLV_BER {
 
 		// VALUE
 		vi = offs+i - bufOffs;
+		if (buf.length < i+vl) {
+			Log.error("data too short, %d < %d", buf.length - i, vl);
+			vl = buf.length - i;
+		}
 		return i+vl;
 	}
 
@@ -342,6 +346,10 @@ public class TLV_BER {
 			ba.write(r); ++rd;
 		}
 		buf = ba.toByteArray();
+		if (buf.length < vl) {
+			Log.error("data to short, %d < %d", buf.length, vl);
+			vl = buf.length;
+		}
 		return rd;
 	}
 
@@ -371,9 +379,11 @@ public class TLV_BER {
 		if ((buf[bufOffs]&TAG_SUBSEQ) < ASN1_Type.length) {
 			TYPE type = ASN1_Type[buf[bufOffs]&TAG_SUBSEQ];
 			if (type == TYPE.STRING)
-				return String.format("T=%s L=%d V=%s",Text.hex(buf,bufOffs,tl),vl,Text.vis(buf,vi,vl));
+				return String.format("T=%s L=%d V=%s",Text.hex(buf,bufOffs,tl),vl,Text.vis(buf,bufOffs+vi,vl));
 		}
-		return String.format("T=%s L=%d V=%s",Text.hex(buf,bufOffs,tl),vl,Text.hex(buf,vi,vl));
+		String T = Text.hex(buf,bufOffs,tl);
+		String V = Text.hex(buf,bufOffs+vi,vl);
+		return String.format("T=%s L=%d V=%s",T,vl,V);
 	}
 	public byte[] toByteArray() {
 		return Arrays.copyOfRange(buf, bufOffs, vi+vl);

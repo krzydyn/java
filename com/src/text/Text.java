@@ -170,7 +170,7 @@ public class Text {
 
 	public static StringBuilder hex(StringBuilder b, byte[] s, int off, int len) {
 		b.ensureCapacity(b.length()+2*len);
-		for (int i=0; i<len; ++i) {
+		for (int i = 0; i < len; ++i) {
 			b.append(String.format("%02X", s[off+i]&0xff));
 		}
 		return b;
@@ -186,7 +186,7 @@ public class Text {
 	}
 
 	public static StringBuilder hexstr(StringBuilder b, byte[] s, int off, int len) {
-		for (int i=0; i<len; ++i) {
+		for (int i = 0; i < len; ++i) {
 			b.append(String.format("\\x%02X", s[off+i]&0xff));
 		}
 		return b;
@@ -202,7 +202,7 @@ public class Text {
 
 	public static StringBuilder vis(StringBuilder b, byte[] s, int off, int len) {
 		b.ensureCapacity(b.length()+len);
-		for (int i=0; i<len; ++i) {
+		for (int i = 0; i < len; ++i) {
 			b.append(Ansi.toString((char)(s[off+i]&0xff)));
 		}
 		return b;
@@ -218,7 +218,7 @@ public class Text {
 
 	public static StringBuilder vis(StringBuilder b, CharSequence s) {
 		b.ensureCapacity(b.length()+s.length());
-		for (int i=0; i<s.length(); ++i) {
+		for (int i=0; i < s.length(); ++i) {
 			b.append(Ansi.toString(s.charAt(i)));
 		}
 		return b;
