@@ -49,7 +49,7 @@ public class Serial {
 	private CommPort commPort;
 
 	static public List<String> listPorts() {
-		List<String> list = new ArrayList<String>();
+		List<String> list = new ArrayList<>();
 		java.util.Enumeration<?> portList = CommPortIdentifier.getPortIdentifiers();
 		while(portList.hasMoreElements()) {
 			CommPortIdentifier portId = (CommPortIdentifier)portList.nextElement();

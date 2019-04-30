@@ -39,8 +39,8 @@ import ui.MainPanel;
 @SuppressWarnings("serial")
 public class SerialMain extends MainPanel {
 
-	private final List<Serial> ports = new ArrayList<Serial>();
-	private final Map<Serial,AnsiTerminal> editors = new HashMap<Serial,AnsiTerminal>();
+	private final List<Serial> ports = new ArrayList<>();
+	private final Map<Serial,AnsiTerminal> editors = new HashMap<>();
 	private boolean running = false;
 
 	public SerialMain() {this(null);}
@@ -203,6 +203,10 @@ public class SerialMain extends MainPanel {
 	}
 
 	public static void main(String[] args) {
+		Log.setTestMode();
+
+		Env.addLibraryPath("./jni/rxtx");
+
 		Log.notice("Serial version %s", Serial.getVersion());
 		//Log.setReleaseMode();
 		startGUI(SerialMain.class, args);

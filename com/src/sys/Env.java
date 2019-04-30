@@ -36,6 +36,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.lang.management.ManagementFactory;
+import java.lang.management.RuntimeMXBean;
+import java.lang.reflect.Field;
 import java.net.URL;
 import java.net.URLConnection;
 import java.nio.charset.Charset;
@@ -70,13 +73,60 @@ public class Env {
 		return new Dimension(gd.getDisplayMode().getWidth(), gd.getDisplayMode().getHeight());
 	}
 
-	private static String linuxPath(File f) {
+	static private String linuxPath(File f) {
 		return f.getPath().replace('\\', '/');
 	}
 
-	static public final String expandEnv(String p) {
-		if (p.startsWith("~/") || p.equals("~")) {
-			p=linuxPath(new File(System.getProperty("user.home")+p.substring(1)));
+	static public void addLibraryPath(String p) {
+		p = Env.expandEnv(p);
+		Log.debug("Addding library path '%s'", p);
+		Field usrPathsField;
+		try {
+			usrPathsField = ClassLoader.class.getDeclaredField("usr_paths");
+			usrPathsField.setAccessible(true);
+			final String[] paths = (String[])usrPathsField.get(null);
+			for(String path : paths) {
+				if(path.equals(p)) {
+					Log.info("path %s already on list", p);
+					return;
+				}
+			}
+
+			final String[] newPaths = Arrays.copyOf(paths, paths.length + 1);
+			newPaths[paths.length] = p;
+			usrPathsField.set(null, newPaths);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+	static public void startApplication(final Class<?> main) throws Exception {
+		Log.debug("starting applicatiobn %s", main.getName());
+		RuntimeMXBean jvm = ManagementFactory.getRuntimeMXBean();
+		ArrayList<String> args = new ArrayList<>();
+		args.add(System.getProperty("java.home") + "/bin/java");
+		args.addAll(jvm.getInputArguments());
+
+		// ClassPath
+		String cp = jvm.getClassPath();
+		if (!cp.isEmpty()) {
+			args.add("-cp"); args.add(jvm.getClassPath());
+		}
+		// Class to be executed
+		args.add(main.getName());
+
+		Log.debug("launch: %s", args.toString());
+		ProcessBuilder pb = new ProcessBuilder(args).inheritIO();
+		pb.start();
+	}
+
+	static public String expandEnv(String p) {
+		if (p.startsWith("/")) ;
+		else if (p.startsWith("~/") || p.equals("~")) {
+			p = linuxPath(new File(System.getProperty("user.home")+p.substring(1)));
+		}
+		else {
+			p = linuxPath(new File(FileSystems.getDefault().getPath(".").toFile(), p));
 		}
 		int s=0,i,e;
 		while ((s=p.indexOf('$',s))>=0) {
@@ -93,6 +143,11 @@ public class Env {
 			if (c!=' ') ++e;
 			if (env==null) p=p.substring(0,s)+p.substring(e);
 			else p=p.substring(0,s)+env+p.substring(e);
+		}
+		try {
+			p = new File(p).getCanonicalPath();
+		} catch (IOException e1) {
+			p = new File(p).getAbsolutePath();
 		}
 		return p;
 	}
@@ -214,9 +269,9 @@ public class Env {
 		return output;
 	}
 
-	static public boolean isAppJar() {
+	static public boolean isAppJar(Class<?> c) {
 		try {
-			URL u=Env.class.getProtectionDomain().getCodeSource().getLocation();
+			URL u = c.getProtectionDomain().getCodeSource().getLocation();
 			if (u.getFile().endsWith(".jar")) {
 				return true;
 			}

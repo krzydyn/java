@@ -130,14 +130,17 @@
 			</fileset>	
 			<fileset dir="${comdir}/${build}">
 				<include name="sys/*"/>
-				<include name="net/**"/>
+				<include name="netio/**"/>
 				<include name="text/Text*"/>
 				<include name="text/Ansi*"/>
+				<include name="ui/*"/>
+				<include name="io/*"/>
 				<exclude name="sys/UnitTest*"/>
 			</fileset>
 
 			<manifest>
 				<attribute name="Main-Class" value="serial.SerialMain"/>
+				<attribute name="Class-Path" value="lib/RXTXcomm.jar"/>
 			</manifest>
 		</jar>
 	</target>
