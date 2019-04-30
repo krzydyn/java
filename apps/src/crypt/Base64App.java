@@ -1,5 +1,7 @@
 package crypt;
 
+import java.io.ByteArrayInputStream;
+
 import sys.Log;
 import text.Text;
 
@@ -176,6 +178,16 @@ public class Base64App {
 
 	}
 
+	public static void parseTLV2(byte[] b) {
+		ByteArrayInputStream is = new ByteArrayInputStream(b);
+		try {
+			TLV t = TLV.load(is);
+			Log.debug("TLV: %s", Text.hex(t.toByteArray()));
+		} catch (Exception e) {
+			Log.error(e);
+		}
+	}
+
 	//https://adywicaksono.wordpress.com/2007/07/16/compare-tcpip-ss7-protocol-stack-based-on-osi-layer/
 	//45...
 	static String map_mt_req =
@@ -241,6 +253,7 @@ public class Base64App {
 
 		bin = Text.bin(emvData);
 		parseTLV(0,bin,0,bin.length);
+		parseTLV2(bin);
 	}
 
 }

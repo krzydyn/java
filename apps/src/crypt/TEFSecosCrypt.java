@@ -655,7 +655,7 @@ public class TEFSecosCrypt extends UnitTest implements TEF_Types {
 		sign = dsa.signDigest(hash);
 		Log.info("hash[%d] = %s", hash.length, Text.hex(hash));
 		Log.info("sign[%d] = %s", sign.length, Text.hex(sign));
-		//dsa.verifyDigest(sign, hash);
+		dsa.verifyDigest(sign, hash);
 
 		/*
 		byte[] p = Text.bin("86F5CA03DCFEB225063FF830A0C769B9DD9D6153AD91D7CE27F787C43278B447E6533B86B18BED6E8A48B784A14C252C5BE0DBF60B86D6385BD2F12FB763ED8873ABFD3F5BA2E0A8C0A59082EAC056935E529DAF7C610467899C77ADEDFC846C881870B7B19B2B58F9BE0521A17002E3BDD6B86685EE90B3D9A1B02B782B1779");

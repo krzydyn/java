@@ -8,6 +8,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import sys.Log;
+
 public abstract class TLV {
 	public static class Tag {
 		byte[] bytes;
@@ -52,7 +54,17 @@ public abstract class TLV {
 		@Override
 		public int length() {return v.length;}
 		@Override
+		public byte[] value() {return v;}
+		@Override
 		public void add(TLV t) {
+			throw new RuntimeException();
+		}
+		@Override
+		public TLV get(int idx) {
+			throw new RuntimeException();
+		}
+		@Override
+		public TLV find(int idx, Tag tag) {
 			throw new RuntimeException();
 		}
 		@Override
@@ -69,11 +81,14 @@ public abstract class TLV {
 		protected TLV_Constr(Tag tag) {
 			super(tag);
 		}
+		protected void writeValue(OutputStream os) throws IOException {
+			for (TLV t : sub) t.write(os);
+		}
 
 		@Override
 		public void write(OutputStream os) throws IOException {
 			writeTL(os);
-			for (TLV t : sub) t.write(os);
+			writeValue(os);
 		}
 
 		@Override
@@ -83,8 +98,30 @@ public abstract class TLV {
 			return l;
 		}
 		@Override
+		public byte[] value() {
+			ByteArrayOutputStream ba = new ByteArrayOutputStream(length());
+			try {
+				writeValue(ba);
+			}catch (Exception e) {
+				return null;
+			}
+			return ba.toByteArray();
+		}
+		@Override
 		public void add(TLV t) {
 			sub.add(t);
+		}
+		@Override
+		public TLV get(int idx) {
+			return sub.get(idx);
+		}
+		@Override
+		public TLV find(int idx, Tag tag) {
+			for (int i=idx; i < sub.size(); ++i) {
+				TLV t = sub.get(i);
+				if (tag.equals(t.t)) return t;
+			}
+			return null;
 		}
 		@Override
 		public TLV setValue(byte[] v, int offs, int len) {
@@ -112,11 +149,16 @@ public abstract class TLV {
 	}
 
 	public abstract void add(TLV t);
+	public abstract TLV get(int idx);
+	public abstract TLV find(int idx, Tag tag);
 	public abstract TLV setValue(byte[] v, int offs, int len);
 	public abstract int length();
+	public abstract byte[] value();
 	public abstract void write(OutputStream os) throws IOException;
 
 	public final TLV setValue(byte[] v) { return setValue(v, 0, v.length); }
+	public final TLV find(int idx, int tag) { return find(idx, new Tag(tag)); }
+
 	public byte[] toByteArray() {
 		int len = length();
 		len = t.bytes.length + TLV_BER.lengthBytes(len) + len;
@@ -173,12 +215,18 @@ public abstract class TLV {
 				if (t == null) break;
 				tlv.add(t);
 			}
+			if (tlv.length() < vl) {
+				Log.error("constr data too short, %d < %d", tlv.length(), vl);
+			}
 		}
 		else {
 			for (int i=0; i < vl && (r=is.read()) >= 0; ++i) {
 				ba.write(r);
 			}
 			tlv.setValue(ba.toByteArray());
+			if (tlv.length() < vl) {
+				Log.error("data too short, %d < %d", tlv.length(), vl);
+			}
 		}
 		ba.reset();
 

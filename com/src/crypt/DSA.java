@@ -1,5 +1,7 @@
 package crypt;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.math.BigInteger;
 import sys.Log;
 import text.Text;
@@ -51,7 +53,7 @@ public class DSA extends Asymmetric {
 	2. r = g^k mod q (if r == 0, generate new k)
 	3. s = k^-1(H(m)+x*r) mod q (if s == 0, generate new k)
 	4. The signature is (r,s)
-	NOTE: (r,s) must be encoded as DER T:30[T:02[r] T:02[s]]
+	NOTE: (r,s) must be encoded as DER T:30{T:02[r] T:02[s]}
 	 */
 	public byte[] signDigest(byte[] hash) {
 		if (q.bitLength() > hash.length*8) {
@@ -89,14 +91,14 @@ public class DSA extends Asymmetric {
 	5. sign is valid if v == r
 	 */
 	public boolean verifyDigest(byte[] sign, byte[] hash) {
-		TLV_BER der = new TLV_BER();
-		TLV_BER tlv = new TLV_BER();
-		der.read(sign, 0, sign.length);
-		tlv.read(der.buf, 0, der.vl);
-		BigInteger r = new BigInteger(1, tlv.toByteArray());
-		int x = tlv.vi - tlv.bufOffs + tlv.vl;
-		tlv.read(der.buf, x, der.vl-x);
-		BigInteger s = new BigInteger(1, tlv.toByteArray());
+		TLV der = null;
+		try {
+			der = TLV.load(new ByteArrayInputStream(sign));
+		} catch (IOException e) {
+			return false;
+		}
+		BigInteger r = new BigInteger(1, der.get(0).value());
+		BigInteger s = new BigInteger(1, der.get(1).value());
 		BigInteger H = new BigInteger(1, hash);
 
 		if (s.bitLength() > q.bitLength()) throw new RuntimeException("signature too long");
