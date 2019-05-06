@@ -109,21 +109,23 @@ public class SerialMain extends MainPanel {
 		}
 		add(p,BorderLayout.CENTER);
 
-		new Thread(new Runnable() {
-			@Override
-			public void run() {
-				running = true;
-				Log.notice("Read loop started");
-				try {
-					readloop();
-				}catch(Throwable e){
-					Log.error(e);
-				} finally {
-					running = false;
-					Log.notice("Read loop finished");
+		if (ports.size() > 0) {
+			new Thread(new Runnable() {
+				@Override
+				public void run() {
+					running = true;
+					Log.notice("Read loop started");
+					try {
+						readloop();
+					}catch(Throwable e){
+						Log.error(e);
+					} finally {
+						running = false;
+						Log.notice("Read loop finished");
+					}
 				}
-			}
-		}, "SerialLoop").start();
+			}, "SerialLoop").start();
+		}
 	}
 
 	@Override

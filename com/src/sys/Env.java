@@ -78,7 +78,7 @@ public class Env {
 	}
 
 	static public void addLibraryPath(String p) {
-		p = Env.expandEnv(p);
+		p = Env.expandEnv(getAppPath(Env.class),p);
 		Log.debug("Addding library path '%s'", p);
 		Field usrPathsField;
 		try {
@@ -120,13 +120,39 @@ public class Env {
 		pb.start();
 	}
 
+	static public String getAppPath(Class<?> c) {
+		try {
+			File f = new File(c.getProtectionDomain().getCodeSource().getLocation().toURI());
+			return f.getParentFile().getCanonicalPath();
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return null;
+	}
+	static public boolean isAppJar(Class<?> c) {
+		try {
+			URL u = c.getProtectionDomain().getCodeSource().getLocation();
+			if (u.getPath().endsWith(".jar")) {
+				return true;
+			}
+		} catch (Throwable e) {
+			Log.error(e);
+		}
+		return false;
+	}
+
 	static public String expandEnv(String p) {
+		return expandEnv(null, p);
+	}
+	static public String expandEnv(String wd, String p) {
 		if (p.startsWith("/")) ;
 		else if (p.startsWith("~/") || p.equals("~")) {
-			p = linuxPath(new File(System.getProperty("user.home")+p.substring(1)));
+			p = linuxPath(new File(System.getProperty("user.home") + p.substring(1)));
 		}
 		else {
-			p = linuxPath(new File(new File("./"), p));
+			if (wd == null) wd = "./";
+			p = linuxPath(new File(new File(wd), p));
 		}
 		int s=0,i,e;
 		while ((s=p.indexOf('$',s))>=0) {
@@ -267,18 +293,6 @@ public class Env {
 		}
 		in.close();
 		return output;
-	}
-
-	static public boolean isAppJar(Class<?> c) {
-		try {
-			URL u = c.getProtectionDomain().getCodeSource().getLocation();
-			if (u.getFile().endsWith(".jar")) {
-				return true;
-			}
-		} catch (Throwable e) {
-			Log.error(e);
-		}
-		return false;
 	}
 
 	static public String memstat() {
