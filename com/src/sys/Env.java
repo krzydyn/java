@@ -126,7 +126,7 @@ public class Env {
 			p = linuxPath(new File(System.getProperty("user.home")+p.substring(1)));
 		}
 		else {
-			p = linuxPath(new File(FileSystems.getDefault().getPath(".").toFile(), p));
+			p = linuxPath(new File(new File("./"), p));
 		}
 		int s=0,i,e;
 		while ((s=p.indexOf('$',s))>=0) {
