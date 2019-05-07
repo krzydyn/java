@@ -52,7 +52,7 @@ public class DataBase {
 		@Override
 		protected void finalize() throws Throwable {
 			close();
-			super.finalize();
+			//super.finalize();
 		}
 	}
 
@@ -96,9 +96,9 @@ public class DataBase {
 		return r;
 	}
 
-	public Result script(String script) throws SQLException,IOException {
+	public Result script(CharSequence script) throws SQLException,IOException {
 		//TODO SQL tokenizer
-		BasicTokenizer tok = new BasicTokenizer(script);
+		BasicTokenizer tok = new BasicTokenizer(script.toString());
 		tok.setDelimiter(";");
 		StringBuilder b = new StringBuilder();
 		Result r = null;

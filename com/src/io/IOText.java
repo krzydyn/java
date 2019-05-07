@@ -102,19 +102,21 @@ public class IOText extends AbstractSelectableChannel implements Readable,Append
 	}
 
 	public static void save(File f, CharSequence data) throws IOException {
-		IOText io = new IOText(null, new FileOutputStream(f));
-		io.write(data);
-		io.close();
+		try (IOText io = new IOText(null, new FileOutputStream(f))) {
+			io.write(data);
+			io.close();
+		}
 	}
 	public static CharSequence load(File f) throws IOException {
 		StringBuilder s = new StringBuilder();
-		char data[] = new char[1024];
 		int r;
-		IOText io = new IOText(new FileInputStream(f), null);
-		while ((r = io.read(data)) > 0) {
-			s.append(data, 0, r);
+		try (IOText io = new IOText(new FileInputStream(f), null)) {
+			char data[] = new char[1024];
+			while ((r = io.read(data)) > 0) {
+				s.append(data, 0, r);
+			}
+			io.close();
 		}
-		io.close();
 		return s;
 	}
 }

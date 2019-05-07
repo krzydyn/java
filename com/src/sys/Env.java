@@ -27,11 +27,8 @@ import java.awt.datatransfer.ClipboardOwner;
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.StringSelection;
 import java.awt.datatransfer.Transferable;
-import java.io.BufferedReader;
 import java.io.Closeable;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -48,6 +45,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import io.IOText;
 import text.Text;
 
 public class Env {
@@ -255,19 +253,31 @@ public class Env {
 		return null;
 	}
 
-	public static String getFileContent(String fn) throws IOException {
-		File file = new File(expandEnv(fn));
-		byte b[] = new byte[(int)file.length()];
-		FileInputStream fis = new FileInputStream(file);
-		fis.read(b);
-		fis.close();
-		return new String(b, Env.UTF8_Charset);
+	public static CharSequence getFileContent(String fn) throws IOException {
+		return IOText.load(new File(expandEnv(fn)));
 	}
-	public static void setFileContent(String fn, String c) throws IOException {
-		File file = new File(fn);
-		FileOutputStream fos = new FileOutputStream(file);
-		fos.write(c.getBytes(Env.UTF8_Charset));
-		fos.close();
+	public static void setFileContent(String fn, CharSequence c) throws IOException {
+		IOText.save(new File(expandEnv(fn)), c);
+	}
+
+	public CharSequence getRemoteContent(String url) throws IOException {
+		URL urlObject = new URL(url);
+		URLConnection conn = urlObject.openConnection();
+		StringBuilder s = new StringBuilder();
+		int r;
+		try (IOText io = new IOText(conn.getInputStream(), null)) {
+			char data[] = new char[1024];
+			while ((r = io.read(data)) > 0) {
+				s.append(data, 0, r);
+			}
+			io.close();
+		}
+		return s;
+	}
+
+	public static Iterable<Path> getRoots() {
+		java.nio.file.FileSystem fs = FileSystems.getDefault();
+		return fs.getRootDirectories();
 	}
 
 	static public List<File> getDirs(File parent, int level){
@@ -283,16 +293,12 @@ public class Env {
 		return dirs;
 	}
 
-	public String getRemoteContents(String url) throws IOException {
-		URL urlObject = new URL(url);
-		URLConnection conn = urlObject.openConnection();
-		BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream(), Env.UTF8_Charset));
-		String inputLine, output = "";
-		while ((inputLine = in.readLine()) != null) {
-			 output += inputLine;
-		}
-		in.close();
-		return output;
+	static public void close(Closeable s) {
+		try {if (s != null) s.close();}catch(IOException e){}
+	}
+
+	public static void remove(String fn) {
+		new File(fn).delete();
 	}
 
 	static public String memstat() {
@@ -314,23 +320,10 @@ public class Env {
 			cause.set(e, c);
 		} catch (Throwable te) {}
 	}
-	public static void remove(String fn) {
-		new File(fn).delete();
-	}
-
-	public static Iterable<Path> getRoots() {
-		java.nio.file.FileSystem fs = FileSystems.getDefault();
-		return fs.getRootDirectories();
-	}
-
 	static public void sleep(long millis) {
 		try {Thread.sleep(millis);}
 		catch (InterruptedException e) { //InterruptedException clears interrupted flag of Thread
 			Thread.currentThread().interrupt(); // set the flag again
 		}
-	}
-
-	static public void close(Closeable s) {
-		try {if (s != null) s.close();}catch(IOException e){}
 	}
 }
