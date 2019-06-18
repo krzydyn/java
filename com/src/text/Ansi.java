@@ -81,48 +81,71 @@ public class Ansi {
 
 	// Single Shift Select of G2
 	public final static String SS2_0 = Code.ESC+"N";
-	public final static String SS2_1 = "\u008e"; //only on 8bit terminal
+	public final static String SS2_1 = "\u008e";
 	public final static String SS2 = SS2_0;
 
 	// Single Shift Select of G3
 	public final static String SS3_0 = Code.ESC+"O";
-	public final static String SS3_1 = "\u008f"; //only on 8bit terminal
+	public final static String SS3_1 = "\u008f";
 	public final static String SS3 = SS3_0;
 
 	// Device Control String
 	public final static String DCS_C0 = Code.ESC+"P";
-	public final static String DCS_C1 = "\u0090"; //only on 8bit terminal
+	public final static String DCS_C1 = "\u0090";
 	public final static String DCS = DCS_C0;
 
 	// Start of Protected Area
 	public final static String SPA_C0 = Code.ESC+"V";
-	public final static String SPA_C1 = "\u0096"; //only on 8bit terminal
+	public final static String SPA_C1 = "\u0096";
 	public final static String SPA = SPA_C0;
 
 	// End of Protected Area
 	public final static String EPA_C0 = Code.ESC+"W";
-	public final static String EPA_C1 = "\u0097"; //only on 8bit terminal
+	public final static String EPA_C1 = "\u0097";
 	public final static String EPA = EPA_C0;
 
 	// Start of String
 	public final static String SOS_C0 = Code.ESC+"X";
-	public final static String SOS_C1 = "\u0098"; //only on 8bit terminal
+	public final static String SOS_C1 = "\u0098";
 	public final static String SOS = SOS_C0;
+
+	// Single Graphic Character Introducer
+	public final static String SGCI_C0 = Code.ESC+"Y";
+	public final static String SGCI_C1 = "\u0099";
+	public final static String SGCI = SGCI_C0;
+
+	// Single Character Introducer
+	public final static String SCI_C0 = Code.ESC+"Z";
+	public final static String SCI_C1 = "\u009a";
+	public final static String SCI = SCI_C0;
 
 	// Character Sequence Indicator
 	public final static String CSI_C0 = Code.ESC+"[";
-	public final static String CSI_C1 = "\u009b"; //only on 8bit terminal
+	public final static String CSI_C1 = "\u009b";
 	public final static String CSI = CSI_C0;
 
 	// String Terminator
 	public final static String ST_C0 = Code.ESC+"\\";
-	public final static String ST_C1 = "\u009c"; //only on 8bit terminal
+	public final static String ST_C1 = "\u009c";
 	public final static String ST = ST_C0;
 
 	// Operating System Command
 	public final static String OSC_C0 = Code.ESC+"]";
-	public final static String OSC_C1 = "\u009d"; //only on 8bit terminal
-	public final static String OSC = CSI_C0;
+	public final static String OSC_C1 = "\u009d";
+	public final static String OSC = OSC_C0;
+
+	// Privacy Message
+	public final static String PM_C0 = Code.ESC+"^";
+	public final static String PM_C1 = "\u009e";
+	public final static String PM = PM_C0;
+
+	// Application Program Command
+	public final static String APC_C0 = Code.ESC+"_";
+	public final static String APC_C1 = "\u009f";
+	public final static String APC = APC_C0;
+
+	// Reset to Initial State
+	public final static String RIS = Code.ESC+"_";
 
 	public final static String INSERT_BLANK = CSI + "@"; // CSI n @ insert n blanks
 	public final static String CURSOR_UP = CSI + "A"; // CSI n A move cursor up n times
@@ -136,7 +159,8 @@ public class Ansi {
 
 	public final static String ERASE_BELOW = CSI + "J"; // clear from cursor to end of screen
 	public final static String ERASE_ABOVE = CSI + "1J"; // clear from cursor to beginning of screen
-	public final static String ERASE_ALL = CSI + "2J"; // clear entire screen
+	public final static String ERASE_ALL = CSI + "2J"; // clear entire screen and move cursor to 1,1
+	public final static String ERASE_ALL2 = CSI + "3J"; // clear entire screen and move cursor to 1,1 and delete saved buffers
 
 	public final static String ERASE_INLINE = CSI + "K"; // erase line, don't change cursor position
 	public final static String ERASE_TORIGTH = CSI + "1K"; // erase to the right

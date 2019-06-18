@@ -103,7 +103,7 @@ public class GenFromXml {
 
 	static Set<String> argPtr = new TreeSet<>();
 	static {
-		argPtr.add("ALL_THREADS");
+		//argPtr.add("ALL_THREADS");
 		argPtr.add("ALL_CONTEXTS");
 		argPtr.add("ALL_SESSIONS");
 		argPtr.add("AttributeList");
@@ -152,6 +152,7 @@ public class GenFromXml {
 	static Set<OperationInfo> operationTypes = new TreeSet<>();
 
 	static class ArgInfo {
+		OperationInfo op;
 		String parameter;
 		String type;
 		String value;
@@ -195,7 +196,7 @@ public class GenFromXml {
 				if (value.equals("NULL")) return "RETURN_ORIGIN_NULL";
 			}
 			else if (type.equals("ALL_TEE_OBJECT_HANDLES")) {
-				if (value.equals("NULL")) return "0";
+				if (value.equals("NULL")) return "OBJECT_HANDLE_NULL";
 			}
 			else if (type.equals("ALL_TTA_STORED_OBJECT_ENUMERATORS")) {
 				if (value.equals("NULL")) return "STORED_OBJECT_NULL";
@@ -258,30 +259,40 @@ public class GenFromXml {
 			if (mapname == null) mapname = name;
 			else if (mapname.isEmpty()) return ;
 
-			String sep = ", ";
-			if (hasReturnCode() && !tc.postamble) {
-				String oneline = String.format(INDENT+"res = %s(%s);\n", mapname, Text.join(sep, args));
-				if (oneline.length() > MAX_LINE_LENGHT) {
-					String openIndent = String.format(INDENT+"res = %s(", mapname);
-					sep = ",\n"+openIndent.replaceAll(".", " ");
-				}
-
-				pr.printf(INDENT+"res = %s(%s);\n", mapname, Text.join(sep, args));
-				pr.printf(INDENT+"if (res != TEEC_SUCCESS) goto postamble;\n\n");
+			boolean runinth = true;
+			if (name.equals("SetUp_TEE") || name.equals("SelectApp") || name.equals("TearDown_TEE")) {
+				runinth = false;
 			}
-			else {
+
+			if (runinth && !tc.postamble) {
+				pr.println();
+				pr.println(INDENT + "if ((res = wait_for_current_thread()) != TEEC_SUCCESS) goto postamble;");
+			}
+
+			String sep = ", ";
+/*			if (hasReturnCode() && !tc.postamble) {
 				String oneline = String.format(INDENT+"%s(%s);\n", mapname, Text.join(sep, args));
 				if (oneline.length() > MAX_LINE_LENGHT) {
 					String openIndent = String.format(INDENT+"%s(", mapname);
 					sep = ",\n"+openIndent.replaceAll(".", " ");
 				}
-				pr.printf(INDENT+"%s(%s);\n", mapname, Text.join(", ", args));
+
+				pr.printf(INDENT+"%s(%s);\n", mapname, Text.join(sep, args));
+			}
+			else */ {
+				String oneline = String.format(INDENT+"%s(%s);\n", mapname, Text.join(sep, args));
+				if (oneline.length() > MAX_LINE_LENGHT) {
+					String openIndent = String.format(INDENT+"%s(", mapname);
+					sep = ",\n"+openIndent.replaceAll(".", " ");
+				}
+				pr.printf(INDENT+"%s(%s);\n", mapname, Text.join(sep, args));
 			}
 		}
 		public void prototype(PrintStream pr) {
 			StringBuilder b = new StringBuilder();
-			if (hasReturnCode()) b.append("TEEC_Result ");
-			else b.append("void ");
+			//if (hasReturnCode()) b.append("TEEC_Result "); else b.append("void ");
+			//b.append("TEEC_Result ");
+			b.append("void ");
 			b.append(name+"(");
 			int indent = b.length();
 			for (int i = 0; i < args.size(); ++i) {
@@ -323,6 +334,7 @@ public class GenFromXml {
 		}
 		@Override
 		public void implement(PrintStream pr) {
+			pr.print(INDENT+"res = wait_for_threads();\n\n");
 			pr.printf("%s:\n", label);
 		}
 	}
@@ -436,11 +448,7 @@ public class GenFromXml {
 			ArgInfo arg = parseArgument(a);
 			if (arg == null) throw new RuntimeException("cannot parse Argument");
 
-			if (arg.type.equals("ALL_THREADS")) {
-				if (!arg.value.equals("THREAD01_DEFAULT"))
-					tc.addLocalVar(String.format("%s %s = {}",arg.type,arg.value));
-			}
-			else if (arg.type.equals("ALL_CONTEXTS")) {
+			if (arg.type.equals("ALL_CONTEXTS")) {
 				if (!arg.value.equals("NULL"))
 					tc.addLocalVar(String.format("%s %s = {}",arg.type,arg.value));
 			}
@@ -466,22 +474,23 @@ public class GenFromXml {
 			}
 			else if (arg.type.equals("ALL_ENUMERATORS")) {
 				if (!arg.value.equals("INVALID_ENUMERATOR"))
-					tc.addLocalVar(String.format("%s %s = 0",arg.type,arg.value));
+					tc.addLocalVar(String.format("%s %s = (%s)0",arg.type,arg.value, arg.type));
 			}
 			else if (arg.type.equals("HandleFlags") || arg.type.equals("DataFlags")) {
 				if (!arg.value.endsWith("None"))
-					tc.addLocalVar(String.format("%s %s = 0",arg.type,arg.value));
+					tc.addLocalVar(String.format("%s %s = (%s)0",arg.type,arg.value, arg.type));
 			}
 			else if (arg.type.equals("ObjectUsage")) {
 				if (!arg.value.endsWith("None") && !arg.value.endsWith("AllBitsOne") && !arg.value.endsWith("Unknown"))
-					tc.addLocalVar(String.format("%s %s = 0",arg.type,arg.value));
+					tc.addLocalVar(String.format("%s %s = (%s)0",arg.type,arg.value, arg.type));
 			}
+			arg.op = op;
 			op.args.add(arg);
 		}
 		if (opAppendArgs.containsKey(op.name)) {
-			ArgInfo a = opAppendArgs.get(op.name);
-			tc.addLocalVar(String.format("%s %s[%s]", a.type, a.value, a.parameter));
-			op.args.add(a);
+			ArgInfo arg = opAppendArgs.get(op.name);
+			tc.addLocalVar(String.format("%s %s[%s]", arg.type, arg.value, arg.parameter));
+			op.args.add(arg);
 		}
 		return op;
 	}
@@ -644,14 +653,14 @@ public class GenFromXml {
 		}
 		pr.println();
 		pr.printf("#endif // %s\n", def);
-
 	}
+
 	private static void genTestCasesCode(String name, List<TestCaseInfo> tcs) {
 		String fn = null;
 		if (name.equals("ClientAPI"))
-			fn = String.format("%s/tta_test_%s_auto.c", repoGPSuitePath, name);
+			fn = String.format("%s/tta_test_%s_auto.cpp", repoGPSuitePath, name);
 		else
-			fn = String.format("%s/tta_test_API_%s_auto.c", repoGPSuitePath, name);
+			fn = String.format("%s/tta_test_API_%s_auto.cpp", repoGPSuitePath, name);
 
 		Log.info("generating file %s", fn);
 		PrintStream pr;
@@ -664,7 +673,9 @@ public class GenFromXml {
 		pr.println(boilerPlate);
 
 		pr.println("#include \"gp_adaptation_api.h\"");
-		pr.println("#include \"tf.h\"");
+		pr.println("#include \"gp_adaptation_dispatch.h\"");
+		pr.println("#include \"tf_types.h\"");
+		//pr.println("#include \"tf.h\"");
 		pr.println();
 
 		int n = 0;
@@ -673,7 +684,6 @@ public class GenFromXml {
 		}
 		pr.println();
 
-		pr.println("#include \"tf.h\"");
 		for (TestCaseInfo tc : tcs) {
 			tc.addTestMacro(name, pr);
 		}

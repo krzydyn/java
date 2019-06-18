@@ -43,7 +43,9 @@ import java.nio.file.FileSystems;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import io.IOText;
 import text.Text;
@@ -260,9 +262,16 @@ public class Env {
 		IOText.save(new File(expandEnv(fn)), c);
 	}
 
-	public CharSequence getRemoteContent(String url) throws IOException {
+	public static CharSequence getRemoteContent(String url, Map<String,String> props) throws IOException {
 		URL urlObject = new URL(url);
 		URLConnection conn = urlObject.openConnection();
+		if (props != null) {
+			for (Iterator<String> i = props.keySet().iterator(); i.hasNext(); ) {
+				String key = i.next();
+				conn.setRequestProperty(key, props.get(key));
+			}
+		}
+		conn.setConnectTimeout(2000);
 		StringBuilder s = new StringBuilder();
 		int r;
 		try (IOText io = new IOText(conn.getInputStream(), null)) {

@@ -82,6 +82,8 @@ public class Log {
 			StackTraceElement[] bt = ct.getStackTrace();
 			if (bt.length > 3+traceOffs) {
 				if (bt[3+traceOffs].getLineNumber()==1) ++traceOffs;
+				//String cl = bt[3+traceOffs].getClassName();
+				//file = cl.replace('.',  '/') + ".java";
 				file = bt[3+traceOffs].getFileName();
 				line = bt[3+traceOffs].getLineNumber();
 			}

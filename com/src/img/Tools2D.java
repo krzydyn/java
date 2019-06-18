@@ -66,7 +66,7 @@ public class Tools2D {
 		if (sval==dval) return ;
 
 		Dimension d = t.getSize();
-		ArrayList<Segment> q = new ArrayList<Segment>();
+		ArrayList<Segment> q = new ArrayList<>();
 		q.add(makeSegment(t, x, y, sval, d.width));
 
 		while (!q.isEmpty()) {
@@ -99,7 +99,7 @@ public class Tools2D {
 		if (sval==dval) return ;
 
 		Dimension d = t.getSize();
-		ArrayList<Point> q = new ArrayList<Point>();
+		ArrayList<Point> q = new ArrayList<>();
 		q.add(new Point(x, y));
 
 		while (!q.isEmpty()) {
@@ -185,8 +185,14 @@ public class Tools2D {
 	}
 	public static void edgeSobel(Raster2D r, Raster2D gradients) {
 		Dimension dim = r.getSize();
-		MatrixI gx = new MatrixI(3, -1, 0, 1, -2, 0, 2, -1, 0, 1);
-		MatrixI gy = new MatrixI(3, 1, 2, 1, 0, 0, 0, -1, -2, -1);
+		MatrixI gx = new MatrixI(3,
+				-1, 0, 1,
+				-2, 0, 2,
+				-1, 0, 1);
+		MatrixI gy = new MatrixI(3,
+				 1,  2,  1,
+				 0,  0,  0,
+				-1, -2, -1);
 		Raster2D rx = new ImageRaster2D(dim.width, dim.height);
 		Raster2D ry = new ImageRaster2D(dim.width, dim.height);
 		convolve(rx, r, gx);
@@ -276,7 +282,7 @@ public class Tools2D {
 	}
 
 	private static List<Point2D> quadriInHull(List<Point2D> pnts) {
-		List<Point2D> h = new ArrayList<Point2D>();
+		List<Point2D> h = new ArrayList<>();
 		if (pnts.size() == 0) return h;
 
 		Point2D left,top,right,bot;
@@ -294,7 +300,7 @@ public class Tools2D {
 	}
 
 	private static List<Point2D> cutout(List<Point2D> pnts, List<Point2D> h) {
-		List<Point2D> a = new ArrayList<Point2D>();
+		List<Point2D> a = new ArrayList<>();
 		if (h == null) h = quadriInHull(pnts);
 		for (Point2D p : pnts) {
 			if (!Lines.pointInPolygon(p, h)) a.add(p);
@@ -308,7 +314,7 @@ public class Tools2D {
 	 * @return
 	 */
 	public static List<Point2D> hullQuick(List<Point2D> pnts) {
-		if (pnts.size() < 3) return new ArrayList<Point2D>(pnts);
+		if (pnts.size() < 3) return new ArrayList<>(pnts);
 
 		List<Point2D> h = quadriInHull(pnts);
 		pnts = cutout(pnts, h);
@@ -329,8 +335,8 @@ public class Tools2D {
 	 * @return
 	 */
 	public static List<Point2D> hullAndrew(List<Point2D> pnts) {
-		if (pnts.size() < 3) return new ArrayList<Point2D>(pnts);
-		List<Point2D> h = new ArrayList<Point2D>();
+		if (pnts.size() < 3) return new ArrayList<>(pnts);
+		List<Point2D> h = new ArrayList<>();
 		pnts = cutout(pnts, null);
 
 		Collections.sort(pnts, new Comparator<Point2D>() {
@@ -366,8 +372,8 @@ public class Tools2D {
 	 * @return
 	 */
 	public static List<Point2D> hullGraham(List<Point2D> pnts) {
-		if (pnts.size() < 3) return new ArrayList<Point2D>(pnts);
-		final List<Point2D> h = new ArrayList<Point2D>();
+		if (pnts.size() < 3) return new ArrayList<>(pnts);
+		final List<Point2D> h = new ArrayList<>();
 		pnts = cutout(pnts, null);
 
 		Point2D mP = pnts.get(0);
@@ -414,7 +420,7 @@ public class Tools2D {
 	 * @return hull
 	 */
 	public static List<Point2D> alphaShape(List<Point2D> pnts, double a) {
-		final List<Point2D> h = new ArrayList<Point2D>();
+		final List<Point2D> h = new ArrayList<>();
 		return h;
 	}
 }
