@@ -76,6 +76,9 @@ public class Env {
 	static private String linuxPath(File f) {
 		return f.getPath().replace('\\', '/');
 	}
+	static private String linuxPath(String f) {
+		return f.replace('\\', '/');
+	}
 
 	static public void addLibraryPath(String p) {
 		p = Env.expandEnv(getAppPath(Env.class),p);
@@ -146,13 +149,14 @@ public class Env {
 		return expandEnv(null, p);
 	}
 	static public String expandEnv(String wd, String p) {
-		if (p.startsWith("/")) ;
+		p = linuxPath(p);
+		if (p.startsWith("/") || p.substring(1).startsWith(":/")) ;
 		else if (p.startsWith("~/") || p.equals("~")) {
-			p = linuxPath(new File(System.getProperty("user.home") + p.substring(1)));
+			p = System.getProperty("user.home") + p.substring(1);
 		}
 		else {
 			if (wd == null) wd = "./";
-			p = linuxPath(new File(new File(wd), p));
+			p = wd + p;
 		}
 		int s=0,i,e;
 		while ((s=p.indexOf('$',s))>=0) {
@@ -170,12 +174,7 @@ public class Env {
 			if (env==null) p=p.substring(0,s)+p.substring(e);
 			else p=p.substring(0,s)+env+p.substring(e);
 		}
-		try {
-			p = new File(p).getCanonicalPath();
-		} catch (IOException e1) {
-			p = new File(p).getAbsolutePath();
-		}
-		return p;
+		return linuxPath(p);
 	}
 
 	static public String exec(File dir, List<String> args) throws IOException {
