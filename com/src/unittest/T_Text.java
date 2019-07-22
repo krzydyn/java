@@ -18,6 +18,10 @@
 
 package unittest;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import io.IOText;
 import sys.Log;
 import sys.UnitTest;
 import text.Text;
@@ -44,5 +48,17 @@ public class T_Text extends UnitTest {
 	}
 	static void emoticonsUTF() {
 		Log.info("\uD83D\uDE0A \uD83D\uDE22 \uD83C\uDF82");
+	}
+	static void textIO() throws IOException {
+		String data = "The fox";
+		File f = new File("/tmp/test.txt");
+		IOText.save(f, data);
+		String data2 = IOText.load(f).toString();
+		Log.info("load : '%s'", data2);
+		try (FileInputStream fs = new FileInputStream(f)) {
+			data2 = IOText.read(fs.getChannel(), 0, f.length()).toString();
+			Log.info("load : '%s'", data2);
+		}
+		f.delete();
 	}
 }

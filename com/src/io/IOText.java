@@ -7,7 +7,7 @@
  *  you may not use this file except in compliance with the License.
  *  You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *	  http://www.apache.org/licenses/LICENSE-2.0
  *
  *  Unless required by applicable law or agreed to in writing, software
  *  distributed under the License is distributed on an "AS IS" BASIS,
@@ -30,7 +30,14 @@ import java.io.OutputStreamWriter;
 import java.io.Reader;
 import java.io.Writer;
 import java.nio.CharBuffer;
+import java.nio.MappedByteBuffer;
+import java.nio.channels.FileChannel;
+import java.nio.channels.FileChannel.MapMode;
+import java.nio.channels.ReadableByteChannel;
+import java.nio.channels.SelectionKey;
+import java.nio.channels.WritableByteChannel;
 import java.nio.channels.spi.AbstractSelectableChannel;
+import java.nio.charset.Charset;
 
 import sys.Env;
 
@@ -48,25 +55,25 @@ public class IOText extends AbstractSelectableChannel implements Readable,Append
 
 	}
 	public void write(CharSequence csq) throws IOException {
-        wr.write(csq.toString());
-    }
+		wr.write(csq.toString());
+	}
 	public void write(String str) throws IOException {
-        wr.write(str);
-    }
+		wr.write(str);
+	}
 	public void write(String str, int off, int len) throws IOException {
-        wr.write(str, 0, len);
-    }
+		wr.write(str, 0, len);
+	}
 	public void write(char cbuf[], int off, int len) throws IOException {
 		wr.write(cbuf, off, len);
 	}
 	@Override
 	public Appendable append(CharSequence csq) throws IOException {
 		wr.write(csq.toString());
-        return this;
+		return this;
 	}
 	@Override
 	public Appendable append(CharSequence csq, int start, int end) throws IOException {
-		wr.write(csq.toString(), start, end);
+		wr.write(csq.subSequence(start, end).toString());
 		return this;
 	}
 	@Override
@@ -98,7 +105,7 @@ public class IOText extends AbstractSelectableChannel implements Readable,Append
 	}
 	@Override
 	public int validOps() {
-		return 0;
+		return SelectionKey.OP_READ|SelectionKey.OP_WRITE;
 	}
 
 	public static void save(File f, CharSequence data) throws IOException {
@@ -118,5 +125,36 @@ public class IOText extends AbstractSelectableChannel implements Readable,Append
 			io.close();
 		}
 		return s;
+	}
+
+	public static long transfer(FileChannel src, WritableByteChannel target) throws IOException {
+		return src.transferTo(0, src.size(), target);
+	}
+	public static long transfer(ReadableByteChannel src, FileChannel target) throws IOException {
+		return target.transferFrom(src, 0, Long.MAX_VALUE);
+	}
+
+	//https://javapapers.com/java/java-nio-file-read-write-with-channels/
+	public static CharSequence read(FileChannel chn, long offs, long size) throws IOException {
+		MappedByteBuffer buf = chn.map(MapMode.READ_ONLY, offs, size);
+		Charset cs = Env.UTF8_Charset;
+		return cs.decode(buf);
+		/*
+		StringBuilder s = new StringBuilder();
+		ByteBuffer bb = ByteBuffer.allocate(256);
+		for (long i = 0; i < size; i += bb.limit()) {
+			if (chn.read(bb) <= 0) break;
+			bb.rewind();
+			s.append(cs.decode(bb));
+			bb.flip();
+		}
+		return s;
+		 */
+	}
+	public static void write(FileChannel chn, long offs, CharSequence s) throws IOException {
+		MappedByteBuffer buf = chn.map(MapMode.READ_WRITE, offs, s.length());
+		Charset cs = Env.UTF8_Charset;
+		buf.put(s.toString().getBytes(cs));
+		buf.force();
 	}
 }

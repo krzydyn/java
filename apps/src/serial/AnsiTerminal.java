@@ -38,6 +38,9 @@ import java.awt.event.KeyListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 
 import javax.swing.Action;
 import javax.swing.ActionMap;
@@ -64,6 +67,7 @@ import javax.swing.text.StyledDocument;
 import javax.swing.text.TabSet;
 import javax.swing.text.TabStop;
 
+import sys.Env;
 import sys.Log;
 import sys.Sound;
 import sys.XThread;
@@ -79,11 +83,27 @@ import ui.MainPanel;
  *
  * http://invisible-island.net/xterm/ctlseqs/ctlseqs.html
  *
+ * TODO
+ *   https://github.com/nyholku/purejavacomm/
+ *   https://github.com/JetBrains/pty4j
+ *   https://github.com/jawi/JPty
+ *
  * @author k.dynowski
  *
  */
 public class AnsiTerminal extends JPanel implements FocusListener,KeyListener {
 	private static final long serialVersionUID = 0;
+
+	private static class Peer {
+		private InputStream is;
+		private OutputStream os;
+		public Peer(InputStream is, OutputStream os) { this.is = is; this.os = os; }
+		public int read(byte[] b, int off, int len) throws IOException {
+			//if (is.available() == 0) return 0;
+			return is.read(b, off, len);
+		}
+		public void write(byte[] b, int off, int len) throws IOException { os.write(b, off, len); }
+	}
 
 	final static Font font = new Font(Font.MONOSPACED, Font.PLAIN, 15);
 	private static int charWidth;
@@ -98,6 +118,7 @@ public class AnsiTerminal extends JPanel implements FocusListener,KeyListener {
 	private static final int MAX_COL=120;
 	private static final int MAX_ROW=60;
 
+	private Peer peer;
 	private final JTextComponent editor = new JTextPane();
 	private final JLabel title = new JLabel();
 	private final SimpleAttributeSet attrib = new SimpleAttributeSet();
@@ -107,9 +128,13 @@ public class AnsiTerminal extends JPanel implements FocusListener,KeyListener {
 	private int absCurPos=0;
 	private boolean escSeq = false;
 	private boolean sendingTilde = false;
+	private boolean running;
 
-	//to get focus component must satisfy: 1.visible, 2.enabled, 3. focusable
 	public AnsiTerminal(String t) {
+		this(t, null, null);
+	}
+	//to get focus component must satisfy: 1.visible, 2.enabled, 3. focusable
+	public AnsiTerminal(String t, InputStream is, OutputStream os) {
 		super(new BorderLayout());
 		setName(t);
 
@@ -227,6 +252,23 @@ public class AnsiTerminal extends JPanel implements FocusListener,KeyListener {
 				}
 			}
 		});
+
+		if (is != null && os != null) {
+			peer = new Peer(is, os);
+			running = true;
+			new Thread("write "+t) {
+				@Override
+				public void run() {
+					writeLoop();
+				}
+			}.start();
+			new Thread("read "+t) {
+				@Override
+				public void run() {
+					readLoop();
+				}
+			}.start();
+		}
 	}
 
 	private void disableActions(String ...names) {
@@ -283,7 +325,10 @@ public class AnsiTerminal extends JPanel implements FocusListener,KeyListener {
 	}
 	@Override
 	public void keyPressed(KeyEvent e) {
-		if (e.getModifiers() != 0) return ;
+		if (e.getModifiersEx() != 0) {
+			Log.debug("Key code = %x", e.getKeyCode());
+			return ;
+		}
 
 		int code = e.getKeyCode();
 		if (code == KeyEvent.VK_UP) { //up-arrow
@@ -322,6 +367,10 @@ public class AnsiTerminal extends JPanel implements FocusListener,KeyListener {
 			Log.debug("Key DEL");
 			inputBuffer.append(Ansi.CSI+"3~");
 		}
+		else {
+			Log.debug("Key code = %x", code);
+			return ;
+		}
 		e.consume();
 	}
 	@Override
@@ -359,7 +408,7 @@ public class AnsiTerminal extends JPanel implements FocusListener,KeyListener {
 		inputBuffer.setLength(0);
 		escSeq = false;
 	}
-	public int getInputBuffer(byte[] b) {
+	public int read(byte[] b) {
 		if (inputBuffer.length() == 0) return 0;
 
 		synchronized (inputBuffer) {
@@ -598,6 +647,13 @@ public class AnsiTerminal extends JPanel implements FocusListener,KeyListener {
 			append(s.charAt(i));
 		}
 	}
+	public void send(CharSequence s) {
+		try {
+			peer.os.write(s.toString().getBytes());
+		} catch (IOException e) {
+			Log.error(e);
+		}
+	}
 
 	public void setTitle(String t) {
 		if (t==null || t.isEmpty()) title.setText(getName());
@@ -740,5 +796,42 @@ public class AnsiTerminal extends JPanel implements FocusListener,KeyListener {
 			} catch (BadLocationException e) {Log.error(e.toString());}
 			absCurPos=p0;
 		}
+	}
+
+	private void readLoop() {
+		byte[] buffer = new byte[256];
+		int r;
+		while (running) {
+			try {
+				Log.debug("read peer");
+				r = peer.read(buffer, 0, buffer.length);
+				Log.debug("from peer: %d %s", r, Text.vis(buffer, 0, r));
+				if (r > 0) {
+					write(buffer, 0, r);
+				}
+			} catch (IOException e) {
+				break;
+			}
+			flushOutput();
+		}
+	}
+	private void writeLoop() {
+		byte[] buffer = new byte[256];
+		int r;
+		while (running) {
+			try {
+				r = read(buffer);
+				if (r > 0) {
+					Log.debug("from trm: %d %s", r, Text.vis(buffer, 0, r));
+					peer.write(buffer, 0, r);
+				}
+			} catch (IOException e) {
+				break;
+			}
+			if (r == 0) Env.sleep(1000);
+		}
+	}
+	public void stop() {
+		running = false;
 	}
 }

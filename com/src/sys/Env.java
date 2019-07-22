@@ -33,6 +33,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.lang.ProcessBuilder.Redirect;
 import java.lang.management.ManagementFactory;
 import java.lang.management.RuntimeMXBean;
 import java.lang.reflect.Field;
@@ -180,40 +181,35 @@ public class Env {
 	static public String exec(File dir, List<String> args) throws IOException {
 		ProcessBuilder pb = new ProcessBuilder(args);
 		if (dir!=null) pb.directory(dir);
+		pb.redirectErrorStream(true);
+		pb.redirectError(Redirect.DISCARD);
 		//pb.environment(envp)
 		Process child = pb.start();
 
 		OutputStream out = child.getOutputStream();
 		InputStream in = child.getInputStream();
-		InputStream err = child.getErrorStream();
 
 		InputStreamReader isr = new InputStreamReader(in, UTF8_Charset);
 		char[] buf = new char[1024];
 		int r;
 
 		StringBuilder str = new StringBuilder();
-		while ((r=isr.read(buf)) >= 0) {
-			str.append(buf, 0, r);
-		}
-
 		try {
-			out.close();
+			while ((r=isr.read(buf)) >= 0) {
+				str.append(buf, 0, r);
+			}
+
 			int ec = child.waitFor();
 			if (ec != 0) {
 				Log.error("exec(%s); exitcode=%d", Text.join(" ", args), ec);
-				str.setLength(0);
-				isr = new InputStreamReader(err, UTF8_Charset);
-				while ((r=isr.read(buf)) >= 0) {
-					str.append(buf, 0, r);
-				}
 				throw new IOException("Exit("+ec+") "+str.toString());
 			}
 		} catch (InterruptedException e) {
 			Log.debug("exec %s interrupted", Text.join(" ", args));
 			return null;
 		} finally {
+			out.close();
 			in.close();
-			err.close();
 		}
 
 		return str.toString();

@@ -1,5 +1,7 @@
 package crypt;
 
+import java.io.BufferedReader;
+import java.io.FileReader;
 import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -10,11 +12,12 @@ import java.util.Arrays;
 import javax.crypto.Mac;
 import crypt.tef.TEF;
 import crypt.tef.TEF_Types;
+import sys.Env;
 import sys.Log;
 import sys.UnitTest;
 import text.Text;
 
-public class TEFSecosCrypt extends UnitTest implements TEF_Types {
+public class GPtests extends UnitTest implements TEF_Types {
 
 	static void listProviders() {
 		for (Provider provider: Security.getProviders()) {
@@ -477,6 +480,63 @@ public class TEFSecosCrypt extends UnitTest implements TEF_Types {
 				"d1:fa:c1:15:91:5e:24:fa:b5:63:f4:fc:3f:26:9b:ed:\n" +
 				"2f:30:08:32:d1:12:59:64:85:a7:11:41:7a:a7:3b:b4:\n" +
 				"ac:72:a6:51:a1:fa:5b:ae:d3:63:6c:72:0d:39:70:08");
+		static byte[] TEE_ATTR_DSA_PRIME_3072_VALUE01 = Text.bin(
+				"c7:b8:6d:70:44:21:8e:36:74:53:d2:10:e7:64:33:e4:e2:7a:98:3d:b1:c5:60:bb:\n" +
+				"97:55:a8:fb:7d:81:99:12:c5:6c:fe:00:2a:b1:ff:3f:72:16:5b:94:3c:0b:28:ed:\n" +
+				"46:03:9a:07:de:50:7d:7a:29:f7:38:60:3d:ec:d1:27:03:80:a4:1f:97:1f:25:92:\n" +
+				"66:1a:64:ba:2f:35:1d:9a:69:e5:1a:88:8a:05:15:6b:7f:e1:56:3c:4b:77:ee:93:\n" +
+				"a4:49:49:13:84:38:a2:ab:8b:dc:fc:49:b4:e7:8d:1c:de:76:6e:54:98:47:60:05:\n" +
+				"7d:76:cd:74:0c:94:a4:dd:25:a4:6a:a7:7b:18:e9:d7:07:d6:73:84:97:d4:ea:c3:\n" +
+				"64:f4:79:2d:97:66:a1:6a:0e:23:48:07:e9:6b:8c:64:d4:04:bb:db:87:6e:39:b5:\n" +
+				"79:9e:f5:3f:e6:cb:9b:ab:62:ef:19:fd:cc:2b:dd:90:5b:ed:a1:3b:9e:f7:ac:35:\n" +
+				"f1:f5:57:cb:0d:c4:58:c0:19:e2:bc:19:a9:f5:df:c1:e4:ec:a9:e6:d4:66:56:41:\n" +
+				"24:30:4a:31:f0:38:60:5a:3e:34:2d:a0:1b:e1:c2:b5:45:61:0e:dd:2c:13:97:a3:\n" +
+				"c8:39:65:88:c6:32:9e:fe:b4:e1:65:af:5b:36:8a:39:a8:8e:48:88:e3:9f:40:bb:\n" +
+				"3d:e4:eb:14:16:67:2f:99:9f:ea:d3:7a:ef:1c:a9:64:3f:f3:2c:db:c0:fc:eb:e6:\n" +
+				"28:d7:e4:6d:28:1a:98:9d:43:dd:21:43:21:51:af:68:be:3f:6d:56:ac:fb:db:6c:\n" +
+				"97:d8:7f:cb:5e:62:91:bf:8b:4e:e1:27:5a:e0:eb:43:83:cc:75:39:03:c8:d2:9f:\n" +
+				"4a:db:6a:54:7e:40:5d:ec:df:f2:88:c5:f6:c7:aa:30:dc:b1:2f:84:d3:92:49:3a:\n" +
+				"70:93:33:17:c0:f5:e6:55:26:01:fa:e1:8f:17:e6:e5:bb:6b:f3:96:d3:2d:8a:b9 ");
+		static byte[] TEE_ATTR_DSA_SUBPRIME_256_VALUE01 = Text.bin(
+				" 87:6f:a0:9e:1d:c6:2b:23:6c:e1:c3:15:5b:a4:8b:0c:\n" +
+				"cf:da:29:f3:ac:5a:97:f7:ff:a1:bd:87:b6:8d:2a:4b ");
+		static byte[] TEE_ATTR_DSA_BASE_3072_VALUE01 = Text.bin(
+				" 11:0a:fe:bb:12:c7:f8:62:b6:de:03:d4:7f:db:c3:32:6e:0d:4d:31:b1:2a:8c:a9:\n" +
+				"5b:2d:ee:21:23:bc:c6:67:d4:f7:2c:1e:72:09:76:7d:27:21:f9:5f:bd:9a:4d:03:\n" +
+				"23:6d:54:17:4f:bf:af:f2:c4:ff:7d:ea:e4:73:8b:20:d9:f3:7b:f0:a1:13:4c:28:\n" +
+				"8b:42:0a:f0:b5:79:2e:47:a9:25:13:c0:41:3f:34:6a:4e:db:ab:2c:45:bd:ca:13:\n" +
+				"f5:34:1c:2b:55:b8:ba:54:93:2b:92:17:b5:a8:59:e5:53:f1:4b:b8:c1:20:fb:b9:\n" +
+				"d9:99:09:df:f5:ea:68:e1:4b:37:99:64:fd:3f:38:61:e5:ba:5c:c9:70:c4:a1:80:\n" +
+				"ee:f5:44:28:70:39:61:02:1e:7b:d6:8c:b6:37:92:7b:8c:be:e6:80:5f:a2:72:85:\n" +
+				"bf:ee:4d:1e:f7:0e:02:c1:a1:8a:7c:d7:8b:ef:1d:d9:cd:ad:45:dd:e9:cd:69:07:\n" +
+				"55:05:0f:c4:66:29:37:ee:1d:6f:4d:b1:28:07:cc:c9:5b:c4:35:f1:1b:71:e7:08:\n" +
+				"60:48:b1:da:b5:91:3c:60:55:01:2d:e8:2e:43:a4:e5:0c:f9:3f:ef:f5:dc:ab:81:\n" +
+				"4a:bc:22:4c:5e:00:25:bd:86:8c:3f:c5:92:04:1b:ba:04:74:7c:10:af:51:3f:c3:\n" +
+				"6e:4d:91:c6:3e:e5:25:34:22:cf:40:63:39:8d:77:c5:2f:cb:01:14:27:cb:fc:fa:\n" +
+				"67:b1:b2:c2:d1:aa:4a:3d:a7:26:45:cb:1c:76:70:36:05:4e:2f:31:f8:86:65:a5:\n" +
+				"44:61:c8:85:fb:32:19:d5:ad:87:48:a0:11:58:f6:c7:c0:df:5a:8c:90:8b:a8:c3:\n" +
+				"e5:36:82:24:28:88:6c:7b:50:0b:bc:15:b4:9d:f7:46:b9:de:5a:78:fe:3b:4f:69:\n" +
+				"91:d0:11:0c:3c:bf:f4:58:03:9d:c3:62:61:cf:46:af:4b:c2:51:53:68:f4:ab:b7 ");
+		static byte[] TEE_ATTR_DSA_PRIVATE_VALUE_256_VALUE01 = Text.bin(
+				"34:70:83:20:55:da:de:94:e1:4c:d8:77:71:71:d1:8e:\n" +
+				"5d:06:f6:6a:ef:f4:c6:14:71:e4:eb:a7:4e:e5:61:64");
+		static byte[] TEE_ATTR_DSA_PUBLIC_VALUE_3072_VALUE01 = Text.bin(
+				"45:6a:10:5c:71:35:66:23:48:38:bc:07:0b:8a:75:1a:0b:57:76:7c:b7:5e:99:11:\n" +
+				"4a:1a:46:64:1e:11:da:1f:a9:f2:29:14:d8:08:ad:71:48:61:2c:1e:a5:5d:25:30:\n" +
+				"17:81:e9:ae:0c:9a:e3:6a:69:d8:7b:a0:39:ec:7c:d8:64:c3:ad:09:48:73:e6:e5:\n" +
+				"67:09:fd:10:d9:66:85:3d:61:1b:1c:ff:15:d3:7f:de:e4:24:50:6c:18:4d:62:c7:\n" +
+				"03:33:58:be:78:c2:25:09:43:b6:f6:d0:43:d6:3b:31:7d:e5:6e:5a:d8:d1:fd:97:\n" +
+				"dd:35:5a:be:96:45:2f:8e:43:54:85:fb:3b:90:7b:51:90:0a:a3:f2:44:18:df:50:\n" +
+				"b4:fc:da:fb:f6:13:75:48:c3:93:73:b8:bc:4b:a3:da:bb:47:46:eb:d1:7b:87:fc:\n" +
+				"d6:a2:f1:97:c1:07:b1:8e:c5:b4:65:e6:e4:cb:43:0d:9c:0c:e7:8d:a5:98:84:41:\n" +
+				"05:4a:37:07:92:b7:30:da:9a:ba:41:a3:16:9a:f2:61:76:f7:4e:6f:7c:0c:9c:9b:\n" +
+				"55:b6:2b:be:7c:e3:8d:46:95:d4:81:57:e6:60:c2:ac:b6:3f:48:2f:55:41:81:50:\n" +
+				"e5:fe:e4:3a:ce:84:c5:40:c3:ba:76:62:ae:80:83:5c:1a:2d:51:89:0e:a9:6b:a2:\n" +
+				"06:42:7c:41:ef:8c:38:aa:07:d2:a3:65:e7:e5:83:80:d8:f4:78:2e:22:ac:21:01:\n" +
+				"af:73:2e:e2:27:58:33:7b:25:36:37:83:8e:16:f5:0f:56:d3:13:d0:79:81:88:0d:\n" +
+				"68:55:57:f7:d7:9a:6d:b8:23:c6:1f:1b:b3:db:c5:d5:04:21:a4:84:3a:6f:29:69:\n" +
+				"0e:78:aa:0f:0c:ff:30:42:31:81:8b:81:fc:4a:24:3f:c0:0f:09:a5:4c:46:6d:6a:\n" +
+				"8c:73:d3:2a:55:e1:ab:d5:ec:8b:4e:1a:fa:32:a7:9b:01:df:85:a8:1f:3f:5c:fe ");
 
 
 		static byte[] DATA_FOR_CRYPTO1 = Text.bin("00:01:02:03:04:05:06:07:08:09:0a:0b:0c:0d:0e:0f:\n" +
@@ -624,6 +684,110 @@ public class TEFSecosCrypt extends UnitTest implements TEF_Types {
 		}
 	}
 
+	static byte[] calcSHA(int sha, byte[] m) throws Exception {
+		MessageDigest md = MessageDigest.getInstance("SHA-"+sha);
+		return md.digest(m);
+	}
+
+	static void nist_dsa() throws Exception {
+		//String file = "~/Secos/test-vectors/dsa/SigGen.txt";
+		String file = "~/Secos/test-vectors/dsa/SigVer.rsp";
+		int cnt = 0;
+		try (BufferedReader rd = new BufferedReader(new FileReader(Env.expandEnv(file)))) {
+			String ln;
+			int L = 0, N = 0, sha = 0;
+			byte[] Msg;
+			BigInteger P, Q, G, K, R, S;
+			BigInteger X, Y;
+
+			P = Q = G = X = Y = K = R = S = null;
+			Msg = null;
+			while ((ln = rd.readLine()) != null) {
+				if (ln.startsWith("#")) continue;
+				if (ln.startsWith("[")) {
+					int b,e;
+					b = ln.indexOf("L=", 1) + 2;
+					e = ln.indexOf(",", b);
+					L = Integer.parseInt(ln.substring(b, e));
+					b = ln.indexOf("N=", e) + 2;
+					e = ln.indexOf(",", b);
+					N = Integer.parseInt(ln.substring(b, e));
+					b = ln.indexOf("SHA-", e) + 4;
+					e = ln.indexOf("]", b);
+					sha = Integer.parseInt(ln.substring(b, e));
+					Log.debug("L=%d, N=%d SHA-%d", L, N, sha);
+					P = Q = G = X = Y = K = R = S = null;
+					Msg = null;
+					continue;
+				}
+
+				if (ln.startsWith("P ")) {
+					int b = ln.indexOf("= ") + 2;
+					P = new BigInteger(1, Text.bin(ln.substring(b)));
+				}
+				else if (ln.startsWith("Q ")) {
+					int b = ln.indexOf("= ") + 2;
+					Q = new BigInteger(1, Text.bin(ln.substring(b)));
+				}
+				else if (ln.startsWith("G ")) {
+					int b = ln.indexOf("= ") + 2;
+					G = new BigInteger(1, Text.bin(ln.substring(b)));
+				}
+				else if (ln.startsWith("Msg ")) {
+					if (Msg != null) {
+						DSA dsa = new DSA(P, Q, G, X, Y);
+						dsa.setK(K);
+
+						byte[] hash = calcSHA(sha, Msg);
+						Log.debug("Test %d", cnt);
+						Log.debug("X = %s", X.toString(16));
+						Log.debug("SHA-%d: %s", sha, Text.hex(hash));
+
+						byte[] sign = dsa.signDigest(hash);
+						if (!dsa.verifyDigest(sign, hash)) break;
+						++cnt;
+					}
+					int b = ln.indexOf("= ") + 2;
+					Msg = Text.bin(ln.substring(b));
+				}
+				else if (ln.startsWith("X ")) {
+					int b = ln.indexOf("= ") + 2;
+					X = new BigInteger(1, Text.bin(ln.substring(b)));
+				}
+				else if (ln.startsWith("Y ")) {
+					int b = ln.indexOf("= ") + 2;
+					Y = new BigInteger(1, Text.bin(ln.substring(b)));
+				}
+				else if (ln.startsWith("K ")) {
+					int b = ln.indexOf("= ") + 2;
+					K = new BigInteger(1, Text.bin(ln.substring(b)));
+				}
+				else if (ln.startsWith("R ")) {
+					int b = ln.indexOf("= ") + 2;
+					R = new BigInteger(1, Text.bin(ln.substring(b)));
+				}
+				else if (ln.startsWith("S ")) {
+					int b = ln.indexOf("= ") + 2;
+					S = new BigInteger(1, Text.bin(ln.substring(b)));
+				}
+				else if (ln.startsWith("Result ")) {
+					int b = ln.indexOf("= ") + 2;
+					boolean Result = ln.substring(b).startsWith("P") ? true : false;
+					DSA dsa = new DSA(P, Q, G, X, Y);
+
+					byte[] hash = calcSHA(sha, Msg);
+					Log.debug("Test %d", cnt);
+					Log.debug("X = %s", X.toString(16));
+					Log.debug("SHA-%d: %s", sha, Text.hex(hash));
+
+					if (dsa.verifyDigest(R, S, hash) != Result) break;
+					Msg = null;
+					++cnt;
+				}
+			}
+		}
+	}
+
 	static void gp_dsa() throws Exception {
 		//byte[] hash = Text.bin("C1A0104D625B8E378A96130514AA1BEAA7BE2E04");
 		DSA dsa = new DSA(
@@ -657,30 +821,19 @@ public class TEFSecosCrypt extends UnitTest implements TEF_Types {
 		Log.info("sign[%d] = %s", sign.length, Text.hex(sign));
 		dsa.verifyDigest(sign, hash);
 
-		/*
-		byte[] p = Text.bin("86F5CA03DCFEB225063FF830A0C769B9DD9D6153AD91D7CE27F787C43278B447E6533B86B18BED6E8A48B784A14C252C5BE0DBF60B86D6385BD2F12FB763ED8873ABFD3F5BA2E0A8C0A59082EAC056935E529DAF7C610467899C77ADEDFC846C881870B7B19B2B58F9BE0521A17002E3BDD6B86685EE90B3D9A1B02B782B1779");
-		byte[] q = Text.bin("996F967F6C8E388D9E28D01E205FBA957A5698B1");
-		byte[] g = Text.bin("07B0F92546150B62514BB771E2A0C0CE387F03BDA6C56B505209FF25FD3C133D89BBCD97E904E09114D9A7DEFDEADFC9078EA544D2E401AEECC40BB9FBBF78FD87995A10A1C27CB7789B594BA7EFB5C4326A9FE59A070E136DB77175464ADCA417BE5DCE2F40D10A46A3A3943F26AB7FD9C0398FF8C76EE0A56826A8A88F1DBD");
-		byte[] y = Text.bin("4B5E43C17DF5692C56B57566CF35C8C3D9A41CC55D01A15B5956B1A2EC669EDE"
-                +"8FC45E59C852CD586788468C6B7719FD1B3CFC57A765152529CFB6EEEB7142EE"
-                +"2A9B1CD661458E4362EE1C0CA973EBFE6EFC23C99F26E9E185CB98A3D90E46C4"
-                +"47C126BFDCA5524692D6945520C71FDA8F668189A09A9C4AA242981AEAAD6BAD");
-		byte[] x = Text.bin("58D0FD3469AD7A39708D1B47858B82953B9D3991");
-
 		dsa = new DSA(
-				new BigInteger(1, p),
-				new BigInteger(1, q),
-				new BigInteger(1, g),
-				new BigInteger(1, x),
-				new BigInteger(1, y)
+				new BigInteger(1, GP.TEE_ATTR_DSA_PRIME_3072_VALUE01),
+				new BigInteger(1, GP.TEE_ATTR_DSA_SUBPRIME_256_VALUE01),
+				new BigInteger(1, GP.TEE_ATTR_DSA_BASE_3072_VALUE01),
+				new BigInteger(1, GP.TEE_ATTR_DSA_PRIVATE_VALUE_256_VALUE01),
+				new BigInteger(1, GP.TEE_ATTR_DSA_PUBLIC_VALUE_3072_VALUE01)
 				);
-		md = MessageDigest.getInstance("SHA-224");
-		hash = md.digest("DSA SHA1".getBytes());
+		md = MessageDigest.getInstance("SHA-256");
+		hash = md.digest(GP.DATA_FOR_CRYPTO1);
+		Log.info("bits(hash) = %d", hash.length*8);
 		sign = dsa.signDigest(hash);
 		Log.info("hash[%d] = %s", hash.length, Text.hex(hash));
 		Log.info("sign[%d] = %s", sign.length, Text.hex(sign));
-		//dsa.verifyDigest(sign, hash);
-		 */
 	}
 	static void gp_dh() throws Exception {
 		BigInteger prime = new BigInteger(1, GP.TEE_ATTR_DH_PRIME_VALUE01);  // p (prime number)
@@ -848,11 +1001,12 @@ public class TEFSecosCrypt extends UnitTest implements TEF_Types {
 		//try { gp_mac(); } catch (Exception e) { Log.error(e); }
 		//try { gp_cmac(); } catch (Exception e) { Log.error(e); }
 		//try { java_mac(); } catch (Exception e) { Log.error(e); }
-		try { gp_dsa(); } catch (Exception e) { Log.error(e); }
+		try { nist_dsa(); } catch (Exception e) { Log.error(e); }
+		//try { gp_dsa(); } catch (Exception e) { Log.error(e); }
 		//try { gp_dh(); } catch (Exception e) { Log.error(e); }
 		//try { mgf_test(); } catch (Exception e) { Log.error(e); }
 		//try { rsa_sign(); } catch (Exception e) { Log.error(e); }
-		try { gp_asym_encr(); } catch (Exception e) { Log.error(e); }
+		//try { gp_asym_encr(); } catch (Exception e) { Log.error(e); }
 		//try { oaep_test_vectors(); } catch (Exception e) { Log.error(e); }
 		//try { gp_check_rsa(); } catch (Exception e) { Log.error(e); }
 	}

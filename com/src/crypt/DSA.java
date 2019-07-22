@@ -2,13 +2,17 @@ package crypt;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.math.BigInteger;
+import java.util.Arrays;
+
 import sys.Log;
 import text.Text;
 
 public class DSA extends Asymmetric {
 	private BigInteger p,q,g;
 	private BigInteger x,y;
+	private BigInteger k = null;
 
 	/*
 	 * Parameter generation (can be shared among users)
@@ -40,41 +44,55 @@ public class DSA extends Asymmetric {
 		this.g = g; //base
 		this.x = x; //priv
 		this.y = y; //pub
+	}
+	public void setK(BigInteger k) {
+		this.k = k;
+	}
 
-		Log.debug("p=%s", p.toString(16));
-		Log.debug("q=%s", q.toString(16));
-		Log.debug("g=%s", g.toString(16));
-		Log.debug("x=%s", x.toString(16));
-		Log.debug("y=%s", y.toString(16));
+	public void print(PrintStream pr) {
+		pr.printf("P %s", p.toString(16));
+		pr.printf("Q %s", q.toString(16));
+		pr.printf("G %s", g.toString(16));
+		//Log.debug("x = %s", x == null ? "null" : x.toString(16));
+		//Log.debug("y = %s", y == null ? "null" : y.toString(16));
 	}
 
 	/*
 	1. k = generated random
-	2. r = g^k mod q (if r == 0, generate new k)
-	3. s = k^-1(H(m)+x*r) mod q (if s == 0, generate new k)
+	2. r = (g^k mod p) mod q (if r == 0, generate new k)
+	3. s = inv(k) * (H(m)+x*r) mod q (if s == 0, generate new k)
 	4. The signature is (r,s)
 	NOTE: (r,s) must be encoded as DER T:30{T:02[r] T:02[s]}
 	 */
 	public byte[] signDigest(byte[] hash) {
-		if (q.bitLength() > hash.length*8) {
-			throw new RuntimeException("bits(q) > bits(hash)");
+		int qBytes = q.bitLength()/8;
+		if (qBytes < hash.length) {
+			hash = Arrays.copyOfRange(hash, 0, qBytes);
 		}
 
 		BigInteger H = new BigInteger(1, hash);
 
 		BigInteger r,s;
-		for (;;) {
-			BigInteger k = new BigInteger(q.bitLength(), rnd);
-			if (k.equals(BigInteger.ZERO)) continue;
+		if (k == null) {
+			for (;;) {
+				BigInteger k = new BigInteger(q.bitLength(), rnd);
+				if (k.equals(BigInteger.ZERO)) continue;
+				r = g.modPow(k, p).mod(q);
+				if (r.equals(BigInteger.ZERO)) continue;
+				s = k.modInverse(q).multiply(H.add(x.multiply(r))).mod(q);
+				if (s.equals(BigInteger.ZERO)) continue;
+				break;
+			}
+		}
+		else {
 			r = g.modPow(k, p).mod(q);
-			if (r.equals(BigInteger.ZERO)) continue;
 			s = k.modInverse(q).multiply(H.add(x.multiply(r))).mod(q);
-			if (s.equals(BigInteger.ZERO)) continue;
-			break;
 		}
 
-		Log.debug("r = %s", Text.hex(r.toByteArray()));
-		Log.debug("s = %s", Text.hex(s.toByteArray()));
+		byte[] b = r.toByteArray();
+		Log.debug("r[%d] = %s", b.length, Text.hex(b));
+		b = s.toByteArray();
+		Log.debug("s[%d] = %s", b.length, Text.hex(b));
 
 		TLV der = TLV.create(0x30);
 		der.add(TLV.create(0x02).setValue(r.toByteArray()));
@@ -84,12 +102,39 @@ public class DSA extends Asymmetric {
 
 	/*
 	 (r,s) = signature
-	1. w = s^-1 mod q
+	1. w = inv(s) mod q
 	2. u1 = H(m)*w mod q
 	3. u2 = r*w mod q
 	4. v = (g^u1 * y^u2 mod p) mod q
 	5. sign is valid if v == r
+
+	https://github.com/frohoff/jdk8u-dev-jdk/blob/master/src/share/classes/sun/security/provider/DSA.java
 	 */
+	public boolean verifyDigest(BigInteger r, BigInteger s, byte[] hash) {
+		if (s.bitLength() > q.bitLength()) throw new RuntimeException("signature too long");
+
+		int qBytes = q.bitLength()/8;
+		if (qBytes < hash.length) {
+			hash = Arrays.copyOfRange(hash, 0, qBytes);
+		}
+
+		BigInteger H = new BigInteger(1, hash);
+		BigInteger w = s.modInverse(q);
+		BigInteger u1 = H.multiply(w).mod(q);
+		BigInteger u2 = r.multiply(w).mod(q);
+		u1 = g.modPow(u1, p);
+		u2 = y.modPow(u2, p);
+		BigInteger v = u1.multiply(u2).mod(p).mod(q);
+/*
+		Log.debug("H = %s", H.toString(16));
+		Log.debug("w = %s", w.toString(16));
+		Log.debug("u1 = %s", u1.toString(16));
+		Log.debug("u2 = %s", u2.toString(16));
+		Log.debug("v = %s", v.toString(16));
+*/
+		return v.equals(r);
+	}
+
 	public boolean verifyDigest(byte[] sign, byte[] hash) {
 		TLV der = null;
 		try {
@@ -99,17 +144,6 @@ public class DSA extends Asymmetric {
 		}
 		BigInteger r = new BigInteger(1, der.get(0).value());
 		BigInteger s = new BigInteger(1, der.get(1).value());
-		BigInteger H = new BigInteger(1, hash);
-
-		if (s.bitLength() > q.bitLength()) throw new RuntimeException("signature too long");
-
-		BigInteger w = s.modInverse(q);
-		BigInteger u1 = H.multiply(w).mod(q);
-		BigInteger u2 = r.multiply(w).mod(q);
-		BigInteger v = g.modPow(u1, p).multiply(y.modPow(u2, p)).mod(p).mod(q);
-
-		if (v.equals(r)) { Log.info("verifyDSA OK");return true; }
-		Log.error("not equal:  v=%s  r=%s", v.toString(16), r.toString(16));
-		return false;
+		return verifyDigest(r,  s, hash);
 	}
 }

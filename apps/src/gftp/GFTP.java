@@ -110,16 +110,12 @@ public class GFTP {
 			sendFile(new FileInputStream(src), ftp.putFileStream(dst.getName()));
 			return ;
 		}
-		else {
-			String[] list = git.lstree("--name-only", "HEAD").split("\n");
-			for (String fn : list) {
-				if (fn.equals(".gitignore")) continue;
-				File f = new File(src.getPath()+"/"+fn);
-				candidateFiles.add(f);
-			}
+		for (String fn : git.lstree("--name-only", "HEAD").split("\n")) {
+			if (fn.equals(".gitignore")) continue;
+			File f = new File(src.getPath()+"/"+fn);
+			candidateFiles.add(f);
 		}
 
-		//Log.debug("local files: \n%s",Text.join(",", localFiles));
 		Iterator<FtpDirEntry> it = ftp.listFiles(linuxPath(dst));
 		List<File> filesToAdd = new ArrayList<>();
 		List<File> dirsToGo = new ArrayList<>();
@@ -157,6 +153,7 @@ public class GFTP {
 				}
 			}
 		}
+
 		Date time = new Date();
 		for (File f : filesToAdd) {
 			++filesSent;

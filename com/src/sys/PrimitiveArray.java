@@ -20,7 +20,28 @@ package sys;
 import java.util.AbstractList;
 import java.util.List;
 
-public class RawArray {
+public class PrimitiveArray {
+	static private class ByteArray extends AbstractList<Byte> {
+		private final byte[] data;
+		public ByteArray(byte... data) {
+			this.data=data;
+		}
+		@Override
+		public Byte get(int index) {
+			return data[index];
+		}
+		@Override
+		public Byte set(int index, Byte element) {
+			byte r = data[index];
+			data[index] = element;
+			return r;
+		}
+		@Override
+		public int size() {
+			return data.length;
+		}
+	}
+
 	static private class IntArray extends AbstractList<Integer> {
 		private final int[] data;
 		public IntArray(int... data) {
@@ -60,8 +81,17 @@ public class RawArray {
 		public int size() {
 			return data.length;
 		}
+
+		@Override
+		public Object[] toArray() {
+			// TODO Auto-generated method stub
+			return super.toArray();
+		}
 	}
 
+	public static List<Byte> asList(final byte[] a) {
+		return new ByteArray(a);
+	}
 	public static List<Integer> asList(final int[] a) {
 		return new IntArray(a);
 	}
