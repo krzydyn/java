@@ -47,7 +47,7 @@ public class TuringMach {
 		String inp;
 		@Override
 		public int hashCode() {
-			return state.hashCode()+inp.hashCode();
+			return state.hashCode()+inp.hashCode()*31;
 		}
 		@Override
 		public boolean equals(Object o) {
@@ -61,8 +61,8 @@ public class TuringMach {
 		State next;   // next state
 	}
 
-	private final Map<String,State> states = new HashMap<String, TuringMach.State>();
-	private final Map<StateKey,Action> rules = new HashMap<TuringMach.StateKey, TuringMach.Action>();
+	private final Map<String,State> states = new HashMap<>();
+	private final Map<StateKey,Action> rules = new HashMap<>();
 	private State currentState=null;
 
 	private State mkState(String name) {
@@ -101,7 +101,7 @@ public class TuringMach {
 	}
 
 	public String run(String initState, String tape) {
-		List<String> t = new ArrayList<String>();
+		List<String> t = new ArrayList<>();
 		for (String s : tape.split("[,\\s]+"))
 			t.add(s);
 
