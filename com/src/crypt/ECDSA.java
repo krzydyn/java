@@ -10,10 +10,13 @@ import text.Text;
 // https://github.com/warner/python-ecdsa/blob/master/src/ecdsa/ecdsa.py
 public class ECDSA extends Asymmetric {
 	static class BigPoint {
-		final static BigPoint INFINITY = new BigPoint(null, null);
+		final static BigPoint INFINITY = new BigPoint();
 		final private BigInteger x, y;
 
+		private BigPoint() { x = y = null; }
+
 		public BigPoint(BigInteger x, BigInteger y) {
+			if (x == null || y == null) throw new NullPointerException();
 			this.x = x;
 			this.y = y;
 		}
@@ -41,7 +44,6 @@ public class ECDSA extends Asymmetric {
 	static class EllipticCurve {
 		//final static BigInteger TWO = BigInteger.valueOf(2);
 		final static BigInteger THREE = BigInteger.valueOf(3);
-		final static BigPoint INFINITY = BigPoint.INFINITY;
 		final private BigInteger a, b, p;
 
 		public EllipticCurve(BigInteger a, BigInteger b, BigInteger p) {
@@ -56,11 +58,11 @@ public class ECDSA extends Asymmetric {
 		}
 
 		public BigPoint add(BigPoint p1, BigPoint p2) {
-			if (p1 == INFINITY) return p2;
-			if (p2 == INFINITY) return p1;
+			if (p1 == BigPoint.INFINITY) return p2;
+			if (p2 == BigPoint.INFINITY) return p1;
 			if (p1.x.equals(p2.x)) {
 				if (p1.y.add(p2.y).mod(p).equals(BigInteger.ZERO))
-					return INFINITY;
+					return BigPoint.INFINITY;
 				return dub(p1);
 			}
 
@@ -72,8 +74,8 @@ public class ECDSA extends Asymmetric {
 			return new BigPoint(x3, y3);
 		}
 		public BigPoint dub(BigPoint p1) {
-			if (p1 == INFINITY)
-				return INFINITY;
+			if (p1 == BigPoint.INFINITY)
+				return BigPoint.INFINITY;
 
 			// l = 3 * x1*x1 * a * inv(2*y1) mod p
 			BigInteger l = THREE.multiply(p1.x).multiply(p1.x).add(a).multiply(TWO.multiply(p1.y).modInverse(p)).mod(p);
@@ -84,9 +86,9 @@ public class ECDSA extends Asymmetric {
 		}
 		public BigPoint multiply(BigPoint p1, BigInteger k) {
 			if (k.equals(BigInteger.ZERO))
-				return INFINITY;
-			if (p1 == INFINITY)
-				return INFINITY;
+				return BigPoint.INFINITY;
+			if (p1 == BigPoint.INFINITY)
+				return BigPoint.INFINITY;
 			BigInteger e3 = THREE.multiply(k);
 			BigPoint negp = new BigPoint(p1.x, p1.y.negate());
 			int i = e3.bitCount()/2;
@@ -103,10 +105,17 @@ public class ECDSA extends Asymmetric {
 		}
 	}
 
-	BigInteger qA; //public key  (qA = dA * G)
+	EllipticCurve ec; // curve
+	BigInteger qA; //public key  (qA = dA * G)?
 	BigInteger dA; //private key
 	BigPoint G;    //base point
-	EllipticCurve ec; // curve
+
+	public ECDSA(EllipticCurve ec, BigPoint g, BigInteger d) {
+		this.ec = ec;
+		this.G = g;
+		this.dA = d;
+		this.qA = ec.multiply(g, d).x;
+	}
 
 	/*
 	 * https://www.johannes-bauer.com/compsci/ecc/
@@ -151,12 +160,12 @@ public class ECDSA extends Asymmetric {
 		return false;
 	}
 
-	EllipticCurve p192 = new EllipticCurve(
+	final public static EllipticCurve p192 = new EllipticCurve(
 			BigInteger.valueOf(-3),
 			new BigInteger("0x64210519e59c80e70fa7e9ab72243049feb8deecc146b9b1"),
 			new BigInteger("6277101735386680763835789423207666416083908700390324961279")
 			);
-	BigPoint g192 = new BigPoint(
+	final public static BigPoint g192 = new BigPoint(
 			new BigInteger("0x188da80eb03090f67cbf20eb43a18800f4ff0afd82ff1012"),
 			new BigInteger("0x07192b95ffc8da78631011ed6b24cdd573f977a11e794811"));
 }

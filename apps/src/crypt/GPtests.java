@@ -690,8 +690,7 @@ public class GPtests extends UnitTest implements TEF_Types {
 	}
 
 	static void nist_dsa() throws Exception {
-		//String file = "~/Secos/test-vectors/dsa/SigGen.txt";
-		String file = "~/Secos/test-vectors/dsa/SigVer.rsp";
+		String file = "res/nist-dsa-SigVer.rsp";
 		int cnt = 0;
 		try (BufferedReader rd = new BufferedReader(new FileReader(Env.expandEnv(file)))) {
 			String ln;
@@ -786,6 +785,9 @@ public class GPtests extends UnitTest implements TEF_Types {
 				}
 			}
 		}
+	}
+	static void nist_ecdsa() throws Exception {
+		//ECDSA dsa = new ECDSA(P, Q, G, X, Y);
 	}
 
 	static void gp_dsa() throws Exception {
@@ -1002,6 +1004,7 @@ public class GPtests extends UnitTest implements TEF_Types {
 		//try { gp_cmac(); } catch (Exception e) { Log.error(e); }
 		//try { java_mac(); } catch (Exception e) { Log.error(e); }
 		try { nist_dsa(); } catch (Exception e) { Log.error(e); }
+		//try { nist_ecdsa(); } catch (Exception e) { Log.error(e); }
 		//try { gp_dsa(); } catch (Exception e) { Log.error(e); }
 		//try { gp_dh(); } catch (Exception e) { Log.error(e); }
 		//try { mgf_test(); } catch (Exception e) { Log.error(e); }
