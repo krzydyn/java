@@ -734,7 +734,8 @@ public class GPtests extends UnitTest implements TEF_Types {
 				}
 				else if (ln.startsWith("Msg ")) {
 					if (Msg != null) {
-						DSA dsa = new DSA(P, Q, G, X, Y);
+						DSA dsa = new DSA(P, Q, G);
+						dsa.setXY(X, Y);
 						dsa.setK(K);
 
 						byte[] hash = calcSHA(sha, Msg);
@@ -772,7 +773,8 @@ public class GPtests extends UnitTest implements TEF_Types {
 				else if (ln.startsWith("Result ")) {
 					int b = ln.indexOf("= ") + 2;
 					boolean Result = ln.substring(b).startsWith("P") ? true : false;
-					DSA dsa = new DSA(P, Q, G, X, Y);
+					DSA dsa = new DSA(P, Q, G);
+					dsa.setXY(X, Y);
 
 					byte[] hash = calcSHA(sha, Msg);
 					Log.debug("Test %d", cnt);
@@ -795,11 +797,12 @@ public class GPtests extends UnitTest implements TEF_Types {
 		DSA dsa = new DSA(
 				new BigInteger(1, GP.TEE_ATTR_DSA_PRIME_768_VALUE01),
 				new BigInteger(1, GP.TEE_ATTR_DSA_SUBPRIME_160_VALUE01),
-				new BigInteger(1, GP.TEE_ATTR_DSA_BASE_768_VALUE01),
+				new BigInteger(1, GP.TEE_ATTR_DSA_BASE_768_VALUE01)
+				);
+		dsa.setXY(
 				new BigInteger(1, GP.TEE_ATTR_DSA_PRIVATE_VALUE_160_VALUE01),
 				new BigInteger(1, GP.TEE_ATTR_DSA_PUBLIC_VALUE_768_VALUE01)
 				);
-
 		MessageDigest md = MessageDigest.getInstance("SHA1");
 		byte[] hash = md.digest(GP.DATA_FOR_CRYPTO1);
 		Log.info("bits(hash) = %d", hash.length*8);
@@ -811,7 +814,9 @@ public class GPtests extends UnitTest implements TEF_Types {
 		dsa = new DSA(
 				new BigInteger(1, GP.TEE_ATTR_DSA_PRIME_2048_VALUE01),
 				new BigInteger(1, GP.TEE_ATTR_DSA_SUBPRIME_224_VALUE01),
-				new BigInteger(1, GP.TEE_ATTR_DSA_BASE_2048_VALUE01),
+				new BigInteger(1, GP.TEE_ATTR_DSA_BASE_2048_VALUE01)
+				);
+		dsa.setXY(
 				new BigInteger(1, GP.TEE_ATTR_DSA_PRIVATE_VALUE_224_VALUE01),
 				new BigInteger(1, GP.TEE_ATTR_DSA_PUBLIC_VALUE_2048_VALUE01)
 				);
@@ -826,10 +831,13 @@ public class GPtests extends UnitTest implements TEF_Types {
 		dsa = new DSA(
 				new BigInteger(1, GP.TEE_ATTR_DSA_PRIME_3072_VALUE01),
 				new BigInteger(1, GP.TEE_ATTR_DSA_SUBPRIME_256_VALUE01),
-				new BigInteger(1, GP.TEE_ATTR_DSA_BASE_3072_VALUE01),
+				new BigInteger(1, GP.TEE_ATTR_DSA_BASE_3072_VALUE01)
+				);
+		dsa.setXY(
 				new BigInteger(1, GP.TEE_ATTR_DSA_PRIVATE_VALUE_256_VALUE01),
 				new BigInteger(1, GP.TEE_ATTR_DSA_PUBLIC_VALUE_3072_VALUE01)
 				);
+
 		md = MessageDigest.getInstance("SHA-256");
 		hash = md.digest(GP.DATA_FOR_CRYPTO1);
 		Log.info("bits(hash) = %d", hash.length*8);

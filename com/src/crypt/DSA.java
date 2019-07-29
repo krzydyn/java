@@ -38,23 +38,27 @@ public class DSA extends Asymmetric {
 		x = new BigInteger(q.bitLength(), rnd);
 		y = g.modPow(x, p);
 	}
-	public DSA(BigInteger p, BigInteger q, BigInteger g, BigInteger x, BigInteger y) {
+
+	/**
+	 * Initialize DSA with domain parameters
+	 */
+	public DSA(BigInteger p, BigInteger q, BigInteger g) {
 		this.p = p; //prime
 		this.q = q; //subprime
 		this.g = g; //base
-		this.x = x; //priv
-		this.y = y; //pub
 	}
 	public void setK(BigInteger k) {
 		this.k = k;
+	}
+	public void setXY(BigInteger x, BigInteger y) {
+		this.x = x; //priv
+		this.y = y; //pub
 	}
 
 	public void print(PrintStream pr) {
 		pr.printf("P %s", p.toString(16));
 		pr.printf("Q %s", q.toString(16));
 		pr.printf("G %s", g.toString(16));
-		//Log.debug("x = %s", x == null ? "null" : x.toString(16));
-		//Log.debug("y = %s", y == null ? "null" : y.toString(16));
 	}
 
 	/*
