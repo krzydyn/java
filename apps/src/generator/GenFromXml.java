@@ -32,6 +32,7 @@ public class GenFromXml {
 	static String repoPath = "/home/k.dynowski/Secos/Trustware";
 	static String xmlBasePath = repoPath + "/trustzone-application/test_suite_v2.0.0";
 	static String xmlPackagesPath = xmlBasePath + "/packages";
+	static String xmlCustomPath = repoPath + "/trustzone-application/test_suite_custom";
 	static String xmlValuesPath = xmlBasePath + "/Values";
 
 	static String repoTestCodePath = repoPath + "/trustzone-application/test_usability";
@@ -427,8 +428,14 @@ public class GenFromXml {
 				arg.parameter = a.getAttributes().getNamedItem("name").getTextContent();
 			else if (tag.equals("type"))
 				arg.type = a.getAttributes().getNamedItem("name").getTextContent();
-			else if (tag.equals("value"))
-				arg.value = a.getAttributes().getNamedItem("name").getTextContent();
+			else if (tag.equals("value")) {
+				Node name = a.getAttributes().getNamedItem("name");
+				if (name != null)
+					arg.value = name.getTextContent();
+				else
+					arg.value = a.getTextContent();
+
+			}
 		}
 		return arg;
 	}
@@ -562,6 +569,8 @@ public class GenFromXml {
 			fn = String.format("%s/%s/xmlstable/TEE_TimeArithm_API.xml", xmlPackagesPath, name);
 		else if (name.equals("TrustedCoreFw"))
 			fn = String.format("%s/%s/xmlstable/TEE_Internal_API.xml", xmlPackagesPath, name);
+		else if (name.contains("Custom"))
+			fn = String.format("%s/TEE_%s.xml", xmlCustomPath, name);
 		else
 			fn = String.format("%s/%s/xmlstable/TEE_%s_API.xml", xmlPackagesPath, name, name);
 

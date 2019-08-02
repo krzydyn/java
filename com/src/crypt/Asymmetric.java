@@ -33,6 +33,9 @@ abstract public class Asymmetric {
 	static BigInteger op2ip(byte[] x) {
 		return new BigInteger(1, x);
 	}
+	static byte[] i2osp(byte[] b, int len) {
+		return padZeroL(b, len);
+	}
 	static byte[] i2osp(BigInteger x, int len) {
 		return padZeroL(x.toByteArray(), len);
 	}
@@ -64,10 +67,11 @@ abstract public class Asymmetric {
 		return r;
 	}
 
-	public static void xor(byte[] a, byte[] b) {
+	public static byte[] xor(byte[] a, byte[] b) {
 		int l = Math.min(a.length, b.length);
 		for (int i = 0; i < l; ++i)
 			a[a.length - i -1] ^= b[b.length - i -1];
+		return a;
 	}
 
 	/**

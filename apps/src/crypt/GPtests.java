@@ -10,6 +10,7 @@ import java.security.Security;
 import java.util.Arrays;
 
 import javax.crypto.Mac;
+
 import crypt.tef.TEF;
 import crypt.tef.TEF_Types;
 import sys.Env;
@@ -744,7 +745,10 @@ public class GPtests extends UnitTest implements TEF_Types {
 						Log.debug("SHA-%d: %s", sha, Text.hex(hash));
 
 						byte[] sign = dsa.signDigest(hash);
-						if (!dsa.verifyDigest(sign, hash)) break;
+						if (!dsa.verifyDigest(sign, hash)) {
+							Log.error("Wrong signaure");
+							break;
+						}
 						++cnt;
 					}
 					int b = ln.indexOf("= ") + 2;
@@ -781,15 +785,98 @@ public class GPtests extends UnitTest implements TEF_Types {
 					Log.debug("X = %s", X.toString(16));
 					Log.debug("SHA-%d: %s", sha, Text.hex(hash));
 
-					if (dsa.verifyDigest(R, S, hash) != Result) break;
+					if (dsa.verifyDigest(R, S, hash) != Result) {
+						Log.error("Wrong signaure");
+						break;
+					}
 					Msg = null;
 					++cnt;
 				}
 			}
 		}
 	}
+
+	static ECDSA createECDSA(int alg) {
+		switch (alg) {
+		case 192: return new ECDSA(ECDSA.p192, ECDSA.g192, null);
+		}
+		return null;
+	}
 	static void nist_ecdsa() throws Exception {
-		//ECDSA dsa = new ECDSA(P, Q, G, X, Y);
+		String file = "res/nist-ecdsa-SigVer.rsp";
+		int cnt = 0;
+		try (BufferedReader rd = new BufferedReader(new FileReader(Env.expandEnv(file)))) {
+			String ln;
+			int ecAlg = 0, sha = 0;
+			byte[] Msg;
+			BigInteger Qx, Qy, R, S;
+
+			Qx = Qy = R = S = null;
+			Msg = null;
+			while ((ln = rd.readLine()) != null) {
+				if (ln.startsWith("#")) continue;
+				if (ln.startsWith("[")) {
+					int b,e;
+					b = ln.indexOf("P-", 1) + 2;
+					e = ln.indexOf(",", b);
+					ecAlg = Integer.parseInt(ln.substring(b, e));
+					b = ln.indexOf("SHA-", e) + 4;
+					e = ln.indexOf("]", b);
+					sha = Integer.parseInt(ln.substring(b, e));
+					Log.debug("P=%d SHA-%d", ecAlg, sha);
+					Qx = Qy = R = S = null;
+					Msg = null;
+					continue;
+				}
+
+				if (ln.startsWith("Qx ")) {
+					int b = ln.indexOf("= ") + 2;
+					Qx = new BigInteger(1, Text.bin(ln.substring(b)));
+				}
+				else if (ln.startsWith("Qy ")) {
+					int b = ln.indexOf("= ") + 2;
+					Qy = new BigInteger(1, Text.bin(ln.substring(b)));
+				}
+				else if (ln.startsWith("Msg ")) {
+					if (Msg != null) {
+						ECDSA ecdsa = createECDSA(ecAlg);
+
+						byte[] hash = calcSHA(sha, Msg);
+						Log.debug("Test %d", cnt);
+						Log.debug("Alg = P-%d", ecAlg);
+						Log.debug("SHA-%d: %s", sha, Text.hex(hash));
+
+						byte[] sign = ecdsa.signDigest(hash);
+						if (!ecdsa.verifyDigest(sign, hash)) break;
+						++cnt;
+					}
+					int b = ln.indexOf("= ") + 2;
+					Msg = Text.bin(ln.substring(b));
+				}
+				else if (ln.startsWith("R ")) {
+					int b = ln.indexOf("= ") + 2;
+					R = new BigInteger(1, Text.bin(ln.substring(b)));
+				}
+				else if (ln.startsWith("S ")) {
+					int b = ln.indexOf("= ") + 2;
+					S = new BigInteger(1, Text.bin(ln.substring(b)));
+				}
+				else if (ln.startsWith("Result ")) {
+					int b = ln.indexOf("= ") + 2;
+					boolean Result = ln.substring(b).startsWith("P") ? true : false;
+					ECDSA ecdsa = createECDSA(ecAlg);
+
+					byte[] hash = calcSHA(sha, Msg);
+					Log.debug("Test %d", cnt);
+					Log.debug("Alg = P-%d", ecAlg);
+					Log.debug("SHA-%d: %s", sha, Text.hex(hash));
+
+					if (ecdsa.verifyDigest(R, S, hash) != Result) break;
+					Msg = null;
+					++cnt;
+				}
+			}
+		}
 	}
 
 	static void gp_dsa() throws Exception {
@@ -965,7 +1052,7 @@ public class GPtests extends UnitTest implements TEF_Types {
 
 		byte[] padEMSA_PSS = RSA.padEMSA_PSS(hash, nBits-1, md);
 		Log.info("padEMSA_PSS[%d] = %s", padEMSA_PSS.length, Text.hex(padEMSA_PSS));
-		check(padEMSA_PSS, empa);
+		//check(padEMSA_PSS, empa); //<- for seed = zero
 
 		sign = rsa.sign(padEMSA_PSS);
 		Log.info("sign[%d] = %s\n", sign.length, Text.hex(sign));
@@ -1004,6 +1091,8 @@ public class GPtests extends UnitTest implements TEF_Types {
 		//try { decrypt(); } catch (Exception e) { Log.error(e); }
 		//try { digest(); } catch (Exception e) { Log.error(e); }
 		//try { nist_mac(); } catch (Exception e) { Log.error(e); }
+		//try { nist_dsa(); } catch (Exception e) { Log.error(e); }
+		try { nist_ecdsa(); } catch (Exception e) { Log.error(e); }
 
 		//Log.info("");
 		//try { gp_digest(); } catch (Exception e) { Log.error(e); }
@@ -1011,8 +1100,6 @@ public class GPtests extends UnitTest implements TEF_Types {
 		//try { gp_mac(); } catch (Exception e) { Log.error(e); }
 		//try { gp_cmac(); } catch (Exception e) { Log.error(e); }
 		//try { java_mac(); } catch (Exception e) { Log.error(e); }
-		try { nist_dsa(); } catch (Exception e) { Log.error(e); }
-		//try { nist_ecdsa(); } catch (Exception e) { Log.error(e); }
 		//try { gp_dsa(); } catch (Exception e) { Log.error(e); }
 		//try { gp_dh(); } catch (Exception e) { Log.error(e); }
 		//try { mgf_test(); } catch (Exception e) { Log.error(e); }

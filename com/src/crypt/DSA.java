@@ -146,8 +146,8 @@ public class DSA extends Asymmetric {
 		} catch (IOException e) {
 			return false;
 		}
-		BigInteger r = new BigInteger(1, der.get(0).value());
-		BigInteger s = new BigInteger(1, der.get(1).value());
+		BigInteger r = new BigInteger(der.get(0).value());
+		BigInteger s = new BigInteger(der.get(1).value());
 		return verifyDigest(r,  s, hash);
 	}
 }

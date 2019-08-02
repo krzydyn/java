@@ -1,5 +1,7 @@
 package crypt;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.Objects;
@@ -114,7 +116,8 @@ public class ECDSA extends Asymmetric {
 		this.ec = ec;
 		this.G = g;
 		this.dA = d;
-		this.qA = ec.multiply(g, d).x;
+		if (d != null)
+			this.qA = ec.multiply(g, d).x;
 	}
 
 	/*
@@ -156,16 +159,33 @@ public class ECDSA extends Asymmetric {
 		return der.toByteArray();
 	}
 
-	public boolean verifyDigest(byte[] sign, byte[] hash) {
+	public boolean verifyDigest(BigInteger r, BigInteger s, byte[] hash) {
+		if (s.bitLength() > qA.bitLength()) throw new RuntimeException("signature too long");
+
+		int qBytes = qA.bitLength()/8;
+		if (qBytes < hash.length) {
+			hash = Arrays.copyOfRange(hash, 0, qBytes);
+		}
 		return false;
+	}
+	public boolean verifyDigest(byte[] sign, byte[] hash) {
+		TLV der = null;
+		try {
+			der = TLV.load(new ByteArrayInputStream(sign));
+		} catch (IOException e) {
+			return false;
+		}
+		BigInteger r = new BigInteger(der.get(0).value());
+		BigInteger s = new BigInteger(der.get(1).value());
+		return verifyDigest(r,  s, hash);
 	}
 
 	final public static EllipticCurve p192 = new EllipticCurve(
 			BigInteger.valueOf(-3),
-			new BigInteger("0x64210519e59c80e70fa7e9ab72243049feb8deecc146b9b1"),
-			new BigInteger("6277101735386680763835789423207666416083908700390324961279")
+			new BigInteger("64210519e59c80e70fa7e9ab72243049feb8deecc146b9b1", 16),
+			new BigInteger("6277101735386680763835789423207666416083908700390324961279", 16)
 			);
 	final public static BigPoint g192 = new BigPoint(
-			new BigInteger("0x188da80eb03090f67cbf20eb43a18800f4ff0afd82ff1012"),
-			new BigInteger("0x07192b95ffc8da78631011ed6b24cdd573f977a11e794811"));
+			new BigInteger("188da80eb03090f67cbf20eb43a18800f4ff0afd82ff1012", 16),
+			new BigInteger("07192b95ffc8da78631011ed6b24cdd573f977a11e794811", 16));
 }

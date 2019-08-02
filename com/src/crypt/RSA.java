@@ -307,9 +307,9 @@ public class RSA extends Asymmetric {
 		}
 
 		byte[] dbMask = mgf1(seed, emLen - hLen, md);
-		byte[] maskedDB = i2osp(new BigInteger(1, db).xor(new BigInteger(1, dbMask)), dbMask.length);
+		byte[] maskedDB = i2osp(xor(db, dbMask), dbMask.length);
 		byte[] seedMask = mgf1(maskedDB, hLen, md);
-		byte[] maskedSeed = i2osp(new BigInteger(1, seed).xor(new BigInteger(1, seedMask)), seedMask.length);
+		byte[] maskedSeed = i2osp(xor(seed, seedMask), seedMask.length);
 		//Log.debug("seed[%d]: %s", seed.length, Text.hex(seed));
 		//Log.debug("dbMask[%d]: %s", dbMask.length, Text.hex(dbMask));
 		Log.debug("maskedDB[%d]: %s", maskedDB.length, Text.hex(maskedDB));
