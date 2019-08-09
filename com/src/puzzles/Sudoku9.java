@@ -6,6 +6,8 @@ package puzzles;
 public class Sudoku9 {
 	private final int[][] C = new int[729][4]; //constraints
 	private final int[][] R = new int[324][9];
+	private String toSolve;
+	private boolean done;
 	public Sudoku9() {
 		genmat();
 	}
@@ -53,6 +55,20 @@ public class Sudoku9 {
 		}
 		return min<<16 | min_c; // return the col that has been modified and with the minimal available choices
 	}
+	public void parse(String s) {
+		done = false;
+		toSolve = s;
+	}
+	public boolean solve() {
+		if (done) return false;
+		done = true;
+		return solve(toSolve) > 0;
+	}
+	@Override
+	public String toString() {
+		return toSolve;
+	}
+	public void print() {}
 	// solve a Sudoku; _s is the standard dot/number representation
 	public int solve(String _s) {
 		int i, j, r, c, r2, dir, cand, n = 0, min, hints = 0; // dir=1: forward; dir=-1: backtrack

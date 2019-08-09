@@ -206,9 +206,6 @@ public class RSA extends Asymmetric {
 		int keylen = (N.bitLength()+7)/8;
 		Log.debug("encr(N.len=%d, keylen=%d)", N.bitLength(), keylen);
 		if (msg.length > keylen) throw new RuntimeException("message too long");
-		//int m = (0xff << (N.bitLength()&7))&0xff;
-		//if (msg.length == keylen && (msg[0]&m) != 0)
-		//	throw new RuntimeException(String.format("message too long, N.bitLength()=%d", N.bitLength()));
 		return i2osp(new BigInteger(1, msg).modPow(e, N), keylen);
 	}
 
@@ -216,11 +213,9 @@ public class RSA extends Asymmetric {
 		int keylen = (N.bitLength()+7)/8;
 		if (cmsg.length > keylen) throw new RuntimeException("message too long");
 		// First form (n,d) is used
-		//return new BigInteger(1, cmsg).modPow(d, N).toByteArray();
-		byte[] x = new BigInteger(1, cmsg).modPow(d, N).toByteArray();
 		//TODO Second form (p,q,dP,dQ,qInv) and (rb,db,ti) is used
-		if (x[0] == 0) return Arrays.copyOfRange(x, 1, x.length);
-		return x;
+		BigInteger r = new BigInteger(1, cmsg).modPow(d, N);
+		return i2osp(r, (r.bitLength()+7)/8);
 	}
 
 	/**
@@ -250,8 +245,43 @@ public class RSA extends Asymmetric {
 	 * Extract the message digest from this integer and compare to given value.
 	 * If both message digests are identical, the signature is valid.
 	 */
-	boolean verify(byte[] hash, byte[] signature) {
+	public boolean verify(byte[] hash, byte[] signature) {
 		return Arrays.equals(hash, encrypt(signature));
+	}
+
+	/**
+	 *
+	 * k = ord(a) (mod N), is minimal positive k where a^k = 1 (mod N)
+	 *
+	 * N = p*q - modulus
+	 * phi(p,q) = (p-1)*(q-1), if p and q are primes
+	 * ord(p*q) = phi(p,q) = (p-1)(q-1)
+	 *
+	 *
+	 * @param a
+	 * @param p
+	 * @return k
+	 */
+	public static BigInteger order(BigInteger p, BigInteger q) {
+		return p.subtract(BigInteger.ONE).multiply(q.subtract(BigInteger.ONE));
+	}
+
+	public static BigInteger invMod(BigInteger a, BigInteger b) {
+		BigInteger u = BigInteger.ONE, w = a;
+		BigInteger x = BigInteger.ZERO, z = b;
+		BigInteger q;
+		while (!w.equals(BigInteger.ZERO)) {
+			if (w.compareTo(x) < 0) {
+				BigInteger t = u; u = x; x = t;
+				t = w; w = z; z = t;
+			}
+			q = w.divide(z);
+			u = q.subtract(q.multiply(x));
+			w = w.subtract(q.multiply(z));
+		}
+		if (!z.equals(BigInteger.ONE)) return null;
+		if (x.compareTo(BigInteger.ZERO) < 0) x = x.add(b);
+		return x;
 	}
 
 	final private static byte[] ZERO8 = new byte[8];

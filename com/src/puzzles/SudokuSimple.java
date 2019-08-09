@@ -20,7 +20,7 @@ package puzzles;
 
 public class SudokuSimple {
 	// 36 figures - support ORDER up to 6
-	final private String figures = ".123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ@";
+	protected final static String figures = ".123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ@";
 	protected final int ORDER;
 	protected final int DIM;
 	protected final int DIM2;
@@ -43,7 +43,9 @@ public class SudokuSimple {
 			}
 	}
 	public void reset() {
-		if (doInit) clear();
+		if (doInit) {
+			clear();
+		}
 		else {
 			for (int y=0; y<DIM; ++y)
 				for (int x=0; x<DIM; ++x) {
@@ -92,7 +94,7 @@ public class SudokuSimple {
 			}
 			for (int x=0; x<dim; ++x) {
 				if (x>0 && x%order == 0) System.out.print(" |");
-				if (mtx[y][x]!=0) System.out.printf(" %d",mtx[y][x]);
+				if (mtx[y][x]!=0) System.out.printf(" %c",figures.charAt(mtx[y][x]));
 				else System.out.printf(" .");
 			}
 			System.out.println();
@@ -149,10 +151,10 @@ public class SudokuSimple {
 			mp=0;
 		}
 		else {
-			mp=DIM2-1;
+			mp = DIM2-1;
 			while (mp > 0) {
-				p=pmap(mp);
-				x=p%DIM; y=p/DIM;
+				p = pmap(mp);
+				x = p%DIM; y=p/DIM;
 				if (!hints[y][x]) break;
 				--mp;
 			}

@@ -180,7 +180,7 @@ public class SudokuFast extends SudokuSimple {
 			}
 			else if (p%ORDER == 0)System.out.printf(" |");
 			int y=map[p]/DIM, x=map[p]%DIM;
-			if (a[y][x]!=0) System.out.printf(" %d",a[y][x]);
+			if (a[y][x]!=0) System.out.printf(" %c",figures.charAt(a[y][x]));
 			else System.out.printf(" .");
 		}
 		System.out.println();

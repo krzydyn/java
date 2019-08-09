@@ -141,6 +141,7 @@ public class SudokuSolver {
 
 	public static void main(String[] args) {
 		SudokuFast sudoku=new SudokuFast(3);
+		//Sudoku9 sudoku=new Sudoku9();
 		int exnum=0,exmax=0;
 		long tmax=0;
 
@@ -161,9 +162,10 @@ public class SudokuSolver {
 			Log.info("S9 done in %.3f sec", t0/1000.0);*/
 
 			t0=System.currentTimeMillis();
-			for (i=0; i<5 && sudoku.solve(); ++i) {
-				System.out.printf("%s\n",sudoku.toString());
-				sudoku.print();
+			for (i=0; i<5 & sudoku.solve(); ++i) {
+				System.out.printf("%d: %s\n",i+1,sudoku.toString());
+				//sudoku.print();
+				break;
 			}
 			t0=System.currentTimeMillis()-t0;
 			Log.info("Fast done in %.3f sec", t0/1000.0);

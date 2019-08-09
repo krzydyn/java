@@ -114,14 +114,15 @@ public class Tools2D {
 		}
 	}
 
-	private static int convolve(Raster2D r, MatrixI k, int x0, int y0) {
+	private static long convolve(Raster2D r, MatrixI k, int x0, int y0) {
 		Dimension dim = r.getSize();
-		int a=0;
-		x0 -= k.getWidth()/2+1;
-		y0 -= k.getHeight()/2+1;
+		long a=0;
+		x0 -= k.getWidth()/2;
+		y0 -= k.getHeight()/2;
 		for (int y=0; y < k.getHeight(); ++y) {
+			int ry = y0+y;
 			for (int x=0; x < k.getWidth(); ++x) {
-				int p=0, rx=x0+x,ry=y0+y;
+				int p=0, rx=x0+x;
 
 				//extend method (other: wrap, crop)
 				if (rx < 0) rx=0;
@@ -129,8 +130,9 @@ public class Tools2D {
 				if (ry < 0) ry=0;
 				else if (ry >= dim.height) ry=dim.height-1;
 
-				p=r.getPixel(rx, ry)&0xff;
-				a += p*k.get(x, y);
+				p = r.getPixel(rx, ry)&0xff;
+				int kxy = k.get(x, y);
+				a += p*kxy;
 			}
 		}
 		return a;
@@ -138,11 +140,15 @@ public class Tools2D {
 
 	// y[n] = x[n] * h[n]
 	public static void convolve(Raster2D dst, Raster2D src, MatrixI k) {
-		int div=0;
+		long div=0;
 		for (int y=0; y < k.getHeight(); ++y ) {
 			for (int x=0; x < k.getWidth(); ++x ) {
-				div += Math.abs(k.get(x, y));
+				div += k.get(x, y);
 			}
+		}
+		if (div < 0) {
+			Log.error("convolve out of range div=%d",div);
+			throw new RuntimeException("convolve out of range");
 		}
 		if (div==0) div=1;
 		Dimension dim = src.getSize();
@@ -150,27 +156,43 @@ public class Tools2D {
 		int amin=Integer.MAX_VALUE,amax=Integer.MIN_VALUE;
 		for (int y=0; y < dim.height; ++y ) {
 			for (int x=0; x < dim.width; ++x) {
-				int a=convolve(src, k, x, y)/div;
-				a += 127;
+				int a = (int)(convolve(src, k, x, y)/div);
 				if (amin > a) amin=a;
 				if (amax < a) amax=a;
 				if (a < 0) a=0; else if (a > 255) a=255;
 				dst.setPixel(x, y, (a<<16) + (a<<8) + a);
 			}
 		}
-		Log.debug("convol: amin=%d   amax=%d", amin, amax);
+		Log.debug("convol: amin=%d   amax=%d  div=%d", amin, amax, div);
 	}
 
+	static MatrixI generateDiscreteGauss(float ro, int size) {
+		MatrixI m = new MatrixI(size, size);
+		int x0 = -size/2, y0 = -size/2;
+		double c = 1.0/(2.0*Math.PI*ro*ro);
+		double g = c*Math.exp(-(x0*x0)/(2.0*ro*ro));
+		c = 0.5*c/g;
+		for (int y = 0; y < size; ++y) {
+			int ry = y0+y;
+			for (int x = 0; x < size; ++x) {
+				int rx = x0+x;
+				g = c*Math.exp(-(rx*rx+ry*ry)/(2.0*ro*ro));
+				m.set(x, y, (int)Math.round(g));
+			}
+		}
+		return m;
+	}
+
+	static MatrixI gauss_ro_05 = generateDiscreteGauss(.5f, 5);
+	static MatrixI gauss_ro_10 = generateDiscreteGauss(1f, 5);
+	static MatrixI gauss_ro_50 = generateDiscreteGauss(5f, 5);
+
 	public static void smoothGauss(Raster2D r) {
+		MatrixI gauss = gauss_ro_05;
 		Dimension dim = r.getSize();
-		MatrixI gx = new MatrixI(5,
-				2, 4, 5, 4, 2,
-				4, 9,12, 9, 4,
-				5,12,15,12, 5,
-				4, 9,12, 9, 4,
-				2, 4, 5, 4, 2);
 		Raster2D rr = new ImageRaster2D(dim.width, dim.height);
-		convolve(rr, r, gx);
+		Log.debug("gauss:\n%s", gauss.toString());
+		convolve(rr, r, gauss);
 
 		for (int y=0; y < dim.height; ++y ) {
 			for (int x=0; x < dim.width; ++x) {
@@ -180,31 +202,19 @@ public class Tools2D {
 		}
 	}
 
-	public static void edgeSobel(Raster2D r) {
-		edgeSobel(r, null);
-	}
-	public static void edgeSobel(Raster2D r, Raster2D gradients) {
+	public static void edgeDetection(Raster2D r, MatrixI gx, MatrixI gy, Raster2D gradients) {
 		Dimension dim = r.getSize();
-		MatrixI gx = new MatrixI(3,
-				-1, 0, 1,
-				-2, 0, 2,
-				-1, 0, 1);
-		MatrixI gy = new MatrixI(3,
-				 1,  2,  1,
-				 0,  0,  0,
-				-1, -2, -1);
 		Raster2D rx = new ImageRaster2D(dim.width, dim.height);
 		Raster2D ry = new ImageRaster2D(dim.width, dim.height);
 		convolve(rx, r, gx);
 		convolve(ry, r, gy);
 
 		int amin=Integer.MAX_VALUE,amax=Integer.MIN_VALUE;
-		double sqm = Math.sqrt(2)*127;
 		for (int y=0; y < dim.height; ++y ) {
 			for (int x=0; x < dim.width; ++x) {
-				int ax = (rx.getPixel(x, y)&0xff)-127;
-				int ay = (ry.getPixel(x, y)&0xff)-127;
-				int a = (int)Math.round(255*Math.sqrt(ax*ax+ay*ay)/sqm);
+				int ax = (rx.getPixel(x, y)&0xff);
+				int ay = (ry.getPixel(x, y)&0xff);
+				int a = (int)(Math.sqrt(ax*ax+ay*ay)+0.5);
 				if (amin > a) amin=a;
 				if (amax < a) amax=a;
 				if (a < 0) a = 0; else if (a > 255) a=255;
@@ -234,6 +244,46 @@ public class Tools2D {
 		rx.dispose();
 		ry.dispose();
 	}
+
+	public static void edgeSobel(Raster2D r) {
+		edgeSobel(r, null);
+	}
+	public static void edgeSobel(Raster2D r, Raster2D gradients) {
+		MatrixI gx = new MatrixI(3,
+				-1, 0, 1,
+				-2, 0, 2,
+				-1, 0, 1);
+		MatrixI gy = new MatrixI(3,
+				-1, -2, -1,
+				 0,  0,  0,
+				 1,  2,  1);
+		edgeDetection(r, gx, gy, gradients);
+	}
+
+	public static void edgeSobelFeldman(Raster2D r, Raster2D gradients) {
+		MatrixI gx = new MatrixI(3,
+				 -3, 0,  3,
+				-10, 0, 10,
+				 -3, 0,  3);
+		MatrixI gy = new MatrixI(3,
+				-3, -10, -3,
+				 0,   0,  0,
+				 3,  10,  3);
+		edgeDetection(r, gx, gy, gradients);
+	}
+
+	public static void edgeScharr(Raster2D r, Raster2D gradients) {
+		MatrixI gx = new MatrixI(3,
+				 -47, 0,  47,
+				-162, 0, 162,
+				 -47, 0,  47);
+		MatrixI gy = new MatrixI(3,
+				-47, -162, -47,
+				 0,     0,   0,
+				 47,  162,  47);
+		edgeDetection(r, gx, gy, gradients);
+	}
+
 	public static void edgeCanny(Raster2D r) {
 		// 1. Apply Gaussian filter to smooth the image in order to remove the noise
 		smoothGauss(r);
