@@ -7,7 +7,6 @@ import image.Tool.HoughTool;
 import image.Tool.LumaTool;
 import img.Colors;
 import img.ImageRaster2D;
-import img.Raster2D;
 import img.Tools2D.Segment;
 
 import java.awt.BorderLayout;
@@ -43,13 +42,13 @@ import ui.ImagePanel;
 import ui.MainPanel;
 
 /*
- * SAD (Sum of absolute differences) 
- * 
+ * SAD (Sum of absolute differences)
+ *
  * crosscoleration
  * http://werner.yellowcouch.org/Papers/subimg/index.html
  * KMP
  * https://en.wikipedia.org/wiki/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm
- * 
+ *
  * Where is Waldo
  * https://stackoverflow.com/questions/8479058/how-do-i-find-waldo-with-mathematica?rq=1
  */
@@ -100,7 +99,7 @@ public class ImageEditor extends MainPanel {
 				mouseClickSelect(p.x, p.y, e.getModifiersEx() == InputEvent.SHIFT_DOWN_MASK);
 			}
 		});
-		imgPanel.setScale(3f);
+		imgPanel.setScale(1f);
 	}
 
 	Action file_open = new AbstractAction("Open") {
@@ -290,8 +289,17 @@ public class ImageEditor extends MainPanel {
 	}
 
 	void selectByColor(ColorTool tool, int x0, int y0, boolean append) {
+		Dimension s = imgPanel.getRaster().getSize();
 		x0 = (int)(x0/imgPanel.getScale());
 		y0 = (int)(y0/imgPanel.getScale());
+
+		if (x0 < 0 || y0 < 0 || x0 >= s.width || y0 >= s.height) {
+			if (append == false) {
+				selection.clear();
+				imgPanel.setSelection(selection);
+			}
+			return ;
+		}
 
 		List<Segment> seq = tool.select(imgPanel.getRaster(), x0, y0);
 		if (append == false) selection.clear();

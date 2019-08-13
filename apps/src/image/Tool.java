@@ -14,17 +14,21 @@ public abstract class Tool {
 			Tools2D.luminance(src);
 		}
 	}
-	static public class EdgeTool extends Tool {
-		@Override
-		void transform(Raster2D src, Raster2D dst) {
-			//Tools2D.edgeSobel(src);
-			Tools2D.edgeScharr(src, null);
-		}
-	}
 	static public class GaussTool extends Tool {
 		@Override
 		void transform(Raster2D src, Raster2D dst) {
+			Tools2D.luminance(src);
 			Tools2D.smoothGauss(src);
+		}
+	}
+	static public class EdgeTool extends Tool {
+		@Override
+		void transform(Raster2D src, Raster2D dst) {
+			Tools2D.luminance(src);
+			Tools2D.smoothGauss(src);
+			Tools2D.edgeSobel(src);
+			//Tools2D.edgeSobelFeldman(src, null);
+			//Tools2D.edgeScharr(src, null);
 		}
 	}
 

@@ -140,30 +140,34 @@ public class Tools2D {
 
 	// y[n] = x[n] * h[n]
 	public static void convolve(Raster2D dst, Raster2D src, MatrixI k) {
-		long div=0;
+		long div_p=0, div_m=0;
 		for (int y=0; y < k.getHeight(); ++y ) {
 			for (int x=0; x < k.getWidth(); ++x ) {
-				div += k.get(x, y);
+				int a = k.get(x, y);
+				if (a >= 0) div_p += a;
+				else div_m -= a;
 			}
 		}
-		if (div < 0) {
+		long div = div_p + div_m;
+		if (div <= 0) {
 			Log.error("convolve out of range div=%d",div);
 			throw new RuntimeException("convolve out of range");
 		}
-		if (div==0) div=1;
-		Dimension dim = src.getSize();
+		int offs = div_m <= 0 ? 0 : 127;
 
+		Dimension dim = src.getSize();
 		int amin=Integer.MAX_VALUE,amax=Integer.MIN_VALUE;
 		for (int y=0; y < dim.height; ++y ) {
 			for (int x=0; x < dim.width; ++x) {
 				int a = (int)(convolve(src, k, x, y)/div);
+				a += offs;
 				if (amin > a) amin=a;
 				if (amax < a) amax=a;
-				if (a < 0) a=0; else if (a > 255) a=255;
+				if (a < 0) a = 0; else if (a > 255) a = 255;
 				dst.setPixel(x, y, (a<<16) + (a<<8) + a);
 			}
 		}
-		Log.debug("convol: amin=%d   amax=%d  div=%d", amin, amax, div);
+		Log.debug("convolve:  amin=%d   amax=%d  div=%d", amin, amax, div);
 	}
 
 	static MatrixI generateDiscreteGauss(float ro, int size) {
@@ -191,7 +195,6 @@ public class Tools2D {
 		MatrixI gauss = gauss_ro_05;
 		Dimension dim = r.getSize();
 		Raster2D rr = new ImageRaster2D(dim.width, dim.height);
-		Log.debug("gauss:\n%s", gauss.toString());
 		convolve(rr, r, gauss);
 
 		for (int y=0; y < dim.height; ++y ) {
@@ -209,19 +212,35 @@ public class Tools2D {
 		convolve(rx, r, gx);
 		convolve(ry, r, gy);
 
+		//TODO calc histogram
 		int amin=Integer.MAX_VALUE,amax=Integer.MIN_VALUE;
 		for (int y=0; y < dim.height; ++y ) {
 			for (int x=0; x < dim.width; ++x) {
-				int ax = (rx.getPixel(x, y)&0xff);
-				int ay = (ry.getPixel(x, y)&0xff);
-				int a = (int)(Math.sqrt(ax*ax+ay*ay)+0.5);
+				int ax = (rx.getPixel(x, y)&0xff) - 127;
+				int ay = (ry.getPixel(x, y)&0xff) - 127;
+				//int a = (int)(Math.sqrt(ax*ax+ay*ay)*c+0.5);
+				int a = Math.abs(ax)+Math.abs(ay);
+				if (amin > a) amin=a;
+				if (amax < a) amax=a;
+			}
+		}
+		double c = 255.0/amax * 5.0;
+		Log.debug("edgeDetection(1): amin=%d   amax=%d   c=%.3f", amin, amax, c);
+		amin=Integer.MAX_VALUE; amax=Integer.MIN_VALUE;
+		for (int y=0; y < dim.height; ++y ) {
+			for (int x=0; x < dim.width; ++x) {
+				int ax = (rx.getPixel(x, y)&0xff) - 127;
+				int ay = (ry.getPixel(x, y)&0xff) - 127;
+				//int a = (int)(Math.sqrt(ax*ax+ay*ay)*c+0.5);
+				int a = (Math.abs(ax)+Math.abs(ay));
+				a = (int)Math.round(a*c);
 				if (amin > a) amin=a;
 				if (amax < a) amax=a;
 				if (a < 0) a = 0; else if (a > 255) a=255;
 				r.setPixel(x, y, (a<<16) + (a<<8) + a);
 			}
 		}
-		Log.debug("sobel: amin=%d   amax=%d", amin, amax);
+		Log.debug("edgeDetection(2): amin=%d   amax=%d", amin, amax);
 		if (gradients != null) {
 			//save gradients
 			amin=Integer.MAX_VALUE; amax=Integer.MIN_VALUE;
@@ -231,8 +250,7 @@ public class Tools2D {
 					int ay = (ry.getPixel(x, y)&0xff)-127;
 					double phi = Math.atan2(ay, ax); // phi = (-pi .. pi)
 					int a = (int)(Math.round(255*Math.abs(phi)/Math.PI));
-					//double phi = (Math.atan2(ay, ax)+Math.PI)/2; // phi = (0 .. pi)
-					//int a = (int)(Math.round(255*phi/Math.PI));
+					//int a = (int)(Math.round(127*phi/Math.PI)+127);
 					if (amin > a) amin=a;
 					if (amax < a) amax=a;
 					if (a < 0) a = 0; else if (a > 255) a=255;
@@ -257,6 +275,18 @@ public class Tools2D {
 				-1, -2, -1,
 				 0,  0,  0,
 				 1,  2,  1);
+		edgeDetection(r, gx, gy, gradients);
+	}
+
+	public static void edgePrewitt(Raster2D r, Raster2D gradients) {
+		MatrixI gx = new MatrixI(3,
+				-1, 0, 1,
+				-1, 0, 1,
+				-1, 0, 1);
+		MatrixI gy = new MatrixI(3,
+				-1, -1, -1,
+				 0,  0,  0,
+				 1,  1,  1);
 		edgeDetection(r, gx, gy, gradients);
 	}
 
