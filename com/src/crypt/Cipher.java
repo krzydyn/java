@@ -24,8 +24,8 @@ package crypt;
  * <h2>Theory</h2>
  * <b>Block Ciphers</b>
  * <ul>
- * <li> DES (56)
- * <li> 3DES (112,168)
+ * <li> DES (56 or 64)
+ * <li> 3DES (112 or 128,168 or 192)
  * <li> AES (128,192,256)
  * </ul><br><br>
  * <b>Padding modes</b>
@@ -84,7 +84,8 @@ package crypt;
  * 		Note: || = concatenation<br>
  * 		(Java appends AuthTag on the end of encrypted buffer)
  *
- * <li><b>CCM (Counter with CBC-MAC)</b><br>
+ * <li><b>CCM (Counter with CBC-MAC)</b> (https://tools.ietf.org/html/rfc3610)<br>
+ * 		<i>NOTE: lenght of message must be know in advance</i><br>
  *		P' = Flags || Nonce || P
  *		Flags = 0(1bit) || Adata(1bit) || M'(3bits) || L'(3bits)
  *		Adata bit: 0 if len(A)==0, 1 if len(A)>0

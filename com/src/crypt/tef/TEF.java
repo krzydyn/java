@@ -258,6 +258,9 @@ public class TEF implements TEF_Types {
 			int taglen = (Integer)algorithm.params.get(tef_algorithm_param_e.TEF_TAGLEN);
 			pspec = new GCMParameterSpec(taglen, iv); // iv = nonce
 		}
+		else if (algorithm.chaining == tef_chaining_mode_e.TEF_CCM) {
+			//
+		}
 		else if (iv != null){
 			pspec = new IvParameterSpec(iv, 0, cipher.getBlockSize());
 		}
