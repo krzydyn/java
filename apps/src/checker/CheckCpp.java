@@ -20,7 +20,6 @@ package checker;
 
 import java.io.IOException;
 import java.io.OutputStreamWriter;
-
 import sys.Env;
 import text.tokenize.Cpp;
 import text.tokenize.CppBuilder;

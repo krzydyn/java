@@ -75,7 +75,7 @@ public class CppBuilder {
 			Cpp.SourceFragment f = (Cpp.SourceFragment)n;
 			if ((f instanceof Cpp.Comment)) wr.writesp(' ');
 			else if (wr.lastc=='}') {
-				if (f.str.length()>1) {
+				if (f.text.length()>1) {
 					wr.writesp('\n');
 					if (wr.indent==0) wr.write('\n');
 				}
@@ -83,7 +83,7 @@ public class CppBuilder {
 			n.write(wr);
 			if ((f instanceof Cpp.Comment)) ;
 			else {
-				if (f.str.endsWith(";") || f.str.endsWith(","))
+				if (f.text.endsWith(";") || f.text.endsWith(","))
 					wr.writesp('\n');
 			}
 		}

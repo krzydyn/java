@@ -1,7 +1,6 @@
 package generator;
 
 import java.nio.charset.Charset;
-
 import crypt.Base64;
 import sys.Log;
 import text.Text;

@@ -7,6 +7,7 @@ import java.util.List;
 import text.Text;
 
 public class Cpp {
+	public static char ESC_CHAR = '\\';
 	public static abstract class Node {
 		protected final List<Node> nodes = new ArrayList<>();
 		public void write(PrintWriter wr) {}
@@ -20,12 +21,12 @@ public class Cpp {
 	 *
 	 */
 	static class SourceFragment extends Node {
-		protected String str;
+		protected String text;
 
-		public SourceFragment(String s) { str=s;}
+		public SourceFragment(String s) { text=s;}
 		@Override
 		public void write(PrintWriter wr) {
-			wr.print(str);
+			wr.print(text);
 		}
 	}
 	/**
@@ -36,26 +37,33 @@ public class Cpp {
 		CodeBlock() {}
 	}
 
+	/**
+	 * Preprocessor instruction
+	 *
+	 */
 	static class Preproc extends SourceFragment {
 		Preproc(String c){super(c);}
 		@Override
 		public void write(PrintWriter wr) {
-			wr.printf("%s\n",str.replace("\n", "\\\n"));
+			wr.printf("%s\n",text.replace("\n", ESC_CHAR+"\n"));
 		}
 	}
 	static class Comment extends SourceFragment {
+		private boolean oneln;
 		Comment(String c, boolean oneln){
 			super(c.replaceAll("(?m)^ *\\* {0,1}", "").trim());
-			this.oneln=oneln;
+			this.oneln = oneln;
 		}
-		boolean oneln;
 		@Override
 		public void write(PrintWriter wr) {
-			if (oneln) wr.printf("// %s\n", str);
+			if (oneln) {
+				if (!text.contains("\n")) wr.printf("// %s\n", text);
+				else wr.printf("%s\n", ("\n"+text).replace("\n", "// "));
+			}
 			else {
-				if (!str.contains("\n")) wr.printf("/* %s */ ", str);
+				if (!text.contains("\n")) wr.printf("/* %s */ ", text);
 				else {
-					wr.printf("/*%s\n */\n", ("\n"+str).replace("\n", "\n * "));
+					wr.printf("/*%s\n */\n", ("\n"+text).replace("\n", "\n * "));
 				}
 			}
 		}
@@ -64,10 +72,12 @@ public class Cpp {
 	static class CharQuote extends SourceFragment {
 		public CharQuote(String s) {
 			super(s);
+			if (s.length() > 1) throw new RuntimeException();
 		}
 		@Override
 		public void write(PrintWriter wr) {
-			wr.printf("'%s'",str);
+			if (text.equals("'")) wr.printf("'%c%s'", ESC_CHAR,text);
+			else wr.printf("'%s'",text);
 		}
 	}
 
@@ -77,7 +87,7 @@ public class Cpp {
 		}
 		@Override
 		public void write(PrintWriter wr) {
-			wr.printf("\"%s\"",str);
+			wr.printf("\"%s\"",text);
 		}
 	}
 
@@ -107,6 +117,7 @@ public class Cpp {
 		String name;
 		@Override
 		public void write(PrintWriter wr) {
+			wr.println();
 			wr.printf("namespace %s", name);
 		}
 	}

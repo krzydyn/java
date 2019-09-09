@@ -182,9 +182,9 @@ public class CppParser {
 		StringBuilder b=new StringBuilder();
 		StringBuilder blk=new StringBuilder();
 		int lcla=CppTokenizer.TOKEN_NONE;
-		if (node.str!=null && !node.str.isEmpty()) {
+		if (node.text!=null && !node.text.isEmpty()) {
 			lcla=CppTokenizer.TOKEN_NAME;
-			blk.append(node.str);
+			blk.append(node.text);
 		}
 		while ((tok=next(b))!=null) {
 			if (tok.cla==CppTokenizer.TOKEN_WHILESPACE) continue;
@@ -194,7 +194,7 @@ public class CppParser {
 				lcla=tok.cla;
 				blk.append(tok.rep);
 				if (lcla==CppTokenizer.TOKEN_SPECIAL && tok.rep.equals(";")) {
-					node.str=blk.toString();
+					node.text=blk.toString();
 					break;
 				}
 			}
