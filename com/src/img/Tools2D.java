@@ -205,6 +205,9 @@ public class Tools2D {
 		}
 	}
 
+	/*
+	 * https://www.cs.auckland.ac.nz/compsci373s1c/PatricesLectures/Edge%20detection-Sobel_2up.pdf
+	 */
 	public static void edgeDetection(Raster2D r, MatrixI gx, MatrixI gy, Raster2D gradients) {
 		Dimension dim = r.getSize();
 		Raster2D rx = new ImageRaster2D(dim.width, dim.height);
@@ -220,6 +223,7 @@ public class Tools2D {
 				int ay = (ry.getPixel(x, y)&0xff) - 127;
 				//int a = (int)(Math.sqrt(ax*ax+ay*ay)*c+0.5);
 				int a = Math.abs(ax)+Math.abs(ay);
+				//int a = (ax+ay)/2 + 127;
 				if (amin > a) amin=a;
 				if (amax < a) amax=a;
 			}
