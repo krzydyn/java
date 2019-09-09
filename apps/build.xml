@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project name="apps" default="gitsvg" basedir=".">
-	<property name="JAVA_VERSION" value="1.7"/>
+	<property name="JAVA_VERSION" value="1.8"/>
 	<property name="build" value="build"/>
 	<property name="comdir" value="../com"/>
 
@@ -71,6 +71,7 @@
 				<include name="img/Colors*"/>
 				<include name="netio/**"/>
 				<include name="text/Text*"/>
+				<include name="ui/ImagePanel*"/>
 				<exclude name="sys/UnitTest*"/>
 			</fileset>
 

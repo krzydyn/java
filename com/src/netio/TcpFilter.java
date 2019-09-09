@@ -1,5 +1,6 @@
 package netio;
 
+import java.nio.Buffer;
 import java.nio.ByteBuffer;
 
 import netio.SelectorThread.QueueChannel;
@@ -20,13 +21,13 @@ public class TcpFilter implements ChannelHandler {
 	@Override
 	public void connected(QueueChannel qchn) {
 		link.connected(qchn);
-		inmsg.clear();
+		((Buffer)inmsg).clear();
 	}
 
 	@Override
 	public void disconnected(QueueChannel qchn,Throwable e) {
 		link.disconnected(qchn, e);
-		inmsg.clear();
+		((Buffer)inmsg).clear();
 	}
 
 	@Override
@@ -35,15 +36,15 @@ public class TcpFilter implements ChannelHandler {
 		while (buf.remaining() > 0) {
 			if (inlen==0) {
 				if (!readData(intbytes, buf)) return ;
-				inmsg.flip();
+				((Buffer)inmsg).flip();
 				inlen = inmsg.getInt();
-				inmsg.clear();
+				((Buffer)inmsg).clear();
 				if (inlen < 0) throw new RuntimeException("Message out of sync");
 			}
 			if (!readData(inlen, buf)) return ;
-			inmsg.flip();
+			((Buffer)inmsg).flip();
 			link.received(qchn, inmsg);
-			inmsg.clear();
+			((Buffer)inmsg).clear();
 			inlen=0;
 		}
 	}
@@ -61,7 +62,7 @@ public class TcpFilter implements ChannelHandler {
 	public void write(QueueChannel qchn, ByteBuffer b) {
 		ByteBuffer lenbuf = ByteBuffer.allocate(4);
 		lenbuf.putInt(b.remaining());
-		lenbuf.flip();
+		((Buffer)lenbuf).flip();
 		//Log.debug("writeTCP(payload=%d)",b.remaining());
 		qchn.write(lenbuf);
 		qchn.write(b,true);

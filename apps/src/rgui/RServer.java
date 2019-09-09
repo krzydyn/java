@@ -49,7 +49,7 @@ import netio.TcpFilter;
 import netio.SelectorThread.QueueChannel;
 
 public class RServer implements ChannelHandler {
-	private static final int RSERVER_PORT = 9085; // IANA IBM remote system console
+	private static final int RSERVER_PORT = 9085;
 	private static final int FORCE_ACTION_TIME = 10*1000;
 	private static boolean keepOn;
 	private static boolean lockScreenOn;
@@ -601,7 +601,7 @@ public class RServer implements ChannelHandler {
 
 		try {
 		selector.start();
-		//selector.bind(null, RSERVER_PORT, this);
+		selector.bind(null, RSERVER_PORT, this);
 		Point lastMouseLoc = null;
 		while (selector.isRunning()) {
 			if (clients.size()>0) {

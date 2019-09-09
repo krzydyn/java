@@ -24,6 +24,7 @@ import java.net.ConnectException;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.net.StandardSocketOptions;
+import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.SelectableChannel;
@@ -139,7 +140,6 @@ public class SelectorThread {
 				disconnect(sk, null);
 		}
 	}
-
 	public SelectionKey bind(String addr, int port, ChannelHandler d) throws IOException {
 		Log.debug("binding to %s:%d",addr==null?"*":addr,port);
 		if (d == null) throw new NullPointerException("ChannelHandler is null");
@@ -199,8 +199,8 @@ public class SelectorThread {
 			ByteBuffer dst =  getbuf();
 			int maxbytes = Math.min(dst.remaining(), buf.remaining());
 			dst.put(buf.array(), buf.position(), maxbytes);
-			buf.position(buf.position() + maxbytes);
-			dst.flip();
+			((Buffer)buf).position(((Buffer)buf).position() + maxbytes);
+			((Buffer)dst).flip();
 			synchronized (qchn) {
 				if (qchn.writeq == null) qchn.writeq = new ArrayList<>();
 				qchn.writeq.add(dst);
@@ -218,7 +218,7 @@ public class SelectorThread {
 			int s=bpool.size();
 			if (s > 0) {
 				b=bpool.remove(s-1);
-				b.clear();//pos=0; limit=capa
+				((Buffer)b).clear();//pos=0; limit=capa
 			}
 		}
 		if (b==null){
@@ -285,6 +285,10 @@ public class SelectorThread {
 		QueueChannel qchn = (QueueChannel)sk.attachment();
 		sk.attach(null);  //unref qchn
 		sk.cancel();      //remove from selector
+		if (sk.channel() instanceof ServerSocketChannel) {
+			Log.error(thr, "server socket");
+			return ;
+		}
 		SocketChannel c = (SocketChannel)sk.channel();
 		SocketAddress addr = qchn.addr;
 		if (thr == null) ;
@@ -334,7 +338,7 @@ public class SelectorThread {
 		if (c.read(b) == -1) {
 			throw new EOFException("End of stream");
 		}
-		b.flip();
+		((Buffer)b).flip();
 		QueueChannel qchn = (QueueChannel)sk.attachment();
 		qchn.hnd.received(qchn, b);
 		releasebuf(b);
