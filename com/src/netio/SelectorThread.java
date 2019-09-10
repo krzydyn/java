@@ -48,7 +48,7 @@ public class SelectorThread {
 	private boolean registerReq = false;
 	private final Object registerLock = new Object();
 
-	private final List<SelectionKey> writeFlag=new ArrayList<>();
+	private final List<SelectionKey> writeFlag = new ArrayList<>();
 
 	final static public class QueueChannel {
 		private QueueChannel(SelectorThread s, SelectableChannel c, ChannelHandler h) {
@@ -145,7 +145,6 @@ public class SelectorThread {
 		if (d == null) throw new NullPointerException("ChannelHandler is null");
 		ServerSocketChannel chn=selector.provider().openServerSocketChannel();
 		chn.setOption(StandardSocketOptions.SO_REUSEADDR, true);
-		wakeup(true);
 		if (addr == null || addr.isEmpty()) chn.bind(new InetSocketAddress(port), 3);
 		else chn.bind(new InetSocketAddress(addr, port), 3);
 		return addChannel(chn, SelectionKey.OP_ACCEPT, d);
@@ -155,34 +154,37 @@ public class SelectorThread {
 		if (d == null) throw new NullPointerException("ChannelHandler is null");
 		SocketChannel chn = selector.provider().openSocketChannel();
 		chn.configureBlocking(false);
-		wakeup(true);
 		chn.connect(new InetSocketAddress(addr, port));
 		return addChannel(chn, SelectionKey.OP_CONNECT|SelectionKey.OP_READ, d);
 	}
 
-	//low level
-	private void wakeup(boolean reg) {
-		if (running) {
-			registerReq=reg;
-			Log.debug(1,"wakeup selector");
+	private SelectionKey addChannel(SelectableChannel chn, int ops, ChannelHandler d) throws IOException {
+		if (chn.isBlocking()) chn.configureBlocking(false);//must be non blocking !!!
+
+		synchronized (registerLock) {
+			if (registerReq == true) {
+				SelectionKey sk = chn.register(selector, ops, new QueueChannel(this, chn, d));
+				if ((ops&SelectionKey.OP_CONNECT)!=0)
+					((QueueChannel)sk.attachment()).addr=((SocketChannel)chn).getRemoteAddress();
+				Log.debug("addChannel done (no wakeup)");
+				return sk;
+			}
+
+			registerReq = true;
 			selector.wakeup();
 			Thread.yield();
 		}
-	}
-	private SelectionKey addChannel(SelectableChannel chn, int ops, ChannelHandler d) throws IOException {
-		if (chn.isBlocking()) chn.configureBlocking(false);//must be non blocking !!!
-		Log.debug("addChannel ...");
+
 		SelectionKey sk = chn.register(selector, ops, new QueueChannel(this, chn, d));
 		if ((ops&SelectionKey.OP_CONNECT)!=0)
 			((QueueChannel)sk.attachment()).addr=((SocketChannel)chn).getRemoteAddress();
 
-		if (registerReq) {
-			Log.debug("notifying selector, chn registered");
-			synchronized (registerLock) {
-				registerReq=false;
-				registerLock.notify();
-			}
+		synchronized (registerLock) {
+			registerReq = false;
+			registerLock.notify();
 		}
+
+		Log.debug("addChannel done (wakeup)");
 		return sk;
 	}
 
@@ -237,27 +239,36 @@ public class SelectorThread {
 	private void loop() throws Exception {
 		while (!stopReq) {
 			if (registerReq) {
-				Log.debug("selector wait for chn registered");
 				 // wait, so other thread can register new channel
 				synchronized (registerLock) {
-					if (registerReq) registerLock.wait();
-				}
-			}
-			synchronized (writeFlag) {
-				for (int i = writeFlag.size(); i > 0;) {
-					--i;
-					SelectionKey sk = writeFlag.get(i);
-					if (!sk.isValid()) {
-						Log.warn("key %d is invalid (was closed)", i);
-						continue;
+					if (registerReq) {
+						//Log.debug("selector wait for chn registered");
+						registerLock.wait();
+						//Log.debug("registerLock waiting done");
 					}
-					int ops = sk.interestOps();
-					sk.interestOps(ops|SelectionKey.OP_READ|SelectionKey.OP_WRITE);
 				}
-				writeFlag.clear();
 			}
+
+			if (writeFlag.size() > 0) {
+				synchronized (writeFlag) {
+					for (int i = writeFlag.size(); i > 0;) {
+						--i;
+						SelectionKey sk = writeFlag.get(i);
+						if (!sk.isValid()) {
+							Log.warn("key %d is invalid (was closed)", i);
+							continue;
+						}
+						int ops = sk.interestOps();
+						sk.interestOps(ops|SelectionKey.OP_READ|SelectionKey.OP_WRITE);
+					}
+					writeFlag.clear();
+				}
+			}
+
+			//Log.debug("select on %d", selector.keys().size());
 			int n=selector.select(10000);
 			if (n==0) {
+				//Log.debug("select wakeup");
 				continue;
 			}
 
@@ -355,7 +366,7 @@ public class SelectorThread {
 				releasebuf(b);
 				qchn.writeq.remove(0);
 				if (qchn.writeq.isEmpty()) {
-					int ops = sk.interestOps()&~SelectionKey.OP_WRITE;
+					int ops = sk.interestOps() & ~SelectionKey.OP_WRITE;
 					sk.interestOps(ops);
 				}
 			}
