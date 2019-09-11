@@ -181,7 +181,6 @@ public class RServer implements ChannelHandler {
 		}
 		else {
 			Log.error("unknown cmd:%d, payload %d", cmd, msg.remaining());
-
 		}
 		}
 		catch (Exception e) {

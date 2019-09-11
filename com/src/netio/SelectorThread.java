@@ -172,7 +172,10 @@ public class SelectorThread {
 		synchronized (addChannelList) {
 			addChannelList.add(new AddChannel(ops, c));
 		}
-		selector.wakeup();
+		if (running) {
+			selector.wakeup();
+			Thread.yield();
+		}
 		return c;
 	}
 

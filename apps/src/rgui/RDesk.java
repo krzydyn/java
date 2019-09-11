@@ -168,6 +168,7 @@ public class RDesk extends MainPanel {
 		}
 	};
 
+	private boolean ctrlPressed=false;
 	public RDesk(String[] args) throws Exception{
 		super(new BorderLayout());
 
@@ -189,11 +190,26 @@ public class RDesk extends MainPanel {
 			}
 			@Override
 			public void keyPressed(KeyEvent e) {
-				//Log.info("keyPressed: %d(0x%x)",e.getKeyCode(),e.getKeyCode());
+				Log.info("keyPressed: %d(0x%x)",e.getKeyCode(),e.getKeyCode());
+				if (e.getKeyCode() == KeyEvent.VK_CONTROL) {
+					ctrlPressed = true;
+				}
+				else if (e.isControlDown() && !ctrlPressed) {
+					ctrlPressed = true;
+					sendKeyPressed(KeyEvent.VK_CONTROL);
+				}
 				sendKeyPressed(e.getKeyCode());
 			}
 			@Override
 			public void keyReleased(KeyEvent e) {
+				Log.info("keyReleased: %d(0x%x)",e.getKeyCode(),e.getKeyCode());
+				if (e.getKeyCode() == KeyEvent.VK_CONTROL) {
+					ctrlPressed = false;
+				}
+				else if (ctrlPressed){
+					ctrlPressed = false;
+					sendKeyReleased(KeyEvent.VK_CONTROL);
+				}
 				sendKeyReleased(e.getKeyCode());
 			}
 		});
