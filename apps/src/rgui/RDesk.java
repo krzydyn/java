@@ -23,7 +23,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
-import java.nio.channels.SelectionKey;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -379,8 +378,6 @@ public class RDesk extends MainPanel {
 		chnHandler.write(qchn, b);
 	}
 	private void sendScreenReq() {
-		int w=getWidth(), h=getHeight();
-		if (w<=0 || h <=0) return ;
 		ByteBuffer b = ByteBuffer.allocate(10);
 		b.putShort(RCommand.SCREEN_IMG);
 		b.putShort((short)0);
@@ -454,8 +451,7 @@ public class RDesk extends MainPanel {
 
 	private void connect() throws Exception {
 		if (qchn==null) {
-			SelectionKey sk = selector.connect(Host, RSERVER_PORT, chnHandler);
-			qchn = (QueueChannel)sk.attachment();
+			qchn = selector.connect(Host, RSERVER_PORT, chnHandler);
 		}
 	}
 

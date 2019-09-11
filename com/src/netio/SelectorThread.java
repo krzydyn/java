@@ -45,11 +45,18 @@ public class SelectorThread {
 	private final List<ByteBuffer> bpool=new ArrayList<>();
 	private boolean running = false;
 	private boolean stopReq = false;
-	private boolean registerReq = false;
-	private final Object registerLock = new Object();
 
 	private final List<SelectionKey> writeFlag = new ArrayList<>();
+	private final List<AddChannel> addChannelList = new ArrayList<>();
 
+	final static private class AddChannel {
+		int ops;
+		QueueChannel chn;
+		public AddChannel(int ops, QueueChannel chn) {
+			this.ops = ops;
+			this.chn = chn;
+		}
+	}
 	final static public class QueueChannel {
 		private QueueChannel(SelectorThread s, SelectableChannel c, ChannelHandler h) {
 			sel=s;
@@ -140,7 +147,7 @@ public class SelectorThread {
 				disconnect(sk, null);
 		}
 	}
-	public SelectionKey bind(String addr, int port, ChannelHandler d) throws IOException {
+	public QueueChannel bind(String addr, int port, ChannelHandler d) throws IOException {
 		Log.debug("binding to %s:%d",addr==null?"*":addr,port);
 		if (d == null) throw new NullPointerException("ChannelHandler is null");
 		ServerSocketChannel chn=selector.provider().openServerSocketChannel();
@@ -149,7 +156,7 @@ public class SelectorThread {
 		else chn.bind(new InetSocketAddress(addr, port), 3);
 		return addChannel(chn, SelectionKey.OP_ACCEPT, d);
 	}
-	public SelectionKey connect(String addr, int port, ChannelHandler d) throws IOException {
+	public QueueChannel connect(String addr, int port, ChannelHandler d) throws IOException {
 		Log.debug("connecting ... %s:%d", addr, port);
 		if (d == null) throw new NullPointerException("ChannelHandler is null");
 		SocketChannel chn = selector.provider().openSocketChannel();
@@ -158,34 +165,15 @@ public class SelectorThread {
 		return addChannel(chn, SelectionKey.OP_CONNECT|SelectionKey.OP_READ, d);
 	}
 
-	private SelectionKey addChannel(SelectableChannel chn, int ops, ChannelHandler d) throws IOException {
+	private QueueChannel addChannel(SelectableChannel chn, int ops, ChannelHandler hnd) throws IOException {
 		if (chn.isBlocking()) chn.configureBlocking(false);//must be non blocking !!!
 
-		synchronized (registerLock) {
-			if (registerReq == true) {
-				SelectionKey sk = chn.register(selector, ops, new QueueChannel(this, chn, d));
-				if ((ops&SelectionKey.OP_CONNECT)!=0)
-					((QueueChannel)sk.attachment()).addr=((SocketChannel)chn).getRemoteAddress();
-				Log.debug("addChannel done (no wakeup)");
-				return sk;
-			}
-
-			registerReq = true;
-			selector.wakeup();
-			Thread.yield();
+		QueueChannel c = new QueueChannel(this, chn, hnd);
+		synchronized (addChannelList) {
+			addChannelList.add(new AddChannel(ops, c));
 		}
-
-		SelectionKey sk = chn.register(selector, ops, new QueueChannel(this, chn, d));
-		if ((ops&SelectionKey.OP_CONNECT)!=0)
-			((QueueChannel)sk.attachment()).addr=((SocketChannel)chn).getRemoteAddress();
-
-		synchronized (registerLock) {
-			registerReq = false;
-			registerLock.notify();
-		}
-
-		Log.debug("addChannel done (wakeup)");
-		return sk;
+		selector.wakeup();
+		return c;
 	}
 
 	private void write(SelectableChannel chn, ByteBuffer buf) {
@@ -238,13 +226,21 @@ public class SelectorThread {
 
 	private void loop() throws Exception {
 		while (!stopReq) {
-			if (registerReq) {
-				 // wait, so other thread can register new channel
-				synchronized (registerLock) {
-					if (registerReq) {
-						//Log.debug("selector wait for chn registered");
-						registerLock.wait();
-						//Log.debug("registerLock waiting done");
+			if (addChannelList.size() > 0) {
+				int l = addChannelList.size();
+				for (int i = 0; i < l; ++i) {
+					AddChannel c = addChannelList.get(i);
+					SelectableChannel chn = c.chn.chn;
+					chn.register(selector, c.ops, c.chn);
+					if ((c.ops&SelectionKey.OP_CONNECT)!=0)
+						c.chn.addr = ((SocketChannel)chn).getRemoteAddress();
+					Log.debug("channel registered");
+				}
+				synchronized (addChannelList) {
+					if (addChannelList.size() == l) addChannelList.clear();
+					else while (l > 0) {
+						--l;
+						addChannelList.remove(0);
 					}
 				}
 			}
@@ -325,10 +321,9 @@ public class SelectorThread {
 		QueueChannel qchn = (QueueChannel)sk.attachment();
 		SocketChannel chn = schn.accept();
 		Log.debug("new connection accepted");
-		sk = addChannel(chn, SelectionKey.OP_READ, qchn.hnd.createFilter());
-		qchn = (QueueChannel)sk.attachment();
+		qchn = addChannel(chn, SelectionKey.OP_READ, qchn.hnd.createFilter());
 		qchn.connected=true;
-		qchn.addr=chn.getRemoteAddress();
+		qchn.addr = chn.getRemoteAddress();
 		qchn.hnd.connected(qchn);
 	}
 	private void finishConnect(SelectionKey sk) throws IOException {
@@ -340,7 +335,7 @@ public class SelectorThread {
 		else ops|=SelectionKey.OP_READ|SelectionKey.OP_WRITE;
 		sk.interestOps(ops);
 		qchn.connected=true;
-		qchn.addr=chn.getRemoteAddress();
+		qchn.addr = chn.getRemoteAddress();
 		qchn.hnd.connected(qchn);
 	}
 	private void read(SelectionKey sk) throws IOException {
@@ -376,13 +371,3 @@ public class SelectorThread {
 		}
 	}
 }
-//problems
-//2017-04-07 16:06:45.911 [E] Selector (SelectorThread2.java:103):
-//java.nio.channels.CancelledKeyException
-//     at sun.nio.ch.SelectionKeyImpl.ensureValid(Unknown Source)
-//     at sun.nio.ch.SelectionKeyImpl.interestOps(Unknown Source)
-//     at net.SelectorThread2.loop(SelectorThread2.java:216)
-//     at net.SelectorThread2.access$200(SelectorThread2.java:41)
-//     at net.SelectorThread2$1.run(SelectorThread2.java:101)
-//
-//2017-04-07 16:06:46.228 [I] AWT-EventQueue-0: rserver finished

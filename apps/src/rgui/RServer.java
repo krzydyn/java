@@ -115,6 +115,7 @@ public class RServer implements ChannelHandler {
 
 		try {
 		if (cmd == RCommand.SCREEN_INFO) {
+			Log.debug("processing SCREEN_INFO");
 			getScreenInfo(chn);
 		}
 		else if (cmd == RCommand.MOUSE_MOVE) {
@@ -140,6 +141,7 @@ public class RServer implements ChannelHandler {
 			float q = msg.getFloat();
 			if (w <= 0) w =  (int)screenRect.getMaxX();
 			if (h <= 0) h =  (int)screenRect.getMaxY();
+			Log.debug("processing SCREEN_IMG(0,0,%d,%d", w, h);
 			sendImage(chn, 0, 0, w, h, q);
 		}
 		else if (cmd == RCommand.CLIENT_REGISTER) {
