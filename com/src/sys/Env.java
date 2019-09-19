@@ -30,10 +30,7 @@ import java.awt.datatransfer.Transferable;
 import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.OutputStream;
-import java.lang.ProcessBuilder.Redirect;
 import java.lang.management.ManagementFactory;
 import java.lang.management.RuntimeMXBean;
 import java.lang.reflect.Field;
@@ -49,6 +46,7 @@ import java.util.List;
 import java.util.Map;
 
 import io.IOText;
+import io.StreamConsumer;
 import text.Text;
 
 public class Env {
@@ -181,38 +179,36 @@ public class Env {
 	static public String exec(File dir, List<String> args) throws IOException {
 		ProcessBuilder pb = new ProcessBuilder(args);
 		if (dir!=null) pb.directory(dir);
-		pb.redirectErrorStream(true);
-		pb.redirectError(Redirect.DISCARD);
+		//pb.redirectErrorStream(true);
+		//pb.redirectError(Redirect.DISCARD);
 		//pb.environment(envp)
 		Process child = pb.start();
 
 		OutputStream out = child.getOutputStream();
-		InputStream in = child.getInputStream();
+		Env.close(out);
 
-		InputStreamReader isr = new InputStreamReader(in, UTF8_Charset);
-		char[] buf = new char[1024];
-		int r;
+		StreamConsumer in = new StreamConsumer(child.getInputStream());
+		StreamConsumer err = new StreamConsumer(child.getErrorStream());
 
-		StringBuilder str = new StringBuilder();
+		new Thread(err).start();
+		in.run();
+
 		try {
-			while ((r=isr.read(buf)) >= 0) {
-				str.append(buf, 0, r);
-			}
-
 			int ec = child.waitFor();
 			if (ec != 0) {
 				Log.error("exec(%s); exitcode=%d", Text.join(" ", args), ec);
-				throw new IOException("Exit("+ec+") "+str.toString());
+				String msg = err.getOutput();
+				if (msg.isEmpty()) msg = in.getOutput();
+				throw new IOException("Exit("+ec+") "+ msg);
 			}
 		} catch (InterruptedException e) {
 			Log.debug("exec %s interrupted", Text.join(" ", args));
 			return null;
 		} finally {
-			out.close();
-			in.close();
+			child.destroy();
 		}
 
-		return str.toString();
+		return in.getOutput();
 	}
 
 	static public String exec(File dir, String ...args) throws IOException {
