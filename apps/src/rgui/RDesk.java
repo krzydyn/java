@@ -7,6 +7,7 @@ import java.awt.GraphicsEnvironment;
 import java.awt.Image;
 import java.awt.Point;
 import java.awt.Rectangle;
+import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyAdapter;
@@ -103,6 +104,7 @@ public class RDesk extends MainPanel {
 			errCnt = 0;
 			imgPanel.setImage(null);
 			inmsg.clear(); inlen=0;
+			sendLockStatus();
 			sendScreenInfoReq();
 			sendScreenReq();
 			sendRegister();
@@ -402,6 +404,29 @@ public class RDesk extends MainPanel {
 		b.flip();
 		Log.debug("send SCREEN_IMG");
 		chnHandler.write(qchn, b);
+	}
+	private void sendLockStatus() {
+		//tk.setLockingKeyState(KeyEvent.VK_NUM_LOCK, false); (not suppoerted)
+		int st = -1;
+		if (st == -1) {
+			// method #1
+			try {
+				Toolkit tk = Toolkit.getDefaultToolkit();
+				Log.debug("Toolkit is = %s", tk.getClass().toString());
+				st = 0;
+				st |= tk.getLockingKeyState(KeyEvent.VK_CAPS_LOCK)   ? 1 : 0;
+				st |= tk.getLockingKeyState(KeyEvent.VK_NUM_LOCK)    ? 2 : 0;
+				st |= tk.getLockingKeyState(KeyEvent.VK_SCROLL_LOCK) ? 4 : 0;
+				st |= tk.getLockingKeyState(KeyEvent.VK_KANA_LOCK)   ? 8 : 0;
+			} catch (UnsupportedOperationException e) { st = -1; }
+		}
+		if (st == -1) {
+			// method #2
+		}
+
+		Log.debug("Sending LockSt = %X", st);
+
+		//TODO send to server
 	}
 	private void sendRegister() {
 		ByteBuffer b = ByteBuffer.allocate(2);
