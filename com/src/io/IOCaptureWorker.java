@@ -3,10 +3,10 @@ package io;
 import java.io.InputStream;
 import java.io.StringWriter;
 
-public class StreamCaptureWorker extends IOForwardWorker {
+public class IOCaptureWorker extends IOForwardWorker {
 	private StringWriter wr;
 
-	public StreamCaptureWorker(InputStream is) {
+	public IOCaptureWorker(InputStream is) {
 		super(is, new StringWriter());
 		wr = (StringWriter) super.wr;
 	}
