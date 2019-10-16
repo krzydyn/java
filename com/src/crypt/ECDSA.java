@@ -10,7 +10,9 @@ import sys.Log;
 import text.Text;
 
 // https://github.com/warner/python-ecdsa/blob/master/src/ecdsa/ecdsa.py
+// https://www.bouncycastle.org/wiki/display/JA1/Elliptic+Curve+Key+Pair+Generation+and+Key+Factories
 public class ECDSA extends Asymmetric {
+	//TODO use java.security.spec.ECPoint
 	static class BigPoint {
 		final static BigPoint INFINITY = new BigPoint();
 		final private BigInteger x, y;
@@ -43,15 +45,16 @@ public class ECDSA extends Asymmetric {
 	// The public key is a point on the curve and the private key is a random number.
 	// The public key is obtained by multiplying the private key with a generator point G in the curve.
 
+	//TODO use java.security.spec.EllipticCurve
 	static class EllipticCurve {
 		//final static BigInteger TWO = BigInteger.valueOf(2);
 		final static BigInteger THREE = BigInteger.valueOf(3);
-		final private BigInteger a, b, p;
+		final private BigInteger p, a, b;
 
-		public EllipticCurve(BigInteger a, BigInteger b, BigInteger p) {
+		public EllipticCurve(BigInteger p, BigInteger a, BigInteger b) {
+			this.p = p;
 			this.a = a;
 			this.b = b;
-			this.p = p;
 		}
 		public boolean contains(BigInteger x, BigInteger y) {
 			BigInteger r = x.multiply(x).multiply(x);

@@ -32,10 +32,10 @@ public class Combination {
 	private int[] pos;
 	private boolean rep;
 
-	public Combination(List<?> l, int k, boolean rep) {
+	public Combination(List<?> l, int k, boolean repetions) {
 		pos = new int[k];
 		set = new ArrayList<>(l);
-		this.rep = rep;
+		this.rep = repetions;
 		reset();
 	}
 	public void save(OutputStream stream) throws IOException {

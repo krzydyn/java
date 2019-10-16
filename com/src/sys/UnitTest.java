@@ -89,12 +89,14 @@ public class UnitTest {
 		while ((line = rd.readLine()) != null) {
 			if(line.endsWith(classExt) && !line.contains("$")) {
 				String unit = pkg + "." + line.substring(0, line.length() - classExt.length());
-				Log.debug("adding test unit: %s", unit);
 				if (unit.startsWith(prefix))
 				try {
 					Class<?> c = cl.loadClass(unit);;
 					if (UnitTest.class.isAssignableFrom(c)) {
 						a.add(unit);
+					}
+					else {
+						Log.error("class %s is not UnitTest", c.getName());
 					}
 				} catch (Throwable e) {}
 			}

@@ -46,7 +46,7 @@ import java.util.List;
 import java.util.Map;
 
 import io.IOText;
-import io.StreamCaptureWorker;
+import io.IOCaptureWorker;
 import text.Text;
 
 public class Env {
@@ -187,8 +187,8 @@ public class Env {
 		OutputStream out = child.getOutputStream();
 		Env.close(out);
 
-		StreamCaptureWorker in = new StreamCaptureWorker(child.getInputStream());
-		StreamCaptureWorker err = new StreamCaptureWorker(child.getErrorStream());
+		IOCaptureWorker in = new IOCaptureWorker(child.getInputStream());
+		IOCaptureWorker err = new IOCaptureWorker(child.getErrorStream());
 
 		new Thread(err).start();
 		in.run();

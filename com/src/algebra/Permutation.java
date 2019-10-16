@@ -35,7 +35,7 @@ public class Permutation {
 
 	public Permutation(List<?> l) {
 		pos = new int[l.size()];
-		set=new ArrayList<Object>(l);
+		set = new ArrayList<>(l);
 		for (int i=0; i < pos.length; ++i) pos[i]=i;
 	}
 	public void save(OutputStream stream) throws IOException {
@@ -97,7 +97,7 @@ public class Permutation {
 		return nextPermutation(a, cmp);
 	}
 
-	static public <T extends Object> boolean nextPermutation(List<T> a, Comparator<T> cmp) {
+	static public <T> boolean nextPermutation(List<T> a, Comparator<T> cmp) {
 		int i = a.size() - 2;
 		while (i >= 0 && cmp.compare(a.get(i),a.get(i + 1)) >= 0) --i;
 		if (i < 0) return false;

@@ -9,6 +9,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import sys.Log;
+import text.Text;
 
 public abstract class TLV {
 	public static class Tag {
@@ -39,10 +40,11 @@ public abstract class TLV {
 	protected TLV_Constr parent;
 	protected Tag t;
 
-	private static class TLV_Primary extends TLV {
+	private static class TLV_Primitive extends TLV {
+		static byte[] empty = {};
 		private byte[] v;
 
-		protected TLV_Primary(Tag tag) {
+		protected TLV_Primitive(Tag tag) {
 			super(tag);
 		}
 
@@ -70,7 +72,7 @@ public abstract class TLV {
 		}
 		@Override
 		public TLV setValue(byte[] v, int offs, int len) {
-			if (len == -1) this.v = v;
+			if (len == 0) this.v = empty;
 			else this.v = Arrays.copyOfRange(v, offs, offs + len);
 			return this;
 		}
@@ -78,7 +80,7 @@ public abstract class TLV {
 
 	private static class TLV_Constr extends TLV {
 		private List<TLV> sub = new ArrayList<>();
-		private int cashedLen = 0;
+		private int cashedLen = -1;
 
 		protected TLV_Constr(Tag tag) {
 			super(tag);
@@ -95,7 +97,7 @@ public abstract class TLV {
 
 		@Override
 		public int length() {
-			if (cashedLen > 0) {
+			if (cashedLen >= 0) {
 				//Log.debug("return cashed value " + cashedLen);
 				return cashedLen;
 			}
@@ -120,13 +122,13 @@ public abstract class TLV {
 				t.parent.remove(t);
 			t.parent = this;
 			sub.add(t);
-			cashedLen = 0;
-			for (TLV_Constr p = parent; p != null; p = p.parent)
-				p.cashedLen = 0;
 		}
 		public void remove(TLV tlv) {
 			sub.remove(tlv);
 			tlv.parent = null;
+			cashedLen = -1;
+			for (TLV_Constr p = parent; p != null; p = p.parent)
+				p.cashedLen = -1;
 		}
 		@Override
 		public TLV get(int idx) {
@@ -154,12 +156,12 @@ public abstract class TLV {
 	static public TLV create(int tag) {
 		Tag t = new Tag(tag);
 		if ((t.bytes[0]&0x20) != 0) return new TLV_Constr(t);
-		return new TLV_Primary(t);
+		return new TLV_Primitive(t);
 	}
 	static public TLV create(byte[] tag, int offs, int len) {
 		Tag t = new Tag(tag, offs, len);
 		if ((t.bytes[0]&0x20) != 0) return new TLV_Constr(t);
-		return new TLV_Primary(t);
+		return new TLV_Primitive(t);
 	}
 	static public TLV create(byte[] tag) {
 		return TLV.create(tag, 0, tag.length);
@@ -169,10 +171,12 @@ public abstract class TLV {
 	public abstract TLV get(int idx);
 	public abstract TLV find(int idx, Tag tag);
 	public abstract TLV setValue(byte[] v, int offs, int len);
+
 	public abstract int length();
 	public abstract byte[] value();
 	public abstract void write(OutputStream os) throws IOException;
 
+	public final byte[] tag() { return t.bytes; }
 	public final int opaqueLength() {
 		int len = length();
 		return t.bytes.length + TLV_BER.lengthBytes(len) + len;
@@ -186,11 +190,9 @@ public abstract class TLV {
 		ByteArrayOutputStream ba = new ByteArrayOutputStream(len);
 		try {
 			write(ba);
-			return ba.toByteArray();
 		}
-		catch (IOException e) {
-			return null;
-		}
+		catch (IOException e) {}
+		return ba.toByteArray();
 	}
 
 	protected void writeTL(OutputStream os) throws IOException {
@@ -216,6 +218,7 @@ public abstract class TLV {
 
 		TLV tlv = create(ba.toByteArray());
 		ba.reset();
+		Log.debug("TAG=%s", Text.hex(tlv.tag()));
 
 		// LENGTH
 		r=is.read();
@@ -228,6 +231,7 @@ public abstract class TLV {
 				vl <<= 8; vl |= r;
 			}
 		}
+		Log.debug("LENGTH=%d", vl);
 
 		// VALUE
 		if (tlv.isConstructed()) {
@@ -250,6 +254,7 @@ public abstract class TLV {
 			}
 		}
 		ba.reset();
+		Log.debug("VALUE=%s", Text.hex(tlv.value()));
 
 		return tlv;
 	}

@@ -94,6 +94,17 @@ package crypt;
  *		Note: || = concatenation<br>
  * </ul>
  *
+ *<p><b>Standards for secure communication defined by the Chinese authorities</b><br>
+ *http://www.programmersought.com/article/101352955/
+ *</p>
+ * <ul>
+ * <li> SM2 public key cryptographic algorithm based on elliptic curves<b>
+ * 		http://www.gmbz.org.cn/upload/2018-07-24/1532401863206085511.pdf
+ * <li> SM3 hashing algorithm comparable to SHA-256
+ * <li> SM4 block cipher algorithm for symmetric cryptography comparable to AES-128<b>
+ * 		https://eprint.iacr.org/2008/281.pdf
+ * </ul>
+ *
  * @author krzydyn
  *
  */

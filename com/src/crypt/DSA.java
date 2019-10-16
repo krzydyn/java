@@ -34,9 +34,6 @@ public class DSA extends Asymmetric {
 		} while (q.subtract(ONE).gcd(p).compareTo(ONE) != 0);
 
 		g = TWO.modPow(p.subtract(ONE).divide(q), p);
-
-		x = new BigInteger(q.bitLength(), rnd);
-		y = g.modPow(x, p);
 	}
 
 	/**
@@ -47,6 +44,11 @@ public class DSA extends Asymmetric {
 		this.q = q; //subprime
 		this.g = g; //base
 	}
+
+	public void generateXY() {
+		x = new BigInteger(q.bitLength(), rnd);
+		y = g.modPow(x, p);
+	}
 	public void setK(BigInteger k) {
 		this.k = k;
 	}
@@ -55,10 +57,13 @@ public class DSA extends Asymmetric {
 		this.y = y; //pub
 	}
 
+
 	public void print(PrintStream pr) {
-		pr.printf("P %s", p.toString(16));
-		pr.printf("Q %s", q.toString(16));
-		pr.printf("G %s", g.toString(16));
+		pr.printf("P %s\n", p.toString(16));
+		pr.printf("Q %s\n", q.toString(16));
+		pr.printf("G %s\n", g.toString(16));
+		if (x!=null) pr.printf("X %s\n", x.toString(16));
+		if (y!=null) pr.printf("Y %s\n", y.toString(16));
 	}
 
 	/*
