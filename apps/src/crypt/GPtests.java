@@ -802,6 +802,7 @@ public class GPtests extends UnitTest implements TEF_Types {
 		}
 		return null;
 	}
+
 	static void nist_ecdsa() throws Exception {
 		String file = "res/nist-ecdsa-SigVer.rsp";
 		int cnt = 0;
@@ -877,6 +878,20 @@ public class GPtests extends UnitTest implements TEF_Types {
 				}
 			}
 		}
+	}
+
+	static void simple_dsa() throws Exception {
+		DSA dsa = new DSA(
+				new BigInteger("123456789", 16),
+				new BigInteger("123456789", 16),
+				new BigInteger("123456789", 16)
+				);
+		dsa.generateXY();
+		dsa.print(System.out);
+
+		dsa = new DSA(64, 16);
+		dsa.generateXY();
+		dsa.print(System.out);
 	}
 
 	static void gp_dsa() throws Exception {
@@ -1090,9 +1105,10 @@ public class GPtests extends UnitTest implements TEF_Types {
 		//try { encrypt(); } catch (Exception e) { Log.error(e); }
 		//try { decrypt(); } catch (Exception e) { Log.error(e); }
 		//try { digest(); } catch (Exception e) { Log.error(e); }
+		try { simple_dsa(); } catch (Exception e) { Log.error(e); }
 		//try { nist_mac(); } catch (Exception e) { Log.error(e); }
 		//try { nist_dsa(); } catch (Exception e) { Log.error(e); }
-		try { nist_ecdsa(); } catch (Exception e) { Log.error(e); }
+		//try { nist_ecdsa(); } catch (Exception e) { Log.error(e); }
 
 		//Log.info("");
 		//try { gp_digest(); } catch (Exception e) { Log.error(e); }
