@@ -29,6 +29,7 @@ import java.util.Random;
 import puzzles.BlackJack;
 import puzzles.GameBoard.Rect;
 import puzzles.GameBoard.Sheet;
+import algebra.CircularList;
 import algebra.Combination;
 import algebra.Expression;
 import algebra.Maths;
@@ -53,19 +54,20 @@ public class T_Algebra extends UnitTest {
 		//System.out.println(r.toString());
 	}
 	static void permutation() {
-		List<Integer> l = new ArrayList<>();
-		l.add(2);
-		l.add(4);
-		l.add(7);
+		List<Character> l = new ArrayList<>();
+		l.add('a');
+		l.add('b');
+		l.add('b');
+		l.add('c');
 		int n=0;
 		do {
 			++n;
 			//Log.debug("%d: %s", n, l.toString());
 		} while (Permutation.nextPermutation(l));
-		check("should be 6 permutations", n == 6);
+		check("permutations", n, 12);
 
 		l.clear(); n=0;
-		for (int i=0; i<6; ++i) l.add(i);
+		for (int i=0; i<6; ++i) l.add((char)i);
 		do {
 			++n;
 			//Log.debug("%d: %s", n, l.toString());
@@ -81,18 +83,18 @@ public class T_Algebra extends UnitTest {
 		do {
 			++n;
 			comb.getSelection(l);
-			Log.debug("%d: %s",n,Text.join(",", l));
+			//Log.debug("%d: %s",n,Text.join(",", l));
 		} while (comb.next());
-		check("comb(10,2)", 10, n);
+		check("comb(5,3)", 10, n);
 
 		comb.reset(true);
 		n=0;
 		do {
 			++n;
 			comb.getSelection(l);
-			Log.debug("%d: %s",n,Text.join(",", l));
+			//Log.debug("%d: %s",n,Text.join(",", l));
 		} while (comb.next());
-		check("comb(10,2)", 125, n);
+		check("comb(10,3)", 125, n);
 	}
 
 	static void nCr() {
@@ -261,6 +263,12 @@ public class T_Algebra extends UnitTest {
 		Arrays.sort(verif3);
 		Log.prn(">>> random");
 		_sortalgos(t3, verif3);
+	}
+
+	static void testCircularList() {
+		CircularList<Integer> list = new CircularList<>();
+		for (int i=0; i < 3; ++i) list.add(i+1);
+		Log.debug(list.toString());
 	}
 
 	static double input_pnts[] = {
