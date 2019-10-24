@@ -122,6 +122,9 @@ public abstract class TLV {
 				t.parent.remove(t);
 			t.parent = this;
 			sub.add(t);
+			cashedLen = -1;
+			for (TLV_Constr p = parent; p != null; p = p.parent)
+				p.cashedLen = -1;
 		}
 		public void remove(TLV tlv) {
 			sub.remove(tlv);
@@ -238,6 +241,7 @@ public abstract class TLV {
 			while (tlv.length() < vl) {
 				TLV t = load(is);
 				if (t == null) break;
+				Log.debug("add tlv t=%s l=%d", Text.hex(t.tag()), t.length());
 				tlv.add(t);
 			}
 			if (tlv.length() < vl) {
