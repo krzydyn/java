@@ -1,10 +1,11 @@
 package algebra;
 
 import java.util.AbstractList;
+import java.util.Iterator;
 import java.util.ListIterator;
 import java.util.NoSuchElementException;
 
-import jdk.internal.jline.internal.Log;
+import sys.Log;
 
 public class CircularList<E> extends AbstractList<E> {
 	static class Node<E> {
@@ -26,44 +27,62 @@ public class CircularList<E> extends AbstractList<E> {
 	}
 
 	private Node<E> prevnode(int index) {
-		if (last == null) return null;
+		if (index == size) return null;
 		Node<E> x = last;
 		for (int i = 0; i < index; ++i)
 			x = x.next;
 		return x;
 	}
 
-	private Node<E> removenext(Node<E> n) {
+	private Node<E> addnext(Node<E> p, E element) {
+		Node<E> n;
+		if (p == null) {
+			Log.debug("addnext as last");
+			if (last == null) {
+				p = n = new Node<>(element, null);
+			}
+			else {
+				p = last;
+				n = new Node<>(element, p.next);
+			}
+			p.next = n;
+			last = n;
+		}
+		else {
+			Log.debug("addnext prev=%s", p.item);
+			n = new Node<>(element, p.next);
+			p.next = n;
+		}
+		++size;
+		return n;
+	}
+	private Node<E> removenext(Node<E> p) {
 		if (last == null) return null;
-		Node<E> rm = n.next;
-		n.next = rm.next;
+		Node<E> rm = p.next;
+		p.next = rm.next;
+		if (p == rm) last = null;
+		else if (last == rm) last = p;
 		--size;
-		if (size == 0) last = null;
-		else if (last == rm) last = n;
 		return rm;
 	}
 
 	@Override
 	public void add(int index, E element) {
 		chechPosIndex(index);
-		Node<E> n;
-		if (last == null) {
-			n = new Node<>(element, null);
-			n.next = n;
-			Log.debug("add first el %s", element);
-		}
-		else {
-			n = new Node<>(element, last.next);
-			Log.debug("add el %s after %s", element, last.next.item);
-		}
-		last = n;
-		++size;
+		Log.debug("add(%d,%s", index, element.toString());
+		addnext(prevnode(index), element);
 	}
 
 	@Override
 	public String toString() {
-		for (int i=0; i<size; ++i);
-		return null;
+		StringBuilder s = new StringBuilder();
+		Iterator<E> i = listIterator(0);
+		while (i.hasNext()) {
+			s.append(i.next().toString());
+			s.append(", ");
+		}
+		if (s.length() > 0) s.setLength(s.length()-2);
+		return s.toString();
 	}
 
 	@Override
@@ -79,11 +98,7 @@ public class CircularList<E> extends AbstractList<E> {
 	public E remove(int index) {
 		chechElemIndex(index);
 		Node<E> p = prevnode(index);
-		E elem = p.next.item;
-		p.next = p.next.next;
-		--size;
-		if (size == 0) last = null;
-		return elem;
+		return removenext(p).item;
 	}
 
 	@Override
@@ -104,12 +119,10 @@ public class CircularList<E> extends AbstractList<E> {
 	}
 
 	private class ListItr implements ListIterator<E> {
-		private Node<E> lastPrev;
 		private Node<E> prev;
 		int nextIndex = 0;
 
 		ListItr(int index) {
-			prev = (index == size) ? null : prevnode(index);
 			nextIndex = index;
 		}
 
@@ -121,10 +134,10 @@ public class CircularList<E> extends AbstractList<E> {
 		@Override
 		public E next() {
 			if (!hasNext()) throw new NoSuchElementException();
-			lastPrev = prev;
-			prev = prev.next;
+			if (prev == null) prev = prevnode(nextIndex);
+			else prev = prev.next;
 			++nextIndex;
-			return prev.item;
+			return prev.next.item;
 		}
 
 		@Override
@@ -149,24 +162,17 @@ public class CircularList<E> extends AbstractList<E> {
 
 		@Override
 		public void remove() {
-			if (lastPrev == null) throw new IllegalStateException();
-			removenext(lastPrev);
-			if (last == null) lastPrev=null;
+			removenext(prev);
 		}
 
 		@Override
 		public void set(E e) {
-			if (lastPrev == null) throw new IllegalStateException();
-			lastPrev.next.item = e;
+			prev.next.item = e;
 		}
 
 		@Override
 		public void add(E e) {
-			if (lastPrev == null) throw new IllegalStateException();
-			Node<E> n = new Node<>(e, lastPrev.next);
-			lastPrev.next = n;
-			lastPrev = n;
-			++nextIndex;
+			addnext(prev, e);
 		}
 	}
 }

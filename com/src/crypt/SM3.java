@@ -1,5 +1,7 @@
 package crypt;
 
+import java.math.BigInteger;
+
 public class SM3 {
 	 public static final byte[] iv = { 0x73, (byte) 0x80, 0x16, 0x6f, 0x49,
 		        0x14, (byte) 0xb2, (byte) 0xb9, 0x17, 0x24, 0x42, (byte) 0xd7,
@@ -140,12 +142,12 @@ public class SM3 {
 
 		    private static byte[] bigEndianIntToByte(int num)
 		    {
-		        return back(Util.intToBytes(num));
+		        return back(BigInteger.valueOf(num).toByteArray());
 		    }
 
 		    private static int bigEndianByteToInt(byte[] bytes)
 		    {
-		        return Util.byteToInt(back(bytes));
+		        return new BigInteger(bytes).intValue();
 		    }
 
 		    private static int FFj(int X, int Y, int Z, int j)
@@ -238,7 +240,7 @@ public class SM3 {
 		        pos += in.length;
 		        System.arraycopy(padd, 0, out, pos, padd.length);
 		        pos += padd.length;
-		        byte[] tmp = back(Util.longToBytes(n));
+		        byte[] tmp = back(BigInteger.valueOf(n).toByteArray());
 		        System.arraycopy(tmp, 0, out, pos, tmp.length);
 		        return out;
 		    }

@@ -543,11 +543,12 @@ public class RServer implements ChannelHandler {
 		}
 		screenRect.x -= shiftX;
 		screenRect.y -= shiftY;
-		Log.info("screen bounds (%d,%d %dx%d)",screenRect.x,screenRect.y,screenRect.width,screenRect.height);
 
 		Rectangle rect = new Rectangle(0,0,(int)screenRect.getMaxX(),(int)screenRect.getMaxY());
 		screenImg = robot.createScreenCapture(rect);
+		Log.info("screen bounds (%d,%d %dx%d)",screenRect.x,screenRect.y,screenRect.width,screenRect.height);
 		Log.info("update rect (%d,%d %dx%d)",rect.x,rect.y,rect.width,rect.height);
+		Log.info("Args lockOn=%b keepOn=%b", lockScreenOn, keepOn);
 
 		if (lockScreenOn) {
 			ImagePanel ip = new ImagePanel(new FlowLayout());
@@ -625,7 +626,7 @@ public class RServer implements ChannelHandler {
 				else lastMouseLoc = m;
 				doActionTm = System.currentTimeMillis()+FORCE_ACTION_TIME;
 			}
-			XThread.sleep(1000/50);
+			XThread.sleep(1000/5);
 		}
 		}finally {
 			selector.stop();

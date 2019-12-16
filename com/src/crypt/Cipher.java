@@ -94,15 +94,14 @@ package crypt;
  *		Note: || = concatenation<br>
  * </ul>
  *
- *<p><b>Standards for secure communication defined by the Chinese authorities</b><br>
- *http://www.programmersought.com/article/101352955/
- *</p>
+ * <p><b>Standards for secure communication defined by the Chinese authorities</b><br>
+ * http://www.pudn.com/Download/item/id/2577700.html
+ * </p>
  * <ul>
- * <li> SM2 public key cryptographic algorithm based on elliptic curves<b>
- * 		http://www.gmbz.org.cn/upload/2018-07-24/1532401863206085511.pdf
- * <li> SM3 hashing algorithm comparable to SHA-256
- * <li> SM4 block cipher algorithm for symmetric cryptography comparable to AES-128<b>
- * 		https://eprint.iacr.org/2008/281.pdf
+ * <li> SM2 public key cryptographic algorithm based on elliptic curves<b> (DSA,KEP,PKE)
+ * <li> SM3 [password] hashing algorithm comparable to SHA-256 (out: 256bits)
+ * <li> SM4 block cipher algorithm for symmetric cryptography comparable to AES-128 (key,blk is 128bits)
+ * <li> SM9 is an identity-based cryptographic algorithm that can replace PKI / CA
  * </ul>
  *
  * @author krzydyn

@@ -44,6 +44,7 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import io.IOText;
 import io.IOCaptureWorker;
@@ -194,7 +195,10 @@ public class Env {
 		in.run();
 
 		try {
-			int ec = child.waitFor();
+			//int ec = child.waitFor(); // blocking
+			boolean done = child.waitFor(20, TimeUnit.MINUTES); //TODO make timeout configurable
+			if (!done) throw new IOException("Timeout exec");
+			int ec = child.exitValue();
 			if (ec != 0) {
 				Log.error("exec(%s); exitcode=%d", Text.join(" ", args), ec);
 				String msg = err.getOutput();

@@ -6,12 +6,12 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
-
 import sys.Log;
 import text.Text;
 
-public abstract class TLV {
+public abstract class TLV implements Iterable<TLV> {
 	public static class Tag {
 		byte[] bytes;
 		public Tag(int tag) {
@@ -59,7 +59,7 @@ public abstract class TLV {
 		@Override
 		public byte[] value() {return v;}
 		@Override
-		public void add(TLV t) {
+		public boolean add(TLV t) {
 			throw new RuntimeException();
 		}
 		@Override
@@ -75,6 +75,11 @@ public abstract class TLV {
 			if (len == 0) this.v = empty;
 			else this.v = Arrays.copyOfRange(v, offs, offs + len);
 			return this;
+		}
+
+		@Override
+		public Iterator<TLV> iterator() {
+			return null;
 		}
 	}
 
@@ -117,21 +122,23 @@ public abstract class TLV {
 			return ba.toByteArray();
 		}
 		@Override
-		public void add(TLV t) {
+		public boolean add(TLV t) {
 			if (t.parent != null)
 				t.parent.remove(t);
 			t.parent = this;
-			sub.add(t);
+			boolean r = sub.add(t);
 			cashedLen = -1;
 			for (TLV_Constr p = parent; p != null; p = p.parent)
 				p.cashedLen = -1;
+			return r;
 		}
-		public void remove(TLV tlv) {
-			sub.remove(tlv);
+		public boolean remove(TLV tlv) {
+			if (!sub.remove(tlv)) return false;
 			tlv.parent = null;
 			cashedLen = -1;
 			for (TLV_Constr p = parent; p != null; p = p.parent)
 				p.cashedLen = -1;
+			return true;
 		}
 		@Override
 		public TLV get(int idx) {
@@ -149,6 +156,17 @@ public abstract class TLV {
 		public TLV setValue(byte[] v, int offs, int len) {
 			throw new RuntimeException();
 		}
+
+		public int size() {
+			return sub.size();
+		}
+		public boolean isEmpty() {
+			return sub.isEmpty();
+		}
+		@Override
+		public Iterator<TLV> iterator() {
+			return sub.iterator();
+		}
 	}
 
 	protected TLV(Tag tag) { this.t = tag; }
@@ -156,21 +174,28 @@ public abstract class TLV {
 		return (t.bytes[0]&TLV_BER.TAG_CONSTR) != 0;
 	}
 
-	static public TLV create(int tag) {
-		Tag t = new Tag(tag);
-		if ((t.bytes[0]&0x20) != 0) return new TLV_Constr(t);
-		return new TLV_Primitive(t);
-	}
-	static public TLV create(byte[] tag, int offs, int len) {
-		Tag t = new Tag(tag, offs, len);
-		if ((t.bytes[0]&0x20) != 0) return new TLV_Constr(t);
-		return new TLV_Primitive(t);
-	}
-	static public TLV create(byte[] tag) {
-		return TLV.create(tag, 0, tag.length);
+	protected void toString(StringBuilder s, int ind) {
+		byte[] x = tag();
+		Text.repeat(s, "  ", ind);
+		s.append("Tag:");
+		Text.hex(s, x, 0 , x.length);
+		s.append(String.format(" Len:%d", length()));
+		if (isConstructed()) {
+			s.append("(Constr)\n");
+			for (TLV t : this) {
+				t.toString(s, ind+1);
+			}
+		}
+		else {
+			s.append(" Val:\n");
+			Text.repeat(s, "  ", ind+1);
+			x = value();
+			Text.hex(s, x, 0 , x.length);
+			s.append("\n");
+		}
 	}
 
-	public abstract void add(TLV t);
+	public abstract boolean add(TLV t);
 	public abstract TLV get(int idx);
 	public abstract TLV find(int idx, Tag tag);
 	public abstract TLV setValue(byte[] v, int offs, int len);
@@ -198,11 +223,32 @@ public abstract class TLV {
 		return ba.toByteArray();
 	}
 
+	@Override
+	public String toString() {
+		StringBuilder s = new StringBuilder();
+		toString(s, 0);
+		return s.toString();
+	}
+
 	protected void writeTL(OutputStream os) throws IOException {
 		os.write(t.bytes);
 		TLV_BER.lengthWrite(os, length());
 	}
 
+
+	static public TLV create(int tag) {
+		Tag t = new Tag(tag);
+		if ((t.bytes[0]&0x20) != 0) return new TLV_Constr(t);
+		return new TLV_Primitive(t);
+	}
+	static public TLV create(byte[] tag, int offs, int len) {
+		Tag t = new Tag(tag, offs, len);
+		if ((t.bytes[0]&0x20) != 0) return new TLV_Constr(t);
+		return new TLV_Primitive(t);
+	}
+	static public TLV create(byte[] tag) {
+		return TLV.create(tag, 0, tag.length);
+	}
 
 	static public TLV load(InputStream is) throws IOException {
 		int r;
@@ -221,7 +267,7 @@ public abstract class TLV {
 
 		TLV tlv = create(ba.toByteArray());
 		ba.reset();
-		Log.debug("TAG=%s", Text.hex(tlv.tag()));
+		//Log.debug("TAG=%s", Text.hex(tlv.tag()));
 
 		// LENGTH
 		r=is.read();
@@ -234,14 +280,13 @@ public abstract class TLV {
 				vl <<= 8; vl |= r;
 			}
 		}
-		Log.debug("LENGTH=%d", vl);
+		//Log.debug("LENGTH=%d", vl);
 
 		// VALUE
 		if (tlv.isConstructed()) {
 			while (tlv.length() < vl) {
 				TLV t = load(is);
 				if (t == null) break;
-				Log.debug("add tlv t=%s l=%d", Text.hex(t.tag()), t.length());
 				tlv.add(t);
 			}
 			if (tlv.length() < vl) {
@@ -258,7 +303,7 @@ public abstract class TLV {
 			}
 		}
 		ba.reset();
-		Log.debug("VALUE=%s", Text.hex(tlv.value()));
+		//Log.debug("VALUE=%s", Text.hex(tlv.value()));
 
 		return tlv;
 	}

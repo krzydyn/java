@@ -45,8 +45,10 @@ public class Log {
 	}
 
 	final private static void moveLeft(Object[] args, int pa) {
-		if (pa>0)
+		if (pa>0) {
 			for (int i=pa; i<args.length; ++i) args[i-pa]=args[i];
+			for (int i = args.length-pa; i < args.length; ++i) args[i] = null;
+		}
 	}
 
 	final private static void log(int level, int traceOffs, Object[] args) {
@@ -57,23 +59,17 @@ public class Log {
 		String file = null;
 		int line = -1;
 
-		Throwable e = null;
+		Throwable exc = null;
 		String fmt=null;
 		int pa=0;
 		if (args.length > pa) {
-			if (args[pa] instanceof Integer) {
-				traceOffs=(Integer)args[pa++];
-			}
+			if (args[pa] instanceof Integer) traceOffs=(Integer)args[pa++];
 		}
 		if (args.length > pa) {
-			if (args[pa] instanceof Throwable) {
-				e=(Throwable)args[pa++];
-			}
+			if (args[pa] instanceof Throwable) exc = (Throwable)args[pa++];
 		}
 		if (args.length > pa) {
-			if (args[pa] instanceof String) {
-				fmt=(String)args[pa++];
-			}
+			if (args[pa] instanceof String) fmt = (String)args[pa++];
 		}
 		moveLeft(args,pa);
 
@@ -99,7 +95,7 @@ public class Log {
 		if (file != null) pr.printf(" (%s:%d)", file, line );
 		pr.print(": ");
 		if (fmt != null) pr.printf((Locale)null, fmt, args);
-		if (e != null) {pr.println();e.printStackTrace(pr);}
+		if (exc != null) {pr.println(); exc.printStackTrace(pr);}
 		if (!color.isEmpty()) pr.printf(Ansi.SGR_RESET);
 		pr.println();
 		pr.close(); // flush data to underlying stream
@@ -108,7 +104,7 @@ public class Log {
 		try {
 			prs.write(bas.toByteArray());
 			prs.flush();
-		}catch (Throwable ee){}
+		}catch (Throwable e){}
 	}
 
 	final public static void setReleaseMode() { tmfmt = tmfmt_rel; }

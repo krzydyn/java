@@ -266,8 +266,11 @@ public class T_Algebra extends UnitTest {
 	}
 
 	static void testCircularList() {
-		CircularList<Integer> list = new CircularList<>();
+		List<Integer> list = new CircularList<>();
 		for (int i=0; i < 3; ++i) list.add(i+1);
+		Log.debug(list.toString());
+		list = new CircularList<>();
+		for (int i=0; i < 3; ++i) list.add(0, i+1);
 		Log.debug(list.toString());
 	}
 

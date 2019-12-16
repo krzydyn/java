@@ -196,11 +196,7 @@ public class RSA extends Asymmetric {
 	}
 
 	/*
-	 * RSAEP ((n, e), m)
-	 * Input: (n, e) RSA public key
-	 *         m     message representative, an integer between 0 and n – 1
-	 * Output: c     ciphertext representative, an integer between 0 and n – 1
-	 * Error: “message representative out of range”
+	 * RSA encrypt using PUBLIC key (N,e)
 	 */
 	public byte[] encrypt(byte[] msg) {
 		int keylen = (N.bitLength()+7)/8;
@@ -209,6 +205,9 @@ public class RSA extends Asymmetric {
 		return i2osp(new BigInteger(1, msg).modPow(e, N), keylen);
 	}
 
+	/*
+	 * RSA decrypt using PRIVATE key (N,d)
+	 */
 	public byte[] decrypt(byte[] cmsg) {
 		int keylen = (N.bitLength()+7)/8;
 		if (cmsg.length > keylen) throw new RuntimeException("message too long");

@@ -29,14 +29,14 @@ import org.w3c.dom.NodeList;
  */
 
 public class GenFromXml {
-	static String repoPath = "/home/k.dynowski/Secos/Trustware";
-	static String xmlBasePath = repoPath + "/trustzone-application/test_suite_v2.0.0";
-	static String xmlPackagesPath = xmlBasePath + "/packages";
-	static String xmlCustomPath = repoPath + "/trustzone-application/test_suite_custom";
-	static String xmlValuesPath = xmlBasePath + "/Values";
+	static String repoPath = null;
+	static String xmlBasePath = null;
+	static String xmlPackagesPath = null;
+	static String xmlCustomPath = null;
+	static String xmlValuesPath = null;
 
-	static String repoTestCodePath = repoPath + "/trustzone-application/test_usability";
-	static String repoGPSuitePath = repoTestCodePath + "/ca/gp_suite";
+	static String repoTestCodePath = null;
+	static String repoGPSuitePath = null;
 
 	final static String boilerPlate = "/*\n" +
 					" *\n" +
@@ -49,7 +49,7 @@ public class GenFromXml {
 					" */\n";
 
 
-	final static int MAX_LINE_LENGHT = 120;
+	final static int MAX_LINE_LENGTH = 120;
 
 	final static String INDENT = "    ";
 
@@ -247,14 +247,6 @@ public class GenFromXml {
 		public int hashCode() {
 			return name.hashCode();
 		}
-		private boolean hasReturnCode() {
-			if (name.startsWith("Check") || name.startsWith("check")) return true;
-			if (name.equals("AllocateTempMemory") || name.equals("AllocateSharedMemory")) return true;
-			for (ArgInfo a : args) {
-				if (a.type.equals("ALL_TEE_RESULTS") || a.type.equals("ALL_RETURN_CODES")) return true;
-			}
-			return false;
-		}
 		public void implement(PrintStream pr) {
 			String mapname = opNameMap.get(name);
 			if (mapname == null) mapname = name;
@@ -282,7 +274,7 @@ public class GenFromXml {
 			}
 			else */ {
 				String oneline = String.format(INDENT+"%s(%s);\n", mapname, Text.join(sep, args));
-				if (oneline.length() > MAX_LINE_LENGHT) {
+				if (oneline.length() > MAX_LINE_LENGTH) {
 					String openIndent = String.format(INDENT+"%s(", mapname);
 					sep = ",\n"+openIndent.replaceAll(".", " ");
 				}
@@ -302,7 +294,7 @@ public class GenFromXml {
 				if (i < args.size()-1)
 					b.append(" ");
 			}
-			if (b.length() > MAX_LINE_LENGHT) {
+			if (b.length() > MAX_LINE_LENGTH) {
 				b.setLength(indent);
 				String openIndent = b.toString().replaceAll(".", " ");
 				for (int i = 0; i < args.size(); ++i) {
@@ -638,10 +630,15 @@ public class GenFromXml {
 	}
 
 	private static void genAdaptationHeader() {
+		if (operationTypes.size() == 0) {
+			Log.info("  no operations found");
+			return ;
+		}
+
 		String name = "gp_adaptation_api";
 		String fn = String.format("%s/include/%s.h", repoTestCodePath, name);
 
-		Log.info("generating file %s", fn);
+		Log.info("generating HEADER %s", fn);
 		PrintStream pr;
 		try {
 			pr = new PrintStream(fn);
@@ -671,7 +668,7 @@ public class GenFromXml {
 		else
 			fn = String.format("%s/tta_test_API_%s_auto.cpp", repoGPSuitePath, name);
 
-		Log.info("generating file %s", fn);
+		Log.info("generating CODE %s", fn);
 		PrintStream pr;
 		try {
 			pr = new PrintStream(fn);
@@ -687,7 +684,6 @@ public class GenFromXml {
 		//pr.println("#include \"tf.h\"");
 		pr.println();
 
-		int n = 0;
 		for (TestCaseInfo tc : tcs) {
 			tc.implement(pr);
 		}
@@ -705,45 +701,6 @@ public class GenFromXml {
 		pr.println("};");
 
 		pr.println("INITIALIZE_TEST_MODULE(test_array);");
-	}
-
-	private static void genTestCasesService(String name, List<TestCaseInfo> tcs) {
-		String fn = null;
-		String header = null;
-		if (name.equals("ClientAPI")) {
-			fn = String.format("%s/test_service_tta_test_%s_auto.c", repoGPSuitePath, name);
-			header = String.format("include/tta_test_%s_auto.h", name);
-		}
-		else {
-			fn = String.format("%s/test_service_tta_test_API_%s_auto.c", repoGPSuitePath, name);
-			header = String.format("include/tta_test_API_%s_auto.h", name);
-		}
-
-		Log.info("generating file %s", fn);
-		PrintStream pr;
-		try {
-			pr = new PrintStream(fn);
-		} catch (Exception e) {
-			throw new RuntimeException(e);
-		}
-
-		pr.println(boilerPlate);
-
-		pr.printf("#include \"%s\"\n", header);
-		pr.println("#include \"tf_gp_suite.h\"");
-		pr.println();
-		pr.printf("static testStruct* pack = tests_API_%s;\n", name);
-		for (TestCaseInfo tc : tcs) {
-			tc.serviceAddEntry(name, pr);
-		}
-		pr.println();
-		pr.println("static struct test_case *tests_table[] = {");
-		for (TestCaseInfo tc : tcs) {
-			tc.serviceTabEntry(pr);
-		}
-		pr.println(INDENT+"NULL\n};");
-		pr.println();
-		pr.println("INITIALIZE_TEST_MODULE(tests_table);");
 	}
 
 	static class Text {
@@ -788,7 +745,6 @@ public class GenFromXml {
 		try {
 			List<TestCaseInfo> tcs = parseTestCaseXML(name);
 			genTestCasesCode(name, tcs);
-			//genTestCasesService(name, tcs);
 		} catch (Exception e) {
 			Log.error(e);
 		}
@@ -821,6 +777,38 @@ public class GenFromXml {
 
 	}
 
+	private static void setupPaths(String repo) {
+		if (repo.startsWith("~/"))
+			repo = System.getProperty("user.home") + repo.substring(1);
+		Log.info("RepoPath = %s", repo);
+		repoPath = repo;
+
+		xmlBasePath = repoPath + "/trustzone-application/test_suite_v2.0.0";
+		xmlPackagesPath = xmlBasePath + "/packages";
+		xmlCustomPath = repoPath + "/trustzone-application/test_suite_custom";
+		xmlValuesPath = xmlBasePath + "/Values";
+
+		repoTestCodePath = repoPath + "/trustzone-application/test_usability";
+		repoGPSuitePath = repoTestCodePath + "/ca/gp_suite";
+	}
+
+	static private void discoverRepo() {
+		if (repoPath != null) {
+			if (new File(repoPath).isDirectory()) return ;
+		}
+		try {
+			String srch = "trustzone-application/";
+			File f = new File(GenFromXml.class.getProtectionDomain().getCodeSource().getLocation().toURI());
+			Log.info("jar file = %s", f.getAbsoluteFile());
+			int i = f.getAbsoluteFile().toString().indexOf(srch);
+			if (i < 0) return ;
+			f = new File(f.getAbsoluteFile().toString().substring(0, i));
+			setupPaths(f.getPath());
+		} catch (Exception e) {
+			Log.error(e);
+		}
+	}
+
 	private static final int CMD_X = 0;
 	private static final int CMD_TC = 1;
 	public static void main(String[] args) {
@@ -842,10 +830,14 @@ public class GenFromXml {
 			else if (args[i].equals("tc")) {
 				cmd = CMD_TC;
 			}
+			else if (args[i].startsWith("twdir=")) {
+				setupPaths(args[i].substring(6).trim());
+			}
 			else if (args[i].equals("val")) {
 				generateValues();
 			}
 			else {
+				discoverRepo();
 				if (cmd == CMD_TC) generateTC(args[i]);
 			}
 

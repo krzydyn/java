@@ -27,7 +27,7 @@ public class Base64App {
 			"5rDOwyslVVjtpz6GfFCKWBiQPgq38P9xgw4PYsXeYFINAUykzSkvrCnaBrVAmIUg\n" +
 			"PBcoGT5v7fDbLpinqwIDAQAB"
 			;
-	static String rsa_prv =
+	static String rsa_prv1 =
 			"MIIBOQIBAAJBAIOLepgdqXrM07O4dV/nJ5gSA12jcjBeBXK5mZO7Gc778HuvhJi+\n"+
 			"RvqhSi82EuN9sHPx1iQqaCuXuS1vpuqvYiUCAwEAAQJATRDbCuFd2EbFxGXNxhjL\n"+
 			"loj/Fc3a6UE8GeFoeydDUIJjWifbCAQsptSPIT5vhcudZgWEMDSXrIn79nXvyPy5\n"+
@@ -64,6 +64,21 @@ public class Base64App {
 			"aDiBDhnxY+5WppDEVAXdW/9Qj80gChkD+wEYnE1uvylWZ2ycO0xAcpg2n78HqHHr\n" +
 			"Lf57iKMoKPA7aw91QslE+tbDm/aHupYPvkTFHBteFYJ/xxO9UVs="
 			;
+
+	static String rsa_prv3 = "MIICXgIBAAKBgQChEC4qTnS2e7m3HcbrOqPh3JzlyydgbXSPANRxhhrAsNGZl3Yo\n" +
+			"+zLDp+9RGbvqYVobjniefYUKbDjyjN23KoBPQKvxLy8pE431rKaMta7GiaxxVl8c\n" +
+			"KovUE9inmmbsE+DfDEGhbymGmL5fF1g/4g8VMlIhwXsMpzgKZXACfgI9owIDAQAB\n" +
+			"AoGBAIGAFv5hMqp+9KXtRUFhVt+FmImTPMflefB5RFc68ku4X+7Uv2bYAssaPevB\n" +
+			"ezxKpj694PHeDpiAx5EN/j8F5z+LOyX+IxIgy6iCmAJAyJZmsy7eIHixfD89H0uS\n" +
+			"W0bSRxUEYH8NJqpCwOfmCdNOwaqnuiyiPrWdOKdOD6wAgo4xAkEAzYnTIoabZQIs\n" +
+			"zj5Aav+nk02lRG0BfDBsZmohmQDT+/6joHkOUNj47fNUo56aRYK0cDAtacTwG4Xf\n" +
+			"Kb4ilqvB/wJBAMibEmSlSZRmaKK09PdGFIBOsvTUInbVISYMqltDKtknlP/2TZ5A\n" +
+			"vOHhP+DcqxQ9qurcLb7a3p93uz9Qd3XbPF0CQQCDEzvkLrd2qPZt6GEoWzVAySl2\n" +
+			"A5YI3tCiV1hpvI9ziqZKtiidAmFtTdpSJdj4LyxmxzKO2xrMUolIk4p3T719AkBR\n" +
+			"65nARgtdMdDrGPCshg7bMsg72OFWG8UUr7ll2XEHCvX67Q9XX+KCb6TRY+vtMR26\n" +
+			"GT4JIYImJxPtUCPomiX1AkEApMZJF92Mym5Ho/hkH57zyimIisNvlkoTj65GCWrw\n" +
+			"/5aSrDk4ixtcP/zNqOYqExrQphqvOmYDc+j1d4Um3y2eAg==\n" +
+			"";
 
 	static String cert =
 			"MIICoTCCAYkCAQEwDQYJKoZIhvcNAQELBQAwWDELMAkGA1UEBhMCUEwxDDAKBgNV\n" +
@@ -153,6 +168,8 @@ public class Base64App {
 			"uPDgjKGo8tXy4G7n7mlMGJPhm57veUrQHgi/Nw==\n" +
 			"";
 
+	static String der = "3044022026E8CA86D97D7DA2226E2937A4A1D33C761823292662BF5BFF4FB9149DFEC16A0220042FA08DC7F1CFDEBB2FB1C4C5AD496154F8CD2D1CC99E0387BB90FE4B26AD79";
+
 	public static void parseTLV(int ind, byte[] b, int offs, int len) {
 		String[] elems = {"version","modulus","publicExponent","privateExponent",
 				"prime1","prime2","exponent1","exponent2","coefficient","otherPrimeInfos",
@@ -182,7 +199,9 @@ public class Base64App {
 		ByteArrayInputStream is = new ByteArrayInputStream(b);
 		try {
 			TLV t = TLV.load(is);
-			Log.debug("TLV: %s", Text.hex(t.toByteArray()));
+			Log.info("TLV text dump\n%s", t.toString());
+			byte[] bt = t.toByteArray();
+			Log.info("TLV[%d]: %s", bt.length, Text.hex(bt));
 		} catch (Exception e) {
 			Log.error(e);
 		}
@@ -251,8 +270,8 @@ public class Base64App {
 		bin = Text.bin(pkcs1DER);
 		parseTLV(0,bin,0,bin.length);*/
 
-		bin = Text.bin(emvData);
-		parseTLV(0,bin,0,bin.length);
+		bin = Base64.decode(rsa_prv2);
+		//parseTLV(0,bin,0,bin.length);
 		parseTLV2(bin);
 	}
 
