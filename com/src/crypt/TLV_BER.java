@@ -63,7 +63,7 @@ universal tags(t0) meaning (ASN.1)
 Tag Primitive 	Use
 0 	RFU (for BER internal mechanism)
 1 	BOOLEAN
-2 	INTEGER
+2 	INTEGER (positive or negative in u2)
 3 	BIT STRING
 4 	OCTET STRING
 5 	NULL
@@ -77,10 +77,10 @@ Tag Primitive 	Use
 13 	RELATIVE-OID
 14 	RFU
 15 	RFU
-16 	SEQUENCE, SEQUENCE OF
-17 	SET, SET OF
+16 	SEQUENCE, SEQUENCE OF (ordered list)
+17 	SET, SET OF (unordered list)
 18 	NumericString
-19 	PrintableString
+19 	PrintableString (contains only printable characters)
 20 	TeletexString, T61String
 21 	VideotexString
 22 	IA5String

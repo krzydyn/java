@@ -68,8 +68,8 @@
 			<fileset dir="${comdir}/${build}">
 				<include name="sys/*"/>
 				<include name="io/IO*"/>
-				<include name="img/Colors*"/>
-				<include name="netio/**"/>
+				<include name="img/*"/>
+				<include name="netio/*"/>
 				<include name="text/Text*"/>
 				<include name="ui/ImagePanel*"/>
 				<exclude name="sys/UnitTest*"/>

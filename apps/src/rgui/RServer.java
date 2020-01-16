@@ -183,7 +183,7 @@ public class RServer implements ChannelHandler {
 			Log.error("unknown cmd:%d, payload %d", cmd, msg.remaining());
 		}
 		}
-		catch (Exception e) {
+		catch (Throwable e) {
 			Log.error(e, "cmd=%d, xcode = 0x%X (%d)",cmd,xcode,xcode);
 		}
 	}
@@ -226,14 +226,17 @@ public class RServer implements ChannelHandler {
 	private void mounseClick(int x,int y,int buttons) {
 		Log.info("mouseClick(%d,%d,%x) / %x",x,y,buttons,mouseButtonMask);
 		buttons &= mouseButtonMask;
-		robot.mouseMove(x, y);
-		robot.mousePress(buttons);
-		robot.mouseRelease(buttons);
+		synchronized (robot) {
+			robot.mouseMove(x, y);
+			robot.mousePress(buttons);
+			robot.mouseRelease(buttons);
+		}
 		doActionTm = System.currentTimeMillis()+FORCE_ACTION_TIME;
 	}
 	private void keyType(int keycode) {
 		int key = keycode&0xffff;
 		int mod = (keycode>>16)&0xffff;
+		synchronized (robot) {
 		if (mod!=0) {
 			if (mod==KeyEvent.VK_ALT_GRAPH) {
 				robot.keyPress(KeyEvent.VK_ALT);
@@ -253,6 +256,7 @@ public class RServer implements ChannelHandler {
 		else {
 			robot.keyPress(key);
 			robot.keyRelease(key);
+		}
 		}
 	}
 	private int getkeycode(char c) {
@@ -298,11 +302,13 @@ public class RServer implements ChannelHandler {
 		else if(keycode == KeyEvent.VK_WINDOWS) winPressed=true;
 		else if(keycode == KeyEvent.VK_META) metaPressed=true;
 
+		synchronized (robot) {
 		if (keycode==KeyEvent.VK_ALT_GRAPH) {
 			robot.keyPress(KeyEvent.VK_ALT);
 			robot.keyPress(KeyEvent.VK_CONTROL);
 		}
 		else robot.keyPress(keycode);
+		}
 	}
 	private void keyReleased(int keycode) {
 		if(keycode == KeyEvent.VK_META) keycode = KeyEvent.VK_WINDOWS;
@@ -310,6 +316,8 @@ public class RServer implements ChannelHandler {
 		if(keycode == KeyEvent.VK_ALT) altPressed=false;
 		else if(keycode == KeyEvent.VK_WINDOWS) winPressed=false;
 		else if(keycode == KeyEvent.VK_META) metaPressed=false;
+
+		synchronized (robot) {
 		if (keycode==KeyEvent.VK_ALT_GRAPH) {
 			robot.keyRelease(KeyEvent.VK_ALT);
 			robot.keyRelease(KeyEvent.VK_CONTROL);
@@ -328,6 +336,7 @@ public class RServer implements ChannelHandler {
 			robot.keyRelease(KeyEvent.VK_META);
 			metaPressed=false;
 		}
+		}
 	}
 	private void mousePressed(int buttons) {
 		buttons &= mouseButtonMask;
@@ -343,7 +352,9 @@ public class RServer implements ChannelHandler {
 		doActionTm = System.currentTimeMillis()+FORCE_ACTION_TIME;
 	}
 	private void mouseWheel(int rot) {
-		robot.mouseWheel(rot);
+		synchronized (robot) {
+			robot.mouseWheel(rot);
+		}
 		doActionTm = System.currentTimeMillis()+FORCE_ACTION_TIME;
 	}
 	private String getUTF(ByteBuffer b) {
@@ -498,11 +509,11 @@ public class RServer implements ChannelHandler {
 	}
 	void detectChanges(BufferedImage p,BufferedImage i) {
 		List<Rectangle> rois=new ArrayList<>();
+		final int dv=5;
 
-		for (int y=0; y < p.getHeight(); y+=5) {
-			for (int x=0; x < p.getWidth(); x+=5) {
+		for (int y=0; y < p.getHeight(); y+=dv) {
+			for (int x=0; x < p.getWidth(); x+=dv) {
 				int r=Math.abs(Colors.quick_luminance(p.getRGB(x, y)) - Colors.quick_luminance(i.getRGB(x, y)));
-				//int r=Colors.errorSum(p.getRGB(x, y),i.getRGB(x, y));
 				if (r<1) r=0;
 				else if (r > 255) r=255;
 				p.setRGB(x, y, (r<<16)|(r<<8)|r);
@@ -510,7 +521,6 @@ public class RServer implements ChannelHandler {
 		}
 
 		Rectangle radd=new Rectangle(0,0,1,1);
-		final int dv=5;
 		for (int y=0; y < p.getHeight(); y+=dv) {
 			for (int x=0; x < p.getWidth(); x+=dv) {
 				if ((p.getRGB(x, y)&0xff)==0) continue;
@@ -545,7 +555,9 @@ public class RServer implements ChannelHandler {
 		screenRect.y -= shiftY;
 
 		Rectangle rect = new Rectangle(0,0,(int)screenRect.getMaxX(),(int)screenRect.getMaxY());
-		screenImg = robot.createScreenCapture(rect);
+		synchronized (robot) {
+			screenImg = robot.createScreenCapture(rect);
+		}
 		Log.info("screen bounds (%d,%d %dx%d)",screenRect.x,screenRect.y,screenRect.width,screenRect.height);
 		Log.info("update rect (%d,%d %dx%d)",rect.x,rect.y,rect.width,rect.height);
 		Log.info("Args lockOn=%b keepOn=%b", lockScreenOn, keepOn);
@@ -610,7 +622,7 @@ public class RServer implements ChannelHandler {
 				BufferedImage i = robot.createScreenCapture(rect);
 				BufferedImage p;
 				synchronized (this) { p=screenImg; screenImg=i; }
-				detectChanges(p,i);
+				detectChanges(p, i);
 				i=null; p=null;
 			}
 
@@ -635,15 +647,16 @@ public class RServer implements ChannelHandler {
 
 	public static void main(String[] args) throws Exception {
 		Log.setTestMode();
-		for (int i=0; i <args.length; ++i) {
+		for (int i=0; i < args.length; ++i) {
 			if (args[i].equalsIgnoreCase("keepon")) keepOn=true;
 			else if (args[i].equalsIgnoreCase("lockon")) lockScreenOn=true;
 		}
 		try {
 			new RServer().run();
 		} catch (Throwable e) {
-			Log.info("rserver finished");
 			Log.error(e);
+		} finally {
+			Log.info("rserver finished");
 		}
 	}
 }
