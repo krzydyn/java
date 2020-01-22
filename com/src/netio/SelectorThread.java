@@ -58,7 +58,7 @@ public class SelectorThread {
 		}
 	}
 	final static public class QueueChannel {
-		private QueueChannel(SelectorThread s, SelectableChannel c, ChannelHandler h) {
+		private QueueChannel(SelectorThread s, SelectableChannel c, ServerHandler h) {
 			sel=s;
 			chn=c;
 			hnd=h;
@@ -66,7 +66,7 @@ public class SelectorThread {
 
 		private final SelectorThread sel;
 		private final SelectableChannel chn;
-		public final ChannelHandler hnd;
+		public final ServerHandler hnd;
 		private List<ByteBuffer> writeq;
 		private Object userData;
 		private SocketAddress addr;
@@ -76,6 +76,9 @@ public class SelectorThread {
 		public Object getUserData() {return userData;}
 		public int queueSize() { return writeq==null?0:writeq.size(); }
 
+		public boolean isServer() {
+			return chn instanceof ServerSocketChannel;
+		}
 		public boolean isOpen() {return chn.isOpen();}
 		public boolean isConnected() {return connected;}
 		public void close() {
@@ -91,7 +94,7 @@ public class SelectorThread {
 					try {
 						((Closeable)chn).close();
 						connected=false;
-						hnd.disconnected(this, null);
+						hnd.closed(this, null);
 					} catch (IOException e) {}
 				}
 			}
@@ -151,7 +154,7 @@ public class SelectorThread {
 				disconnect(sk, null);
 		}
 	}
-	public QueueChannel bind(String addr, int port, ChannelHandler d) throws IOException {
+	public QueueChannel bind(String addr, int port, ServerHandler d) throws IOException {
 		Log.debug("binding to %s:%d",addr==null?"*":addr,port);
 		if (d == null) throw new NullPointerException("ChannelHandler is null");
 		ServerSocketChannel chn=selector.provider().openServerSocketChannel();
@@ -169,7 +172,7 @@ public class SelectorThread {
 		return addChannel(chn, SelectionKey.OP_CONNECT|SelectionKey.OP_READ, d);
 	}
 
-	private QueueChannel addChannel(SelectableChannel chn, int ops, ChannelHandler hnd) throws IOException {
+	private QueueChannel addChannel(SelectableChannel chn, int ops, ServerHandler hnd) throws IOException {
 		if (chn.isBlocking()) chn.configureBlocking(false);//must be non blocking !!!
 
 		QueueChannel c = new QueueChannel(this, chn, hnd);
@@ -328,7 +331,8 @@ public class SelectorThread {
 			Log.error(thr, "addr: %s", addr);
 		try {c.close();} catch (IOException e) { Log.error(e);}
 		qchn.connected=false;
-		qchn.hnd.disconnected(qchn, thr);
+		qchn.hnd.closed(qchn, thr);
+
 		if (qchn.writeq != null) {
 			qchn.writeq.clear();
 			qchn.writeq=null;
@@ -340,7 +344,7 @@ public class SelectorThread {
 		QueueChannel qchn = (QueueChannel)sk.attachment();
 		SocketChannel chn = schn.accept();
 		Log.debug("new connection accepted");
-		qchn = addChannel(chn, SelectionKey.OP_READ, qchn.hnd.createFilter());
+		qchn = addChannel(chn, SelectionKey.OP_READ, qchn.hnd.connected(qchn));
 		qchn.connected=true;
 		qchn.addr = chn.getRemoteAddress();
 		qchn.hnd.connected(qchn);
@@ -365,7 +369,7 @@ public class SelectorThread {
 		}
 		((Buffer)b).flip();
 		QueueChannel qchn = (QueueChannel)sk.attachment();
-		qchn.hnd.received(qchn, b);
+		((ChannelHandler)qchn.hnd).received(qchn, b);
 		releasebuf(b);
 	}
 	private void write(SelectionKey sk) throws IOException {

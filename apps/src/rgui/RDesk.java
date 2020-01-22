@@ -95,11 +95,7 @@ public class RDesk extends MainPanel {
 
 	ChannelHandler chnHandler = new ChannelHandler() {
 		@Override
-		public ChannelHandler createFilter() {
-			return null;
-		}
-		@Override
-		public void connected(QueueChannel chn) {
+		public ChannelHandler connected(QueueChannel chn) {
 			Log.debug("connected");
 			errCnt = 0;
 			imgPanel.setImage(null);
@@ -108,9 +104,10 @@ public class RDesk extends MainPanel {
 			sendScreenInfoReq();
 			sendScreenReq();
 			sendRegister();
+			return null;
 		}
 		@Override
-		public void disconnected(QueueChannel chn, Throwable e) {
+		public void closed(QueueChannel chn, Throwable e) {
 			Log.debug("disconnected %s", e==null?"":e.toString());
 			qchn = null;
 			if (e != null) ++errCnt;

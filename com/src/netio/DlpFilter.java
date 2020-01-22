@@ -15,16 +15,12 @@ public class DlpFilter implements ChannelHandler {
 	ByteBuffer wbuf = ByteBuffer.allocate(1+2);
 
 	@Override
-	public ChannelHandler createFilter() {
+	public ChannelHandler connected(QueueChannel qchn) {
 		return null;
 	}
 
 	@Override
-	public void connected(QueueChannel qchn) {
-	}
-
-	@Override
-	public void disconnected(QueueChannel qchn, Throwable e) {
+	public void closed(QueueChannel qchn, Throwable e) {
 	}
 
 	@Override

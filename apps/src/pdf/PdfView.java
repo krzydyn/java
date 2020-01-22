@@ -97,7 +97,7 @@ public class PdfView {
 	static float PAGE_WIDTH = 0;
 	static float PAGE_HEIGHT = 0;
 	static int PAGE_LINES = 100;
-	static int PAGE_COLUMNS = 50;
+	static int PAGE_COLUMNS = 55;
 
 	static int mapToColumn(float x) {
 		return (int)(PAGE_COLUMNS*x/PAGE_WIDTH);

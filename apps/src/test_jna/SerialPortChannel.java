@@ -483,7 +483,7 @@ public class SerialPortChannel implements ByteChannel {
 		if (staticInitDone) {
 			return;
 		}
-		libc = Native.loadLibrary("c", Libc.class);
+		libc = (Libc)Native.loadLibrary("c", Libc.class);
 		staticInitDone = true;
 	}
 

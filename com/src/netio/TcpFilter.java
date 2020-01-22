@@ -14,14 +14,15 @@ public class TcpFilter extends AbstractFilter {
 		super(link);
 	}
 	@Override
-	public void connected(QueueChannel qchn) {
+	public ChannelHandler connected(QueueChannel qchn) {
 		super.connected(qchn);
 		((Buffer)inmsg).clear();
+		return null;
 	}
 
 	@Override
-	public void disconnected(QueueChannel qchn,Throwable e) {
-		super.disconnected(qchn, e);
+	public void closed(QueueChannel qchn,Throwable e) {
+		super.closed(qchn, e);
 		((Buffer)inmsg).clear();
 	}
 

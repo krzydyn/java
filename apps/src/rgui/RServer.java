@@ -83,15 +83,14 @@ public class RServer implements ChannelHandler {
 	}
 
 	@Override
-	public ChannelHandler createFilter() {
-		return new TcpFilter(this);
-	}
-	@Override
-	public void connected(QueueChannel chn) {
+	public ChannelHandler connected(QueueChannel chn) {
 		Log.debug("connected");
+		if (chn.isServer())
+			return new TcpFilter(this);
+		return null;
 	}
 	@Override
-	public void disconnected(QueueChannel chn, Throwable e) {
+	public void closed(QueueChannel chn, Throwable e) {
 		Log.debug("disconnected %s", e==null?"":e.toString());
 		clients.remove(chn);
 	}
@@ -105,7 +104,7 @@ public class RServer implements ChannelHandler {
 	}
 	@Override
 	public void write(QueueChannel qchn, ByteBuffer buf) {
-		qchn.hnd.write(qchn,buf);
+		((ChannelHandler)qchn.hnd).write(qchn,buf);
 	}
 
 	private void processMsg(QueueChannel qchn, ByteBuffer msg) {

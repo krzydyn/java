@@ -52,16 +52,13 @@ public class T_SelectorThread extends UnitTest {
 		t.start();
 		t.connect(HOST, 80, new ChannelHandler(){
 			@Override
-			public ChannelHandler createFilter() {
+			public ChannelHandler connected(QueueChannel chn) {
+				Log.debug("connected!");
+				chn.write(data);
 				return null;
 			}
 			@Override
-			public void connected(QueueChannel chn) {
-				Log.debug("connected!");
-				chn.write(data);
-			}
-			@Override
-			public void disconnected(QueueChannel chnst, Throwable e) {
+			public void closed(QueueChannel chnst, Throwable e) {
 				Log.debug("disconnected!");
 			}
 			@Override

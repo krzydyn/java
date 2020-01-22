@@ -10,17 +10,12 @@ public abstract class AbstractFilter implements ChannelHandler {
 	}
 
 	@Override
-	public ChannelHandler createFilter() {
-		return null;
+	public ChannelHandler connected(QueueChannel qchn) {
+		return link.connected(qchn);
 	}
 
 	@Override
-	public void connected(QueueChannel qchn) {
-		link.connected(qchn);
-	}
-
-	@Override
-	public void disconnected(QueueChannel qchn, Throwable e) {
-		link.disconnected(qchn, e);
+	public void closed(QueueChannel qchn, Throwable e) {
+		link.closed(qchn, e);
 	}
 }
