@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.math.BigInteger;
 import java.security.SecureRandom;
 import java.security.spec.ECPoint;
+
 import text.Text;
 
 /**
@@ -106,7 +107,6 @@ public class SM2 {
 	            int yTilde = type & 1;
 	            int len = encoded.length-1;
 	            BigInteger X = new BigInteger(encoded, 1, len);
-
 	            p = decompressPoint(yTilde, X);
 	            break;
 	        }

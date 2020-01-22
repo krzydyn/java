@@ -79,10 +79,14 @@ public class SelectorThread {
 		public boolean isOpen() {return chn.isOpen();}
 		public boolean isConnected() {return connected;}
 		public void close() {
-			Log.warn("closing QueueChannel");
 			SelectionKey sk = chn.keyFor(sel.selector);
-			if (sk != null) sel.disconnect(sk, null);
+			if (sk != null) {
+				//TODO postpone closing to Selector loop
+				Log.debug("closing QueueChannel");
+				sel.disconnect(sk, null);
+			}
 			else {
+				Log.warn("closing non selector Channel");
 				if (chn instanceof Closeable) {
 					try {
 						((Closeable)chn).close();
@@ -196,6 +200,7 @@ public class SelectorThread {
 			((Buffer)dst).flip();
 			synchronized (qchn) {
 				if (qchn.writeq == null) qchn.writeq = new ArrayList<>();
+				Log.debug("adding buffer to queue");
 				qchn.writeq.add(dst);
 			}
 		}
@@ -292,7 +297,17 @@ public class SelectorThread {
 	}
 
 	private void disconnect(SelectionKey sk, Throwable thr) {
+		writeFlag.remove(sk);
 		QueueChannel qchn = (QueueChannel)sk.attachment();
+		while (running && qchn.writeq.size() > 0) {
+			Log.debug("waiting wrq %d", qchn.writeq.size());
+			try {
+				write(sk);
+			} catch (IOException e) {
+				Log.error(e);
+			}
+		}
+
 		sk.attach(null);  //unref qchn
 		sk.cancel();      //remove from selector
 		if (sk.channel() instanceof ServerSocketChannel) {
@@ -301,7 +316,8 @@ public class SelectorThread {
 		}
 		SocketChannel c = (SocketChannel)sk.channel();
 		SocketAddress addr = qchn.addr;
-		if (thr == null) ;
+		if (thr == null) {
+		}
 		else if (thr instanceof EOFException)
 			Log.error("%s: peer closed connection", addr);
 		else if (thr instanceof ConnectException)

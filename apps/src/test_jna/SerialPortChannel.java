@@ -20,6 +20,7 @@ import java.nio.ByteOrder;
 import java.nio.channels.ByteChannel;
 import java.util.Arrays;
 import java.util.List;
+
 import com.sun.jna.IntegerType;
 import com.sun.jna.Library;
 import com.sun.jna.Memory;
@@ -353,7 +354,7 @@ public class SerialPortChannel implements ByteChannel {
 
 		// termbits.h
 		// static final int VTIME = 5;
-		// static final int VMIN = 6; // for ARM and X86, fÃ¼r MIPS this is 4!
+		// static final int VMIN = 6; // for ARM and X86, fĂ�ÂĽr MIPS this is 4!
 
 		// termios.h
 		static final int IGNBRK = 0000001;
@@ -412,7 +413,7 @@ public class SerialPortChannel implements ByteChannel {
 											// Mips)
 
 		@Override
-		protected List<?> getFieldOrder() {
+		protected List getFieldOrder() {
 			return Arrays.asList("c_iflag", "c_oflag", "c_cflag", "c_lflag", "c_line", "c_cc");
 		}
 	}
@@ -442,7 +443,7 @@ public class SerialPortChannel implements ByteChannel {
 		}
 
 		@Override
-		protected List<?> getFieldOrder() {
+		protected List getFieldOrder() {
 			return Arrays.asList("tv_sec", "tv_usec");
 		}
 	}
@@ -482,7 +483,7 @@ public class SerialPortChannel implements ByteChannel {
 		if (staticInitDone) {
 			return;
 		}
-		libc = (Libc) Native.loadLibrary("c", Libc.class);
+		libc = Native.loadLibrary("c", Libc.class);
 		staticInitDone = true;
 	}
 

@@ -26,7 +26,7 @@ import java.util.Locale;
 
 import text.Ansi;
 
-public class Log {
+public abstract class Log {
 	final private static SimpleDateFormat tmfmt_rel = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
 	final private static SimpleDateFormat tmfmt_tst = new SimpleDateFormat("HH:mm:ss.SSS");
 	final private static String[] LEVEL_COLOR = {Ansi.SGR_RED, Ansi.SGR_YELLOW, Ansi.SGR_BLUE, Ansi.SGR_CYAN, "", Ansi.SGR_GREEN, Ansi.SGR_LIGHTMAGENTA };
@@ -123,10 +123,10 @@ public class Log {
 	final public static void info(Object ...args) {log(4, -1, args);}
 	final public static void notice(Object ...args) {log(5, -1, args);}
 
-	public boolean isLoggable(Level finest) {
+	final public static boolean isLoggable(Level finest) {
 		return false;
 	}
 
-	public void finest(Object ...args) {
+	final public static void finest(Object ...args) {
 	}
 }

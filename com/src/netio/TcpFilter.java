@@ -5,28 +5,23 @@ import java.nio.ByteBuffer;
 
 import netio.SelectorThread.QueueChannel;
 
-public class TcpFilter implements ChannelHandler {
+public class TcpFilter extends AbstractFilter {
 	static final int MAX_MSG_BUF = 16*1024;
-	private final ChannelHandler link;
 	private final ByteBuffer inmsg = ByteBuffer.allocate(MAX_MSG_BUF);
 	private int inlen;
 
 	public TcpFilter(ChannelHandler link) {
-		this.link=link;
-	}
-	@Override
-	public ChannelHandler createFilter() {
-		return null;
+		super(link);
 	}
 	@Override
 	public void connected(QueueChannel qchn) {
-		link.connected(qchn);
+		super.connected(qchn);
 		((Buffer)inmsg).clear();
 	}
 
 	@Override
 	public void disconnected(QueueChannel qchn,Throwable e) {
-		link.disconnected(qchn, e);
+		super.disconnected(qchn, e);
 		((Buffer)inmsg).clear();
 	}
 

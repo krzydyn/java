@@ -1,7 +1,23 @@
 package net.ftp.impl;
 
-import java.net.*;
-import java.io.*;
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.BufferedReader;
+import java.io.Closeable;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.PrintStream;
+import java.io.UnsupportedEncodingException;
+import java.net.Inet6Address;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
+import java.net.Proxy;
+import java.net.ServerSocket;
+import java.net.Socket;
+import java.net.SocketAddress;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.text.DateFormat;
@@ -21,15 +37,13 @@ import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
 
 import crypt.Base64;
-import sys.Log;
 import net.ftp.FtpDirEntry;
 import net.ftp.FtpDirParser;
 import net.ftp.FtpReplyCode;
+import sys.Log;
 
 
 public class FtpClient extends net.ftp.FtpClient {
-
-	private final Log logger = new Log();
 	private static int defaultSoTimeout;
 	private static int defaultConnectTimeout;
 	private Proxy proxy;
@@ -49,7 +63,7 @@ public class FtpClient extends net.ftp.FtpClient {
 	private SSLSocketFactory sslFact;
 	private Socket oldSocket;
 	/** Array of strings (usually 1 entry) for the last reply from the server. */
-	private final Vector<String> serverResponse = new Vector<String>(1);
+	private final Vector<String> serverResponse = new Vector<>(1);
 	/** The last reply code from the ftp daemon. */
 	private FtpReplyCode lastReplyCode = null;
 	/** Welcome message from the server, if any. */
@@ -411,8 +425,8 @@ public class FtpClient extends net.ftp.FtpClient {
 			}
 			response = replyBuf.toString();
 			replyBuf.setLength(0);
-			if (logger.isLoggable(Log.Level.FINEST)) {
-				logger.finest("Server [" + serverAddr + "] --> " + response);
+			if (Log.isLoggable(Log.Level.FINEST)) {
+				Log.finest("Server [%s] --> %s", serverAddr, response);
 			}
 
 			if (response.length() == 0) {
@@ -453,8 +467,8 @@ public class FtpClient extends net.ftp.FtpClient {
 	/** Sends command <i>cmd</i> to the server. */
 	private void sendServer(String cmd) {
 		out.print(cmd);
-		if (logger.isLoggable(Log.Level.FINEST)) {
-			logger.finest("Server [" + serverAddr + "] <-- " + cmd);
+		if (Log.isLoggable(Log.Level.FINEST)) {
+			Log.finest("Server [%s] --> %s", serverAddr, cmd);
 		}
 	}
 
@@ -1546,7 +1560,7 @@ public class FtpClient extends net.ftp.FtpClient {
 		 *   REST STREAM
 		 *  211 END
 		 */
-		ArrayList<String> features = new ArrayList<String>();
+		ArrayList<String> features = new ArrayList<>();
 		issueCommandCheck("FEAT");
 		Vector<String> resp = getResponseStrings();
 		// Note that we start at index 1 to skip the 1st line (211-...)
@@ -2261,11 +2275,29 @@ public class FtpClient extends net.ftp.FtpClient {
 		SimpleDateFormat fmt = new SimpleDateFormat("yyyyMMddHHmmss");
 		issueCommandCheck("MFMT " + fmt.format(dttm) + " " + path);
 		if (lastReplyCode == FtpReplyCode.FILE_STATUS) {
-			String s = getResponseString().substring(4).trim();
-			System.err.println("Resp: "+s+", Requested: "+fmt.format(dttm));
+			String s = getResponseString();
+			int i = s.indexOf('=');
+			if (i < 0) Log.error("No time in response");
+			else {
+				Date stm;
+				try {
+					stm = fmt.parse(s.substring(i+1));
+					long st = dttm.getTime() - stm.getTime();
+					if (st < 0 || st > 999) Log.error("Time not equal %d", stm.getTime() - dttm.getTime());
+				} catch (ParseException e) {
+					Log.error("Can't parse '%s'", s);
+				}
+			}
 		}
 		else {
-			System.err.println("ReplyCode: "+lastReplyCode);
+			Log.error("ReplyCode: "+lastReplyCode);
 		}
+	}
+
+	/*
+	 * MFF UNIX.mode=777;Create=20020718012845; Fred.txt
+	 */
+	public void modifyFacts(String path, String ...facts) throws net.ftp.FtpProtocolException, IOException {
+		issueCommandCheck("MFF " + "???");
 	}
 }

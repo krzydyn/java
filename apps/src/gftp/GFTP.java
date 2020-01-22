@@ -2,6 +2,7 @@ package gftp;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -56,11 +57,12 @@ public class GFTP {
 
 		if (jobs.size() == 0) {
 			exclude.add(Env.expandEnv("~/Work/www/cms/ckeditor"));
-			//jobs.add(new CopyJob("~/Work/www/cms/lib", "/www/cms/lib"));
 			//jobs.add(new CopyJob("~/Work/www", "/www"));
-			//jobs.add(new CopyJob("~/Work/www/templates", "/www/templates"));
+			//jobs.add(new CopyJob("~/Work/www/cms/lib", "/www/cms/lib"));
 			//jobs.add(new CopyJob("~/Work/www/espdb", "/www/espdb"));
-			jobs.add(new CopyJob("~/Work/www/bridge", "/www/bridge"));
+			//jobs.add(new CopyJob("~/Work/www/bridge", "/www/bridge"));
+			jobs.add(new CopyJob("~/Work/www/kysoft", "/www/kysoft"));
+			//jobs.add(new CopyJob("~/Work/www/templates", "/www/templates"));
 			//jobs.add(new CopyJob("~/Work/www/przepisy", "/www/przepisy"));
 			//jobs.add(new CopyJob("~/Work/www/ankieta.php", "/www/"));
 		}
@@ -116,7 +118,14 @@ public class GFTP {
 			candidateFiles.add(f);
 		}
 
-		Iterator<FtpDirEntry> it = ftp.listFiles(linuxPath(dst));
+		Iterator<FtpDirEntry> it = null;
+		try {
+			it = ftp.listFiles(linuxPath(dst));
+		} catch (FileNotFoundException e) {
+			Log.error(e);
+			ftp.makeDirectory(linuxPath(dst));
+			return ;
+		}
 		List<File> filesToAdd = new ArrayList<>();
 		List<File> dirsToGo = new ArrayList<>();
 		while (it.hasNext()) {
@@ -140,13 +149,15 @@ public class GFTP {
 					dirsToGo.add(f);
 					continue;
 				}
+				Date sTime = fde.getLastModified();
 				if (f.length() != fde.getSize()) {
 					filesToAdd.add(f);
 					Log.debug("ADD (sz %d != %d) %s", f.length(), fde.getSize(), d);
 				}
-				else if (f.lastModified() > fde.getLastModified().getTime()) {
+				else if (sTime == null || sTime.getTime() + 1000 < f.lastModified()) {
 					filesToAdd.add(f);
-					Log.debug("ADD (dtm %d) %s", f.lastModified() - fde.getLastModified().getTime(), d);
+					if (sTime == null) Log.debug("ADD (no server tm) %s", d);
+					else Log.debug("ADD (dtm %d sec) %s", (f.lastModified() - sTime.getTime())/1000, d);
 				}
 				else {
 					//Log.info("SAME (%d == %d) %s", f.length(), fde.getSize(), d);
@@ -158,17 +169,23 @@ public class GFTP {
 		for (File f : filesToAdd) {
 			++filesSent;
 			String d = linuxPath(dst)+"/"+f.getName();
-			Log.info("send file '%s' -> '%s'", f.getPath(), d);
-			sendFile(new FileInputStream(f), ftp.putFileStream(d));
-			time.setTime(f.lastModified()+1000);
-			ftp.setLastModified(d, time);
+			if (!f.exists()) {
+				Log.debug("DEL file '%s'", f.getPath(), d);
+				ftp.deleteFile(d);
+			}
+			else {
+				Log.info("send file '%s' -> '%s'", f.getPath(), d);
+				sendFile(new FileInputStream(f), ftp.putFileStream(d));
+				time.setTime(f.lastModified());
+				ftp.setLastModified(d, time);
+			}
 		}
 		for (File f : dirsToGo) {
 			if (f.isFile()) {continue;}
 			syncDirs(f, new File(dst.getPath()+"/"+f.getName()));
 		}
 		for (File f : candidateFiles) {
-			String d = dst.getPath()+"/"+f.getName();
+			String d = linuxPath(dst)+"/"+f.getName();
 			if (f.isDirectory()) {
 				Log.info("NEW DIR %s", d);
 				ftp.makeDirectory(d);

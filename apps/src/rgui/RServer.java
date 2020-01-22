@@ -1,8 +1,5 @@
 package rgui;
 
-import img.Colors;
-import io.IOText;
-
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
@@ -39,14 +36,16 @@ import javax.swing.JFrame;
 import javax.swing.JPasswordField;
 import javax.swing.JTextField;
 
+import img.Colors;
+import io.IOText;
+import netio.ChannelHandler;
+import netio.SelectorThread;
+import netio.SelectorThread.QueueChannel;
+import netio.TcpFilter;
 import sys.Env;
 import sys.Log;
 import sys.XThread;
 import ui.ImagePanel;
-import netio.ChannelHandler;
-import netio.SelectorThread;
-import netio.TcpFilter;
-import netio.SelectorThread.QueueChannel;
 
 public class RServer implements ChannelHandler {
 	private static final int RSERVER_PORT = 9085;
@@ -66,7 +65,7 @@ public class RServer implements ChannelHandler {
 	private JTextField passwdInput;
 	private String passwd;
 
-	private RServer() throws Exception{
+	private RServer() throws Exception {
 		robot = new Robot();
 		robot.setAutoDelay(10); // delay before generating event
 
@@ -109,14 +108,14 @@ public class RServer implements ChannelHandler {
 		qchn.hnd.write(qchn,buf);
 	}
 
-	private void processMsg(QueueChannel chn, ByteBuffer msg) {
+	private void processMsg(QueueChannel qchn, ByteBuffer msg) {
 		short cmd = msg.getShort();
 		int xcode=-1;
 
 		try {
 		if (cmd == RCommand.SCREEN_INFO) {
 			Log.debug("processing SCREEN_INFO");
-			getScreenInfo(chn);
+			getScreenInfo(qchn);
 		}
 		else if (cmd == RCommand.MOUSE_MOVE) {
 			int x=msg.getInt();
@@ -142,11 +141,11 @@ public class RServer implements ChannelHandler {
 			if (w <= 0) w =  (int)screenRect.getMaxX();
 			if (h <= 0) h =  (int)screenRect.getMaxY();
 			Log.debug("processing SCREEN_IMG(0,0,%d,%d", w, h);
-			sendImage(chn, 0, 0, w, h, q);
+			sendImage(qchn, 0, 0, w, h, q);
 		}
 		else if (cmd == RCommand.CLIENT_REGISTER) {
 			Log.debug("processing CLIENT_REGISTER");
-			registerClient(chn);
+			registerClient(qchn);
 		}
 		else if (cmd == RCommand.KEY_PRESS) {
 			int keycode=msg.getInt();
@@ -174,7 +173,7 @@ public class RServer implements ChannelHandler {
 			mouseWheel(rot);
 		}
 		else if (cmd == RCommand.CLIPBOARD_GET) {
-			getClipboard(chn);
+			getClipboard(qchn);
 		}
 		else if (cmd == RCommand.CLIPBOARD_SET) {
 			setClipboard(msg);
