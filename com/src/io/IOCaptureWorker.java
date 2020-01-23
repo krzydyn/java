@@ -19,7 +19,7 @@ public class IOCaptureWorker extends IOForwardWorker {
 					wait();
 				} catch (InterruptedException e) {}
 			}
-			s = wr.getBuffer().toString().trim();
+			s = wr.getBuffer().toString();
 			wr.flush();
 		}
 		return s;

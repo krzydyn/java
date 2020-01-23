@@ -203,7 +203,6 @@ public class SelectorThread {
 			((Buffer)dst).flip();
 			synchronized (qchn) {
 				if (qchn.writeq == null) qchn.writeq = new ArrayList<>();
-				Log.debug("adding buffer to queue");
 				qchn.writeq.add(dst);
 			}
 		}
@@ -302,12 +301,14 @@ public class SelectorThread {
 	private void disconnect(SelectionKey sk, Throwable thr) {
 		writeFlag.remove(sk);
 		QueueChannel qchn = (QueueChannel)sk.attachment();
-		while (running && qchn.writeq.size() > 0) {
-			Log.debug("waiting wrq %d", qchn.writeq.size());
-			try {
-				write(sk);
-			} catch (IOException e) {
-				Log.error(e);
+		if (qchn.writeq != null) {
+			while (running && qchn.writeq.size() > 0) {
+				Log.debug("waiting wrq %d", qchn.writeq.size());
+				try {
+					write(sk);
+				} catch (IOException e) {
+					Log.error(e);
+				}
 			}
 		}
 

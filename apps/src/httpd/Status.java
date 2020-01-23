@@ -22,17 +22,17 @@ public enum Status {
 	;
 
 	public int getCode() { return rc; }
-	public String getMessage() { return msg; }
+	public String getText() { return txt; }
 
 	@Override
 	public String toString() {
-		return String.format("%d %s", rc, msg);
+		return String.format("%d %s", rc, txt);
 	}
 
-	private Status(int rc, String msg) {
+	private Status(int rc, String txt) {
 		this.rc = rc;
-		this.msg = msg;
+		this.txt = txt;
 	}
-	private int rc;
-	private String msg;
+	final private int rc;
+	final private String txt;
 }

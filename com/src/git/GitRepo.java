@@ -38,7 +38,7 @@ public class GitRepo {
 		List<String> a = new ArrayList<>();
 		a.add(git);
 		a.addAll(args);
-		return Env.exec(path, a);
+		return Env.exec(a, path);
 	}
 
 	public String log(List<String> args) throws Exception {
@@ -46,7 +46,7 @@ public class GitRepo {
 		a.add(git);
 		a.add("log");
 		a.addAll(args);
-		return Env.exec(path, a);
+		return Env.exec(a, path);
 	}
 	public String log(String ...args) throws Exception {
 		return log(Arrays.asList(args));
@@ -57,7 +57,7 @@ public class GitRepo {
 		a.add(git);
 		a.add("ls-tree");
 		a.addAll(args);
-		return Env.exec(path, a);
+		return Env.exec(a, path);
 	}
 	public String lstree(String ...args) throws Exception {
 		return lstree(Arrays.asList(args));
@@ -68,7 +68,7 @@ public class GitRepo {
 		a.add(git);
 		a.add("diff");
 		a.addAll(args);
-		return Env.exec(path, a);
+		return Env.exec(a, path);
 	}
 	public String diff(String ...args) throws Exception {
 		return diff(Arrays.asList(args));

@@ -177,12 +177,14 @@ public class Env {
 		return linuxPath(p);
 	}
 
-	static public String exec(File dir, List<String> args) throws IOException {
+	static public String exec(List<String> args, File workdir, Map<String,String> envp) throws IOException {
 		ProcessBuilder pb = new ProcessBuilder(args);
-		if (dir!=null) pb.directory(dir);
+		if (workdir!=null) pb.directory(workdir);
 		//pb.redirectErrorStream(true);
 		//pb.redirectError(Redirect.DISCARD);
-		//pb.environment(envp)
+		//pb.environment((String[]) envp.toArray());
+		if (envp != null)
+			pb.environment().putAll(envp);
 		Process child = pb.start();
 
 		OutputStream out = child.getOutputStream();
@@ -215,12 +217,16 @@ public class Env {
 		return in.getOutput();
 	}
 
+	static public String exec(List<String> args, File workdir) throws IOException {
+		return exec(args, workdir, null);
+	}
+
 	static public String exec(File dir, String ...args) throws IOException {
-		return exec(dir,Arrays.asList(args));
+		return exec(Arrays.asList(args), dir, null);
 	}
 
 	static public String exec(String ...args) throws IOException {
-		return exec(null,Arrays.asList(args));
+		return exec(Arrays.asList(args), null, null);
 	}
 
 	static private ClipboardOwner manClipboard = new ClipboardOwner() {

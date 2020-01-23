@@ -3,6 +3,9 @@ package httpd;
 import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import io.IOText;
 import netio.ChannelHandler;
@@ -12,6 +15,12 @@ import sys.Log;
 
 public class HttpClientHandler implements ChannelHandler {
 	private static final String CRLF = "\r\n";
+
+	private static Map<String,String> envp = new HashMap<>();
+	static {
+		envp.put("HTTP_USER_AGENT", "HttpdServer");
+		envp.put("REQUEST_URI", "");
+	}
 
 	public HttpClientHandler() {
 	}
@@ -67,7 +76,9 @@ public class HttpClientHandler implements ChannelHandler {
 			}
 			else if (req.endsWith(".php")) {
 				try {
-					body = Env.exec(new File(HttpServer.serverRoot), "php", HttpServer.serverRoot + req);
+					//https://stackoverflow.com/questions/3258634/php-how-to-send-http-response-code
+					List<String> args = List.of("php-cgi", HttpServer.serverRoot + req);
+					body = Env.exec(args, new File(HttpServer.serverRoot), envp);
 					status = Status.OK;
 				} catch (IOException e) {
 					Log.error(e.getMessage());
@@ -106,12 +117,21 @@ public class HttpClientHandler implements ChannelHandler {
 		//    * generic header | ... CRLF
 		// CRLF
 
-		String str = "HTTP/1.1 " + status + CRLF
-				+ "Content-Type: text/html;charset=\"utf-8\"" + CRLF
-				+ "Server: HttpServer" + CRLF
-				+  CRLF
-				// message body
-				+ body.toString();
+		Log.debug("body: '%s'", body);
+		String str = body.toString();
+		if (str.startsWith("Status:")) {
+			str = "HTTP/1.1" + str.substring(7) + CRLF
+					+ CRLF;
+		}
+		else {
+			str = "HTTP/1.1 " + status + CRLF
+					+ "Content-Type: text/html;charset=\"utf-8\"" + CRLF
+					+ "Server: HttpServer" + CRLF
+					+  CRLF
+					// message body
+					+ str;
+		}
+
 		write(qchn, ByteBuffer.wrap(str.getBytes()));
 	}
 }
