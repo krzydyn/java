@@ -3,6 +3,7 @@ package httpd;
 import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -37,58 +38,95 @@ public class HttpClientHandler implements ChannelHandler {
 	}
 
 	@Override
+	public void write(QueueChannel qchn, ByteBuffer msg) {
+		String s = new String(msg.array(), msg.position(), msg.remaining(), Env.UTF8_Charset);
+		if (s.length() > 300) s = s.substring(0,300);
+		Log.debug("Write: %s",  s);
+		qchn.write(msg);
+	}
+
+	@Override
 	public void received(QueueChannel qchn, ByteBuffer msg) {
-		String s = new String(msg.array(),msg.position(),msg.remaining(),Env.UTF8_Charset);
+		String s = new String(msg.array(), msg.position(), msg.remaining(), Env.UTF8_Charset);
 		Log.debug("received: %s", s);
 		processMsg(qchn, s);
 		qchn.close();
 	}
 
-	@Override
-	public void write(QueueChannel qchn, ByteBuffer msg) {
-		Log.debug("Write: %s",  new String(msg.array(),msg.position(),msg.remaining(),Env.UTF8_Charset));
-		qchn.write(msg);
-	}
-
 	private void processMsg(QueueChannel qchn, String msg) {
-		String method = null;
-		String req = null;
+		List<String> requHeader = new ArrayList<>();
+
+		requHeader.clear();
 		for (String s : msg.split("\n")) {
 			s = s.trim();
-			if (s.startsWith("GET ")) {
-				method = "GET";
-				int ei = s.indexOf(' ', 4);
-				req = s.substring(4, ei);
-				if (req.equals("/")) req = "/index.html";
-			}
+			if (s.isEmpty()) break;
+			requHeader.add(s);
 		}
 
 		Status status = null;
+		if (requHeader.isEmpty()) {
+			Log.error("empty request");
+			status = Status.BAD_REQUEST;
+		}
+
+		String method;
+		String resource;
+		String httpver;
+
+		String[] n = requHeader.get(0).split(" ", 3);
+		method = n[0];
+		resource = n[1];
+		httpver = n[2];
+
+		envp.put("REQUEST_URI", resource);
+		resource = "/index.php";
+
 		CharSequence body = null;
 		if (method == null) {
 			Log.error("no method given");
 			status = Status.BAD_REQUEST;
 		}
 		else if (method.equals("GET")) {
-			if (req == null) {
-				Log.debug("no method given");
-				status = Status.BAD_REQUEST;
-			}
-			else if (req.endsWith(".php")) {
+			envp.put("REDIRECT_STATUS", "CGI");
+			envp.put("REQUEST_METHOD", method);
+			envp.put("SCRIPT_FILENAME", HttpServer.serverRoot + resource);
+			//envp.put("CONTENT_TYPE", "");
+			envp.put("CONTENT_LENGTH", "0");
+			if (resource.endsWith(".php")) {
 				try {
 					//https://stackoverflow.com/questions/3258634/php-how-to-send-http-response-code
-					List<String> args = List.of("php-cgi", HttpServer.serverRoot + req);
-					body = Env.exec(args, new File(HttpServer.serverRoot), envp);
-					status = Status.OK;
+					List<String> args = List.of("php-cgi", "-f", HttpServer.serverRoot + resource);
+					String result = Env.exec(args, new File(HttpServer.serverRoot), envp);
+
+					if (result.startsWith("Status:")) {
+
+					}
+					else {
+						String str = httpver + " " + Status.OK + CRLF + result;
+						write(qchn, ByteBuffer.wrap(str.getBytes()));
+						return ;
+					}
+
+					//read status from script statusline
+					int idx = result.indexOf("\n");
+					if (idx > 0) {
+						String sln = result.substring(0, idx + 1);
+						if (sln.startsWith("Status: ")) {
+							status = Status.getStatus(Integer.parseInt(sln.substring(8, 11)));
+							if (status == Status.OK)
+								body = result.substring(idx);
+						}
+					}
 				} catch (IOException e) {
 					Log.error(e.getMessage());
 					status = Status.FILE_NOT_FOUND;
+					body = e.getMessage();
 				}
 			}
 			else {
-				Log.debug("Reading %s", req);
+				Log.debug("Reading %s", resource);
 				try {
-					body = IOText.load(new File(HttpServer.serverRoot, req));
+					body = IOText.load(new File(HttpServer.serverRoot, resource));
 					status = Status.OK;
 				} catch (IOException e) {
 					Log.error(e.getMessage());
@@ -118,19 +156,12 @@ public class HttpClientHandler implements ChannelHandler {
 		// CRLF
 
 		Log.debug("body: '%s'", body);
-		String str = body.toString();
-		if (str.startsWith("Status:")) {
-			str = "HTTP/1.1" + str.substring(7) + CRLF
-					+ CRLF;
-		}
-		else {
-			str = "HTTP/1.1 " + status + CRLF
-					+ "Content-Type: text/html;charset=\"utf-8\"" + CRLF
-					+ "Server: HttpServer" + CRLF
-					+  CRLF
-					// message body
-					+ str;
-		}
+		String str = httpver + " " + status + CRLF
+				+ "Content-Type: text/html;charset=\"utf-8\"" + CRLF
+				+ "Server: HttpServer" + CRLF
+				+  CRLF
+				// message body
+				+ body;
 
 		write(qchn, ByteBuffer.wrap(str.getBytes()));
 	}

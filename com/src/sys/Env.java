@@ -183,6 +183,8 @@ public class Env {
 		//pb.redirectErrorStream(true);
 		//pb.redirectError(Redirect.DISCARD);
 		//pb.environment((String[]) envp.toArray());
+
+		Log.debug("exec %s", args.toString());
 		if (envp != null)
 			pb.environment().putAll(envp);
 		Process child = pb.start();

@@ -35,4 +35,11 @@ public enum Status {
 	}
 	final private int rc;
 	final private String txt;
+
+	static Status getStatus(int rc) {
+		for (Status s : Status.values()) {
+			if (s.rc == rc) return s;
+		}
+		return BAD_REQUEST;
+	}
 }
