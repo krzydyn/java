@@ -87,7 +87,7 @@ public class HttpClientHandler implements ChannelHandler {
 			status = Status.BAD_REQUEST;
 		}
 		else if (method.equals("GET")) {
-			envp.put("REDIRECT_STATUS", "CGI");
+			envp.put("REDIRECT_STATUS", "200"); // mandatory
 			envp.put("REQUEST_METHOD", method);
 			envp.put("SCRIPT_FILENAME", HttpServer.serverRoot + resource);
 			//envp.put("CONTENT_TYPE", "");
@@ -99,7 +99,14 @@ public class HttpClientHandler implements ChannelHandler {
 					String result = Env.exec(args, new File(HttpServer.serverRoot), envp);
 
 					if (result.startsWith("Status:")) {
-
+						//read status from script statusline
+						int idx = result.indexOf("\n");
+						if (idx > 0) {
+							String sln = result.substring(0, idx + 1);
+							status = Status.getStatus(Integer.parseInt(sln.substring(8, 11)));
+							if (status == Status.OK)
+								body = result.substring(idx);
+						}
 					}
 					else {
 						String str = httpver + " " + Status.OK + CRLF + result;
@@ -107,16 +114,6 @@ public class HttpClientHandler implements ChannelHandler {
 						return ;
 					}
 
-					//read status from script statusline
-					int idx = result.indexOf("\n");
-					if (idx > 0) {
-						String sln = result.substring(0, idx + 1);
-						if (sln.startsWith("Status: ")) {
-							status = Status.getStatus(Integer.parseInt(sln.substring(8, 11)));
-							if (status == Status.OK)
-								body = result.substring(idx);
-						}
-					}
 				} catch (IOException e) {
 					Log.error(e.getMessage());
 					status = Status.FILE_NOT_FOUND;
