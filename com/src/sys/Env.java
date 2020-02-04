@@ -128,8 +128,7 @@ public class Env {
 			File f = new File(c.getProtectionDomain().getCodeSource().getLocation().toURI());
 			return f.getParentFile().getCanonicalPath();
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			Log.error(e);
 		}
 		return null;
 	}
@@ -185,8 +184,10 @@ public class Env {
 		//pb.environment((String[]) envp.toArray());
 
 		Log.debug("exec %s", args.toString());
-		if (envp != null)
+		if (envp != null) {
+			pb.environment().clear();
 			pb.environment().putAll(envp);
+		}
 		Process child = pb.start();
 
 		OutputStream out = child.getOutputStream();

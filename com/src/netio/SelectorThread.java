@@ -40,6 +40,7 @@ import java.util.List;
 import sys.Log;
 
 public class SelectorThread {
+	private Thread selThread = null;
 	private final Selector selector;
 	private static final int RWBUFLEN=8*1024; //by default it is 8kB
 	private final List<ByteBuffer> bpool=new ArrayList<>();
@@ -110,6 +111,9 @@ public class SelectorThread {
 		public void write(ByteBuffer b) {
 			write(b, false);
 		}
+		public SocketAddress getAddress() {
+			return addr;
+		}
 	};
 
 	//private final Map<Channel,ChannelState> chns=new HashMap<Channel, ChannelState>();
@@ -123,7 +127,7 @@ public class SelectorThread {
 	}
 
 	public void start() {
-		new Thread("Selector") {
+		selThread = new Thread("Selector") {
 			@Override
 			public void run() {
 				running=true;
@@ -134,12 +138,14 @@ public class SelectorThread {
 				}
 				finally {
 					running=false;
+					selThread = null;
 					if (stopReq) Log.notice("selector loop finished, sockets = %d",selector.keys().size());
 					else Log.warn("selector loop finished, sockets = %d",selector.keys().size());
 					closeAll();
 				}
 			}
-		}.start();
+		};
+		selThread.start();
 	}
 	public void stop() {
 		stopReq=true;
@@ -179,7 +185,7 @@ public class SelectorThread {
 		synchronized (addChannelList) {
 			addChannelList.add(new AddChannel(ops, c));
 		}
-		if (running) {
+		if (running && selThread != Thread.currentThread()) {
 			selector.wakeup();
 			Thread.yield();
 		}
@@ -215,14 +221,14 @@ public class SelectorThread {
 	final private ByteBuffer getbuf() {
 		ByteBuffer b=null;
 		synchronized (bpool) {
-			int s=bpool.size();
+			int s = bpool.size();
 			if (s > 0) {
 				b=bpool.remove(s-1);
 				((Buffer)b).clear();//pos=0; limit=capa
 			}
 		}
-		if (b==null){
-			b=ByteBuffer.allocate(RWBUFLEN);
+		if (b == null){
+			b = ByteBuffer.allocate(RWBUFLEN);
 			if (b==null) throw new NullPointerException("ByteBuffer.allocate");
 			//Log.debug("created buf[%d]", bufcnt);
 		}
@@ -244,7 +250,6 @@ public class SelectorThread {
 					chn.register(selector, c.ops, c.chn);
 					if ((c.ops&SelectionKey.OP_CONNECT)!=0)
 						c.chn.addr = ((SocketChannel)chn).getRemoteAddress();
-					Log.debug("channel registered");
 				}
 				synchronized (addChannelList) {
 					if (addChannelList.size() == l) addChannelList.clear();
@@ -344,7 +349,7 @@ public class SelectorThread {
 		ServerSocketChannel schn = (ServerSocketChannel)sk.channel();
 		QueueChannel qchn = (QueueChannel)sk.attachment();
 		SocketChannel chn = schn.accept();
-		Log.debug("new connection accepted");
+		Log.debug("new connection accepted from %s", chn.getRemoteAddress());
 		qchn = addChannel(chn, SelectionKey.OP_READ, qchn.hnd.connected(qchn));
 		qchn.connected=true;
 		qchn.addr = chn.getRemoteAddress();
@@ -363,7 +368,7 @@ public class SelectorThread {
 		qchn.hnd.connected(qchn);
 	}
 	private void read(SelectionKey sk) throws IOException {
-		ReadableByteChannel c=(ReadableByteChannel)sk.channel();
+		ReadableByteChannel c = (ReadableByteChannel)sk.channel();
 		ByteBuffer b=getbuf();
 		if (c.read(b) == -1) {
 			throw new EOFException("End of stream");
@@ -374,23 +379,30 @@ public class SelectorThread {
 		releasebuf(b);
 	}
 	private void write(SelectionKey sk) throws IOException {
-		WritableByteChannel c=(WritableByteChannel)sk.channel();
+		WritableByteChannel c = (WritableByteChannel)sk.channel();
 		QueueChannel qchn = (QueueChannel)sk.attachment();
 		ByteBuffer b;
-		synchronized (qchn) {
-			if (qchn.writeq.size()==0) return ;
-			b = qchn.writeq.get(0);
+		int l = qchn.writeq.size();
+		for (int i = 0; i < l; ++i) {
+			b = qchn.writeq.get(i);
 			int r = c.write(b);
-			if (b.remaining() == 0) {
-				releasebuf(b);
-				qchn.writeq.remove(0);
-				if (qchn.writeq.isEmpty()) {
-					int ops = sk.interestOps() & ~SelectionKey.OP_WRITE;
-					sk.interestOps(ops);
-				}
-			}
-			else {
+			if (b.remaining() != 0) {
 				Log.error("Not all bytes written, r=%d %d/%d", r, b.position(), b.limit());
+				l = i;
+				break;
+			}
+			releasebuf(b);
+		}
+		synchronized (qchn) {
+			if (l == qchn.writeq.size()) {
+				qchn.writeq.clear();
+				int ops = sk.interestOps() & ~SelectionKey.OP_WRITE;
+				sk.interestOps(ops);
+				return ;
+			}
+			while (l > 0) {
+				qchn.writeq.remove(0);
+				--l;
 			}
 		}
 	}

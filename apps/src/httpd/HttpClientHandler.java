@@ -28,20 +28,20 @@ public class HttpClientHandler implements ChannelHandler {
 
 	@Override
 	public ChannelHandler connected(QueueChannel qchn) {
-		Log.debug("connected");
+		//Log.debug("connected %s", qchn.getAddress());
 		return null;
 	}
 
 	@Override
 	public void closed(QueueChannel qchn, Throwable e) {
-		Log.debug("disconnected");
+		//Log.debug("disconnected %s", qchn.getAddress());
 	}
 
 	@Override
 	public void write(QueueChannel qchn, ByteBuffer msg) {
-		String s = new String(msg.array(), msg.position(), msg.remaining(), Env.UTF8_Charset);
-		if (s.length() > 300) s = s.substring(0,300);
-		Log.debug("Write: %s",  s);
+		//String s = new String(msg.array(), msg.position(), msg.remaining(), Env.UTF8_Charset);
+		//if (s.length() > 300) s = s.substring(0,300);
+		//Log.debug("Write: %s",  s);
 		qchn.write(msg);
 	}
 
@@ -152,7 +152,7 @@ public class HttpClientHandler implements ChannelHandler {
 		//    * generic header | ... CRLF
 		// CRLF
 
-		Log.debug("body: '%s'", body);
+		//Log.debug("body: '%s'", body);
 		String str = httpver + " " + status + CRLF
 				+ "Content-Type: text/html;charset=\"utf-8\"" + CRLF
 				+ "Server: HttpServer" + CRLF

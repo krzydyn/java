@@ -1,7 +1,5 @@
 package httpd;
 
-import java.util.List;
-
 import netio.ChannelHandler;
 import netio.SelectorThread;
 import netio.SelectorThread.QueueChannel;
@@ -16,7 +14,6 @@ public class HttpServer implements ServerHandler {
 
 
 	private final SelectorThread selector;
-	private List<String> reqFeatures;
 
 	public HttpServer() throws Exception {
 		selector = new SelectorThread();
