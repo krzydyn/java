@@ -24,7 +24,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-
 import algebra.Maths;
 
 public class Text {
@@ -166,6 +165,36 @@ public class Text {
 	public static String repeat(CharSequence s, int n) {
 		StringBuilder b=new StringBuilder(s.length()*n);
 		return repeat(b, s, n).toString();
+	}
+
+	public static String escape(CharSequence str) {
+		String s = str.toString();
+		if (s.indexOf('\\') < 0) return s;
+		return s.replace("\\", "\\\\");
+	}
+
+	public static String unescape(CharSequence str) {
+		StringBuilder b = null;
+		int i;
+		for (i = 0; i < str.length(); ++i) {
+			char c = str.charAt(i);
+			if (c == '\\') {
+				b = new StringBuilder(str.length()+2);
+				b.append(str.subSequence(0, i));
+				break;
+			}
+		}
+		if (b == null) return str.toString();
+
+		for (; i < str.length(); ++i) {
+			char c = str.charAt(i);
+			if (c == '\\') {
+				if (str.charAt(i+1) == '\\')
+					{ b.append(c); ++i; }
+			}
+			else b.append(c);
+		}
+		return b.toString();
 	}
 
 	public static StringBuilder hex(StringBuilder b, byte[] s, int off, int len) {

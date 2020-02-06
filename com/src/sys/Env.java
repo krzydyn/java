@@ -53,6 +53,8 @@ import text.Text;
 public class Env {
 	final public static Charset UTF8_Charset = Charset.forName("UTF-8");
 
+	final public static String PATH_SEPARATOR = ";";
+
 	static public final String country() { return System.getProperty("user.country"); }
 	static public final String language() { return System.getProperty("user.language"); }
 	static public final String launcher() { return System.getProperty("sun.java.launcher"); }
@@ -304,6 +306,48 @@ public class Env {
 			}
 		}
 		return dirs;
+	}
+
+	/**
+	 * Split paths separated with ';' (; can be escaped as \; or put in single quotation)
+	 * @param paths
+	 * @return
+	 */
+	public static List<String> splitPaths(String paths) {
+		final char escChar = '\\';
+		final char pathSep = ';';
+		final char quoteChar = '\'';
+
+		List<String> l = new ArrayList<>();
+		StringBuilder b = new StringBuilder();
+		boolean esc = false;
+		boolean quote = false;
+		for (int i = 0; i < paths.length(); ++i) {
+			char c = paths.charAt(i);
+			if (esc) {
+				esc = false;
+				b.append(c);
+			}
+			else if (quote) {
+				if (c == escChar && paths.charAt(i+1) == quoteChar) esc = true;
+				else if (c == quoteChar) quote = false;
+				else b.append(c);
+			}
+			else if (c == quoteChar) {
+				quote = true;
+			}
+			else if (c == escChar) {
+				esc = true;
+			}
+			else if (c == pathSep) {
+				l.add(b.toString());
+				b.setLength(0);
+			}
+			else b.append(c);
+		}
+		if (b.length() > 0) l.add(b.toString());
+
+		return l;
 	}
 
 	static public void close(Closeable s) {

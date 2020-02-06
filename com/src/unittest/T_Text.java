@@ -21,7 +21,10 @@ package unittest;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.List;
+
 import io.IOText;
+import sys.Env;
 import sys.Log;
 import sys.UnitTest;
 import text.Text;
@@ -60,5 +63,18 @@ public class T_Text extends UnitTest {
 			Log.info("load : '%s'", data2);
 		}
 		f.delete();
+	}
+
+	static void splitPath() {
+		List<String> paths = Env.splitPaths("p1;p2;p3");
+		Log.info("paths: %s", paths);
+		paths = Env.splitPaths("p1;p2;p3;");
+		Log.info("paths: %s", paths);
+		paths = Env.splitPaths("p1;p2;p\\;3;");
+		Log.info("paths: %s", paths);
+		paths = Env.splitPaths("p1;p2;p3|:;");
+		Log.info("paths: %s", paths);
+		paths = Env.splitPaths("p1;p2;'p\\';3'");
+		Log.info("paths: %s", paths);
 	}
 }
