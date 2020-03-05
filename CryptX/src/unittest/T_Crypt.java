@@ -37,7 +37,6 @@ import crypt.Prime;
 import crypt.RSA;
 import crypt.SuperHash;
 import sys.Log;
-import sys.UnitTest;
 import text.Text;
 
 public class T_Crypt extends UnitTest {

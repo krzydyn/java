@@ -26,7 +26,6 @@ import java.util.List;
 import io.IOText;
 import sys.Env;
 import sys.Log;
-import sys.UnitTest;
 import text.Text;
 
 public class T_Text extends UnitTest {

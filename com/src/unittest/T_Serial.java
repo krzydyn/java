@@ -26,7 +26,6 @@ import java.util.List;
 import io.Serial;
 import io.SerialChannel;
 import sys.Log;
-import sys.UnitTest;
 import text.Text;
 
 public class T_Serial extends UnitTest {

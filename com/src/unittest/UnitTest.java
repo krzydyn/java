@@ -16,7 +16,7 @@
  *  limitations under the License
  */
 
-package sys;
+package unittest;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -31,6 +31,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
+import sys.Log;
 import text.Text;
 import time.LapTime;
 
@@ -93,6 +94,7 @@ public class UnitTest {
 				try {
 					Class<?> c = cl.loadClass(unit);;
 					if (UnitTest.class.isAssignableFrom(c)) {
+						Log.debug("add TC: %s", unit);
 						a.add(unit);
 					}
 					else {
@@ -142,6 +144,7 @@ public class UnitTest {
 				current.elapsed = -1;
 
 				time.update(0);
+				time.nextLap();
 				Log.info("  ** Testcase: %s start", m.getName());
 				try {
 					++current.checks;
@@ -151,7 +154,7 @@ public class UnitTest {
 					if (e.getCause() != null) e=e.getCause();
 					Log.error(-1,e,"Exception in %s.%s", unit, m.getName());
 				} finally {
-					time.nextLap();
+					time.update(0);
 					current.elapsed = time.getTime();
 					Log.info("  ** Testcase: %s end in %.3f sec", m.getName(), current.elapsed/1000.0);
 					current=null;

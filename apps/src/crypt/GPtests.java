@@ -15,8 +15,8 @@ import crypt.tef.TEF;
 import crypt.tef.TEF_Types;
 import sys.Env;
 import sys.Log;
-import sys.UnitTest;
 import text.Text;
+import unittest.UnitTest;
 
 public class GPtests extends UnitTest implements TEF_Types {
 

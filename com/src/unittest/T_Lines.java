@@ -27,7 +27,6 @@ import java.awt.geom.Point2D;
 
 import algebra.Maths;
 import sys.Log;
-import sys.UnitTest;
 
 public class T_Lines extends UnitTest {
 

@@ -23,7 +23,6 @@ import java.io.PrintStream;
 
 import sys.Log;
 import sys.Sound;
-import sys.UnitTest;
 import text.Ansi;
 
 public class T_System extends UnitTest {

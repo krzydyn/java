@@ -22,7 +22,6 @@ import java.nio.ByteBuffer;
 
 import sys.Env;
 import sys.Log;
-import sys.UnitTest;
 import netio.ChannelHandler;
 import netio.SelectorThread;
 import netio.SelectorThread.QueueChannel;
@@ -42,7 +41,7 @@ public class T_SelectorThread extends UnitTest {
 	static void connectTCP() throws Exception {
 		final byte[] CRLF = "\r\n".getBytes();
 		final ByteBuffer data = ByteBuffer.allocate(100*1024);
-		data.put("GET /?gfe_rd=cr&ei=uUfgVvPuEeza8Afh9IbIDQ&gws_rd=cr HTTP/1.1".getBytes());
+		data.put("GET / HTTP/1.1".getBytes());
 		data.put(CRLF);
 		data.put(("Host: " + HOST).getBytes());
 		data.put(CRLF); data.put(CRLF);
@@ -64,7 +63,8 @@ public class T_SelectorThread extends UnitTest {
 			@Override
 			public void received(QueueChannel chn, ByteBuffer buf) {
 				String rep = new String(buf.array(), buf.position(), buf.limit(), Env.UTF8_Charset);
-				Log.debug("data[%d]:  %s",rep.length(), rep.length()>20?rep.substring(0, 20)+"...":rep);
+				int len = rep.length();
+				Log.debug("data[%d]:  %s",rep.length(), len>40?rep.substring(0, 10)+"..."+rep.substring(len-20, len):rep);
 			}
 			@Override
 			public void write(QueueChannel qchn, ByteBuffer buf) {

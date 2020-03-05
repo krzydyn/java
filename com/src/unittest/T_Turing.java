@@ -20,7 +20,6 @@ package unittest;
 
 import algebra.TuringMach;
 import sys.Log;
-import sys.UnitTest;
 
 public class T_Turing extends UnitTest {
 	static void duplicateSymbols() {

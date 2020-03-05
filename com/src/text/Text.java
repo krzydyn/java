@@ -167,13 +167,13 @@ public class Text {
 		return repeat(b, s, n).toString();
 	}
 
-	public static String escape(CharSequence str) {
+	public static String escapeBackSlash(CharSequence str) {
 		String s = str.toString();
 		if (s.indexOf('\\') < 0) return s;
 		return s.replace("\\", "\\\\");
 	}
 
-	public static String unescape(CharSequence str) {
+	public static String unescapeBackSlash(CharSequence str) {
 		StringBuilder b = null;
 		int i;
 		for (i = 0; i < str.length(); ++i) {

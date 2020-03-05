@@ -3,7 +3,6 @@ package unittest;
 import java.util.Random;
 
 import sys.Log;
-import sys.UnitTest;
 import graphs.BinTree;
 import graphs.Graph;
 

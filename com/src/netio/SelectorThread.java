@@ -39,12 +39,32 @@ import java.util.List;
 
 import sys.Log;
 
+/*
+ * Desing is (not yet):
+ *
+ * SelectorThread <-> ByteBuffer Stream <-> Worker
+ */
 public class SelectorThread {
-	private Thread selThread = null;
+	private Thread selThread = 	new Thread("Selector") {
+		@Override
+		public void run() {
+			Log.notice("selector loop started");
+			try { loop(); }
+			catch (Throwable e) {
+				Log.error(e);
+			}
+			finally {
+				selThread = null;
+				if (stopReq) Log.notice("selector loop finished, sockets = %d",selector.keys().size());
+				else Log.warn("selector loop finished, sockets = %d",selector.keys().size());
+				closeAll();
+			}
+		}
+	};
+
 	private final Selector selector;
 	private static final int RWBUFLEN=8*1024; //by default it is 8kB
 	private final List<ByteBuffer> bpool=new ArrayList<>();
-	private boolean running = false;
 	private boolean stopReq = false;
 
 	private final List<SelectionKey> writeFlag = new ArrayList<>();
@@ -123,28 +143,10 @@ public class SelectorThread {
 	}
 
 	public boolean isRunning() {
-		return running;
+		return selThread.isAlive();
 	}
 
 	public void start() {
-		selThread = new Thread("Selector") {
-			@Override
-			public void run() {
-				running=true;
-				Log.notice("selector loop started");
-				try { loop(); }
-				catch (Throwable e) {
-					Log.error(e);
-				}
-				finally {
-					running=false;
-					selThread = null;
-					if (stopReq) Log.notice("selector loop finished, sockets = %d",selector.keys().size());
-					else Log.warn("selector loop finished, sockets = %d",selector.keys().size());
-					closeAll();
-				}
-			}
-		};
 		selThread.start();
 	}
 	public void stop() {
@@ -185,7 +187,7 @@ public class SelectorThread {
 		synchronized (addChannelList) {
 			addChannelList.add(new AddChannel(ops, c));
 		}
-		if (running && selThread != Thread.currentThread()) {
+		if (selThread != Thread.currentThread()) {
 			selector.wakeup();
 			Thread.yield();
 		}
@@ -215,7 +217,7 @@ public class SelectorThread {
 		synchronized (writeFlag) {
 			writeFlag.add(sk);
 		}
-		if (running) selector.wakeup();
+		selector.wakeup();
 	}
 
 	final private ByteBuffer getbuf() {
@@ -307,7 +309,7 @@ public class SelectorThread {
 		writeFlag.remove(sk);
 		QueueChannel qchn = (QueueChannel)sk.attachment();
 		if (qchn.writeq != null) {
-			while (running && qchn.writeq.size() > 0) {
+			while (qchn.writeq.size() > 0) {
 				Log.debug("waiting wrq %d", qchn.writeq.size());
 				try {
 					write(sk);

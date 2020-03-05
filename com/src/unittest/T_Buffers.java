@@ -3,7 +3,6 @@ package unittest;
 import concur.RingByteBuffer;
 import concur.RingArray;
 import sys.Log;
-import sys.UnitTest;
 import text.Text;
 
 public class T_Buffers extends UnitTest {

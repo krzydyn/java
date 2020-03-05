@@ -38,7 +38,6 @@ import algebra.Permutation;
 import algebra.SortedArray;
 import algebra.Sorting;
 import sys.Log;
-import sys.UnitTest;
 import text.Text;
 
 public class T_Algebra extends UnitTest {
