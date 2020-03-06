@@ -27,6 +27,7 @@ public class SelectorThread2 {
 		void closed(SelSocket sock);
 	}
 
+	private int sockCnt = 0;
 	private final Selector selector;
 	private final List<ByteBuffer> bpool=new ArrayList<>();
 	private final Thread selThread = 	new Thread("Selector") {
@@ -44,8 +45,14 @@ public class SelectorThread2 {
 	};
 	private boolean stopReq = true;
 
-	public SelectorThread2() throws IOException {
-		selector = Selector.open();
+	public SelectorThread2() {
+		Selector s = null;
+		try {
+			s = Selector.open();
+		} catch (IOException e) {
+			Log.error(e);
+		}
+		selector = s;
 	}
 
 	public boolean isRunning() {
@@ -102,7 +109,7 @@ public class SelectorThread2 {
 		chn.connect(new InetSocketAddress(addr, port));
 
 		SelectionKey sk = registerSocket(chn, SelectionKey.OP_READ|SelectionKey.OP_CONNECT);
-		SelSocket sock = new SelSocket(this, sk);
+		SelSocket sock = new SelSocket(this, sk, "sock"+sockCnt+":"); ++sockCnt;
 		sk.attach(sock);
 
 		return sock;
@@ -115,7 +122,8 @@ public class SelectorThread2 {
 
 	void wakeup(SelectionKey sk) {
 		SelSocket sock = (SelSocket)sk.attachment();
-		int ops = sk.interestOps() | SelectionKey.OP_READ;
+		int ops = sk.interestOps();
+		if (!sock.rdqFull()) ops |= SelectionKey.OP_READ;
 		if (sock.wrqSize() > 0) ops |= SelectionKey.OP_WRITE;
 		sk.interestOps(ops);
 		selector.wakeup();
@@ -163,7 +171,7 @@ public class SelectorThread2 {
 		Log.debug("new connection accepted from %s", chn.getRemoteAddress());
 
 		SelectionKey nsk = registerSocket(chn, SelectionKey.OP_READ);
-		SelSocket sock = new SelSocket(this, nsk);
+		SelSocket sock = new SelSocket(this, nsk, "sock"+sockCnt + ":"); ++sockCnt;
 		nsk.attach(sock);
 
 		// TODO move to worker thread
@@ -196,8 +204,11 @@ public class SelectorThread2 {
 			return ;
 		}
 		((Buffer)b).flip();
-		Log.debug("received %d bytes", b.remaining());
-		sock.received(b);
+		Log.debug("%s received %d bytes", sock.getName(), b.remaining());
+		if (!sock.received(b)) {
+			int ops = sk.interestOps() & ~SelectionKey.OP_READ;
+			sk.interestOps(ops);
+		}
 	}
 
 	private void doWrite(SelectionKey sk) throws IOException {
@@ -209,7 +220,7 @@ public class SelectorThread2 {
 		int len = wrq.size();
 			for (int i = 0; i < len; ++i) {
 				b = wrq.peek();
-				Log.debug("writing %d bytes", b.remaining());
+				Log.debug("%s writing %d bytes", sock.getName(), b.remaining());
 				int r = c.write(b);
 				if (b.remaining() != 0) {
 					Log.error("Not all bytes written, r=%d %d/%d", r, b.position(), b.limit());

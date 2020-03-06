@@ -8,22 +8,31 @@ import concur.RingArray;
 import sys.Log;
 
 public class SelSocket {
-	final private RingArray<ByteBuffer> wrq = new RingArray<>("wrq", 10);
-	final private RingArray<ByteBuffer> rdq = new RingArray<>("rdq", 10);
+	final private String name;
+	final private RingArray<ByteBuffer> wrq;
+	final private RingArray<ByteBuffer> rdq;
 	final private SelectorThread2 selector;
 	final private SelectionKey sk;
 
 	private IOException ioerror = null;
 	private boolean eof = false;
+	private ByteBuffer hold;
 
 	// package private
 	SelSocket(SelectorThread2 selector, SelectionKey sk) {
+		this(selector, sk, "");
+	}
+	SelSocket(SelectorThread2 selector, SelectionKey sk, String name) {
+		this.name = name;
+		wrq = new RingArray<>(name+"wrq", 10);
+		rdq = new RingArray<>(name+"rdq", 10);
 		this.selector = selector;
 		this.sk = sk;
 	}
 
+
 	final RingArray<ByteBuffer> get_wrq() { return wrq; }
-	final RingArray<ByteBuffer> get_rdq() { return rdq; }
+
 	final void setError(IOException err) {
 		ioerror = err;
 		rdq.setInterrupted();
@@ -32,26 +41,23 @@ public class SelSocket {
 		eof = true;
 		rdq.setInterrupted();
 	}
-	final void received(ByteBuffer b) {
-		try {
-			//TODO stop reading nio channel
-			if (!rdq.addw(b, 100))
-				Log.error("FATAL: dopped packet");
-		} catch (InterruptedException e) {
-			Log.error("FATAL: dopped packet (intr)");
+	final boolean received(ByteBuffer b) {
+		if (hold != null) {
+			Log.error("hold in use, packet dropped");
+			System.exit(1);
+			hold = null;
 		}
+		if (rdq.add(b)) return true;
+		hold = b;
+		return false;
 	}
 
-
-	public int wrqSize() {
-		return wrq.size();
-	}
-	public int rdqSize() {
-		return rdq.size();
-	}
+	final public String getName() {return  name;}
+	final public int wrqSize() { return wrq.size(); }
+	final public int rdqSize() { return rdq.size(); }
+	final public boolean rdqFull() { return rdq.isFull(); }
 
 	public void close() {
-		Log.debug("sock.close");
 		SelectableChannel chn = sk.channel();
 		sk.attach(null);
 		sk.cancel();
@@ -63,21 +69,19 @@ public class SelSocket {
 	public int read(byte[] buf, int offs, int len) throws IOException {
 		if (ioerror != null) throw ioerror;
 
-		while (rdq.size() == 0) {
-			try {
-				rdq.peekw();
-			} catch (InterruptedException e) {
-				Log.error("peekw interrupted");
-			}
-			if (rdq.isInterrupted()) {
-				if (eof) {
-					Log.error("read =  EOF");
-					return -1;
-				}
+		try {
+			rdq.peekw();
+		} catch (InterruptedException e) {
+			Log.error("%s: peekw interrupted", name);
+			setEOF();
+		}
+		if (rdq.isInterrupted()) {
+			if (eof) {
+				Log.error("read =  EOF");
+				return -1;
 			}
 		}
 
-		Log.debug("reading rdq rdq.size = %d", rdq.size());
 		int i;
 		for (i = 0; rdq.size() > 0 & i < len; ) {
 			ByteBuffer b = rdq.peek();
@@ -85,14 +89,23 @@ public class SelSocket {
 			if (n > 0) {
 				if (n > len - i) n = len - i;
 				b.get(buf, offs + i, n);
-				if (!b.hasRemaining()) rdq.poll();
+				if (!b.hasRemaining()) {
+					rdq.poll();
+					if (hold != null) {
+						rdq.add(hold);
+						hold = null;
+					}
+				}
 				i += n;
 			}
 			else {
+				Log.error("empty buffer");
 				rdq.poll();
 				selector.releasebuf(b);
 			}
+			selector.wakeup(sk);
 		}
+		Log.debug("%s.read %d: ", name, i);
 		return i;
 	}
 	public void write(byte[] buf) throws IOException {
