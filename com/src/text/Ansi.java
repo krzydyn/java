@@ -172,7 +172,8 @@ public class Ansi {
 	public final static String SCR_MODE19 = CSI + "=19h";// 320x200 256colors
 	public final static String SCR_RESET19 = CSI + "=19l";
 
-	public final static String SGR_RESET = CSI + "m"; //
+	// Select Graphic Rendition
+	public final static String SGR_RESET = CSI + "m"; // same as 0m
 	public final static String SGR_BOLD = CSI + "1m"; //increased intensity
 	public final static String SGR_FAINT = CSI + "2m";//decreased intensity
 	public final static String SGR_ITALIC = CSI + "3m";
@@ -181,6 +182,8 @@ public class Ansi {
 	public final static String SGR_INVARSE = CSI + "7m";
 	public final static String SGR_HIDDEN = CSI + "8m";
 	public final static String SGR_CROSSOUT = CSI + "9m";
+	public final static String SGR_FONTDEFAULT = CSI + "10m";
+
 	public final static String SGR_UNDERLINE2 = CSI + "21m";
 	public final static String SGR_NORMAL = CSI + "22m";// Normal color and intensity
 	public final static String SGR_N_ITALIC = CSI + "23m";// Not italic
@@ -188,16 +191,18 @@ public class Ansi {
 	public final static String SGR_N_BLINK = CSI + "25m";// Not blink
 	public final static String SGR_N_INVERSE = CSI + "27m";// Not inverse
 	public final static String SGR_N_HIDDEN = CSI + "28m";// Not hidden
+	public final static String SGR_N_CROSSOUT = CSI + "29m";// Not crossout
 
-	public final static String SGR_BLACK = CSI + "0;30m";
-	public final static String SGR_RED = CSI + "0;31m";
-	public final static String SGR_GREEN = CSI + "0;32m";
-	public final static String SGR_YELLOW = CSI + "0;33m";
-	public final static String SGR_BLUE = CSI + "0;34m";
-	public final static String SGR_MAGENTA = CSI + "0;35m";
-	public final static String SGR_CYAN = CSI + "0;36m";
-	public final static String SGR_LIGHTGRAY = CSI + "0;37m";
-	public final static String SGR_GRAY = CSI + "1;30m";
+	// text color
+	public final static String SGR_BLACK = CSI + "30m"; // same as 0;30m
+	public final static String SGR_RED = CSI + "31m";
+	public final static String SGR_GREEN = CSI + "32m";
+	public final static String SGR_YELLOW = CSI + "33m";
+	public final static String SGR_BLUE = CSI + "34m";
+	public final static String SGR_MAGENTA = CSI + "35m";
+	public final static String SGR_CYAN = CSI + "36m";
+	public final static String SGR_LIGHTGRAY = CSI + "37m";
+	public final static String SGR_GRAY = CSI + "1;30m"; /// same as 30;1m
 	public final static String SGR_LIGHTRED = CSI + "1;31m";
 	public final static String SGR_LIGHTGREEN = CSI + "1;32m";
 	public final static String SGR_LIGHTYELLOW = CSI + "1;33m";
@@ -205,6 +210,17 @@ public class Ansi {
 	public final static String SGR_LIGHTMAGENTA = CSI + "1;35m";
 	public final static String SGR_LIGHTCYAN = CSI + "1;36m";
 	public final static String SGR_WHITE = CSI + "1;37m";
+	public final static String SGR_RGB = CSI + "38;2;%d;%d;%dm";  //r,g,b
+	public final static String SGR_256 = CSI + "38;5;%dm";  // id=0..255
+
+	// background color
+	public final static String SGR_BGBLACK = CSI + "41m";
+	public final static String SGR_BGRGB = CSI + "48;2;%d;%d;%dm";  //r,g,b
+	public final static String SGR_BG256 = CSI + "48;5;%dm";  // id=0..255
+
+	public final static String SGR_FRAMED = CSI + "51m";
+	public final static String SGR_ENCIRCLED = CSI + "52m";
+	public final static String SGR_OVERLINED = CSI + "53m";
 
 	// Device Status Report
 	public final static String DSR_STATUS = CSI + "5n"; // resp: CSI+0+n

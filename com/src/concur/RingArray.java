@@ -29,11 +29,10 @@ public class RingArray<T> extends RingCollection {
 	public boolean isFull() { return len == buf.length; }
 	public boolean isEmpty() { return len == 0; }
 
-	private boolean prv_add(T o) {
+	private boolean prv_add(T o, int i) {
 		if (len == buf.length) return false;
-		buf[(idx+len)%buf.length]=o;
+		buf[(idx+i)%buf.length]=o;
 		++len;
-		Log.debug("%s: packet added, len = %d", name, len);
 		if (len == 1) lock.notifyAll();
 		return true;
 	}
@@ -41,7 +40,7 @@ public class RingArray<T> extends RingCollection {
 	// Add element (insert the element at the end)
 	public boolean add(T o){
 		synchronized (lock) {
-			if (!prv_add(o)) {
+			if (!prv_add(o, len)) {
 				Log.error("%s: queue overflow", name);
 				return false;
 			}
@@ -54,9 +53,7 @@ public class RingArray<T> extends RingCollection {
 		synchronized (lock) {
 			if (len == buf.length) return false;
 			idx = (idx+buf.length-1)%buf.length;
-			buf[idx]=o;
-			++len;
-			if (len == 1) lock.notifyAll();
+			prv_add(o, 0);
 		}
 		return true;
 	}
@@ -104,7 +101,7 @@ public class RingArray<T> extends RingCollection {
 	public void addw(T o) throws InterruptedException {
 		Log.debug("%s addw()", name);
 		synchronized (lock) {
-			while (!prv_add(o)) {
+			while (!prv_add(o, len)) {
 				Log.debug(1, "%s wait() len == %d", name, len);
 				lock.wait();
 			}
@@ -112,10 +109,10 @@ public class RingArray<T> extends RingCollection {
 	}
 	public boolean addw(T o, long tm) throws InterruptedException {
 		synchronized (lock) {
-			if (prv_add(o)) return true;
+			if (prv_add(o, len)) return true;
 			Log.debug(1, "%s wait() len == %d", name, len);
 			lock.wait(tm);
-			return prv_add(o);
+			return prv_add(o, len);
 		}
 	}
 	public void pushw(T o) throws InterruptedException {

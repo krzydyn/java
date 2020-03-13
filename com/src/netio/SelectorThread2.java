@@ -17,15 +17,11 @@ import java.util.Iterator;
 import java.util.List;
 
 import concur.RingArray;
+import netio.SelSocket.SocketListener;
 import sys.Log;
 
 public class SelectorThread2 {
-	private static final int RWBUFLEN=1*1024; //by default it is 8kB
-
-	public static interface BindListener {
-		void accepted(SelSocket sock);
-		void closed(SelSocket sock);
-	}
+	private static final int RWBUFLEN=4*1024; //by default it is 8kB
 
 	private int sockCnt = 0;
 	private final Selector selector;
@@ -43,6 +39,8 @@ public class SelectorThread2 {
 			}
 		}
 	};
+	private final List<SelSocket> addSocklList = new ArrayList<>();
+
 	private boolean stopReq = true;
 
 	public SelectorThread2() {
@@ -91,38 +89,38 @@ public class SelectorThread2 {
 		}
 	}
 
-	public void bind(String addr, int port, BindListener l) throws IOException {
+	public SelSocket bind(String addr, int port) throws IOException {
 		Log.debug("binding to %s:%d",addr==null?"*":addr,port);
-		if (l == null) throw new NullPointerException("BindListener is null");
 		ServerSocketChannel chn = selector.provider().openServerSocketChannel();
 		chn.setOption(StandardSocketOptions.SO_REUSEADDR, true);
 		chn.configureBlocking(false);
 		if (addr == null || addr.isEmpty()) chn.bind(new InetSocketAddress(port), 3);
 		else chn.bind(new InetSocketAddress(addr, port), 3);
-		SelectionKey sk = registerSocket(chn, SelectionKey.OP_ACCEPT);
-		sk.attach(l);
+		return addsocket(chn);
 	}
 	public SelSocket connect(String addr, int port) throws IOException {
 		Log.debug("connecting %s:%d ...", addr, port);
 		SocketChannel chn = selector.provider().openSocketChannel();
 		chn.configureBlocking(false);
 		chn.connect(new InetSocketAddress(addr, port));
-
-		SelectionKey sk = registerSocket(chn, SelectionKey.OP_READ|SelectionKey.OP_CONNECT);
-		SelSocket sock = new SelSocket(this, sk, "sock"+sockCnt+":"); ++sockCnt;
-		sk.attach(sock);
-
-		return sock;
+		return addsocket(chn);
 	}
 
-	private SelectionKey registerSocket(SelectableChannel chn, int ops) throws IOException {
-		selector.wakeup();
-		return chn.register(selector, ops);
+	private SelSocket addsocket(SelectableChannel chn) {
+		SelSocket sock;
+		synchronized (addSocklList) {
+			sock = new SelSocket(this, chn, "sock"+sockCnt+":"); ++sockCnt;
+			addSocklList.add(sock);
+		}
+		if (Thread.currentThread() != selThread)
+			selector.wakeup();
+		return sock;
 	}
 
 	void wakeup(SelectionKey sk) {
 		SelSocket sock = (SelSocket)sk.attachment();
-		int ops = sk.interestOps();
+		int ops = sk.interestOps()&~(SelectionKey.OP_READ|SelectionKey.OP_WRITE);
+		//int ops = 0;
 		if (!sock.rdqFull()) ops |= SelectionKey.OP_READ;
 		if (sock.wrqSize() > 0) ops |= SelectionKey.OP_WRITE;
 		sk.interestOps(ops);
@@ -131,12 +129,22 @@ public class SelectorThread2 {
 
 	private void loop() throws Exception {
 		while (!stopReq) {
-
-			int n = selector.select(60000);
+			synchronized (addSocklList) {
+				for (SelSocket sock : addSocklList) {
+					SelectableChannel chn = sock.channel();
+					SelectionKey sk = null;
+					if (chn instanceof ServerSocketChannel) {
+						sk = chn.register(selector, SelectionKey.OP_ACCEPT, sock);
+					} else if (chn instanceof SocketChannel) {
+						sk = chn.register(selector, SelectionKey.OP_READ|SelectionKey.OP_CONNECT, sock);
+					}
+					sock.setSelection(sk);
+				}
+				addSocklList.clear();
+			}
+			int n = selector.select();
 			if (n == 0) {
 				if (stopReq) break;
-				Log.debug("select wakeup");
-				//Thread.sleep(10);
 				continue;
 			}
 
@@ -170,13 +178,13 @@ public class SelectorThread2 {
 		chn.configureBlocking(false);
 		Log.debug("new connection accepted from %s", chn.getRemoteAddress());
 
-		SelectionKey nsk = registerSocket(chn, SelectionKey.OP_READ);
-		SelSocket sock = new SelSocket(this, nsk, "sock"+sockCnt + ":"); ++sockCnt;
-		nsk.attach(sock);
-
+		SelSocket sock = (SelSocket)sk.attachment();
 		// TODO move to worker thread
-		BindListener listener = (BindListener)sk.attachment();
-		if (listener != null) listener.accepted(sock);
+		SelSocket c_sock = addsocket(chn);
+
+		List<SocketListener> listeners = sock.getListeners();
+		for (SocketListener l : listeners)
+			l.connected(c_sock);
 	}
 
 	private void doConnect(SelectionKey sk) throws IOException {
@@ -184,19 +192,23 @@ public class SelectorThread2 {
 		SocketChannel chn = (SocketChannel)sk.channel();
 		if (!chn.finishConnect()) return ;
 		SelSocket sock = (SelSocket)sk.attachment();
-		int ops = (sk.interestOps() | SelectionKey.OP_READ) & ~SelectionKey.OP_CONNECT;
+		int ops = sk.interestOps()&~(SelectionKey.OP_READ|SelectionKey.OP_WRITE);
+		if (!sock.rdqFull()) ops |= SelectionKey.OP_READ;
 		if (sock.wrqSize() > 0) ops |= SelectionKey.OP_WRITE;
 		sk.interestOps(ops);
+
+		List<SocketListener> listeners = sock.getListeners();
+		for (SocketListener l : listeners)
+			l.connected(sock);
 	}
 
 
 	private void doRead(SelectionKey sk) throws IOException {
-		Log.debug("doRead");
 		ReadableByteChannel c = (ReadableByteChannel)sk.channel();
 		ByteBuffer b = getbuf();
 		SelSocket sock = (SelSocket)sk.attachment();
 		if (c.read(b) == -1) {
-			Log.error("received EOF");
+			Log.error("doRead %s: received EOF", sock.getName());
 			sock.setEOF();
 			sk.cancel(); // throw away
 			//c.close();
@@ -204,7 +216,7 @@ public class SelectorThread2 {
 			return ;
 		}
 		((Buffer)b).flip();
-		Log.debug("%s received %d bytes", sock.getName(), b.remaining());
+		Log.debug("doRead %s: %d", sock.getName(), b.remaining());
 		if (!sock.received(b)) {
 			int ops = sk.interestOps() & ~SelectionKey.OP_READ;
 			sk.interestOps(ops);
@@ -222,8 +234,9 @@ public class SelectorThread2 {
 				b = wrq.peek();
 				Log.debug("%s writing %d bytes", sock.getName(), b.remaining());
 				int r = c.write(b);
+				sock.sent(r);
 				if (b.remaining() != 0) {
-					Log.error("Not all bytes written, r=%d %d/%d", r, b.position(), b.limit());
+					Log.warn("Not all bytes written, r=%d %d/%d", r, b.position(), b.limit());
 					break;
 				}
 				releasebuf(b);
@@ -242,19 +255,17 @@ public class SelectorThread2 {
 
 	private void doDisconnect(SelectionKey sk, Throwable e) {
 		if (e != null) Log.error(e, "doDisconnect"); else Log.debug("doDisconnect");
-		SelectableChannel ch = sk.channel();
-		if (ch instanceof ServerSocketChannel) {
-			BindListener l = (BindListener)sk.attachment();
-			l.closed(null);
+		SelSocket sock = (SelSocket)sk.attachment();
+		if (sock == null) {
+			Log.warn("sock is already detached");
+			return ;
 		}
-		else {
-			SelSocket sock = (SelSocket)sk.attachment();
-			if (sock == null) {
-				Log.warn("sock is already detached");
-				return ;
-			}
-			if (e instanceof IOException)
-				sock.setError((IOException)e);
+		if (e instanceof IOException) {
+			sock.setError((IOException)e);
 		}
+		List<SocketListener> listeners = sock.getListeners();
+		for (SocketListener l : listeners)
+			l.closed(sock);
+
 	}
 }

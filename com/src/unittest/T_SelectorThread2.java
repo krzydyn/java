@@ -62,11 +62,17 @@ public class T_SelectorThread2 extends UnitTest {
 		sel.start();
 
 		List<SelSocket> socks = new ArrayList<>();
-		for (int i = 0; i < 4; ++i) {
+		for (int i = 0; i < 100; ++i) {
 			try {
 				SelSocket sock = sel.connect("www.google.com", 80);
 				socks.add(sock);
-				final ByteBuffer data = ByteBuffer.allocate(100*1024);
+			} catch (Exception e) {
+				Log.error(e);
+			}
+		}
+		for (SelSocket sock : socks) {
+			try {
+				final ByteBuffer data = ByteBuffer.allocate(10*1024);
 				data.put("GET / HTTP/1.1".getBytes());
 				data.put(CRLF);
 				data.put(("Host: " + HOST).getBytes());
@@ -78,7 +84,7 @@ public class T_SelectorThread2 extends UnitTest {
 			}
 		}
 
-		ExecutorService pool = Executors.newFixedThreadPool(2);
+		ExecutorService pool = Executors.newFixedThreadPool(10);
 		int i = 0;
 		for (SelSocket sock : socks) {
 			final int cnt = i++;
@@ -99,11 +105,11 @@ public class T_SelectorThread2 extends UnitTest {
 							break;
 						}
 						r = s.length();
-						Log.debug("%sread[%d] ...%s", sock.getName(), r, s.substring(r-10,r));
+						//Log.debug("%sread[%d] ...%s", sock.getName(), r, s.substring(r-10,r));
 					}
 					os.close();
 					sock.close();
-					Log.debug("END reading");
+					Log.debug("%s END reading", sock.getName());
 					}catch (Exception e) {
 						Log.error(e);
 					}
@@ -113,7 +119,7 @@ public class T_SelectorThread2 extends UnitTest {
 
 		pool.shutdown();
 		try {
-			pool.awaitTermination(5, TimeUnit.SECONDS);
+			pool.awaitTermination(3, TimeUnit.SECONDS);
 			for (SelSocket sock : socks) { sock.close(); }
 			pool.shutdownNow();
 		}catch (Exception e) {
@@ -127,21 +133,22 @@ public class T_SelectorThread2 extends UnitTest {
 			SelectorThread2 sel = new SelectorThread2();
 			sel.start();
 
-			sel.bind(null, 8080, new SelectorThread2.BindListener() {
-
-				@Override
-				public void accepted(SelSocket sock) {
-					Log.debug("accepted connection");
-				}
+			SelSocket server = sel.bind(null, 8080);
+			server.addListener(new SelSocket.SocketListener() {
 
 				@Override
 				public void closed(SelSocket sock) {
 					Log.debug("closed connection");
 				}
-			});
 
+				@Override
+				public void connected(SelSocket sock) {
+					Log.debug("connected connection");
+
+				}
+			});
 			Log.debug("bind ok");
-			SelSocket sock = sel.connect("localhost", 80);
+			SelSocket sock = sel.connect("localhost", 8080);
 			sock.write("abc".getBytes());
 			Thread.sleep(500);
 
