@@ -50,8 +50,11 @@ import ui.ImagePanel;
 public class RServer implements ChannelHandler {
 	private static final int RSERVER_PORT = 9085;
 	private static final int FORCE_ACTION_TIME = 10*1000;
+
+	private static boolean bindOn;
 	private static boolean keepOn;
 	private static boolean lockScreenOn;
+
 	private final SelectorThread selector;
 	private final Robot robot;
 	private final int mouseButtonMask;
@@ -613,7 +616,8 @@ public class RServer implements ChannelHandler {
 
 		try {
 		selector.start();
-		selector.bind(null, RSERVER_PORT, this);
+		if (bindOn)
+			selector.bind(null, RSERVER_PORT, this);
 		Point lastMouseLoc = null;
 		while (selector.isRunning()) {
 			if (clients.size()>0) {
@@ -638,7 +642,9 @@ public class RServer implements ChannelHandler {
 			}
 			XThread.sleep(1000/5);
 		}
-		}finally {
+		} catch (Exception e) {
+			Log.error(e);
+		} finally {
 			selector.stop();
 		}
 	}
@@ -646,8 +652,9 @@ public class RServer implements ChannelHandler {
 	public static void main(String[] args) throws Exception {
 		Log.setTestMode();
 		for (int i=0; i < args.length; ++i) {
-			if (args[i].equalsIgnoreCase("keepon")) keepOn=true;
-			else if (args[i].equalsIgnoreCase("lockon")) lockScreenOn=true;
+			if (args[i].equalsIgnoreCase("bind")) bindOn=true;
+			else if (args[i].equalsIgnoreCase("keep")) keepOn=true;
+			else if (args[i].equalsIgnoreCase("lock")) lockScreenOn=true;
 		}
 		try {
 			new RServer().run();

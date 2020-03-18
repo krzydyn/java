@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -95,8 +96,8 @@ public class HttpClientHandler implements ChannelHandler {
 			if (resource.endsWith(".php")) {
 				try {
 					//https://stackoverflow.com/questions/3258634/php-how-to-send-http-response-code
-					List<String> args = List.of("php-cgi", "-f", HttpServer.serverRoot + resource);
-					String result = Env.exec(args, new File(HttpServer.serverRoot), envp);
+					String[] args = {"php-cgi", "-f", HttpServer.serverRoot + resource};
+					String result = Env.exec(Arrays.asList(args), new File(HttpServer.serverRoot), envp);
 
 					if (result.startsWith("Status:")) {
 						//read status from script statusline
