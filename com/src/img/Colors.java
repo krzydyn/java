@@ -149,7 +149,7 @@ public class Colors {
 	 * @param b
 	 * @return
 	 */
-	public static float luminance(float r,float g, float b) {
+	public static float luminance2(float r,float g, float b) {
 		return r*0.299f + g*0.587f + b*0.114f;
 	}
 	public static float luminanceHSP(float r,float g, float b) {
@@ -171,7 +171,7 @@ public class Colors {
 		int r = (rgb>>16)&0xff;
 		int g = (rgb>>8)&0xff;
 		int b = rgb&0xff;
-		return (r+(r<<1)+(g<<2)+b)>>>3; //(R+R+R+B+G+G+G+G)>>3
+		return (r+(r<<1)+(g<<2)+b)>>>3; // (3*R+4*G+B)/8
 	}
 
 	/**

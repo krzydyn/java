@@ -18,14 +18,13 @@
 
 package unittest;
 
-import img.Colors;
-import img.Lines;
-import img.Lines.IntersectionType;
-
 import java.awt.Point;
 import java.awt.geom.Point2D;
 
 import algebra.Maths;
+import img.Colors;
+import img.Lines;
+import img.Lines.IntersectionType;
 import sys.Log;
 
 public class T_Lines extends UnitTest {
@@ -34,7 +33,7 @@ public class T_Lines extends UnitTest {
 		int a = Colors.quick_luminance(0);
 		int b = Colors.quick_luminance(0xffffff);
 		check("black",0,a);
-		check("while",223,b);
+		check("while",255,b);
 	}
 	static void power() {
 		Log.debug("pow=%d",Maths.power(3, 10));

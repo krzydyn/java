@@ -58,6 +58,7 @@ public class SelectorThread2 {
 	}
 
 	public void start() {
+		if (selThread.isAlive()) return ;
 		stopReq = false;
 		selThread.start();
 	}
@@ -155,7 +156,7 @@ public class SelectorThread2 {
 				try {
 					//SelectableChannel chn = sk.channel();
 
-					if (!sk.isValid()) doDisconnect(sk, null);
+					if (!sk.isValid()) doCancel(sk, null);
 					else if (sk.isAcceptable()) doAccept(sk);
 					else if (sk.isConnectable()) doConnect(sk);
 					else {
@@ -164,7 +165,7 @@ public class SelectorThread2 {
 					}
 				}
 				catch (Throwable e) {
-					doDisconnect(sk, e);
+					doCancel(sk, e);
 				}
 			}
 
@@ -253,8 +254,8 @@ public class SelectorThread2 {
 			}
 	}
 
-	private void doDisconnect(SelectionKey sk, Throwable e) {
-		if (e != null) Log.error(e, "doDisconnect"); else Log.debug("doDisconnect");
+	private void doCancel(SelectionKey sk, Throwable e) {
+		Log.debug("doDisconnect");
 		SelSocket sock = (SelSocket)sk.attachment();
 		if (sock == null) {
 			Log.warn("sock is already detached");
