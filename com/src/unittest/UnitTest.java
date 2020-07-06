@@ -75,6 +75,7 @@ public class UnitTest {
 	static public List<String> getTestUnits(String prefix) throws IOException {
 		ArrayList<String> a = new ArrayList<>();
 
+		Log.debug("getting units for %s", prefix);
 		String pkg = "";
 		if (prefix.lastIndexOf('.')>0) pkg=prefix.substring(0, prefix.lastIndexOf('.'));
 		ClassLoader cl = getClassLoader();

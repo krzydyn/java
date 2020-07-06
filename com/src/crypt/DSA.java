@@ -29,11 +29,15 @@ public class DSA extends Asymmetric {
 	 */
 	public DSA(int p_bits, int q_bits) {
 		p = BigInteger.probablePrime(p_bits, rnd);
+		BigInteger e = p.subtract(ONE);
 		do {
 			q = BigInteger.probablePrime(q_bits, rnd);
-		} while (q.subtract(ONE).gcd(p).compareTo(ONE) != 0);
+		} while (!e.gcd(q).equals(ONE));
+		g = findGenerator(p, q);
 
-		g = TWO.modPow(p.subtract(ONE).divide(q), p);
+		Log.debug("P=%s", p.toString(16));
+		Log.debug("Q=%s", q.toString(16));
+		Log.debug("G=%s", g.toString(16));
 	}
 
 	/**

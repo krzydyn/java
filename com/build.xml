@@ -3,14 +3,14 @@
 	<property name="JAVA_VERSION" value="1.7"/>
 	<property name="build" value="build"/>
 	<property name="libdir" value="lib"/>
-	
+
 	<target name="compile">
 		<mkdir dir="${build}"/>
 		<javac srcdir="src" destdir="${build}" debug="true" listfiles="true"
 			encoding="UTF-8" source="${JAVA_VERSION}" target="${JAVA_VERSION}"
 			includeantruntime="false"
 			classpath="${libdir}/RXTXcomm.jar"
-			excludes="unittest/**"
+			excludes="crypt/SM2.java"
 		/>
 	</target>
 
@@ -18,4 +18,9 @@
 		<delete dir="${build}"/>
 	</target>
 
+	<target name="test" depends="compile">
+		<java classpath="${build}" classname="unittest.RunTests">
+			<arg value="unittest.T_Crypt"/>
+		</java>
+	</target>
 </project>

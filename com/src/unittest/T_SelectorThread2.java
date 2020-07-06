@@ -86,7 +86,7 @@ public class T_SelectorThread2 extends UnitTest {
 
 		ExecutorService pool = Executors.newFixedThreadPool(10);
 		int i = 0;
-		for (SelSocket sock : socks) {
+		for (final SelSocket sock : socks) {
 			final int cnt = i++;
 			pool.execute(new Runnable() {
 				@Override

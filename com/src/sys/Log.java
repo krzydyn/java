@@ -109,6 +109,8 @@ public abstract class Log {
 
 		//PrintStream is synchronized
 		try {
+			if (prs != System.err)
+				System.err.write(bas.toByteArray());
 			prs.write(bas.toByteArray());
 			prs.flush();
 		}catch (Throwable e){}

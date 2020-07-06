@@ -3,6 +3,7 @@ package crypt;
 import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.util.Random;
+import sys.Log;
 
 abstract public class Asymmetric {
 	final public static BigInteger ZERO = BigInteger.ZERO;
@@ -94,4 +95,55 @@ abstract public class Asymmetric {
 		}
 		return T;
 	}
+
+	static public BigInteger safePrime(int bits) {
+		int cnt = 0;
+		BigInteger p;
+		do {
+			p = BigInteger.probablePrime(bits, rnd);
+			++cnt;
+		} while(!p.shiftRight(1).isProbablePrime(100));
+		Log.debug("Safe %d-bit prime in %d iterations", bits, cnt);
+		return p;
+	}
+
+	// FIPS-186.4 Appendix A.2
+	static public BigInteger findGenerator(BigInteger p, BigInteger q) {
+		BigInteger g;
+		BigInteger e = p.subtract(ONE).divide(q);
+		byte hb[] = new byte[p.bitLength()/8];
+		do {
+			rnd.nextBytes(hb);
+			BigInteger h = new BigInteger(1, hb); // to check: 1 < h < p-1
+			g = h.modPow(e, p);
+		} while (g.equals(BigInteger.ONE));
+
+		return g;
+	}
+
+	// https://www.geeksforgeeks.org/primitive-root-of-a-prime-number-n-modulo-n/
+/*
+1- Euler Totient Function phi = n-1 [Assuming n is prime]
+1- Find all prime factors of phi.
+2- Calculate all powers to be calculated further
+   using (phi/prime-factors) one by one.
+3- Check for all numbered for all powers from i=2
+   to n-1 i.e. (i^ powers) modulo n.
+4- If it is 1 then 'i' is not a primitive root of n.
+5- If it is never 1 then return i;.
+*/
+	// p is prime, q is co-prime
+	// g in range [2, q-2] is generator if and only if g^((q-1)/2) != 1 mod p
+	static public BigInteger primitiveRoot(BigInteger p, BigInteger q) {
+		BigInteger g;
+		BigInteger e = q.shiftRight(1);
+		byte hb[] = new byte[p.bitLength()/8];
+		do {
+			rnd.nextBytes(hb);
+			g = new BigInteger(1, hb); // to check: 1 < h < p-1
+		} while (!g.modPow(e, p).equals(ONE));
+
+		return g;
+	}
+
 }
