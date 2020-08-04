@@ -146,6 +146,33 @@
 		</jar>
 	</target>
 
+	<target name="kml" depends="common">
+		<echo>Building KML app</echo>
+		<mkdir dir="${build}"/>
+
+		<javac srcdir="src" destdir="${build}" debug="true" listfiles="true"
+			encoding="UTF-8" source="${JAVA_VERSION}" target="${JAVA_VERSION}"
+			includeantruntime="false"
+			includes="gps/*"
+			classpath="${comdir}/${build}"
+		/>
+		<delete file="bin/kml.jar"/>
+		<jar destfile="bin/kml.jar">
+			<fileset dir="${build}">
+				<include name="gps/*"/>
+			</fileset>	
+			<fileset dir="${comdir}/${build}">
+				<include name="sys/Env*"/>
+				<include name="sys/Log*"/>
+				<exclude name="sys/UnitTest*"/>
+			</fileset>
+
+			<manifest>
+				<attribute name="Main-Class" value="gps.KML"/>
+			</manifest>
+		</jar>
+	</target>
+
 	<target name="clean">
 		<ant dir="${comdir}" antfile="build.xml" target="clean" />
 		<delete dir="${build}"/>
