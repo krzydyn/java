@@ -47,7 +47,7 @@ public class IOForwardWorker implements Runnable {
 	private void run_is2wr() throws IOException {
 		char[] buf = new char[1024];
 		int r;
-		InputStreamReader isr = new InputStreamReader(is, Env.UTF8_Charset);
+		InputStreamReader isr = new InputStreamReader(is, Env.UTF8);
 		while ((r=isr.read(buf)) >= 0) {
 			wr.write(buf, 0, r);
 		}

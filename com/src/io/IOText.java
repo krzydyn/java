@@ -48,8 +48,8 @@ public class IOText extends AbstractSelectableChannel implements Readable,Append
 		super(null);
 		InputStreamReader is = null;
 		OutputStreamWriter os = null;
-		if (i!=null) is = new InputStreamReader(i, Env.UTF8_Charset);
-		if (o!=null) os = new OutputStreamWriter(o, Env.UTF8_Charset);
+		if (i!=null) is = new InputStreamReader(i, Env.UTF8);
+		if (o!=null) os = new OutputStreamWriter(o, Env.UTF8);
 		this.rd=is;
 		this.wr=os;
 
@@ -137,7 +137,7 @@ public class IOText extends AbstractSelectableChannel implements Readable,Append
 	//https://javapapers.com/java/java-nio-file-read-write-with-channels/
 	public static CharSequence read(FileChannel chn, long offs, long size) throws IOException {
 		MappedByteBuffer buf = chn.map(MapMode.READ_ONLY, offs, size);
-		Charset cs = Env.UTF8_Charset;
+		Charset cs = Env.UTF8;
 		return cs.decode(buf);
 		/*
 		StringBuilder s = new StringBuilder();
@@ -153,7 +153,7 @@ public class IOText extends AbstractSelectableChannel implements Readable,Append
 	}
 	public static void write(FileChannel chn, long offs, CharSequence s) throws IOException {
 		MappedByteBuffer buf = chn.map(MapMode.READ_WRITE, offs, s.length());
-		Charset cs = Env.UTF8_Charset;
+		Charset cs = Env.UTF8;
 		buf.put(s.toString().getBytes(cs));
 		buf.force();
 	}

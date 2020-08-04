@@ -348,7 +348,7 @@ public class GitGraph {
 			if (c.cp==null) break;
 			if (c.fields != null) {
 				os.write(String.format("%d|%s\n",X0+c.cols*DX,c.fields).
-						getBytes(Env.UTF8_Charset));
+						getBytes(Env.UTF8));
 			}
 			//ps.println(c.fields);
 		}

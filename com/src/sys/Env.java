@@ -51,7 +51,7 @@ import io.IOCaptureWorker;
 import text.Text;
 
 public class Env {
-	final public static Charset UTF8_Charset = Charset.forName("UTF-8");
+	final public static Charset UTF8 = Charset.forName("UTF-8");
 
 	final public static String PATH_SEPARATOR = ";";
 
@@ -75,9 +75,6 @@ public class Env {
 		return new Dimension(gd.getDisplayMode().getWidth(), gd.getDisplayMode().getHeight());
 	}
 
-	static private String linuxPath(File f) {
-		return f.getPath().replace('\\', '/');
-	}
 	static private String linuxPath(String f) {
 		return f.replace('\\', '/');
 	}

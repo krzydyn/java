@@ -43,7 +43,7 @@ public class T_SelectorThread2 extends UnitTest {
 			while ((r = sock.read(buf, 0, buf.length)) >= 0) {
 				Log.debug("read %d: ", r);
 				os.write(buf, 0, r);
-				String s = new String(buf, 0, r, Env.UTF8_Charset);
+				String s = new String(buf, 0, r, Env.UTF8);
 				if (s.contains("</html>")) break;
 			}
 			os.close();
@@ -99,7 +99,7 @@ public class T_SelectorThread2 extends UnitTest {
 					int r;
 					while ((r = sock.read(buf, 0, buf.length)) >= 0) {
 						os.write(buf, 0, r);
-						String s = new String(buf, 0, r, Env.UTF8_Charset);
+						String s = new String(buf, 0, r, Env.UTF8);
 						if (s.contains("</html>")) {
 							Log.debug("%s found </html>", sock.getName());
 							break;

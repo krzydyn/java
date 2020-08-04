@@ -289,10 +289,10 @@ public class RDesk extends MainPanel {
 		}
 		byte[] a = new byte[l];
 		b.get(a);
-		return new String(a,Env.UTF8_Charset);
+		return new String(a,Env.UTF8);
 	}
 	private void writeUTF(ByteBuffer b, String s) {
-		byte[] a = s.getBytes(Env.UTF8_Charset);
+		byte[] a = s.getBytes(Env.UTF8);
 		int l=a.length;
 		b.putShort((short)l);
 		b.put(a);
@@ -385,7 +385,7 @@ public class RDesk extends MainPanel {
 		sendKeyType(new String(new char[]{c}));
 	}
 	private void sendKeyType(String s) {
-		byte[] a = s.getBytes(Env.UTF8_Charset);
+		byte[] a = s.getBytes(Env.UTF8);
 		ByteBuffer b = ByteBuffer.allocate(2+a.length);
 		b.putShort(RCommand.TEXT_TYPE);//key type
 		b.put(a, 0, a.length);

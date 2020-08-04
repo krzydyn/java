@@ -39,6 +39,7 @@ public class KML {
 	}
 
 	public void append(String file) throws Exception {
+		Log.info("adding file %s", file);
 		Document doc = documentBuilder.parse(file);
 		NodeList nl = doc.getElementsByTagName("Placemark");
 		for (int i = 0; i < nl.getLength(); ++i) {
@@ -92,7 +93,6 @@ public class KML {
 				});
 				Arrays.sort(files);
 				for (String x : files) {
-					Log.debug("adding file %s", x);
 					kml.append(f + "/" + x);
 				}
 			}

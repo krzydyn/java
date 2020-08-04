@@ -62,7 +62,7 @@ public class T_SelectorThread extends UnitTest {
 			}
 			@Override
 			public void received(QueueChannel chn, ByteBuffer buf) {
-				String rep = new String(buf.array(), buf.position(), buf.limit(), Env.UTF8_Charset);
+				String rep = new String(buf.array(), buf.position(), buf.limit(), Env.UTF8);
 				int len = rep.length();
 				Log.debug("data[%d]:  %s",rep.length(), len>40?rep.substring(0, 10)+"..."+rep.substring(len-20, len):rep);
 			}

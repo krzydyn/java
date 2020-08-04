@@ -129,7 +129,7 @@ public class RServer implements ChannelHandler {
 			mounseClick(x, y, buttons);
 		}
 		else if (cmd == RCommand.TEXT_TYPE) {
-			String s = new String(msg.array(),msg.position(),msg.remaining(),Env.UTF8_Charset);
+			String s = new String(msg.array(),msg.position(),msg.remaining(),Env.UTF8);
 			xcode = s.charAt(0);
 			keyType(s);
 		}
@@ -362,7 +362,7 @@ public class RServer implements ChannelHandler {
 		}
 		byte[] a = new byte[l];
 		b.get(a);
-		return new String(a,Env.UTF8_Charset);
+		return new String(a,Env.UTF8);
 	}
 	private void setClipboard(ByteBuffer msg) {
 		String s = getUTF(msg);

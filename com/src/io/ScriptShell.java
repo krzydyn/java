@@ -93,8 +93,8 @@ public class ScriptShell {
 		//pb.redirectInput(Redirect.PIPE); pipe is default
 		if (dir!=null) pb.directory(dir);
 		Process child = pb.start();
-		InputStreamReader is = new InputStreamReader(child.getInputStream(), Env.UTF8_Charset);
-		OutputStreamWriter os = new OutputStreamWriter(child.getOutputStream(), Env.UTF8_Charset);
+		InputStreamReader is = new InputStreamReader(child.getInputStream(), Env.UTF8);
+		OutputStreamWriter os = new OutputStreamWriter(child.getOutputStream(), Env.UTF8);
 		childwriter = os;
 		Log.debug("child started: %s", Text.join(" ", args));
 		if (lastrd!=null) {

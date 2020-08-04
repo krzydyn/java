@@ -47,7 +47,7 @@ public class HttpClientHandler implements ChannelHandler {
 
 	@Override
 	public void received(QueueChannel qchn, ByteBuffer msg) {
-		String s = new String(msg.array(), msg.position(), msg.remaining(), Env.UTF8_Charset);
+		String s = new String(msg.array(), msg.position(), msg.remaining(), Env.UTF8);
 		Log.debug("received: %s", s);
 		processMsg(qchn, s);
 		qchn.close();
