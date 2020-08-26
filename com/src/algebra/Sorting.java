@@ -43,22 +43,26 @@ public class Sorting {
 		rdCnt+=2;
 		wrCnt+=2;
 	}
-	private static void quickSort(int[] a, int l,int r) {
-		int e = a[(l+r)/2]; //pivot element
-		++rdCnt;
-		int i=l,j=r;
-		do {
-			while (a[i] < e) {++i;++opCnt;++rdCnt;}
-			++opCnt;++rdCnt;
-			while (e < a[j]) {--j;++opCnt;++rdCnt;}
-			++opCnt;++rdCnt;
-			if (i <= j) {
-				if (i!=j) swap(a,i,j);
-				++i; --j;
+
+	private static int partition(int[] a, int l,int r) {
+		int pivot = a[r]; //pivot element
+		int i = l-1;
+		// elements smoller then pivot put on the left
+		for (int j = l; j < r; ++j) {
+			if (a[j] < pivot) {
+				++i;
+				swap(a,i,j);
 			}
-		} while (i<=j);
-		if (l < j) quickSort(a, l, j);
-		if (i < r) quickSort(a, i, r);
+		}
+		swap(a,i+1,r);
+		return i+1;  // return index of pivot element, now it is in the right place
+	}
+	private static void quickSort(int[] a, int l,int r) {
+		if (l < r) {
+			int pi = partition(arr, l, r);
+			quickSort(a, l, pi-1);
+			quickSort(a, pi+1, r);
+		}
 	}
 
 	public static void quickSort(int[] a) {
