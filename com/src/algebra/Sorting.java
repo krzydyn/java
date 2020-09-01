@@ -59,7 +59,7 @@ public class Sorting {
 	}
 	private static void quickSort(int[] a, int l,int r) {
 		if (l < r) {
-			int pi = partition(arr, l, r);
+			int pi = partition(a, l, r);
 			quickSort(a, l, pi-1);
 			quickSort(a, pi+1, r);
 		}
