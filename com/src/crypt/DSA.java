@@ -49,6 +49,9 @@ public class DSA extends Asymmetric {
 		Log.debug("P=%s", p.toString(16));
 		Log.debug("Q=%s", q.toString(16));
 		Log.debug("G=%s", g.toString(16));
+
+		if (!checkPQG())
+			throw new RuntimeException("Wrong DSA params");
 	}
 
 	/**
@@ -58,11 +61,45 @@ public class DSA extends Asymmetric {
 		this.p = p; //prime
 		this.q = q; //subprime
 		this.g = g; //base
+		if (!checkPQG())
+			throw new RuntimeException("Wrong DSA params");
+	}
+
+	private boolean checkPQG() {
+		if (!p.isProbablePrime(100)) {
+			Log.error("dsa P is not rpime");
+			return false;
+		}
+		if (!q.isProbablePrime(100)) {
+			Log.error("dsa Q is not rpime");
+			return false;
+		}
+		if (!p.subtract(ONE).mod(q).equals(ZERO)) {
+			Log.error("dsa (P-1) mod Q != 0");
+			return false;
+		}
+		if (!g.modPow(q, p).equals(ONE)) {
+			Log.error("dsa G^Q mod P != 1");
+			return false;
+		}
+		return true;
+	}
+	private boolean checkXY() {
+		if (q.compareTo(x) != 1) {
+			Log.error("dsa Q <= X");
+			return false;
+		}
+		if (g.modPow(x, p).equals(y)) {
+			Log.error("dsa G^X mod P != Y");
+			return false;
+		}
+		return true;
 	}
 
 	public void generateXY() {
 		x = new BigInteger(q.bitLength(), rnd);
 		y = g.modPow(x, p);
+		checkXY();
 	}
 	public void setK(BigInteger k) {
 		this.k = k;
@@ -70,6 +107,7 @@ public class DSA extends Asymmetric {
 	public void setXY(BigInteger x, BigInteger y) {
 		this.x = x; //priv
 		this.y = y; //pub
+		checkXY();
 	}
 
 
@@ -147,9 +185,7 @@ public class DSA extends Asymmetric {
 		BigInteger w = s.modInverse(q);
 		BigInteger u1 = H.multiply(w).mod(q);
 		BigInteger u2 = r.multiply(w).mod(q);
-		u1 = g.modPow(u1, p);
-		u2 = y.modPow(u2, p);
-		BigInteger v = u1.multiply(u2).mod(p).mod(q);
+		BigInteger v = g.modPow(u1, p).multiply(y.modPow(u2, p)).mod(p).mod(q);
 
 		Log.debug("r = %s", r.toString(16));
 		Log.debug("s = %s", s.toString(16));
