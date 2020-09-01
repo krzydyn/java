@@ -9,6 +9,13 @@ import java.util.Arrays;
 import sys.Log;
 import text.Text;
 
+/*
+ * p - DSA prime
+ * q - DSA group order q (which is a prime divisor of p-1)
+ * g - DSA group generator
+ * y - DSA public key, y = g^x % p
+ * x = DSA secret exponent
+*/
 public class DSA extends Asymmetric {
 	private BigInteger p,q,g;
 	private BigInteger x,y;
@@ -18,23 +25,27 @@ public class DSA extends Asymmetric {
 	 * Parameter generation (can be shared among users)
 	 * q = generate prime of length N-bits
 	 * p = choose prime of length L-bits such that p − 1 is a multiple of q
-	 * g = a number whose multiplicative order modulo p is q
+	 * g = number whose multiplicative order modulo p is q
 	 *
 	 * Per-user keys
 	 * x = generate private key (0 < x < q)
 	 * y = g^x mod p
 	 *
-	 * (L,N) : (1,024, 160), (2,048, 224), (2,048, 256), and (3,072, 256)
+	 * (L,N) : (1024, 160), (2048, 224), (2048, 256), and (3072, 256)
 	 * N must be <= hashbits
 	 */
 	public DSA(int p_bits, int q_bits) {
-		p = BigInteger.probablePrime(p_bits, rnd);
-		BigInteger e = p.subtract(ONE);
-		do {
+		for (;;) {
 			q = BigInteger.probablePrime(q_bits, rnd);
-		} while (!e.gcd(q).equals(ONE));
-		g = findGenerator(p, q);
+			p = BigInteger.probablePrime(p_bits, rnd);
+			p = p.subtract(p.mod(q)).add(ONE);
+			while (!p.isProbablePrime(100))
+				p = p.add(q);
+			if (p.bitCount() <= p_bits) break;
+			Log.error("P to large");
+		}
 
+		g = findGenerator(p, q);
 		Log.debug("P=%s", p.toString(16));
 		Log.debug("Q=%s", q.toString(16));
 		Log.debug("G=%s", g.toString(16));
@@ -102,6 +113,7 @@ public class DSA extends Asymmetric {
 			s = k.modInverse(q).multiply(H.add(x.multiply(r))).mod(q);
 		}
 
+		Log.debug("H = %s", H.toString(16));
 		byte[] b = r.toByteArray();
 		Log.debug("r[%d] = %s", b.length, Text.hex(b));
 		b = s.toByteArray();
@@ -138,13 +150,15 @@ public class DSA extends Asymmetric {
 		u1 = g.modPow(u1, p);
 		u2 = y.modPow(u2, p);
 		BigInteger v = u1.multiply(u2).mod(p).mod(q);
-/*
+
+		Log.debug("r = %s", r.toString(16));
+		Log.debug("s = %s", s.toString(16));
 		Log.debug("H = %s", H.toString(16));
 		Log.debug("w = %s", w.toString(16));
 		Log.debug("u1 = %s", u1.toString(16));
 		Log.debug("u2 = %s", u2.toString(16));
 		Log.debug("v = %s", v.toString(16));
-*/
+
 		return v.equals(r);
 	}
 

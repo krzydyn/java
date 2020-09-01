@@ -114,7 +114,7 @@ abstract public class Asymmetric {
 		byte hb[] = new byte[p.bitLength()/8];
 		do {
 			rnd.nextBytes(hb);
-			BigInteger h = new BigInteger(1, hb); // to check: 1 < h < p-1
+			BigInteger h = new BigInteger(1, hb); // check: 1 < h < p-1
 			g = h.modPow(e, p);
 		} while (g.equals(BigInteger.ONE));
 
