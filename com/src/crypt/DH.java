@@ -10,21 +10,18 @@ import sys.Log;
 //    xA - private key of user A (xA < p)
 //    xB - private key of user B (xB < p)
 // 3. calculate public keys and send to the other user
-//    yA = g ^ xA mod p   - user A send to user B
-//    yB = g ^ xB mod p   - user B send to user A
+//    yA = g ^ xA mod p   - user A send yA to user B
+//    yB = g ^ xB mod p   - user B send yB to user A
 // 4. calculate shared secret key (note: sA==sB)
-//    sA = yB ^ xA mod p
-//    sB = yA ^ xB mod p
+//    sA = yB ^ xA mod p  - user A calc his shared key
+//    sB = yA ^ xB mod p  - user B calc his shared key
 public class DH extends Asymmetric {
 	private BigInteger p; //prime
 	private BigInteger g; //generator
 
 	public DH(int p_bits) {
 		p = safePrime(p_bits);
-		BigInteger q = p.shiftRight(1); // p=2*q+1
-
-		// g in range [2, q-2] is generator if and only if g^((q-1)/2) != 1 mod p
-		g = findGenerator(p, q);
+		g = primitiveRoot(p);
 		Log.debug("P=%s", p.toString(16));
 		Log.debug("G=%s", g.toString(16));
 	}

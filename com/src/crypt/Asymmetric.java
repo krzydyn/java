@@ -107,16 +107,16 @@ abstract public class Asymmetric {
 		return p;
 	}
 
-	// FIPS-186.4 Appendix A.2
+	// FIPS-186.4 Appendix A.2  g = h ^ ((p - 1)/q) mod p
 	static public BigInteger findGenerator(BigInteger p, BigInteger q) {
 		BigInteger g;
 		BigInteger e = p.subtract(ONE).divide(q);
-		byte hb[] = new byte[p.bitLength()/8];
+		byte hb[] = new byte[q.bitLength()/8];
 		do {
 			rnd.nextBytes(hb);
-			BigInteger h = new BigInteger(1, hb); // check: 1 < h < p-1
+			BigInteger h = new BigInteger(1, hb);
 			g = h.modPow(e, p);
-		} while (g.equals(BigInteger.ONE));
+		} while (g.equals(ONE));
 
 		return g;
 	}
@@ -133,15 +133,15 @@ abstract public class Asymmetric {
 5- If it is never 1 then return i;.
 */
 	// p is prime, q is co-prime
-	// g in range [2, q-2] is generator if and only if g^((q-1)/2) != 1 mod p
-	static public BigInteger primitiveRoot(BigInteger p, BigInteger q) {
+	// g in range [2, p-2] is generator if and only if g^((p-1)/2) != 1 mod p
+	static public BigInteger primitiveRoot(BigInteger p) {
 		BigInteger g;
-		BigInteger e = q.shiftRight(1);
+		BigInteger e = p.shiftRight(1); // q = (p-1)/2
 		byte hb[] = new byte[p.bitLength()/8];
 		do {
 			rnd.nextBytes(hb);
 			g = new BigInteger(1, hb); // to check: 1 < h < p-1
-		} while (!g.modPow(e, p).equals(ONE));
+		} while (g.modPow(e, p).equals(ONE));
 
 		return g;
 	}

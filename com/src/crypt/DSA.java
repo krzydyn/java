@@ -35,20 +35,26 @@ public class DSA extends Asymmetric {
 	 * N must be <= hashbits
 	 */
 	public DSA(int p_bits, int q_bits) {
+		byte[] hb = new byte[(p_bits+7)/8];
 		for (;;) {
 			q = BigInteger.probablePrime(q_bits, rnd);
-			p = BigInteger.probablePrime(p_bits, rnd);
+			//p = BigInteger.probablePrime(p_bits, rnd);
+			rnd.nextBytes(hb);
+			p = new BigInteger(1, hb).setBit(p_bits-1);
 			p = p.subtract(p.mod(q)).add(ONE);
 			while (!p.isProbablePrime(100))
 				p = p.add(q);
-			if (p.bitCount() <= p_bits) break;
-			Log.error("P to large");
+			if (p.bitLength() == p_bits) break;
+			if (p.bitLength() > p_bits)
+				Log.error("P to large");
+			else
+				Log.error("P to small");
 		}
 
 		g = findGenerator(p, q);
-		Log.debug("P=%s", p.toString(16));
-		Log.debug("Q=%s", q.toString(16));
-		Log.debug("G=%s", g.toString(16));
+		Log.debug("P[%d]=%s", p.bitLength(), p.toString(16));
+		Log.debug("Q[%d]=%s", q.bitLength(), q.toString(16));
+		Log.debug("G[%d]=%s", g.bitLength(), g.toString(16));
 
 		if (!checkPQG())
 			throw new RuntimeException("Wrong DSA params");
@@ -61,6 +67,10 @@ public class DSA extends Asymmetric {
 		this.p = p; //prime
 		this.q = q; //subprime
 		this.g = g; //base
+		Log.debug("P[%d]=%s", p.bitLength(), p.toString(16));
+		Log.debug("Q[%d]=%s", q.bitLength(), q.toString(16));
+		Log.debug("G[%d]=%s", g.bitLength(), g.toString(16));
+
 		if (!checkPQG())
 			throw new RuntimeException("Wrong DSA params");
 	}
@@ -89,7 +99,7 @@ public class DSA extends Asymmetric {
 			Log.error("dsa Q <= X");
 			return false;
 		}
-		if (g.modPow(x, p).equals(y)) {
+		if (!g.modPow(x, p).equals(y)) {
 			Log.error("dsa G^X mod P != Y");
 			return false;
 		}
@@ -97,8 +107,10 @@ public class DSA extends Asymmetric {
 	}
 
 	public void generateXY() {
-		x = new BigInteger(q.bitLength(), rnd);
+		x = new BigInteger(q.bitLength()-1, rnd);
 		y = g.modPow(x, p);
+		Log.debug("X=%s", x.toString(16));
+		Log.debug("Y=%s", y.toString(16));
 		checkXY();
 	}
 	public void setK(BigInteger k) {
@@ -107,6 +119,8 @@ public class DSA extends Asymmetric {
 	public void setXY(BigInteger x, BigInteger y) {
 		this.x = x; //priv
 		this.y = y; //pub
+		Log.debug("X=%s", x.toString(16));
+		Log.debug("Y=%s", y.toString(16));
 		checkXY();
 	}
 
