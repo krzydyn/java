@@ -97,21 +97,43 @@ abstract public class Asymmetric {
 	}
 
 	static public BigInteger safePrime(int bits) {
-		int cnt = 0;
+		int iter = 0;
 		BigInteger p;
 		do {
 			p = BigInteger.probablePrime(bits, rnd);
-			++cnt;
+			++iter;
 		} while(!p.shiftRight(1).isProbablePrime(100));
-		Log.debug("Safe %d-bit prime in %d iterations", bits, cnt);
+		Log.debug("Safe %d-bit prime in %d iterations", bits, iter);
 		return p;
+	}
+	static public BigInteger euclideanGCD(BigInteger p, BigInteger q) {
+		int iter = 0;
+		while (!q.equals(ZERO)) {
+			++iter;
+			BigIngeter t = q;
+			q = p.mod(q);
+			p = t;
+		}
+		Log.debug("GCD in %d iterations", iter);
+		return p.abs(); // Knuth
+	}
+/*
+	Definition:
+	the smallest positive integer k satisfying equation: q^k = 1 (mod p)
+*/
+	static public BigInteger multiplicativeOrder(BigInteger p, BigInteger q) {
+		if (!p.gcd(q).equals(ONE))
+			throw new RuntimeException("p,q are not coprimes");
+		return null;
 	}
 
 	// FIPS-186.4 Appendix A.2  g = h ^ ((p - 1)/q) mod p
 	static public BigInteger findGenerator(BigInteger p, BigInteger q) {
+		if (!p.gcd(q).equals(ONE))
+			Log.warn("p,q are not coprimes");
 		BigInteger g;
 		BigInteger e = p.subtract(ONE).divide(q);
-		byte hb[] = new byte[q.bitLength()/8];
+		byte hb[] = new byte[q.bitLength()/8/2];
 		do {
 			rnd.nextBytes(hb);
 			BigInteger h = new BigInteger(1, hb);
@@ -123,25 +145,29 @@ abstract public class Asymmetric {
 
 	// https://www.geeksforgeeks.org/primitive-root-of-a-prime-number-n-modulo-n/
 /*
-1- Euler Totient Function phi = n-1 [Assuming n is prime]
-1- Find all prime factors of phi.
-2- Calculate all powers to be calculated further
-   using (phi/prime-factors) one by one.
-3- Check for all numbered for all powers from i=2
-   to n-1 i.e. (i^ powers) modulo n.
-4- If it is 1 then 'i' is not a primitive root of n.
-5- If it is never 1 then return i;.
+	Definition:
+	Primitive root of a prime number n is an integer r between[1, n-1] such that
+	the values of r^x(mod n) where x is in range[0, n-2] are different
 */
-	// p is prime, q is co-prime
+	// p is prime (better safe prime)
 	// g in range [2, p-2] is generator if and only if g^((p-1)/2) != 1 mod p
 	static public BigInteger primitiveRoot(BigInteger p) {
+		int smallG[] = { 2, 3, 11, 17 };
 		BigInteger g;
-		BigInteger e = p.shiftRight(1); // q = (p-1)/2
-		byte hb[] = new byte[p.bitLength()/8];
+
+		BigInteger q = p.shiftRight(1); // q = (p-1)/2
+		if (!p.gcd(q).equals(ONE))
+			Log.warn("p,q are not coprimes");
+		for (int i : smallG ) {
+			g = BigInteger.valueOf(i);
+			if (!g.modPow(q, p).equals(ONE))
+				return g;
+		}
+		byte hb[] = new byte[p.bitLength()/8/2];
 		do {
 			rnd.nextBytes(hb);
 			g = new BigInteger(1, hb); // to check: 1 < h < p-1
-		} while (g.modPow(e, p).equals(ONE));
+		} while (g.modPow(q, p).equals(ONE));
 
 		return g;
 	}

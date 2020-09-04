@@ -17,8 +17,11 @@ import text.Text;
  * x = DSA secret exponent
 */
 public class DSA extends Asymmetric {
-	private BigInteger p,q,g;
-	private BigInteger x,y;
+	private BigInteger p;  // base prime
+	private BigInteger q;  // subprime
+	private BigInteger g;  // generator
+	private BigInteger x;  // private key
+	private BigInteger y;  // public key
 	private BigInteger k = null;
 
 	/*
@@ -107,7 +110,7 @@ public class DSA extends Asymmetric {
 	}
 
 	public void generateXY() {
-		x = new BigInteger(q.bitLength()-1, rnd);
+		x = new BigInteger(q.bitLength() - 1, rnd);
 		y = g.modPow(x, p);
 		Log.debug("X=%s", x.toString(16));
 		Log.debug("Y=%s", y.toString(16));

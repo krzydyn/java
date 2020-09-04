@@ -61,6 +61,17 @@ public class T_Crypt extends UnitTest {
 	}
 
 	static void dh() {
-		DH dh = new DH(256);
+		DH a = new DH(160);
+		DH b = new DH(a.getBasePrime(), a.getGenerator());
+
+		a.generateXY(10);
+		b.generateXY(10);
+
+		BigInteger sh1 = a.deriveShared(b.getPublicKey());
+		BigInteger sh2 = b.deriveShared(a.getPublicKey());
+
+		Log.debug("sh1: %s", sh1.toString(16));
+		Log.debug("sh2: %s", sh2.toString(16));
+		check("shared", sh1.equals(sh2));
 	}
 }
