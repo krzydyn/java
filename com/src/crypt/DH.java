@@ -38,9 +38,11 @@ public class DH extends Asymmetric {
 	public BigInteger getGenerator() { return g; }
 	public BigInteger getPublicKey() { return y; }
 
-	public void generateXY(int bits) {
-		x = new BigInteger(bits, rnd);
+	public void generateXY() {
+		x = new BigInteger((p.bitLength()+3)/4, rnd);
 		y = g.modPow(x, p);
+		Log.debug("X[%d]=%s", x.bitLength(), x.toString(16));
+		Log.debug("Y[%d]=%s", y.bitLength(), y.toString(16));
 	}
 
 	public BigInteger deriveShared(BigInteger peerY) {

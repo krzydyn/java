@@ -20,7 +20,7 @@
 
 	<target name="test" depends="compile">
 		<java classpath="${build}" classname="unittest.RunTests">
-			<arg value="unittest.T_Crypt"/>
+			<arg value="unittest.T_Cry"/>
 		</java>
 	</target>
 </project>

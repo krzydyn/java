@@ -5,6 +5,7 @@ import java.security.MessageDigest;
 import java.util.Random;
 import sys.Log;
 
+// FIPS 140-1  testing random bits generatot
 abstract public class Asymmetric {
 	final public static BigInteger ZERO = BigInteger.ZERO;
 	final public static BigInteger ONE = BigInteger.ONE;
@@ -96,6 +97,40 @@ abstract public class Asymmetric {
 		return T;
 	}
 
+	static public BigInteger genPrime1(int bits) {
+		byte hb[] = new byte[(bits+7)/8];
+		int  hibit = 1 << ((bits - 1)%8);
+		rnd.nextBytes(hb);
+		hb[hb.length-1] |= 1;
+		hb[0] &= hibit - 1;
+		hb[0] |= hibit;
+		BigInteger h = new BigInteger(1, hb);
+		int iter = 0;
+		while (!h.isProbablePrime(50)) {
+			++iter;
+			h = h.add(TWO);
+		}
+		Log.debug("Found prime(%d) after %d iterations", bits, iter);
+		return h;
+	}
+
+	static public BigInteger genPrime2(int bits) {
+		byte hb[] = new byte[(bits+7)/8];
+		int  hibit = 1 << ((bits - 1)%8);
+		rnd.nextBytes(hb);
+		hb[hb.length-1] |= 1;
+		hb[0] &= hibit - 1;
+		hb[0] |= hibit;
+		BigInteger h = new BigInteger(1, hb);
+		int iter = 0;
+		while (!h.isProbablePrime(50)) {
+			++iter;
+			h = h.add(TWO);
+		}
+		Log.debug("Found prime(%d) after %d iterations", bits, iter);
+		return h;
+	}
+
 	static public BigInteger safePrime(int bits) {
 		int iter = 0;
 		BigInteger p;
@@ -110,7 +145,7 @@ abstract public class Asymmetric {
 		int iter = 0;
 		while (!q.equals(ZERO)) {
 			++iter;
-			BigIngeter t = q;
+			BigInteger t = q;
 			q = p.mod(q);
 			p = t;
 		}
@@ -133,7 +168,7 @@ abstract public class Asymmetric {
 			Log.warn("p,q are not coprimes");
 		BigInteger g;
 		BigInteger e = p.subtract(ONE).divide(q);
-		byte hb[] = new byte[q.bitLength()/8/2];
+		byte hb[] = new byte[q.bitLength()/8];
 		do {
 			rnd.nextBytes(hb);
 			BigInteger h = new BigInteger(1, hb);
@@ -163,7 +198,7 @@ abstract public class Asymmetric {
 			if (!g.modPow(q, p).equals(ONE))
 				return g;
 		}
-		byte hb[] = new byte[p.bitLength()/8/2];
+		byte hb[] = new byte[p.bitLength()/8];
 		do {
 			rnd.nextBytes(hb);
 			g = new BigInteger(1, hb); // to check: 1 < h < p-1

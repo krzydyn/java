@@ -4,6 +4,11 @@
 	<property name="build" value="build"/>
 	<property name="comdir" value="../com"/>
 
+	<target name="clean">
+		<ant dir="${comdir}" antfile="build.xml" target="clean" />
+		<delete dir="${build}"/>
+	</target>
+
 	<target name="common">
 		<ant dir="${comdir}" antfile="build.xml" target="compile" />
 	</target>
@@ -64,7 +69,7 @@
 		<jar destfile="bin/rserver.jar">
 			<fileset dir="${build}">
 				<include name="rgui/RServer*"/>
-			</fileset>	
+			</fileset>
 			<fileset dir="${comdir}/${build}">
 				<include name="sys/*"/>
 				<include name="io/IO*"/>
@@ -128,7 +133,7 @@
 		<jar destfile="bin/mserial.jar">
 			<fileset dir="${build}">
 				<include name="serial/*"/>
-			</fileset>	
+			</fileset>
 			<fileset dir="${comdir}/${build}">
 				<include name="sys/*"/>
 				<include name="netio/**"/>
@@ -160,7 +165,7 @@
 		<jar destfile="bin/kml.jar">
 			<fileset dir="${build}">
 				<include name="gps/*"/>
-			</fileset>	
+			</fileset>
 			<fileset dir="${comdir}/${build}">
 				<include name="sys/Env*"/>
 				<include name="sys/Log*"/>
@@ -173,9 +178,32 @@
 		</jar>
 	</target>
 
-	<target name="clean">
-		<ant dir="${comdir}" antfile="build.xml" target="clean" />
-		<delete dir="${build}"/>
+	<target name="immo" depends="common">
+		<echo>Building Immobiles app</echo>
+		<mkdir dir="${build}"/>
+
+		<javac srcdir="src" destdir="${build}" debug="true" listfiles="true"
+			encoding="UTF-8" source="${JAVA_VERSION}" target="${JAVA_VERSION}"
+			includeantruntime="false"
+			includes="espdb/*"
+			classpath="${comdir}/${build};lib/jsoup-1.11.1.jar"
+		/>
+		<delete file="bin/immo.jar"/>
+		<jar destfile="bin/immo.jar">
+			<fileset dir="${build}">
+				<include name="espdb/*"/>
+			</fileset>
+			<fileset dir="${comdir}/${build}">
+				<include name="sys/Env*"/>
+				<include name="sys/Log*"/>
+				<exclude name="sys/UnitTest*"/>
+			</fileset>
+
+			<manifest>
+				<attribute name="Main-Class" value="espdb.Immobiles"/>
+				<attribute name="Class-Path" value="lib/jsoup-1.11.1.jar"/>
+			</manifest>
+		</jar>
 	</target>
 
 </project>

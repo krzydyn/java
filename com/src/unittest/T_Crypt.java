@@ -2,12 +2,40 @@ package unittest;
 
 import java.math.BigInteger;
 
+import crypt.Asymmetric;
 import crypt.DH;
 import crypt.DSA;
 import sys.Log;
 import text.Text;
 
 public class T_Crypt extends UnitTest {
+
+	static void _bigint2str() {
+		BigInteger b = BigInteger.valueOf(0x1234);
+		Log.debug("0x1234: %s", Text.hex(b.toByteArray()));
+		b = BigInteger.valueOf(-0x1234);
+		Log.debug("-0x1234: %s", Text.hex(b.toByteArray()));
+		b = BigInteger.valueOf(0xfecc);
+		Log.debug("0xfecc: %s", Text.hex(b.toByteArray()));
+	}
+	static void _gen_prime1() {
+		int bits = 1024;
+		for (int i = 0; i < 5; ++i)
+			Asymmetric.genPrime1(bits);
+		bits *= 2;
+		for (int i = 0; i < 5; ++i)
+			Asymmetric.genPrime1(bits);
+		// for more bits it takes really long
+	}
+
+	static void _gen_prime2() {
+		int bits = 1024;
+		for (int i = 0; i < 5; ++i)
+			Asymmetric.genPrime2(bits);
+		bits *= 2;
+		for (int i = 0; i < 5; ++i)
+			Asymmetric.genPrime2(bits);
+	}
 
 	static void _expmod() {
 		BigInteger b = new BigInteger(1, "12345678".getBytes());
@@ -61,17 +89,17 @@ public class T_Crypt extends UnitTest {
 	}
 
 	static void dh() {
-		DH a = new DH(160);
+		DH a = new DH(2048);
 		DH b = new DH(a.getBasePrime(), a.getGenerator());
 
-		a.generateXY(10);
-		b.generateXY(10);
+		a.generateXY();
+		b.generateXY();
 
-		BigInteger sh1 = a.deriveShared(b.getPublicKey());
-		BigInteger sh2 = b.deriveShared(a.getPublicKey());
+		BigInteger sh_a = a.deriveShared(b.getPublicKey());
+		BigInteger sh_b = b.deriveShared(a.getPublicKey());
 
-		Log.debug("sh1: %s", sh1.toString(16));
-		Log.debug("sh2: %s", sh2.toString(16));
-		check("shared", sh1.equals(sh2));
+		Log.debug("shared A: %s", sh_a.toString(16));
+		Log.debug("shared B: %s", sh_b.toString(16));
+		check("shared", sh_a.equals(sh_b));
 	}
 }

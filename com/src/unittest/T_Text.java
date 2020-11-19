@@ -76,4 +76,10 @@ public class T_Text extends UnitTest {
 		paths = Env.splitPaths("p1;p2;'p\\';3'");
 		Log.info("paths: %s", paths);
 	}
+
+	static void splitText() {
+		String txt = "A AND (B OR (C OR D))";
+		String[] arr = txt.split("?:[^\\w()]+");
+		Log.debug("split[%d]: %s", arr.length, Text.join(",", arr));
+	}
 }
