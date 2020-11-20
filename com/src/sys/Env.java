@@ -80,8 +80,8 @@ public class Env {
 	}
 
 	static public void addLibraryPath(String p) {
-		p = Env.expandEnv(getAppPath(Env.class),p);
-		Log.debug("Addding library path '%s'", p);
+		p = Env.expandEnv(getAppPath(Env.class), p);
+		Log.debug("Adding library path '%s'", p);
 		Field usrPathsField;
 		try {
 			usrPathsField = ClassLoader.class.getDeclaredField("usr_paths");
@@ -154,6 +154,7 @@ public class Env {
 		}
 		else {
 			if (wd == null) wd = "./";
+			else if (!wd.endsWith("/")) wd += "/";
 			p = wd + p;
 		}
 		int s=0,i,e;
