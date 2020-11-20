@@ -73,17 +73,18 @@ public class Immobiles {
 		Response resp = conn.execute();
 		Document doc = resp.parse();
 		//int len = resp.body().length();
-		Elements elems = doc.getElementsByClass("phr");
-		for (int i=0; i < elems.size(); ++i) {
-			System.out.println(elems.get(i).text());
-		}
-		elems = doc.getElementsByClass("defmetas");
+		Elements elems = doc.getElementsByClass("offer-item");
 		for (int i=0; i < elems.size(); ++i) {
 			System.out.println(elems.get(i).text());
 		}
 	}
+
 	public static void main(String[] args) throws Exception {
-		jsoupScrapp("https://www.otodom.pl/");
+		System.out.printf("cwd=%s\n", System.getProperty("user.dir"));
+		//String filt = "search%5Bprivate_business%5D=private&search%5Border%5D=created_at_first%3Adesc";
+		//String filt = "search%5Bprivate_business%5D=private&search%5Border%5D=created_at_first%3Adesc&nrAdsPerPage=100";
+		String filt = "search%5Bfilter_float_price%3Ato%5D=200000&search%5Bprivate_business%5D=private&search%5Border%5D=filter_float_price_per_m%3Aasc&search%5Bregion_id%5D=7&nrAdsPerPage=100";
+		jsoupScrapp("https://www.otodom.pl/sprzedaz/dzialka/mazowieckie/?" + filt);
 	}
 
 }

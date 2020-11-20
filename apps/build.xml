@@ -186,7 +186,7 @@
 			encoding="UTF-8" source="${JAVA_VERSION}" target="${JAVA_VERSION}"
 			includeantruntime="false"
 			includes="espdb/*"
-			classpath="${comdir}/${build};lib/jsoup-1.11.1.jar"
+			classpath="${comdir}/${build}:lib/jsoup-1.11.1.jar"
 		/>
 		<delete file="bin/immo.jar"/>
 		<jar destfile="bin/immo.jar">
@@ -201,7 +201,8 @@
 
 			<manifest>
 				<attribute name="Main-Class" value="espdb.Immobiles"/>
-				<attribute name="Class-Path" value="lib/jsoup-1.11.1.jar"/>
+				<!-- Class-Path attribute is a space-separated list of relative URLs -->
+				<attribute name="Class-Path" value="../lib/jsoup-1.11.1.jar"/>
 			</manifest>
 		</jar>
 	</target>
