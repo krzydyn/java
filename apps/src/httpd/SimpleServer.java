@@ -32,11 +32,14 @@ public class SimpleServer {
 				s.setReceiveBufferSize(1024);
 
 				BufferedReader rd = new BufferedReader(new InputStreamReader(s.getInputStream()));
+				String header = "";
 				String ln;
 				while ((ln = rd.readLine()) != null) {
 					//Log.debug("%s: ", ln);
 					if (ln.equals("")) break;
+					header += ln + "\n";
 				}
+				Log.debug("header: %s", header);
 
 				File f = new File(serverRoot, "res/unittest/html-index.txt");
 				try (FileInputStream is = new FileInputStream(f)) {

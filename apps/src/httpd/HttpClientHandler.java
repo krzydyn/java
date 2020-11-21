@@ -17,12 +17,7 @@ import sys.Log;
 
 public class HttpClientHandler implements ChannelHandler {
 	private static final String CRLF = "\r\n";
-
-	private static Map<String,String> envp = new HashMap<>();
-	static {
-		envp.put("HTTP_USER_AGENT", "HttpdServer");
-		envp.put("REQUEST_URI", "");
-	}
+	private String phpcgi = "php-cgi";
 
 	public HttpClientHandler() {
 	}
@@ -79,7 +74,11 @@ public class HttpClientHandler implements ChannelHandler {
 		resource = n[1];
 		httpver = n[2];
 
+		Map<String,String> envp = new HashMap<>();
+		envp.put("HTTP_USER_AGENT", "HttpdServer");
 		envp.put("REQUEST_URI", resource);
+		envp.put("REQUEST_METHOD", method);
+
 		resource = "/index.php";
 
 		CharSequence body = null;
@@ -88,25 +87,31 @@ public class HttpClientHandler implements ChannelHandler {
 			status = Status.BAD_REQUEST;
 		}
 		else if (method.equals("GET")) {
-			envp.put("REDIRECT_STATUS", "200"); // mandatory
-			envp.put("REQUEST_METHOD", method);
-			envp.put("SCRIPT_FILENAME", HttpServer.serverRoot + resource);
-			//envp.put("CONTENT_TYPE", "");
-			envp.put("CONTENT_LENGTH", "0");
 			if (resource.endsWith(".php")) {
+				envp.put("LC_ALL", "en_US.UTF-8");
+				//envp.put("PATH", System.getenv("PATH"));
+				envp.put("REDIRECT_STATUS", "200"); // mandatory
+				//envp.put("SCRIPT_FILENAME", HttpServer.serverRoot+resource);
+				envp.put("SCRIPT_FILENAME", "."+resource);
+				envp.put("DOCUMENT_ROOT", HttpServer.serverRoot);
+				envp.put("PHP_SELF", resource);
+				//envp.put("CONTENT_TYPE", "");
+				//envp.put("CONTENT_LENGTH", "0");
 				try {
 					//https://stackoverflow.com/questions/3258634/php-how-to-send-http-response-code
-					String[] args = {"php-cgi", "-f", HttpServer.serverRoot + resource};
-					String result = Env.exec(Arrays.asList(args), new File(HttpServer.serverRoot), envp);
+					//String[] args = {"php", "-f", HttpServer.serverRoot + resource};
+					String[] args = {phpcgi};
+					//String[] args = {phpcgi, HttpServer.serverRoot + resource};
+					String result = Env.exec(Arrays.asList(args), envp, HttpServer.serverRoot);
 
+					//Log.debug("result: %s:", result);
 					if (result.startsWith("Status:")) {
 						//read status from script statusline
 						int idx = result.indexOf("\n");
 						if (idx > 0) {
 							String sln = result.substring(0, idx + 1);
 							status = Status.getStatus(Integer.parseInt(sln.substring(8, 11)));
-							if (status == Status.OK)
-								body = result.substring(idx);
+							body = result.substring(idx);
 						}
 					}
 					else {

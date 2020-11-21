@@ -8,10 +8,10 @@ import sys.Env;
 import sys.Log;
 
 public class HttpServer implements ServerHandler {
-	public static final String serverRoot = Env.expandEnv("~/krzydyn/www");
+	//public static final String serverRoot = Env.expandEnv("~/krzydyn/www");
+	public static final String serverRoot = Env.expandEnv("~/Work/www/kysoft");
 
 	private static final int HTTP_PORT = 8080;
-
 
 	private final SelectorThread selector;
 
@@ -43,6 +43,7 @@ public class HttpServer implements ServerHandler {
 
 	public static void main(String[] args) {
 		try {
+			Log.debug("path = %s", System.getenv("PATH"));
 			new HttpServer().run();
 		} catch (Throwable e) {
 			Log.info("httpd failed");

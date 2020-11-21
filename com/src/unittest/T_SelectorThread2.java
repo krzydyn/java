@@ -64,7 +64,7 @@ public class T_SelectorThread2 extends UnitTest {
 		List<SelSocket> socks = new ArrayList<>();
 		for (int i = 0; i < 100; ++i) {
 			try {
-				SelSocket sock = sel.connect("www.google.com", 80);
+				SelSocket sock = sel.connect("127.0.0.1", 8080);
 				socks.add(sock);
 			} catch (Exception e) {
 				Log.error(e);
@@ -94,7 +94,7 @@ public class T_SelectorThread2 extends UnitTest {
 					try {
 					String fn = String.format("/tmp/test-index-%d.html", cnt);
 					OutputStream os = new FileOutputStream(fn);
-					Log.debug("START reading");
+					Log.debug("%s START reading", sock.getName());
 					byte[] buf = new byte[1000];
 					int r;
 					while ((r = sock.read(buf, 0, buf.length)) >= 0) {
@@ -120,7 +120,8 @@ public class T_SelectorThread2 extends UnitTest {
 		pool.shutdown();
 		try {
 			pool.awaitTermination(3, TimeUnit.SECONDS);
-			for (SelSocket sock : socks) { sock.close(); }
+			//for (SelSocket sock : socks) { sock.close(); }
+			for (SelSocket sock : socks) { sock.stat(); }
 			pool.shutdownNow();
 		}catch (Exception e) {
 			Log.error(e);

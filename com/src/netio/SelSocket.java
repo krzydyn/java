@@ -2,7 +2,6 @@ package netio;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.nio.channels.ClosedChannelException;
 import java.nio.channels.SelectableChannel;
 import java.nio.channels.SelectionKey;
 import java.util.ArrayList;
@@ -29,7 +28,6 @@ public class SelSocket {
 	private long bytes_sent = 0, bytes_write = 0;
 	private IOException ioerror = null;
 	private boolean eof = false;
-	private ByteBuffer hold;
 
 	// package private
 	SelSocket(SelectorThread2 selector, SelectableChannel chn, String name) {
@@ -58,21 +56,9 @@ public class SelSocket {
 		bytes_sent += n;
 	}
 	final boolean received(ByteBuffer b) {
-		if (hold != null) {
-			if (rdq.add(hold)) {
-				hold = null;
-			}
-			else {
-				Log.error("hold in use, packet dropped");
-				selector.releasebuf(b);
-				close();
-				return false;
-			}
-		}
 		bytes_recv += b.remaining();
 		if (rdq.add(b)) return true;
-		Log.debug("%s received %d bytes (hold)", name, b.remaining());
-		hold = b;
+		Log.debug("%s dropped %d bytes", name, b.remaining());
 		return false;
 	}
 
@@ -85,37 +71,28 @@ public class SelSocket {
 	final public boolean rdqFull() { return rdq.isFull(); }
 
 	public void close() {
-		if (chn != null) {
-			try { chn.close(); } catch (Throwable e) {}
-		}
-		stat();
+		try { chn.close(); } catch (Throwable e) {}
+		//stat();
 	}
 
 	public void stat() {
 		if (bytes_read != bytes_recv)
-			Log.error("%s: rcv %d/%d   snd %d/%d", name, bytes_read, bytes_recv, bytes_write, bytes_sent);
+			Log.error("%s: rcv %d/%d   snd %d/%d  open=%b", name, bytes_read, bytes_recv, bytes_write, bytes_sent, chn.isOpen());
 		else
-			Log.debug("%s: rcv %d/%d   snd %d/%d", name, bytes_read, bytes_recv, bytes_write, bytes_sent);
+			Log.debug("%s: rcv %d/%d   snd %d/%d  open=%b", name, bytes_read, bytes_recv, bytes_write, bytes_sent, chn.isOpen());
 	}
 
 	public int read(byte[] buf, int offs, int len) throws IOException {
 		if (ioerror != null) throw ioerror;
-
-		if (hold != null) {
-			if (rdq.add(hold))
-				hold = null;
+		if (eof && rdq.isEmpty()) {
+			Log.error("read =  EOF");
+			return -1;
 		}
+
 		try {
 			rdq.peekw();
 		} catch (InterruptedException e) {
-			Log.error("%s: peekw interrupted", name);
-			setEOF();
-		}
-		if (rdq.isInterrupted()) {
-			if (eof) {
-				Log.error("read =  EOF");
-				return -1;
-			}
+			Log.error("%s: peekw interrupted rdq.size=%d", name, rdq.size());
 		}
 
 		int i;
@@ -140,7 +117,7 @@ public class SelSocket {
 		}
 
 		bytes_read += i;
-		Log.debug("%s.read %d: ", name, i);
+		//Log.debug("%s.read %d: ", name, i);
 		return i;
 	}
 	public void write(byte[] buf) throws IOException {
@@ -152,7 +129,7 @@ public class SelSocket {
 
 	public void write(ByteBuffer buf) throws IOException {
 		if (ioerror != null) throw ioerror;
-		if (!chn.isOpen()) throw new ClosedChannelException();
+		//if (!chn.isOpen()) throw new ClosedChannelException();
 
 		int len = buf.remaining();
 		bytes_write += len;

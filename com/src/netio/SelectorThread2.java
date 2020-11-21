@@ -26,7 +26,7 @@ public class SelectorThread2 {
 	private int sockCnt = 0;
 	private final Selector selector;
 	private final List<ByteBuffer> bpool=new ArrayList<>();
-	private final Thread selThread = 	new Thread("Selector") {
+	private final Runnable runloop = new Runnable() {
 		@Override
 		public void run() {
 			Log.notice("selector loop started");
@@ -36,12 +36,16 @@ public class SelectorThread2 {
 			}
 			finally {
 				Log.notice("selector loop exited");
+				selThread = null;
 			}
 		}
 	};
+	private Thread selThread = null;
 	private final List<SelSocket> addSocklList = new ArrayList<>();
 
 	private boolean stopReq = true;
+	private long recvBytes = 0;
+	private long sentBytes = 0;
 
 	public SelectorThread2() {
 		Selector s = null;
@@ -53,16 +57,17 @@ public class SelectorThread2 {
 		selector = s;
 	}
 
-	public boolean isRunning() {
-		return selThread.isAlive();
+	final public boolean isRunning() {
+		return selThread != null && selThread.isAlive();
 	}
 
-	public void start() {
-		if (selThread.isAlive()) return ;
+	final public void start() {
+		if (isRunning()) return ;
 		stopReq = false;
+		selThread = new Thread(runloop);
 		selThread.start();
 	}
-	public void stop() {
+	final public void stop() {
 		if (stopReq) return ;
 		stopReq=true;
 		selector.wakeup();
@@ -106,6 +111,9 @@ public class SelectorThread2 {
 		chn.connect(new InetSocketAddress(addr, port));
 		return addsocket(chn);
 	}
+	public void stat() {
+		Log.debug("sent %d  recv %d", sentBytes, recvBytes);
+	}
 
 	private SelSocket addsocket(SelectableChannel chn) {
 		SelSocket sock;
@@ -120,11 +128,17 @@ public class SelectorThread2 {
 
 	void wakeup(SelectionKey sk) {
 		SelSocket sock = (SelSocket)sk.attachment();
-		int ops = sk.interestOps()&~(SelectionKey.OP_READ|SelectionKey.OP_WRITE);
-		//int ops = 0;
-		if (!sock.rdqFull()) ops |= SelectionKey.OP_READ;
-		if (sock.wrqSize() > 0) ops |= SelectionKey.OP_WRITE;
-		sk.interestOps(ops);
+		if (!sk.isValid()) {
+			Log.error("%s sk in not valid", sock.getName());
+			return ;
+		}
+		synchronized (sk) {
+			int ops = sk.interestOps()&~(SelectionKey.OP_READ|SelectionKey.OP_WRITE);
+			//int ops = 0;
+			if (!sock.rdqFull()) ops |= SelectionKey.OP_READ;
+			if (sock.wrqSize() > 0) ops |= SelectionKey.OP_WRITE;
+			sk.interestOps(ops);
+		}
 		selector.wakeup();
 	}
 
@@ -209,7 +223,7 @@ public class SelectorThread2 {
 		ByteBuffer b = getbuf();
 		SelSocket sock = (SelSocket)sk.attachment();
 		if (c.read(b) == -1) {
-			Log.error("doRead %s: received EOF", sock.getName());
+			Log.warn("doRead %s: received EOF", sock.getName());
 			sock.setEOF();
 			sk.cancel(); // throw away
 			//c.close();
@@ -218,9 +232,14 @@ public class SelectorThread2 {
 		}
 		((Buffer)b).flip();
 		Log.debug("doRead %s: %d", sock.getName(), b.remaining());
-		if (!sock.received(b)) {
-			int ops = sk.interestOps() & ~SelectionKey.OP_READ;
-			sk.interestOps(ops);
+		recvBytes += b.remaining();
+		sock.received(b);
+		synchronized (sk) {
+			if (sock.rdqFull()) {
+				Log.warn("%s stop reading", sock.getName());
+				int ops = sk.interestOps() & ~SelectionKey.OP_READ;
+				sk.interestOps(ops);
+			}
 		}
 	}
 
@@ -235,6 +254,7 @@ public class SelectorThread2 {
 				b = wrq.peek();
 				Log.debug("%s writing %d bytes", sock.getName(), b.remaining());
 				int r = c.write(b);
+				sentBytes += r;
 				sock.sent(r);
 				if (b.remaining() != 0) {
 					Log.warn("Not all bytes written, r=%d %d/%d", r, b.position(), b.limit());

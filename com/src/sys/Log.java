@@ -19,8 +19,6 @@
 package sys;
 
 import java.io.ByteArrayOutputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.PrintStream;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -45,8 +43,8 @@ public abstract class Log {
 		else
 			tmfmt = tmfmt_tst;
 		try {
-			prs = new PrintStream(new FileOutputStream("syslog.log"));
-		} catch (FileNotFoundException e) {
+			//prs = new PrintStream(new FileOutputStream("syslog.log"));
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}

@@ -46,8 +46,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-import io.IOText;
 import io.IOCaptureWorker;
+import io.IOText;
 import text.Text;
 
 public class Env {
@@ -175,32 +175,19 @@ public class Env {
 		return linuxPath(p);
 	}
 
-	static public String exec(List<String> args, File workdir, Map<String,String> envp) throws IOException {
-		ProcessBuilder pb = new ProcessBuilder(args);
-		if (workdir!=null) pb.directory(workdir);
-		//pb.redirectErrorStream(true);
-		//pb.redirectError(Redirect.DISCARD);
-		//pb.environment((String[]) envp.toArray());
-
-		Log.debug("exec %s", args.toString());
-		if (envp != null) {
-			pb.environment().clear();
-			pb.environment().putAll(envp);
-		}
-		Process child = pb.start();
-
+	static public String exec(String[] args, String[] env, File dir) throws IOException {
+		Process child = Runtime.getRuntime().exec(args, env, dir);
 		OutputStream out = child.getOutputStream();
 		Env.close(out);
 
 		IOCaptureWorker in = new IOCaptureWorker(child.getInputStream());
 		IOCaptureWorker err = new IOCaptureWorker(child.getErrorStream());
-
 		new Thread(err).start();
 		in.run();
 
 		try {
 			//int ec = child.waitFor(); // blocking
-			boolean done = child.waitFor(20, TimeUnit.MINUTES); //TODO make timeout configurable
+			boolean done = child.waitFor(3, TimeUnit.MINUTES); //TODO make timeout configurable
 			if (!done) throw new IOException("Timeout exec");
 			int ec = child.exitValue();
 			if (ec != 0) {
@@ -219,16 +206,29 @@ public class Env {
 		return in.getOutput();
 	}
 
-	static public String exec(List<String> args, File workdir) throws IOException {
-		return exec(args, workdir, null);
+	static public String exec(List<String> args, Map<String,String> env, File dir) throws IOException {
+		String[] envp = new String[env.size()];
+		int ei = 0;
+		for (Iterator<Map.Entry<String,String>> i = env.entrySet().iterator(); i.hasNext(); ) {
+			Map.Entry<String,String> e = i.next();
+			//byte[] v = e.getValue().getBytes("Utf-8");
+			envp[ei++] = String.format("%s=%s", e.getKey(), e.getValue());
+		}
+		Log.debug("ENV %s", Arrays.toString(envp));
+		Log.debug("ARGS %s", args);
+		return exec(args.toArray(new String[] {}), envp, dir);
 	}
 
-	static public String exec(File dir, String ...args) throws IOException {
-		return exec(Arrays.asList(args), dir, null);
+	static public String exec(List<String> args, Map<String,String> env, String dir) throws IOException {
+		return exec(args, env, new File(dir));
+	}
+
+	static public String exec(List<String> args, File dir) throws IOException {
+		return exec(args, null, dir);
 	}
 
 	static public String exec(String ...args) throws IOException {
-		return exec(Arrays.asList(args), null, null);
+		return exec(args, null, null);
 	}
 
 	static private ClipboardOwner manClipboard = new ClipboardOwner() {
