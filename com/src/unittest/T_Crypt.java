@@ -95,8 +95,8 @@ public class T_Crypt extends UnitTest {
 		a.generateXY();
 		b.generateXY();
 
-		BigInteger sh_a = a.deriveShared(b.getPublicKey());
-		BigInteger sh_b = b.deriveShared(a.getPublicKey());
+		BigInteger sh_a = a.deriveSharedKey(b.getPublicKey());
+		BigInteger sh_b = b.deriveSharedKey(a.getPublicKey());
 
 		Log.debug("shared A: %s", sh_a.toString(16));
 		Log.debug("shared B: %s", sh_b.toString(16));

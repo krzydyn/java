@@ -45,7 +45,7 @@ public class DH extends Asymmetric {
 		Log.debug("Y[%d]=%s", y.bitLength(), y.toString(16));
 	}
 
-	public BigInteger deriveShared(BigInteger peerY) {
+	public BigInteger deriveSharedKey(BigInteger peerY) {
 		return peerY.modPow(x, this.p);
 	}
 }
