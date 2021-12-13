@@ -47,7 +47,7 @@ public class Sorting {
 	private static int partition(int[] a, int l,int r) {
 		int pivot = a[r]; //pivot element
 		int i = l-1;
-		// elements smoller then pivot put on the left
+		// elements smaller then pivot put on the left
 		for (int j = l; j < r; ++j) {
 			if (a[j] < pivot) {
 				++i;
@@ -127,7 +127,7 @@ public class Sorting {
 		while (gap > 1 || swapped) {
 			gap = gap * 10 / 13; //empirical
 			if (gap==0) gap=1;
-			else if (gap==9||gap==10) gap=11;
+			//else if (gap==9||gap==10) gap=11;
 
 			swapped = false;
 			for (int i = 0; i + gap < a.size(); ++i) {

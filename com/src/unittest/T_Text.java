@@ -77,9 +77,14 @@ public class T_Text extends UnitTest {
 		Log.info("paths: %s", paths);
 	}
 
-	static void splitText() {
+	static void _splitText() {
 		String txt = "A AND (B OR (C OR D))";
 		String[] arr = txt.split("?:[^\\w()]+");
 		Log.debug("split[%d]: %s", arr.length, Text.join(",", arr));
+	}
+
+	static void removeChar() {
+		String input = "sdfsdfs\\sdfsdfs\\sdfsdf\\sd\\";
+		Log.debug("%s -> %s", input, input.replace("\\", ""));
 	}
 }

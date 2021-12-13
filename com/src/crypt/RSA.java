@@ -38,6 +38,11 @@ import text.Text;
  * or the more specific mbedtls_rsarsassa_pss_sign() and mbedtls_rsarsassa_pss_verify().
  */
 
+/*
+ * Using CRT
+ * https://exploringnumbertheory.wordpress.com/2015/11/16/speeding-up-modular-exponentiation-using-crt/
+ */
+
 public class RSA extends Asymmetric {
 	final static BigInteger[] pubExpCandidates = {
 		BigInteger.valueOf(3),
@@ -381,7 +386,10 @@ public class RSA extends Asymmetric {
 		if (emLen < msg.length + 3)
 			throw new RuntimeException("message too long");
 		byte[] ps = new byte[emLen - msg.length - 3];
+		// pad with zeros
 		return concat(PAD_0102, ps, PAD_00, msg);
+		// pad with random bytes
+		// return concat(PAD_0002, ps, PAD_00, msg);
 	}
 
 	/*
